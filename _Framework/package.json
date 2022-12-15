@@ -1,0 +1,11 @@
+{
+  "author": {
+    "name": "Bezoro"
+  },
+  "name": "com.bezoro.framework",
+  "version": "0.0.1",
+  "displayName": "Bezoro's Unity Framework",
+  "description": "Base Framework to use in Unity Projects",
+  "dependencies": {
+  }
+}
