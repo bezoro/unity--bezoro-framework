@@ -4,6 +4,7 @@ using Bezoro.Core.Helpers;
 
 namespace Bezoro.Core.Singletons
 {
+	[AddComponentMenu("")]
 	public sealed class ReflectionProbeManager : MonoBehaviour
 	{
 		public static ReflectionProbeManager Instance

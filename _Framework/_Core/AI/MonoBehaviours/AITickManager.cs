@@ -4,6 +4,7 @@ using UnityEngine;
 
 namespace Bezoro.Core.Singletons
 {
+	[AddComponentMenu("")]
 	public sealed class AITickManager : MonoBehaviour
 	{
 		public static AITickManager Instance
