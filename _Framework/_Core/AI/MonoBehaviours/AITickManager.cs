@@ -1,23 +1,15 @@
 ﻿using System.Collections.Generic;
 using Bezoro.Core.Helpers;
+using JetBrains.Annotations;
 using UnityEngine;
+using Weaver;
 
 namespace Bezoro.Core.Singletons
 {
-	[AddComponentMenu("")]
 	public sealed class AITickManager : MonoBehaviour
 	{
-		public static AITickManager Instance
-		{
-			get
-			{
-				if (_instance != null)
-					return _instance;
-
-				_instance = SingletonMonoBehaviourHelpers.CreateSingleton<AITickManager>();
-				return _instance;
-			}
-		}
+		[AssetInstance] [UsedImplicitly]
+		public static readonly AITickManager Instance;
 
 		public float TickFrequency => 0.1f;
 

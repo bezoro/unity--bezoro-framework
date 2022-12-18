@@ -1,7 +1,9 @@
 {
     "name": "Bezoro.Core",
     "rootNamespace": "Bezoro.Core",
-    "references": [],
+    "references": [
+        "GUID:a7397cecbf8cd414c9f5add2cde8c5f9"
+    ],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,

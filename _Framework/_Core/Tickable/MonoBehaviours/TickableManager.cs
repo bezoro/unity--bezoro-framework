@@ -1,23 +1,14 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
-using Bezoro.Core.Helpers;
+using JetBrains.Annotations;
+using Weaver;
 
 namespace Bezoro.Core.Singletons
 {
-	[AddComponentMenu("")]
 	public sealed class TickableManager : MonoBehaviour
 	{
-		public static TickableManager Instance
-		{
-			get
-			{
-				if (_instance != null)
-					return _instance;
-
-				_instance = SingletonMonoBehaviourHelpers.CreateSingleton<TickableManager>();
-				return _instance;
-			}
-		}
+		[AssetInstance] [UsedImplicitly]
+		public static readonly TickableManager Instance;
 
 		public void AddUnique(Tickable tickable)
 		{
