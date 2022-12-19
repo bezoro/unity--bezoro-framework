@@ -19,6 +19,9 @@ namespace Bezoro.StateMachines
 			_currentState.Enter();
 		}
 
+		public override void EarlyTick() =>
+			_currentState.EarlyTick();
+
 		public override void Tick() =>
 			_currentState.Tick();
 
