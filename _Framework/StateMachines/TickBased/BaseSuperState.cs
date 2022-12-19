@@ -57,6 +57,9 @@ namespace Bezoro.StateMachines
 			_currentState.Enter();
 		}
 
+		public void EarlyTick() =>
+			OnEarlyTick();
+
 		public void Tick()
 		{
 			OnTick();
@@ -88,8 +91,8 @@ namespace Bezoro.StateMachines
 
 		public void Exit()
 		{
-			foreach (var transition in _transitions)
-				transition.CeaseRelevant();
+			for (var i = 0; i < _transitions.Count; i++)
+				_transitions[i].CeaseRelevant();
 
 			_currentState.Exit();
 			OnExit();
@@ -107,16 +110,23 @@ namespace Bezoro.StateMachines
 		}
 
 		protected abstract void SetUp();
+
 		protected abstract void OnEnter();
+
+		protected abstract void OnEarlyTick();
+
 		protected abstract void OnTick();
+
 		protected abstract void OnFixedTick();
+
 		protected abstract void OnLateTick();
+
 		protected abstract void OnExit();
 
 		private void CheckTransitions()
 		{
-			foreach (var transition in _transitions)
-				if (transition.CheckConditions())
+			for (var i = 0; i < _transitions.Count; i++)
+				if (_transitions[i].CheckConditions())
 					return;
 		}
 
