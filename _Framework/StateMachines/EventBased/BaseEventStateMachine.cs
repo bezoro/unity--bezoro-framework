@@ -5,12 +5,12 @@ using UnityEditor;
 
 namespace Bezoro.StateMachines
 {
-	public abstract class BaseSimpleStateMachine : MonoBehaviour,
-		ISimpleStateMachine
+	public abstract class BaseEventStateMachine : MonoBehaviour,
+		IEventStateMachine
 	{
-		public ISimpleState CurrentState => _currentState;
+		public IEventState CurrentState => _currentState;
 
-		public void SwitchCurrentState(ISimpleState stateToSwitchTo)
+		public void SwitchCurrentState(IEventState stateToSwitchTo)
 		{
 			_currentState.Exit();
 			_currentState = stateToSwitchTo;
@@ -18,43 +18,45 @@ namespace Bezoro.StateMachines
 		}
 
 		protected void RegisterState<TState>(out TState createdState)
-		where TState : ISimpleState, new()
+		where TState : IEventState, new()
 		{
 			var newState = new TState();
 			newState.Init(this, this);
 			createdState = newState;
 
-			if (_currentState is NullSimpleState)
+			if (_currentState is NullEventState)
 				_currentState = newState;
 		}
 
 		protected abstract void SetUp();
 
-		private void Awake() => SetUp();
+		private void Awake() =>
+			SetUp();
 
-		private void Start() => _currentState.Enter();
+		private void Start() =>
+			_currentState.Enter();
 
-		private ISimpleState _currentState = new NullSimpleState();
+		private IEventState _currentState = new NullEventState();
 
-		#if UNITY_EDITOR
+	#if UNITY_EDITOR
 		private void OnDrawGizmos()
 		{
 			if (Application.isPlaying)
 			{
 				DrawStateLabels(this);
 
-				void DrawStateLabels(ISimpleStateMachine stateMachine, int index = 0)
+				void DrawStateLabels(IEventStateMachine stateMachine, int index = 0)
 				{
 					const float offset = 4f;
 					var labelPosition = transform.position + Vector3.up * offset;
 
 					Handles.Label
-					(
-						labelPosition - (Vector3.up * index) * 0.75f,
-						stateMachine.CurrentState.GetType().Name
-					);
+						(
+						 labelPosition - (Vector3.up * index) * 0.75f,
+						 stateMachine.CurrentState.GetType().Name
+						);
 
-					if (stateMachine.CurrentState is ISimpleStateMachine FSM)
+					if (stateMachine.CurrentState is IEventStateMachine FSM)
 					{
 						index++;
 						DrawStateLabels(FSM, index);
@@ -62,6 +64,6 @@ namespace Bezoro.StateMachines
 				}
 			}
 		}
-		#endif
+	#endif
 	}
 }

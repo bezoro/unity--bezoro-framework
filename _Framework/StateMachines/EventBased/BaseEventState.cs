@@ -1,16 +1,16 @@
-﻿using System.Collections;
+﻿using UnityEngine;
+using System.Collections;
 using System.Collections.Generic;
-using UnityEngine;
 
 namespace Bezoro.StateMachines
 {
-	public abstract class BaseSimpleState<TAgent> : BaseSimpleState
+	public abstract class BaseEventState<TAgent> : BaseEventState
 	where TAgent : MonoBehaviour
 	{
 		public override void Init
 		(
-			ISimpleStateMachine owningStateMachine,
-			BaseSimpleStateMachine masterStateMachine
+			IEventStateMachine owningStateMachine,
+			BaseEventStateMachine masterStateMachine
 		)
 		{
 			Agent = masterStateMachine.GetComponent<TAgent>();
@@ -23,12 +23,12 @@ namespace Bezoro.StateMachines
 		protected TAgent Agent { get; private set; }
 	}
 
-	public abstract class BaseSimpleState : ISimpleState
+	public abstract class BaseEventState : IEventState
 	{
 		public virtual void Init
 		(
-			ISimpleStateMachine owningStateMachine,
-			BaseSimpleStateMachine masterStateMachine
+			IEventStateMachine owningStateMachine,
+			BaseEventStateMachine masterStateMachine
 		)
 		{
 			_owningStateMachine = owningStateMachine;
@@ -36,9 +36,9 @@ namespace Bezoro.StateMachines
 			OnInit();
 		}
 
-		public SimpleTransition TransitionsTo(BaseSimpleState toState)
+		public EventTransition TransitionsTo(BaseEventState toState)
 		{
-			var newTransition = new SimpleTransition(this, toState, _masterStateMachine);
+			var newTransition = new EventTransition(this, toState, _masterStateMachine);
 			_transitions.Add(newTransition);
 			return newTransition;
 		}
@@ -51,7 +51,7 @@ namespace Bezoro.StateMachines
 				transition.BecomeRelevant();
 		}
 
-		public void SwitchOwningStateMachineCurrentState(ISimpleState toState) =>
+		public void OnTransitionRaised(IEventState toState) =>
 			_owningStateMachine.SwitchCurrentState(toState);
 
 		public void Exit()
@@ -66,13 +66,13 @@ namespace Bezoro.StateMachines
 		protected abstract void OnEnter();
 		protected abstract void OnExit();
 
-		private ISimpleStateMachine _owningStateMachine;
-		private BaseSimpleStateMachine _masterStateMachine;
+		private IEventStateMachine _owningStateMachine;
+		private BaseEventStateMachine _masterStateMachine;
 
-		private readonly List<SimpleTransition> _transitions = new();
+		private readonly List<EventTransition> _transitions = new();
 	}
 
-	internal sealed class NullSimpleState : BaseSimpleState
+	internal sealed class NullEventState : BaseEventState
 	{
 		protected override void OnInit() { }
 		protected override void OnEnter() { }
