@@ -4,14 +4,14 @@ using UnityEngine.Assertions;
 
 namespace Bezoro.StateMachines
 {
-	public abstract class KinematicCharacterCondition<TAgent, TBlackBoard> :
-		KinematicCharacterCondition<TAgent>
+	public abstract class BaseKCCCondition<TAgent, TBlackBoard> :
+		BaseKCCCondition<TAgent>
 	where TAgent : MonoBehaviour
 	where TBlackBoard : BlackBoard
 	{
 		public override void Init
 		(
-			KinematicCharacterStateMachine masterStateMachine,
+			BaseKCCStateMachine masterStateMachine,
 			bool inverted,
 			KinematicCharacterMotor motor
 		)
@@ -25,12 +25,12 @@ namespace Bezoro.StateMachines
 		protected TBlackBoard BlackBoard { get; private set; }
 	}
 
-	public abstract class KinematicCharacterCondition<TAgent> : KinematicCharacterCondition
+	public abstract class BaseKCCCondition<TAgent> : BaseKCCCondition
 	where TAgent : MonoBehaviour
 	{
 		public override void Init
 		(
-			KinematicCharacterStateMachine masterStateMachine,
+			BaseKCCStateMachine masterStateMachine,
 			bool inverted,
 			KinematicCharacterMotor motor
 		)
@@ -47,27 +47,23 @@ namespace Bezoro.StateMachines
 		protected TAgent Agent { get; private set; }
 	}
 
-	public abstract class KinematicCharacterCondition
+	public abstract class BaseKCCCondition
 	{
-		protected KinematicCharacterStateMachine MasterStateMachine { get; private set; }
-
 		protected KinematicCharacterMotor Motor { get; private set; }
 
 		public bool Inverted { get; private set; }
 
 		public virtual void Init
 		(
-			KinematicCharacterStateMachine masterStateMachine,
+			BaseKCCStateMachine masterStateMachine,
 			bool inverted,
 			KinematicCharacterMotor motor
 		)
 		{
-			MasterStateMachine = masterStateMachine;
 			Inverted = inverted;
 			Motor = motor;
 			OnInit();
 		}
-
 
 		public void BecomeRelevant() =>
 			OnBecomeRelevant();

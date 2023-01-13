@@ -5,16 +5,16 @@ using UnityEngine;
 
 namespace Bezoro.StateMachines
 {
-	public interface IKinematicCharacterSuperState : IKinematicCharacterState
+	public interface IKCCSuperState : IKCCState
 	{
-		public IKinematicCharacterState LastState { get; }
+		public IKCCState LastState { get; }
 
-		public IKinematicCharacterState CurrentState { get; }
+		public IKCCState CurrentState { get; }
 
-		public void SwitchCurrentState(IKinematicCharacterState stateToSwitchTo);
+		public void SwitchCurrentState(IKCCState stateToSwitchTo);
 	}
 
-	public interface IKinematicCharacterState
+	public interface IKCCState
 	{
 		public KinematicCharacterMotor Motor { get; }
 
@@ -22,12 +22,12 @@ namespace Bezoro.StateMachines
 
 		public void Init
 		(
-			KinematicCharacterStateMachine stateMachine,
-			IKinematicCharacterSuperState parentState,
+			BaseKCCStateMachine stateMachine,
+			IKCCSuperState parentState,
 			KinematicCharacterMotor motor
 		);
 
-		public KinematicCharacterTransition TransitionsTo(IKinematicCharacterState state);
+		public KCCTransition TransitionsTo(IKCCState state);
 
 		public void Enter();
 
@@ -81,6 +81,6 @@ namespace Bezoro.StateMachines
 
 		public void Exit();
 
-		public void SwitchParentCurrentState(IKinematicCharacterState toState);
+		public void SwitchParentCurrentState(IKCCState toState);
 	}
 }

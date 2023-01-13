@@ -7,15 +7,15 @@ using UnityEngine.Assertions;
 
 namespace Bezoro.StateMachines
 {
-	public abstract class KinematicCharacterState<TAgent, TBlackBoard> :
-		KinematicCharacterState<TAgent>
+	public abstract class BaseKCCSuperState<TAgent, TBlackBoard> :
+		BaseKCCSuperState<TAgent>
 	where TAgent : MonoBehaviour
 	where TBlackBoard : BlackBoard
 	{
-		public sealed override void Init
+		public override void Init
 		(
-			KinematicCharacterStateMachine stateMachine,
-			IKinematicCharacterSuperState parentState,
+			BaseKCCStateMachine stateMachine,
+			IKCCSuperState parentState,
 			KinematicCharacterMotor motor
 		)
 		{
@@ -28,13 +28,13 @@ namespace Bezoro.StateMachines
 		protected TBlackBoard BlackBoard { get; private set; }
 	}
 
-	public abstract class KinematicCharacterState<TAgent> : KinematicCharacterState
+	public abstract class BaseKCCSuperState<TAgent> : BaseKCCSuperState
 	where TAgent : MonoBehaviour
 	{
 		public override void Init
 		(
-			KinematicCharacterStateMachine stateMachine,
-			IKinematicCharacterSuperState parentState,
+			BaseKCCStateMachine stateMachine,
+			IKCCSuperState parentState,
 			KinematicCharacterMotor motor
 		)
 		{
@@ -48,32 +48,41 @@ namespace Bezoro.StateMachines
 		protected TAgent Agent { get; private set; }
 	}
 
-	public abstract class KinematicCharacterState : IKinematicCharacterState
+	public abstract class BaseKCCSuperState : IKCCSuperState
 	{
+		public IKCCState StartingState { get; private set; }
+
+		public IKCCState LastState { get; private set; }
+
+		public IKCCState CurrentState { get; private set; }
+
 		public KinematicCharacterMotor Motor { get; private set; }
 
-		public KinematicCharacterStateMachine StateMachine { get; private set; }
+		public BaseKCCStateMachine StateMachine { get; private set; }
 
-		public IKinematicCharacterSuperState ParentState { get; private set; }
+		public IKCCSuperState ParentState { get; private set; }
 
 		public List<Type> MonoBehaviourTypesToIgnoreCollisionsWith { get; } = new(12);
 
 		public virtual void Init
 		(
-			KinematicCharacterStateMachine stateMachine,
-			IKinematicCharacterSuperState parentState,
+			BaseKCCStateMachine stateMachine,
+			IKCCSuperState parentState,
 			KinematicCharacterMotor motor
 		)
 		{
 			StateMachine = stateMachine;
 			ParentState = parentState;
 			Motor = motor;
-			OnInit();
+			SetUp();
+
+			Assert.IsNotNull(StartingState);
+			Assert.IsNotNull(CurrentState);
 		}
 
-		public KinematicCharacterTransition TransitionsTo(IKinematicCharacterState state)
+		public KCCTransition TransitionsTo(IKCCState state)
 		{
-			var transition = new KinematicCharacterTransition
+			var transition = new KCCTransition
 				(
 				 this,
 				 state,
@@ -86,38 +95,67 @@ namespace Bezoro.StateMachines
 
 		public void Enter()
 		{
+			CurrentState = StartingState;
+
 			OnEnter();
 
 			foreach (var transition in _transitions)
 				transition.BecomeRelevant();
+
+			CurrentState.Enter();
 		}
 
-		public void Tick() =>
+		public void Tick()
+		{
 			OnTick();
 
-		public void FixedTick() =>
+			CurrentState.Tick();
+		}
+
+		public void FixedTick()
+		{
 			OnFixedTick();
 
-		public void LateTick() =>
+			CurrentState.FixedTick();
+		}
+
+		public void LateTick()
+		{
 			OnLateTick();
+
+			CurrentState.LateTick();
+		}
 
 		#region KCC Methods
 
-		public void UpdateRotation(ref Quaternion currentRotation, float deltaTime) =>
+		public void UpdateRotation(ref Quaternion currentRotation, float deltaTime)
+		{
 			OnUpdateRotation(ref currentRotation, deltaTime);
+			CurrentState.UpdateRotation(ref currentRotation, deltaTime);
+		}
 
-		public void UpdateVelocity(ref Vector3 currentVelocity, float deltaTime) =>
+		public void UpdateVelocity(ref Vector3 currentVelocity, float deltaTime)
+		{
 			OnUpdateVelocity(ref currentVelocity, deltaTime);
+			CurrentState.UpdateVelocity(ref currentVelocity, deltaTime);
+		}
 
-		public void BeforeCharacterUpdate(float deltaTime) =>
+		public void BeforeCharacterUpdate(float deltaTime)
+		{
 			OnBeforeCharacterUpdate(deltaTime);
+			CurrentState.BeforeCharacterUpdate(deltaTime);
+		}
 
-		public void PostGroundingUpdate(float deltaTime) =>
+		public void PostGroundingUpdate(float deltaTime)
+		{
 			OnPostGroundingUpdate(deltaTime);
+			CurrentState.PostGroundingUpdate(deltaTime);
+		}
 
 		public void AfterCharacterUpdate(float deltaTime)
 		{
 			OnAfterCharacterUpdate(deltaTime);
+			CurrentState.AfterCharacterUpdate(deltaTime);
 			TryTransition();
 		}
 
@@ -127,7 +165,8 @@ namespace Bezoro.StateMachines
 			Vector3 hitNormal,
 			Vector3 hitPoint,
 			ref HitStabilityReport hitStabilityReport
-		) =>
+		)
+		{
 			OnGroundHit
 				(
 				 hitCollider,
@@ -136,13 +175,23 @@ namespace Bezoro.StateMachines
 				 ref hitStabilityReport
 				);
 
+			CurrentState.GroundHit
+				(
+				 hitCollider,
+				 hitNormal,
+				 hitPoint,
+				 ref hitStabilityReport
+				);
+		}
+
 		public void MovementHit
 		(
 			Collider hitCollider,
 			Vector3 hitNormal,
 			Vector3 hitPoint,
 			ref HitStabilityReport hitStabilityReport
-		) =>
+		)
+		{
 			OnMovementHit
 				(
 				 hitCollider,
@@ -150,6 +199,15 @@ namespace Bezoro.StateMachines
 				 hitPoint,
 				 ref hitStabilityReport
 				);
+
+			CurrentState.MovementHit
+				(
+				 hitCollider,
+				 hitNormal,
+				 hitPoint,
+				 ref hitStabilityReport
+				);
+		}
 
 		public void ProcessHitStabilityReport
 		(
@@ -159,7 +217,8 @@ namespace Bezoro.StateMachines
 			Vector3 atCharacterPosition,
 			Quaternion atCharacterRotation,
 			ref HitStabilityReport hitStabilityReport
-		) =>
+		)
+		{
 			OnProcessHitStabilityReport
 				(
 				 hitCollider,
@@ -170,20 +229,36 @@ namespace Bezoro.StateMachines
 				 ref hitStabilityReport
 				);
 
-		public void DiscreteCollisionDetected(Collider hitCollider) =>
+			CurrentState.ProcessHitStabilityReport
+				(
+				 hitCollider,
+				 hitNormal,
+				 hitPoint,
+				 atCharacterPosition,
+				 atCharacterRotation,
+				 ref hitStabilityReport
+				);
+		}
+
+		public void DiscreteCollisionDetected(Collider hitCollider)
+		{
 			OnDiscreteCollisionDetected(hitCollider);
+			CurrentState.DiscreteCollisionDetected(hitCollider);
+		}
 
 		#endregion
 
 		public void Exit()
 		{
+			CurrentState.Exit();
+
 			foreach (var transition in _transitions)
 				transition.CeaseRelevant();
 
 			OnExit();
 		}
 
-		public void SwitchParentCurrentState(IKinematicCharacterState toState)
+		public void SwitchParentCurrentState(IKCCState toState)
 		{
 			if (ParentState is null)
 			{
@@ -192,6 +267,26 @@ namespace Bezoro.StateMachines
 			}
 
 			ParentState.SwitchCurrentState(toState);
+		}
+
+		public void SwitchCurrentState(IKCCState stateToSwitchTo)
+		{
+			LastState = CurrentState;
+
+			CurrentState.Exit();
+			CurrentState = stateToSwitchTo;
+			CurrentState.Enter();
+		}
+
+		protected void RegisterState<TState>(out TState createdState)
+		where TState : class, IKCCState, new()
+		{
+			var newState = new TState();
+			newState.Init(StateMachine, this, Motor);
+			createdState = newState;
+
+			StartingState ??= newState;
+			CurrentState ??= StartingState;
 		}
 
 		protected void AddMonoBehaviourTypeToIgnoreCollisionsWith<TMonoBehaviour>()
@@ -203,7 +298,7 @@ namespace Bezoro.StateMachines
 
 		#region Protected Abstract Methods
 
-		protected abstract void OnInit();
+		protected abstract void SetUp();
 
 		protected abstract void OnEnter();
 
@@ -246,7 +341,8 @@ namespace Bezoro.StateMachines
 			Vector3 hitPoint,
 			Vector3 atCharacterPosition,
 			Quaternion atCharacterRotation,
-			ref HitStabilityReport hitStabilityReport
+			ref HitStabilityReport
+				hitStabilityReport
 		);
 
 		protected abstract void OnDiscreteCollisionDetected(Collider hitCollider);
@@ -268,77 +364,6 @@ namespace Bezoro.StateMachines
 			}
 		}
 
-		private readonly List<KinematicCharacterTransition> _transitions = new(4);
-	}
-	
-	public sealed class NullKinematicCharacterState : IKinematicCharacterState
-	{
-		public KinematicCharacterMotor Motor { get; }
-
-		public List<Type> MonoBehaviourTypesToIgnoreCollisionsWith { get; }
-
-		public void Init
-		(
-			KinematicCharacterStateMachine stateMachine,
-			IKinematicCharacterSuperState parentState,
-			KinematicCharacterMotor motor
-		) { }
-
-		public KinematicCharacterTransition TransitionsTo(IKinematicCharacterState state) =>
-			null;
-
-		public void Enter() { }
-
-		public void Tick() { }
-
-		public void FixedTick() { }
-
-		public void LateTick() { }
-		
-		#region KCC Methods
-
-		public void UpdateRotation(ref Quaternion currentRotation, float deltaTime) { }
-
-		public void UpdateVelocity(ref Vector3 currentVelocity, float deltaTime) { }
-
-		public void BeforeCharacterUpdate(float deltaTime) { }
-
-		public void PostGroundingUpdate(float deltaTime) { }
-
-		public void AfterCharacterUpdate(float deltaTime) { }
-
-		public void GroundHit
-		(
-			Collider hitCollider,
-			Vector3 hitNormal,
-			Vector3 hitPoint,
-			ref HitStabilityReport hitStabilityReport
-		) { }
-
-		public void MovementHit
-		(
-			Collider hitCollider,
-			Vector3 hitNormal,
-			Vector3 hitPoint,
-			ref HitStabilityReport hitStabilityReport
-		) { }
-
-		public void ProcessHitStabilityReport
-		(
-			Collider hitCollider,
-			Vector3 hitNormal,
-			Vector3 hitPoint,
-			Vector3 atCharacterPosition,
-			Quaternion atCharacterRotation,
-			ref HitStabilityReport hitStabilityReport
-		) { }
-
-		public void DiscreteCollisionDetected(Collider hitCollider) { }
-		
-		#endregion
-
-		public void Exit() { }
-
-		public void SwitchParentCurrentState(IKinematicCharacterState toState) { }
+		private readonly List<KCCTransition> _transitions = new(4);
 	}
 }

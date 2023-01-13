@@ -2,24 +2,24 @@
 
 namespace Bezoro.StateMachines
 {
-	public class KinematicCharacterTransition
+	public class KCCTransition
 	{
-		public IKinematicCharacterState FromState { get; }
+		public IKCCState FromState { get; }
 
-		public IKinematicCharacterState ToState { get; }
+		public IKCCState ToState { get; }
 
-		public List<KinematicCharacterCondition> Conditions { get; } = new(4);
+		public List<BaseKCCCondition> Conditions { get; } = new(4);
 
 		public ConditionsCriteria ConditionsCriteria { get; private set; } =
 			ConditionsCriteria.AnyTrue;
 
-		public KinematicCharacterStateMachine StateMachine { get; }
+		public BaseKCCStateMachine StateMachine { get; }
 
-		public KinematicCharacterTransition
+		public KCCTransition
 		(
-			IKinematicCharacterState fromState,
-			IKinematicCharacterState toState,
-			KinematicCharacterStateMachine stateMachine
+			IKCCState fromState,
+			IKCCState toState,
+			BaseKCCStateMachine stateMachine
 		)
 		{
 			FromState = fromState;
@@ -28,7 +28,7 @@ namespace Bezoro.StateMachines
 		}
 
 		public void WithCondition<TCondition>(bool inverted = false)
-		where TCondition : KinematicCharacterCondition, new()
+		where TCondition : BaseKCCCondition, new()
 		{
 			var newCondition = new TCondition();
 			newCondition.Init(StateMachine, inverted, StateMachine.Motor);
@@ -41,8 +41,8 @@ namespace Bezoro.StateMachines
 			bool inverted1 = false,
 			bool inverted2 = false
 		)
-		where TCondition1 : KinematicCharacterCondition, new()
-		where TCondition2 : KinematicCharacterCondition, new()
+		where TCondition1 : BaseKCCCondition, new()
+		where TCondition2 : BaseKCCCondition, new()
 		{
 			var newCondition1 = new TCondition1();
 			newCondition1.Init(StateMachine, inverted1, StateMachine.Motor);
