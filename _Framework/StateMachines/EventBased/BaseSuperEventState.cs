@@ -1,16 +1,16 @@
-﻿using System.Collections;
+﻿using UnityEngine;
+using System.Collections;
 using System.Collections.Generic;
-using UnityEngine;
 
 namespace Bezoro.StateMachines
 {
-	public abstract class BaseSuperSimpleState<TAgent> : BaseSuperSimpleState
+	public abstract class BaseSuperEventState<TAgent> : BaseSuperEventState
 	where TAgent : MonoBehaviour
 	{
 		public override void Init
 		(
-			ISimpleStateMachine owningStateMachine,
-			BaseSimpleStateMachine masterStateMachine
+			IEventStateMachine owningStateMachine,
+			BaseEventStateMachine masterStateMachine
 		)
 		{
 			Agent = masterStateMachine.GetComponent<TAgent>();
@@ -23,14 +23,14 @@ namespace Bezoro.StateMachines
 		protected TAgent Agent { get; private set; }
 	}
 
-	public abstract class BaseSuperSimpleState : ISimpleState, ISimpleStateMachine
+	public abstract class BaseSuperEventState : IEventState, IEventStateMachine
 	{
-		public ISimpleState CurrentState => _currentState;
+		public IEventState CurrentState => _currentState;
 
 		public virtual void Init
 		(
-			ISimpleStateMachine owningStateMachine,
-			BaseSimpleStateMachine masterStateMachine
+			IEventStateMachine owningStateMachine,
+			BaseEventStateMachine masterStateMachine
 		)
 		{
 			_owningStateMachine = owningStateMachine;
@@ -38,9 +38,9 @@ namespace Bezoro.StateMachines
 			SetUp();
 		}
 
-		public SimpleTransition TransitionsTo(BaseSimpleState toState)
+		public EventTransition TransitionsTo(BaseEventState toState)
 		{
-			var newTransition = new SimpleTransition(this, toState, _masterStateMachine);
+			var newTransition = new EventTransition(this, toState, _masterStateMachine);
 			_transitions.Add(newTransition);
 			return newTransition;
 		}
@@ -55,14 +55,14 @@ namespace Bezoro.StateMachines
 			_currentState.Enter();
 		}
 
-		public void SwitchCurrentState(ISimpleState stateToSwitchTo)
+		public void SwitchCurrentState(IEventState stateToSwitchTo)
 		{
 			_currentState.Exit();
 			_currentState = stateToSwitchTo;
 			_currentState.Enter();
 		}
 
-		public void SwitchOwningStateMachineCurrentState(ISimpleState toState) =>
+		public void OnTransitionRaised(IEventState toState) =>
 			_owningStateMachine.SwitchCurrentState(toState);
 
 		public void Exit()
@@ -76,24 +76,26 @@ namespace Bezoro.StateMachines
 		}
 
 		protected abstract void SetUp();
+
 		protected abstract void OnEnter();
+
 		protected abstract void OnExit();
 
 		protected void RegisterState<TState>(out TState createdState)
-		where TState : ISimpleState, new()
+		where TState : IEventState, new()
 		{
 			var newState = new TState();
 			newState.Init(this, _masterStateMachine);
 			createdState = newState;
 
-			if (_currentState is NullSimpleState)
+			if (_currentState is NullEventState)
 				_currentState = newState;
 		}
 
-		private ISimpleState _currentState = new NullSimpleState();
-		private ISimpleStateMachine _owningStateMachine;
-		private BaseSimpleStateMachine _masterStateMachine;
+		private IEventState _currentState = new NullEventState();
+		private IEventStateMachine _owningStateMachine;
+		private BaseEventStateMachine _masterStateMachine;
 
-		private readonly List<SimpleTransition> _transitions = new();
+		private readonly List<EventTransition> _transitions = new();
 	}
 }
