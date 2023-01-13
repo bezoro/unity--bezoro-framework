@@ -1,7 +1,7 @@
-﻿using UnityEngine;
-using System.Collections.Generic;
+﻿using Weaver;
+using UnityEngine;
 using JetBrains.Annotations;
-using Weaver;
+using System.Collections.Generic;
 
 namespace Bezoro.Core.Singletons
 {
