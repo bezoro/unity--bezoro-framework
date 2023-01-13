@@ -1,7 +1,6 @@
 ﻿using System;
-using Bezoro.Core.Singletons;
-using Sirenix.OdinInspector;
 using UnityEngine;
+using Bezoro.Core.Singletons;
 
 namespace Bezoro.Core
 {
@@ -21,68 +20,90 @@ namespace Bezoro.Core
 
 		protected virtual void OnEnable()
 		{
-			if ((tickType & TickType.Early) != 0)
-				TickableManager.Instance.AddUniqueEarlyTickable(this);
+			RegisterWithTickableManager();
 
-			if ((tickType & TickType.Normal) != 0)
-				TickableManager.Instance.AddUniqueTickable(this);
+			void RegisterWithTickableManager()
+			{
+				if ((tickType & TickType.Early) != 0)
+					TickableManager.Instance.AddUniqueEarlyTickable(this);
 
-			if ((tickType & TickType.Fixed) != 0)
-				TickableManager.Instance.AddUniqueFixedTickable(this);
+				if ((tickType & TickType.Normal) != 0)
+					TickableManager.Instance.AddUniqueTickable(this);
 
-			if ((tickType & TickType.Late) != 0)
-				TickableManager.Instance.AddUniqueLateTickable(this);
+				if ((tickType & TickType.Fixed) != 0)
+					TickableManager.Instance.AddUniqueFixedTickable(this);
+
+				if ((tickType & TickType.Late) != 0)
+					TickableManager.Instance.AddUniqueLateTickable(this);
+			}
 		}
 
 		protected virtual void OnDisable()
 		{
-			if ((tickType & TickType.Early) != 0)
-				TickableManager.Instance.RemoveEarlyTickable(this);
+			UnregisterFromTickableManager();
 
-			if ((tickType & TickType.Normal) != 0)
-				TickableManager.Instance.RemoveTickable(this);
+			void UnregisterFromTickableManager()
+			{
+				if ((tickType & TickType.Early) != 0)
+					TickableManager.Instance.RemoveEarlyTickable(this);
 
-			if ((tickType & TickType.Fixed) != 0)
-				TickableManager.Instance.RemoveFixedTickable(this);
+				if ((tickType & TickType.Normal) != 0)
+					TickableManager.Instance.RemoveTickable(this);
 
-			if ((tickType & TickType.Late) != 0)
-				TickableManager.Instance.RemoveLateTickable(this);
+				if ((tickType & TickType.Fixed) != 0)
+					TickableManager.Instance.RemoveFixedTickable(this);
+
+				if ((tickType & TickType.Late) != 0)
+					TickableManager.Instance.RemoveLateTickable(this);
+			}
 		}
 
-		[Button]
-		public void AddTickTypeFlag(TickType value)
+		public void AddTickTypeFlag(TickType flag)
 		{
-			tickType |= value;
+			if ((tickType & flag) != 0)
+				return;
 
-			if ((tickType & TickType.Early) != 0)
-				TickableManager.Instance.AddUniqueEarlyTickable(this);
+			tickType |= flag;
 
-			if ((tickType & TickType.Normal) != 0)
-				TickableManager.Instance.AddUniqueTickable(this);
-
-			if ((tickType & TickType.Fixed) != 0)
-				TickableManager.Instance.AddUniqueFixedTickable(this);
-
-			if ((tickType & TickType.Late) != 0)
-				TickableManager.Instance.AddUniqueLateTickable(this);
+			switch (flag)
+			{
+				case TickType.Early:
+					TickableManager.Instance.AddUniqueEarlyTickable(this);
+					break;
+				case TickType.Normal:
+					TickableManager.Instance.AddUniqueTickable(this);
+					break;
+				case TickType.Fixed:
+					TickableManager.Instance.AddUniqueFixedTickable(this);
+					break;
+				case TickType.Late:
+					TickableManager.Instance.AddUniqueLateTickable(this);
+					break;
+			}
 		}
 
-		[Button]
-		public void RemoveTickTypeFlag(TickType value)
+		public void RemoveTickTypeFlag(TickType flag)
 		{
-			tickType &= ~value;
+			if ((tickType & flag) == 0)
+				return;
 
-			if ((value & TickType.Early) != 0)
-				TickableManager.Instance.RemoveEarlyTickable(this);
+			tickType &= ~flag;
 
-			if ((value & TickType.Normal) != 0)
-				TickableManager.Instance.RemoveTickable(this);
-
-			if ((value & TickType.Fixed) != 0)
-				TickableManager.Instance.RemoveFixedTickable(this);
-
-			if ((value & TickType.Late) != 0)
-				TickableManager.Instance.RemoveLateTickable(this);
+			switch (flag)
+			{
+				case TickType.Early:
+					TickableManager.Instance.RemoveEarlyTickable(this);
+					break;
+				case TickType.Normal:
+					TickableManager.Instance.RemoveTickable(this);
+					break;
+				case TickType.Fixed:
+					TickableManager.Instance.RemoveFixedTickable(this);
+					break;
+				case TickType.Late:
+					TickableManager.Instance.RemoveLateTickable(this);
+					break;
+			}
 		}
 	}
 
