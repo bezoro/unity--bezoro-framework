@@ -6,8 +6,8 @@ using KinematicCharacterController;
 
 namespace Bezoro.StateMachines
 {
-	public abstract class KinematicCharacterStateMachine<TBlackBoard> :
-		KinematicCharacterStateMachine
+	public abstract class BaseKCCStateMachine<TBlackBoard> :
+		BaseKCCStateMachine
 	where TBlackBoard : BlackBoard, new()
 	{
 		public override void Init
@@ -21,16 +21,16 @@ namespace Bezoro.StateMachines
 		}
 	}
 
-	public abstract class KinematicCharacterStateMachine
+	public abstract class BaseKCCStateMachine
 	{
 		public MonoBehaviour Owner { get; private set; }
 
 		public KinematicCharacterMotor Motor { get; private set; }
 
-		public IKinematicCharacterState LastState { get; private set; }
+		public IKCCState LastState { get; private set; }
 
-		public IKinematicCharacterState CurrentState { get; private set; } =
-			new NullKinematicCharacterState();
+		public IKCCState CurrentState { get; private set; } =
+			new NullKCCState();
 
 		public BlackBoard BlackBoard { get; protected set; }
 
@@ -139,7 +139,7 @@ namespace Bezoro.StateMachines
 				if (CheckInState(CurrentState))
 					return true;
 
-				if (!CheckIfIsSuperState(CurrentState, out var rootSuperState))
+				if (!IsSuperState(CurrentState, out var rootSuperState))
 					return false;
 
 				var parentState = rootSuperState;
@@ -151,13 +151,13 @@ namespace Bezoro.StateMachines
 					if (CheckInState(currentState))
 						return true;
 
-					if (!CheckIfIsSuperState(currentState, out var superState))
+					if (!IsSuperState(currentState, out var superState))
 						return false;
 
 					parentState = superState;
 				}
 
-				bool CheckInState(IKinematicCharacterState state)
+				bool CheckInState(IKCCState state)
 				{
 					foreach (var monoBehaviour in state.MonoBehaviourTypesToIgnoreCollisionsWith)
 						if (coll.TryGetComponent(monoBehaviour, out _))
@@ -222,7 +222,7 @@ namespace Bezoro.StateMachines
 
 		#endregion
 
-		public void SwitchCurrentState(IKinematicCharacterState stateToSwitchTo)
+		public void SwitchCurrentState(IKCCState stateToSwitchTo)
 		{
 			LastState = CurrentState;
 
@@ -231,8 +231,8 @@ namespace Bezoro.StateMachines
 			CurrentState.Enter();
 		}
 
-		public bool TryFindStateInCurrentHierarchy<TState>(out IKinematicCharacterState outState)
-		where TState : IKinematicCharacterState
+		public bool TryFindStateInCurrentHierarchy<TState>(out IKCCState outState)
+		where TState : IKCCState
 		{
 			if (CurrentState is TState)
 			{
@@ -240,7 +240,7 @@ namespace Bezoro.StateMachines
 				return true;
 			}
 
-			if (!CheckIfIsSuperState(CurrentState, out var rootSuperState))
+			if (!IsSuperState(CurrentState, out var rootSuperState))
 			{
 				outState = null;
 				return false;
@@ -258,7 +258,7 @@ namespace Bezoro.StateMachines
 					return true;
 				}
 
-				if (!CheckIfIsSuperState(currentState, out var superState))
+				if (!IsSuperState(currentState, out var superState))
 				{
 					outState = null;
 					return false;
@@ -268,8 +268,8 @@ namespace Bezoro.StateMachines
 			}
 		}
 
-		public bool TryFindStateInLastHierarchy<TState>(out IKinematicCharacterState outState)
-		where TState : IKinematicCharacterState
+		public bool TryFindStateInLastHierarchy<TState>(out IKCCState outState)
+		where TState : IKCCState
 		{
 			if (LastState is TState)
 			{
@@ -277,7 +277,7 @@ namespace Bezoro.StateMachines
 				return true;
 			}
 
-			if (!CheckIfIsSuperState(LastState, out var rootSuperState))
+			if (!IsSuperState(LastState, out var rootSuperState))
 			{
 				outState = null;
 				return false;
@@ -295,7 +295,7 @@ namespace Bezoro.StateMachines
 					return true;
 				}
 
-				if (!CheckIfIsSuperState(lastState, out var superState))
+				if (!IsSuperState(lastState, out var superState))
 				{
 					outState = null;
 					return false;
@@ -305,11 +305,11 @@ namespace Bezoro.StateMachines
 			}
 		}
 
-		public List<IKinematicCharacterState> GetCurrentHierarchy()
+		public List<IKCCState> GetCurrentHierarchy()
 		{
-			var currentStateHierarchy = new List<IKinematicCharacterState> { CurrentState };
+			var currentStateHierarchy = new List<IKCCState> { CurrentState };
 
-			if (CurrentState is not IKinematicCharacterSuperState rootSuperState)
+			if (CurrentState is not IKCCSuperState rootSuperState)
 				return currentStateHierarchy;
 
 			var parentState = rootSuperState;
@@ -320,7 +320,7 @@ namespace Bezoro.StateMachines
 
 				currentStateHierarchy.Add(currentState);
 
-				if (currentState is not IKinematicCharacterSuperState superState)
+				if (currentState is not IKCCSuperState superState)
 					return currentStateHierarchy;
 
 				parentState = superState;
@@ -328,25 +328,25 @@ namespace Bezoro.StateMachines
 		}
 
 		protected void RegisterState<TState>(out TState createdState)
-		where TState : class, IKinematicCharacterState, new()
+		where TState : class, IKCCState, new()
 		{
 			var newState = new TState();
 			newState.Init(this, null, Motor);
 			createdState = newState;
 
-			if (CurrentState is null or NullKinematicCharacterState)
+			if (CurrentState is null or NullKCCState)
 				CurrentState = newState;
 		}
 
 		protected abstract void SetUp();
 
-		private static bool CheckIfIsSuperState
+		private static bool IsSuperState
 		(
-			IKinematicCharacterState state,
-			out IKinematicCharacterSuperState outSuperState
+			IKCCState state,
+			out IKCCSuperState outSuperState
 		)
 		{
-			if (state is IKinematicCharacterSuperState superState)
+			if (state is IKCCSuperState superState)
 			{
 				outSuperState = superState;
 				return true;
