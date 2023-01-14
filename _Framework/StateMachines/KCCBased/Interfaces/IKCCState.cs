@@ -31,6 +31,8 @@ namespace Bezoro.StateMachines
 
 		public void Enter();
 
+		public void EarlyTick();
+
 		public void Tick();
 
 		public void FixedTick();

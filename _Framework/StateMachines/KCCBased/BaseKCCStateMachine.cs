@@ -1,57 +1,81 @@
 ﻿using Drawing;
+using Bezoro.Core;
 using UnityEngine;
 using UnityEngine.Assertions;
 using System.Collections.Generic;
 using KinematicCharacterController;
+using UnityEditor;
+using Debug = Sisus.Debugging.Debug;
 
 namespace Bezoro.StateMachines
 {
-	public abstract class BaseKCCStateMachine<TBlackBoard> :
-		BaseKCCStateMachine
-	where TBlackBoard : BlackBoard, new()
+	public abstract class BaseKCCStateMachine<TBlackBoard> : BaseKCCStateMachine
+	where TBlackBoard : BlackBoard
 	{
-		public override void Init
-		(
-			MonoBehaviour owner,
-			KinematicCharacterMotor motor
-		)
+		[field: SerializeField]
+		public BlackBoard BlackBoard { get; private set; }
+
+	#if UNITY_EDITOR
+		protected override void OnValidate()
 		{
-			BlackBoard = new TBlackBoard();
-			base.Init(owner, motor);
+			base.OnValidate();
+
+			if (Application.isPlaying)
+				return;
+
+			EditorApplication.delayCall += SetBlackBoard;
+
+
+			void SetBlackBoard()
+			{
+				BlackBoard ??= TryGetComponent<TBlackBoard>(out var blackBoard) ?
+								   blackBoard :
+								   gameObject.AddComponent<TBlackBoard>();
+			}
 		}
+	#endif
 	}
 
-	public abstract class BaseKCCStateMachine
+	[DisallowMultipleComponent]
+	public abstract class BaseKCCStateMachine : Tickable,
+		ICharacterController
 	{
-		public MonoBehaviour Owner { get; private set; }
-
+		[field: SerializeField]
 		public KinematicCharacterMotor Motor { get; private set; }
 
 		public IKCCState LastState { get; private set; }
 
-		public IKCCState CurrentState { get; private set; } =
-			new NullKCCState();
+		public IKCCState CurrentState { get; private set; } = new NullKCCState();
 
-		public BlackBoard BlackBoard { get; protected set; }
-
-		public virtual void Init
-		(
-			MonoBehaviour owner,
-			KinematicCharacterMotor motor
-		)
+	#if UNITY_EDITOR
+		protected virtual void OnValidate()
 		{
-			Owner = owner;
-			Motor = motor;
-			Assert.IsNotNull(Motor);
+			if (Application.isPlaying)
+				return;
 
+			EditorApplication.delayCall += SetMotor;
+
+			void SetMotor()
+			{
+				Motor ??= TryGetComponent<KinematicCharacterMotor>(out var characterMotor) ?
+							  characterMotor :
+							  gameObject.AddComponent<KinematicCharacterMotor>();
+			}
+		}
+	#endif
+
+		private void Awake()
+		{
 			SetUp();
 			Assert.IsNotNull(CurrentState);
 		}
 
-		public void Start() =>
+		private void Start() =>
 			CurrentState.Enter();
 
-		public void Tick()
+		public override void EarlyTick() { }
+
+		public override void Tick()
 		{
 			CurrentState.Tick();
 
@@ -71,11 +95,11 @@ namespace Bezoro.StateMachines
 
 					for (var i = states.Count - 1; i >= 0; i--)
 					{
-						var renderer = Owner.GetComponentInChildren<Renderer>();
-						if (renderer is null)
+						var childRenderer = GetComponentInChildren<Renderer>();
+						if (childRenderer is null)
 							return;
 
-						var bounds = renderer.bounds;
+						var bounds = childRenderer.bounds;
 
 						var positionToDrawLabel = new Vector3
 							(
@@ -86,7 +110,7 @@ namespace Bezoro.StateMachines
 
 						states.Reverse();
 
-						using (Draw.InLocalSpace(Owner.transform))
+						using (Draw.InLocalSpace(transform))
 						{
 							Draw.Label2D
 								(
@@ -107,10 +131,10 @@ namespace Bezoro.StateMachines
 			#endregion
 		}
 
-		public void FixedTick() =>
+		public override void FixedTick() =>
 			CurrentState.FixedTick();
 
-		public void LateTick() =>
+		public override void LateTick() =>
 			CurrentState.LateTick();
 
 		#region KCC Methods
@@ -327,6 +351,16 @@ namespace Bezoro.StateMachines
 			}
 		}
 
+		public TBlackBoard TryGetBlackBoard<TBlackBoard>()
+		where TBlackBoard : BlackBoard
+		{
+			if (TryGetComponent<TBlackBoard>(out var bb))
+				return bb;
+
+			Debug.LogWarning($"BlackBoard not found in {gameObject.name}", gameObject);
+			return null;
+		}
+
 		protected void RegisterState<TState>(out TState createdState)
 		where TState : class, IKCCState, new()
 		{
@@ -357,5 +391,6 @@ namespace Bezoro.StateMachines
 		}
 	}
 
-	public abstract class BlackBoard { }
+	[DisallowMultipleComponent]
+	public abstract class BlackBoard : MonoBehaviour { }
 }
