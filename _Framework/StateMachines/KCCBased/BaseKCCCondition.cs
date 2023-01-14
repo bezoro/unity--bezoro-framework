@@ -16,7 +16,7 @@ namespace Bezoro.StateMachines
 			KinematicCharacterMotor motor
 		)
 		{
-			BlackBoard = masterStateMachine.BlackBoard as TBlackBoard;
+			BlackBoard = masterStateMachine.TryGetBlackBoard<TBlackBoard>();
 			Assert.IsNotNull(BlackBoard);
 
 			base.Init(masterStateMachine, inverted, motor);
@@ -35,7 +35,7 @@ namespace Bezoro.StateMachines
 			KinematicCharacterMotor motor
 		)
 		{
-			Agent = masterStateMachine.Owner.GetComponent<TAgent>();
+			Agent = masterStateMachine.gameObject.GetComponent<TAgent>();
 			base.Init
 				(
 				 masterStateMachine,

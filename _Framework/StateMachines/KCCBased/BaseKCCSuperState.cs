@@ -19,7 +19,7 @@ namespace Bezoro.StateMachines
 			KinematicCharacterMotor motor
 		)
 		{
-			BlackBoard = stateMachine.BlackBoard as TBlackBoard;
+			BlackBoard = stateMachine.TryGetBlackBoard<TBlackBoard>();
 			Assert.IsNotNull(BlackBoard);
 
 			base.Init(stateMachine, parentState, motor);
@@ -38,12 +38,9 @@ namespace Bezoro.StateMachines
 			KinematicCharacterMotor motor
 		)
 		{
-			Agent = stateMachine.Owner.GetComponent<TAgent>();
+			Agent = stateMachine.gameObject.GetComponent<TAgent>();
 			base.Init(stateMachine, parentState, motor);
 		}
-
-		protected Coroutine StartCoroutine(IEnumerator routine) =>
-			Agent.StartCoroutine(routine);
 
 		protected TAgent Agent { get; private set; }
 	}
@@ -105,24 +102,27 @@ namespace Bezoro.StateMachines
 			CurrentState.Enter();
 		}
 
+		public void EarlyTick()
+		{
+			OnEarlyTick();
+			CurrentState.EarlyTick();
+		}
+
 		public void Tick()
 		{
 			OnTick();
-
 			CurrentState.Tick();
 		}
 
 		public void FixedTick()
 		{
 			OnFixedTick();
-
 			CurrentState.FixedTick();
 		}
 
 		public void LateTick()
 		{
 			OnLateTick();
-
 			CurrentState.LateTick();
 		}
 
@@ -296,11 +296,16 @@ namespace Bezoro.StateMachines
 			MonoBehaviourTypesToIgnoreCollisionsWith.Add(type);
 		}
 
+		protected Coroutine StartCoroutine(IEnumerator routine) =>
+			StateMachine.StartCoroutine(routine);
+
 		#region Protected Abstract Methods
 
 		protected abstract void SetUp();
 
 		protected abstract void OnEnter();
+
+		protected abstract void OnEarlyTick();
 
 		protected abstract void OnTick();
 

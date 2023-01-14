@@ -1,0 +1,20 @@
+{
+    "name": "Bezoro.StateMachines.Editor",
+    "rootNamespace": "",
+    "references": [
+        "GUID:e7b5fe1ae928b34408955f8d44bafd20",
+        "GUID:6d67c34254683f542bff65947aabed51",
+        "GUID:d4de13d108091124ab7b74b8d95ec9f6"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

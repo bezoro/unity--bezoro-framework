@@ -1,9 +1,10 @@
 ﻿using System;
 using UnityEngine;
 using System.Collections;
-using UnityEngine.Assertions;
 using System.Collections.Generic;
 using KinematicCharacterController;
+using UnityEngine.Assertions;
+using Debug = Sisus.Debugging.Debug;
 
 namespace Bezoro.StateMachines
 {
@@ -19,7 +20,7 @@ namespace Bezoro.StateMachines
 			KinematicCharacterMotor motor
 		)
 		{
-			BlackBoard = stateMachine.BlackBoard as TBlackBoard;
+			BlackBoard = stateMachine.TryGetBlackBoard<TBlackBoard>();
 			Assert.IsNotNull(BlackBoard);
 
 			base.Init(stateMachine, parentState, motor);
@@ -38,12 +39,9 @@ namespace Bezoro.StateMachines
 			KinematicCharacterMotor motor
 		)
 		{
-			Agent = stateMachine.Owner.GetComponent<TAgent>();
+			Agent = stateMachine.gameObject.GetComponent<TAgent>();
 			base.Init(stateMachine, parentState, motor);
 		}
-
-		protected Coroutine StartCoroutine(IEnumerator routine) =>
-			Agent.StartCoroutine(routine);
 
 		protected TAgent Agent { get; private set; }
 	}
@@ -91,6 +89,9 @@ namespace Bezoro.StateMachines
 			foreach (var transition in _transitions)
 				transition.BecomeRelevant();
 		}
+
+		public void EarlyTick() =>
+			OnEarlyTick();
 
 		public void Tick() =>
 			OnTick();
@@ -200,12 +201,17 @@ namespace Bezoro.StateMachines
 			var type = typeof(TMonoBehaviour);
 			MonoBehaviourTypesToIgnoreCollisionsWith.Add(type);
 		}
+		
+		protected Coroutine StartCoroutine(IEnumerator routine) =>
+			StateMachine.StartCoroutine(routine);
 
 		#region Protected Abstract Methods
 
 		protected abstract void OnInit();
 
 		protected abstract void OnEnter();
+
+		protected abstract void OnEarlyTick();
 
 		protected abstract void OnTick();
 
@@ -270,7 +276,7 @@ namespace Bezoro.StateMachines
 
 		private readonly List<KCCTransition> _transitions = new(4);
 	}
-	
+
 	public sealed class NullKCCState : IKCCState
 	{
 		public KinematicCharacterMotor Motor { get; }
@@ -289,12 +295,14 @@ namespace Bezoro.StateMachines
 
 		public void Enter() { }
 
+		public void EarlyTick() { }
+
 		public void Tick() { }
 
 		public void FixedTick() { }
 
 		public void LateTick() { }
-		
+
 		#region KCC Methods
 
 		public void UpdateRotation(ref Quaternion currentRotation, float deltaTime) { }
@@ -334,7 +342,7 @@ namespace Bezoro.StateMachines
 		) { }
 
 		public void DiscreteCollisionDetected(Collider hitCollider) { }
-		
+
 		#endregion
 
 		public void Exit() { }
