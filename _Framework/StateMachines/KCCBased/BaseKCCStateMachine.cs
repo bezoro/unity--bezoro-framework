@@ -4,36 +4,24 @@ using UnityEngine;
 using UnityEngine.Assertions;
 using System.Collections.Generic;
 using KinematicCharacterController;
-using UnityEditor;
 using Debug = Sisus.Debugging.Debug;
 
 namespace Bezoro.StateMachines
 {
-	public abstract class BaseKCCStateMachine<TBlackBoard> : BaseKCCStateMachine
+	public interface IHaveBlackBoard
+	{
+		public void SetBlackBoard(BlackBoard blackBoard);
+	}
+
+	public abstract class BaseKCCStateMachine<TBlackBoard> : BaseKCCStateMachine,
+		IHaveBlackBoard
 	where TBlackBoard : BlackBoard
 	{
 		[field: SerializeField]
-		public BlackBoard BlackBoard { get; private set; }
+		public TBlackBoard BlackBoard { get; private set; }
 
-	#if UNITY_EDITOR
-		protected override void OnValidate()
-		{
-			base.OnValidate();
-
-			if (Application.isPlaying)
-				return;
-
-			EditorApplication.delayCall += SetBlackBoard;
-
-
-			void SetBlackBoard()
-			{
-				BlackBoard ??= TryGetComponent<TBlackBoard>(out var blackBoard) ?
-								   blackBoard :
-								   gameObject.AddComponent<TBlackBoard>();
-			}
-		}
-	#endif
+		public void SetBlackBoard(BlackBoard blackBoard) =>
+			BlackBoard = blackBoard as TBlackBoard;
 	}
 
 	[DisallowMultipleComponent]
@@ -47,22 +35,8 @@ namespace Bezoro.StateMachines
 
 		public IKCCState CurrentState { get; private set; } = new NullKCCState();
 
-	#if UNITY_EDITOR
-		protected virtual void OnValidate()
-		{
-			if (Application.isPlaying)
-				return;
-
-			EditorApplication.delayCall += SetMotor;
-
-			void SetMotor()
-			{
-				Motor ??= TryGetComponent<KinematicCharacterMotor>(out var characterMotor) ?
-							  characterMotor :
-							  gameObject.AddComponent<KinematicCharacterMotor>();
-			}
-		}
-	#endif
+		public void SetMotor(KinematicCharacterMotor motor) =>
+			Motor = motor;
 
 		private void Awake()
 		{
