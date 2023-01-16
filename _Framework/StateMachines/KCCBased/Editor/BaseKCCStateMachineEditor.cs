@@ -1,5 +1,7 @@
-﻿using UnityEditor;
+﻿using System;
+using UnityEditor;
 using UnityEngine;
+using System.Reflection;
 using Bezoro.Core.Extensions;
 using UnityEngine.Assertions;
 using KinematicCharacterController;
@@ -14,16 +16,26 @@ namespace Bezoro.StateMachines
 		private KinematicCharacterMotor _motor;
 		private CapsuleCollider _capsuleCollider;
 		private BlackBoard _blackBoard;
+		private PropertyInfo _blackBoardProperty;
+		private Type _blackBoardType;
+		private MethodInfo _setBlackBoardMethod;
 
 		private void OnEnable()
 		{
 			baseKCCStateMachine = target as BaseKCCStateMachine;
 			Assert.IsNotNull(baseKCCStateMachine);
 
+			ResolveHasBlackBoard();
 			TryGetDependencies();
 			TrySetDependencies();
-
 			CreateComponentsThatWereNotFound();
+
+			void ResolveHasBlackBoard()
+			{
+				_blackBoardProperty = baseKCCStateMachine.GetType().GetProperty("BlackBoard");
+				_blackBoardType = _blackBoardProperty?.PropertyType;
+				_setBlackBoardMethod = baseKCCStateMachine.GetType().GetMethod("SetBlackBoard");
+			}
 
 			void TryGetDependencies()
 			{
@@ -31,48 +43,46 @@ namespace Bezoro.StateMachines
 
 				_capsuleCollider = baseKCCStateMachine.gameObject.GetComponent<CapsuleCollider>();
 
-				if (baseKCCStateMachine is IHaveBlackBoard)
+				if (_blackBoardProperty is not null)
 					_blackBoard = baseKCCStateMachine.gameObject.GetComponent<BlackBoard>();
 			}
 
 			void TrySetDependencies()
 			{
-				if (_motor != null)
+				if (_motor is not null)
 					baseKCCStateMachine.SetMotor(_motor);
 
-				if (_blackBoard != null)
-					if (baseKCCStateMachine is IHaveBlackBoard haveBlackBoard)
-						haveBlackBoard.SetBlackBoard(_blackBoard);
+				if (_blackBoard is not null)
+				{
+					object[] parameters = { _blackBoard };
+
+					_setBlackBoardMethod?.Invoke(baseKCCStateMachine, parameters);
+				}
 			}
 
 			void CreateComponentsThatWereNotFound()
 			{
-				if (_motor == null)
+				if (_blackBoard is null && _blackBoardProperty is not null)
+				{
+					_blackBoard =
+						baseKCCStateMachine.gameObject.AddComponent(_blackBoardType) as BlackBoard;
+
+					object[] parameters = { _blackBoard };
+
+					_setBlackBoardMethod?.Invoke(baseKCCStateMachine, parameters);
+				}
+
+				if (_motor is null)
 				{
 					_motor = baseKCCStateMachine.gameObject.AddComponent<KinematicCharacterMotor>();
 					baseKCCStateMachine.SetMotor(_motor);
-				}
-
-				if (_blackBoard == null
-				    &&
-				    baseKCCStateMachine is IHaveBlackBoard haveBlackBoard)
-				{
-					var blackBoardProperty =
-						baseKCCStateMachine.GetType().GetProperty("BlackBoard");
-
-					Assert.IsNotNull(blackBoardProperty);
-					var blackBoardType = blackBoardProperty.PropertyType;
-					_blackBoard = baseKCCStateMachine.gameObject.AddComponent
-									  (blackBoardType) as BlackBoard;
-
-					haveBlackBoard.SetBlackBoard(_blackBoard);
 				}
 			}
 		}
 
 		private void OnDisable()
 		{
-			if (target.IsNull())
+			if (target.EqualsNull())
 			{
 				DestroyImmediate(_motor);
 				DestroyImmediate(_capsuleCollider);
