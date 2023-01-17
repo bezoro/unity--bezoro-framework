@@ -8,14 +8,8 @@ using Debug = Sisus.Debugging.Debug;
 
 namespace Bezoro.StateMachines
 {
-	public interface IHaveBlackBoard
-	{
-		public void SetBlackBoard(BlackBoard blackBoard);
-	}
-
-	public abstract class BaseKCCStateMachine<TBlackBoard> : BaseKCCStateMachine,
-		IHaveBlackBoard
-	where TBlackBoard : BlackBoard
+	public abstract class BaseKCCStateMachine<TBlackBoard> : BaseKCCStateMachine
+		where TBlackBoard : BlackBoard
 	{
 		[field: SerializeField]
 		public TBlackBoard BlackBoard { get; private set; }
@@ -33,7 +27,11 @@ namespace Bezoro.StateMachines
 
 		public IKCCState LastState { get; private set; }
 
-		public IKCCState CurrentState { get; private set; } = new NullKCCState();
+		public IKCCState CurrentState
+		{
+			get => _currentState;
+			private set => _currentState = value;
+		}
 
 		public void SetMotor(KinematicCharacterMotor motor) =>
 			Motor = motor;
@@ -45,13 +43,13 @@ namespace Bezoro.StateMachines
 		}
 
 		private void Start() =>
-			CurrentState.Enter();
+			_currentState.Enter();
 
 		public override void EarlyTick() { }
 
 		public override void Tick()
 		{
-			CurrentState.Tick();
+			_currentState.Tick();
 
 			#region Debug
 
@@ -106,27 +104,27 @@ namespace Bezoro.StateMachines
 		}
 
 		public override void FixedTick() =>
-			CurrentState.FixedTick();
+			_currentState.FixedTick();
 
 		public override void LateTick() =>
-			CurrentState.LateTick();
+			_currentState.LateTick();
 
 		#region KCC Methods
 
 		public void UpdateRotation(ref Quaternion currentRotation, float deltaTime) =>
-			CurrentState.UpdateRotation(ref currentRotation, deltaTime);
+			_currentState.UpdateRotation(ref currentRotation, deltaTime);
 
 		public void UpdateVelocity(ref Vector3 currentVelocity, float deltaTime) =>
-			CurrentState.UpdateVelocity(ref currentVelocity, deltaTime);
+			_currentState.UpdateVelocity(ref currentVelocity, deltaTime);
 
 		public void BeforeCharacterUpdate(float deltaTime) =>
-			CurrentState.BeforeCharacterUpdate(deltaTime);
+			_currentState.BeforeCharacterUpdate(deltaTime);
 
 		public void PostGroundingUpdate(float deltaTime) =>
-			CurrentState.PostGroundingUpdate(deltaTime);
+			_currentState.PostGroundingUpdate(deltaTime);
 
 		public void AfterCharacterUpdate(float deltaTime) =>
-			CurrentState.AfterCharacterUpdate(deltaTime);
+			_currentState.AfterCharacterUpdate(deltaTime);
 
 		public bool IsColliderValidForCollisions(Collider coll)
 		{
@@ -173,7 +171,7 @@ namespace Bezoro.StateMachines
 			Vector3 hitPoint,
 			ref HitStabilityReport hitStabilityReport
 		) =>
-			CurrentState.GroundHit
+			_currentState.GroundHit
 				(
 				 hitCollider,
 				 hitNormal,
@@ -188,7 +186,7 @@ namespace Bezoro.StateMachines
 			Vector3 hitPoint,
 			ref HitStabilityReport hitStabilityReport
 		) =>
-			CurrentState.MovementHit
+			_currentState.MovementHit
 				(
 				 hitCollider,
 				 hitNormal,
@@ -205,7 +203,7 @@ namespace Bezoro.StateMachines
 			Quaternion atCharacterRotation,
 			ref HitStabilityReport hitStabilityReport
 		) =>
-			CurrentState.ProcessHitStabilityReport
+			_currentState.ProcessHitStabilityReport
 				(
 				 hitCollider,
 				 hitNormal,
@@ -216,29 +214,29 @@ namespace Bezoro.StateMachines
 				);
 
 		public void OnDiscreteCollisionDetected(Collider hitCollider) =>
-			CurrentState.DiscreteCollisionDetected(hitCollider);
+			_currentState.DiscreteCollisionDetected(hitCollider);
 
 		#endregion
 
 		public void SwitchCurrentState(IKCCState stateToSwitchTo)
 		{
-			LastState = CurrentState;
+			LastState = _currentState;
 
-			CurrentState.Exit();
-			CurrentState = stateToSwitchTo;
-			CurrentState.Enter();
+			_currentState.Exit();
+			_currentState = stateToSwitchTo;
+			_currentState.Enter();
 		}
 
 		public bool TryFindStateInCurrentHierarchy<TState>(out IKCCState outState)
 		where TState : IKCCState
 		{
-			if (CurrentState is TState)
+			if (_currentState is TState)
 			{
-				outState = CurrentState;
+				outState = _currentState;
 				return true;
 			}
 
-			if (!IsSuperState(CurrentState, out var rootSuperState))
+			if (!IsSuperState(_currentState, out var rootSuperState))
 			{
 				outState = null;
 				return false;
@@ -305,9 +303,9 @@ namespace Bezoro.StateMachines
 
 		public List<IKCCState> GetCurrentHierarchy()
 		{
-			var currentStateHierarchy = new List<IKCCState> { CurrentState };
+			var currentStateHierarchy = new List<IKCCState> { _currentState };
 
-			if (CurrentState is not IKCCSuperState rootSuperState)
+			if (_currentState is not IKCCSuperState rootSuperState)
 				return currentStateHierarchy;
 
 			var parentState = rootSuperState;
@@ -342,8 +340,8 @@ namespace Bezoro.StateMachines
 			newState.Init(this, null, Motor);
 			createdState = newState;
 
-			if (CurrentState is null or NullKCCState)
-				CurrentState = newState;
+			if (_currentState is null or NullKCCState)
+				_currentState = newState;
 		}
 
 		protected abstract void SetUp();
@@ -363,6 +361,8 @@ namespace Bezoro.StateMachines
 			outSuperState = null;
 			return false;
 		}
+
+		private IKCCState _currentState = new NullKCCState();
 	}
 
 	[DisallowMultipleComponent]
