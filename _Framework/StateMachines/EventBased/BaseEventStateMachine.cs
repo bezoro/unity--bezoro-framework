@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.Assertions;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -30,8 +31,11 @@ namespace Bezoro.StateMachines
 
 		protected abstract void SetUp();
 
-		private void Awake() =>
+		private void Awake()
+		{
 			SetUp();
+			Assert.IsNotNull(CurrentState);
+		}
 
 		private void Start() =>
 			_currentState.Enter();
