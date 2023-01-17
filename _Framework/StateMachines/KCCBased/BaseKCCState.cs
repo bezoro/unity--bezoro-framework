@@ -279,9 +279,9 @@ namespace Bezoro.StateMachines
 
 	public sealed class NullKCCState : IKCCState
 	{
-		public KinematicCharacterMotor Motor { get; }
+		public KinematicCharacterMotor Motor { get; } = new();
 
-		public List<Type> MonoBehaviourTypesToIgnoreCollisionsWith { get; }
+		public List<Type> MonoBehaviourTypesToIgnoreCollisionsWith { get; } = new();
 
 		public void Init
 		(
