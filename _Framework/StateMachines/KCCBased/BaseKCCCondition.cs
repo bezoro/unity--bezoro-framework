@@ -1,6 +1,6 @@
-﻿using KinematicCharacterController;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.Assertions;
+using KinematicCharacterController;
 
 namespace Bezoro.StateMachines
 {
@@ -11,15 +11,15 @@ namespace Bezoro.StateMachines
 	{
 		public override void Init
 		(
-			BaseKCCStateMachine masterStateMachine,
 			bool inverted,
+			BaseKCCStateMachine masterStateMachine,
 			KinematicCharacterMotor motor
 		)
 		{
 			BlackBoard = masterStateMachine.TryGetBlackBoard<TBlackBoard>();
 			Assert.IsNotNull(BlackBoard);
 
-			base.Init(masterStateMachine, inverted, motor);
+			base.Init(inverted, masterStateMachine, motor);
 		}
 
 		protected TBlackBoard BlackBoard { get; private set; }
@@ -30,18 +30,13 @@ namespace Bezoro.StateMachines
 	{
 		public override void Init
 		(
-			BaseKCCStateMachine masterStateMachine,
 			bool inverted,
+			BaseKCCStateMachine masterStateMachine,
 			KinematicCharacterMotor motor
 		)
 		{
 			Agent = masterStateMachine.gameObject.GetComponent<TAgent>();
-			base.Init
-				(
-				 masterStateMachine,
-				 inverted,
-				 motor
-				);
+			base.Init(inverted, masterStateMachine, motor);
 		}
 
 		protected TAgent Agent { get; private set; }
@@ -49,14 +44,14 @@ namespace Bezoro.StateMachines
 
 	public abstract class BaseKCCCondition
 	{
-		protected KinematicCharacterMotor Motor { get; private set; }
-
 		public bool Inverted { get; private set; }
+
+		protected KinematicCharacterMotor Motor { get; private set; }
 
 		public virtual void Init
 		(
-			BaseKCCStateMachine masterStateMachine,
 			bool inverted,
+			BaseKCCStateMachine masterStateMachine,
 			KinematicCharacterMotor motor
 		)
 		{
