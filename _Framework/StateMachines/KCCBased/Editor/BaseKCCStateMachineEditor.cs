@@ -6,10 +6,10 @@ using Bezoro.Core.Extensions;
 using UnityEngine.Assertions;
 using KinematicCharacterController;
 
-namespace Bezoro.StateMachines
+namespace Bezoro.StateMachines.Editor
 {
 	[CustomEditor(typeof(BaseKCCStateMachine), true)]
-	public class BaseKCCStateMachineEditor : Editor
+	public class BaseKCCStateMachineEditor : UnityEditor.Editor
 	{
 		private BaseKCCStateMachine baseKCCStateMachine;
 

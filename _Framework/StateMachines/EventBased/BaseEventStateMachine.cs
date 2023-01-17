@@ -1,8 +1,5 @@
 ﻿using UnityEngine;
 using UnityEngine.Assertions;
-#if UNITY_EDITOR
-using UnityEditor;
-#endif
 
 namespace Bezoro.StateMachines
 {
@@ -41,33 +38,5 @@ namespace Bezoro.StateMachines
 			_currentState.Enter();
 
 		private IEventState _currentState = new NullEventState();
-
-	#if UNITY_EDITOR
-		private void OnDrawGizmos()
-		{
-			if (Application.isPlaying)
-			{
-				DrawStateLabels(this);
-
-				void DrawStateLabels(IEventStateMachine stateMachine, int index = 0)
-				{
-					const float offset = 4f;
-					var labelPosition = transform.position + Vector3.up * offset;
-
-					Handles.Label
-						(
-						 labelPosition - (Vector3.up * index) * 0.75f,
-						 stateMachine.CurrentState.GetType().Name
-						);
-
-					if (stateMachine.CurrentState is IEventStateMachine FSM)
-					{
-						index++;
-						DrawStateLabels(FSM, index);
-					}
-				}
-			}
-		}
-	#endif
 	}
 }

@@ -1,5 +1,4 @@
-﻿using Drawing;
-using Bezoro.Core;
+﻿using Bezoro.Core;
 using UnityEngine;
 using UnityEngine.Assertions;
 using System.Collections.Generic;
@@ -9,7 +8,7 @@ using Debug = Sisus.Debugging.Debug;
 namespace Bezoro.StateMachines
 {
 	public abstract class BaseKCCStateMachine<TBlackBoard> : BaseKCCStateMachine
-		where TBlackBoard : BlackBoard
+	where TBlackBoard : BlackBoard
 	{
 		[field: SerializeField]
 		public TBlackBoard BlackBoard { get; private set; }
@@ -39,61 +38,8 @@ namespace Bezoro.StateMachines
 
 		public override void EarlyTick() { }
 
-		public override void Tick()
-		{
+		public override void Tick() =>
 			_currentState.Tick();
-
-			#region Debug
-
-		#if UNITY_EDITOR
-			if (Application.isPlaying)
-				DrawDebugInfo();
-
-			void DrawDebugInfo()
-			{
-				DrawStateLabels();
-
-				void DrawStateLabels()
-				{
-					var states = GetCurrentHierarchy();
-
-					for (var i = states.Count - 1; i >= 0; i--)
-					{
-						var childRenderer = GetComponentInChildren<Renderer>();
-						if (childRenderer is null)
-							return;
-
-						var bounds = childRenderer.bounds;
-
-						var positionToDrawLabel = new Vector3
-							(
-							 0f,
-							 bounds.size.y + i * 0.5f,
-							 0f
-							);
-
-						states.Reverse();
-
-						using (Draw.InLocalSpace(transform))
-						{
-							Draw.Label2D
-								(
-								 positionToDrawLabel,
-								 $"{states[i].GetType().Name}",
-								 24f,
-								 LabelAlignment.Center,
-								 Color.blue
-								);
-						}
-
-						states.Reverse();
-					}
-				}
-			}
-		#endif
-
-			#endregion
-		}
 
 		public override void FixedTick() =>
 			_currentState.FixedTick();
