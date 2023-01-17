@@ -25,17 +25,13 @@ namespace Bezoro.StateMachines
 		[field: SerializeField]
 		public KinematicCharacterMotor Motor { get; private set; }
 
-		public IKCCState LastState { get; private set; }
-
-		public IKCCState CurrentState => _currentState;
-
 		public void SetMotor(KinematicCharacterMotor motor) =>
 			Motor = motor;
 
 		private void Awake()
 		{
 			SetUp();
-			Assert.IsNotNull(CurrentState);
+			Assert.IsNotNull(_currentState);
 		}
 
 		private void Start() =>
@@ -128,10 +124,10 @@ namespace Bezoro.StateMachines
 
 			bool CheckForMonoBehaviourToIgnoreCollisionsWith()
 			{
-				if (CheckInState(CurrentState))
+				if (CheckInState(_currentState))
 					return true;
 
-				if (!IsSuperState(CurrentState, out var rootSuperState))
+				if (!IsSuperState(_currentState, out var rootSuperState))
 					return false;
 
 				var parentState = rootSuperState;
@@ -216,7 +212,7 @@ namespace Bezoro.StateMachines
 
 		public void SwitchCurrentState(IKCCState stateToSwitchTo)
 		{
-			LastState = _currentState;
+			_lastState = _currentState;
 
 			_currentState.Exit();
 			_currentState = stateToSwitchTo;
@@ -263,13 +259,13 @@ namespace Bezoro.StateMachines
 		public bool TryFindStateInLastHierarchy<TState>(out IKCCState outState)
 		where TState : IKCCState
 		{
-			if (LastState is TState)
+			if (_lastState is TState)
 			{
-				outState = LastState;
+				outState = _lastState;
 				return true;
 			}
 
-			if (!IsSuperState(LastState, out var rootSuperState))
+			if (!IsSuperState(_lastState, out var rootSuperState))
 			{
 				outState = null;
 				return false;
@@ -359,6 +355,7 @@ namespace Bezoro.StateMachines
 		}
 
 		private IKCCState _currentState = new NullKCCState();
+		private IKCCState _lastState = new NullKCCState();
 	}
 
 	[DisallowMultipleComponent]
