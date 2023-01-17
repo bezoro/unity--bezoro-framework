@@ -156,12 +156,12 @@ namespace Bezoro.StateMachines
 
 		#endregion
 
-		public void SwitchCurrentState(IKCCState stateToSwitchTo)
+		public void DoTransition(IKCCState toState)
 		{
 			_lastState = _currentState;
 
 			_currentState.Exit();
-			_currentState = stateToSwitchTo;
+			_currentState = toState;
 			_currentState.Enter();
 		}
 

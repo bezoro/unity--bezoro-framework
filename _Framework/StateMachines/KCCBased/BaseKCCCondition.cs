@@ -13,13 +13,14 @@ namespace Bezoro.StateMachines
 		(
 			bool inverted,
 			BaseKCCStateMachine masterStateMachine,
-			KinematicCharacterMotor motor
+			KinematicCharacterMotor motor,
+			KCCTransition transition
 		)
 		{
 			BlackBoard = masterStateMachine.TryGetBlackBoard<TBlackBoard>();
 			Assert.IsNotNull(BlackBoard);
 
-			base.Init(inverted, masterStateMachine, motor);
+			base.Init(inverted, masterStateMachine, motor, transition);
 		}
 
 		protected TBlackBoard BlackBoard { get; private set; }
@@ -32,11 +33,12 @@ namespace Bezoro.StateMachines
 		(
 			bool inverted,
 			BaseKCCStateMachine masterStateMachine,
-			KinematicCharacterMotor motor
+			KinematicCharacterMotor motor,
+			KCCTransition transition
 		)
 		{
 			Agent = masterStateMachine.gameObject.GetComponent<TAgent>();
-			base.Init(inverted, masterStateMachine, motor);
+			base.Init(inverted, masterStateMachine, motor, transition);
 		}
 
 		protected TAgent Agent { get; private set; }
@@ -52,19 +54,22 @@ namespace Bezoro.StateMachines
 		(
 			bool inverted,
 			BaseKCCStateMachine masterStateMachine,
-			KinematicCharacterMotor motor
+			KinematicCharacterMotor motor,
+			KCCTransition transition
 		)
 		{
 			Inverted = inverted;
 			Motor = motor;
+			_transition = transition;
 			OnInit();
 		}
 
 		public void BecomeRelevant() =>
 			OnBecomeRelevant();
 
-		public bool Check() =>
-			Inverted ? !OnCheck() : OnCheck();
+		public bool Tick() => 
+			Inverted ? !OnTick() : OnTick();
+		
 
 		public void CeaseRelevant() =>
 			OnCeaseRelevant();
@@ -73,8 +78,12 @@ namespace Bezoro.StateMachines
 
 		protected abstract void OnBecomeRelevant();
 
-		protected abstract bool OnCheck();
+		protected abstract bool OnTick();
 
 		protected abstract void OnCeaseRelevant();
+
+		private KCCTransition _transition;
+
+		private bool _state;
 	}
 }

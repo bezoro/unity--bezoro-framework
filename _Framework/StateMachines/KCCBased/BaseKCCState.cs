@@ -4,7 +4,6 @@ using System.Collections;
 using System.Collections.Generic;
 using KinematicCharacterController;
 using UnityEngine.Assertions;
-using Debug = Sisus.Debugging.Debug;
 
 namespace Bezoro.StateMachines
 {
@@ -119,7 +118,7 @@ namespace Bezoro.StateMachines
 		public void AfterCharacterUpdate(float deltaTime)
 		{
 			OnAfterCharacterUpdate(deltaTime);
-			TryTransition();
+			TickTransitions();
 		}
 
 		public void GroundHit
@@ -176,6 +175,9 @@ namespace Bezoro.StateMachines
 
 		#endregion
 
+		public void OnTransitionTrue(IKCCState toState) =>
+			ParentDoTransition(toState);
+		
 		public void Exit()
 		{
 			foreach (var transition in _transitions)
@@ -184,24 +186,13 @@ namespace Bezoro.StateMachines
 			OnExit();
 		}
 
-		public void SwitchParentCurrentState(IKCCState toState)
-		{
-			if (ParentState is null)
-			{
-				StateMachine.SwitchCurrentState(toState);
-				return;
-			}
-
-			ParentState.SwitchCurrentState(toState);
-		}
-
 		protected void AddMonoBehaviourTypeToIgnoreCollisionsWith<TMonoBehaviour>()
 		where TMonoBehaviour : MonoBehaviour
 		{
 			var type = typeof(TMonoBehaviour);
 			MonoBehaviourTypesToIgnoreCollisionsWith.Add(type);
 		}
-		
+
 		protected Coroutine StartCoroutine(IEnumerator routine) =>
 			StateMachine.StartCoroutine(routine);
 
@@ -261,17 +252,21 @@ namespace Bezoro.StateMachines
 
 		#endregion
 
-		private void TryTransition()
+		private void TickTransitions()
 		{
 			for (var i = 0; i < _transitions.Count; i++)
-			{
-				var transition = _transitions[i];
-				if (!transition.CheckConditions())
-					continue;
+				_transitions[i].Tick();
+		}
 
-				SwitchParentCurrentState(transition.ToState);
+		private void ParentDoTransition(IKCCState toState)
+		{
+			if (ParentState is null)
+			{
+				StateMachine.DoTransition(toState);
 				return;
 			}
+
+			ParentState.DoTransition(toState);
 		}
 
 		private readonly List<KCCTransition> _transitions = new(4);
@@ -347,6 +342,6 @@ namespace Bezoro.StateMachines
 
 		public void Exit() { }
 
-		public void SwitchParentCurrentState(IKCCState toState) { }
+		public void OnTransitionTrue(IKCCState toState) { }
 	}
 }
