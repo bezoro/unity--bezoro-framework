@@ -1,19 +1,10 @@
 ﻿using System;
+using UnityEngine;
 using System.Collections.Generic;
 using KinematicCharacterController;
-using UnityEngine;
 
 namespace Bezoro.StateMachines
 {
-	public interface IKCCSuperState : IKCCState
-	{
-		public IKCCState LastState { get; }
-
-		public IKCCState CurrentState { get; }
-
-		public void SwitchCurrentState(IKCCState stateToSwitchTo);
-	}
-
 	public interface IKCCState
 	{
 		public KinematicCharacterMotor Motor { get; }
@@ -83,6 +74,6 @@ namespace Bezoro.StateMachines
 
 		public void Exit();
 
-		public void SwitchParentCurrentState(IKCCState toState);
+		public void OnTransitionTrue(IKCCState toState);
 	}
 }

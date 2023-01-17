@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace Bezoro.StateMachines
 {
@@ -29,7 +30,7 @@ namespace Bezoro.StateMachines
 		where TCondition : BaseKCCCondition, new()
 		{
 			var newCondition = new TCondition();
-			newCondition.Init(inverted, StateMachine, StateMachine.Motor);
+			newCondition.Init(inverted, StateMachine, StateMachine.Motor, this);
 			_conditions.Add(newCondition);
 		}
 
@@ -43,11 +44,11 @@ namespace Bezoro.StateMachines
 		where TCondition2 : BaseKCCCondition, new()
 		{
 			var newCondition1 = new TCondition1();
-			newCondition1.Init(inverted1, StateMachine, StateMachine.Motor);
+			newCondition1.Init(inverted1, StateMachine, StateMachine.Motor, this);
 			_conditions.Add(newCondition1);
 
 			var newCondition2 = new TCondition2();
-			newCondition2.Init(inverted2, StateMachine, StateMachine.Motor);
+			newCondition2.Init(inverted2, StateMachine, StateMachine.Motor, this);
 			_conditions.Add(newCondition2);
 
 			ConditionsCriteria = conditionsCriteria;
@@ -59,29 +60,33 @@ namespace Bezoro.StateMachines
 				condition.BecomeRelevant();
 		}
 
-		public bool CheckConditions()
+		public void Tick() =>
+			TickConditions();
+
+		private void TickConditions()
 		{
-			switch (ConditionsCriteria)
+			if (ConditionsCriteria is ConditionsCriteria.AnyTrue)
+				TickAnyTrue();
+
+			else if (ConditionsCriteria is ConditionsCriteria.AllTrue)
+				TickAllTrue();
+
+			void TickAnyTrue()
 			{
-				case ConditionsCriteria.None:
-					break;
-
-				case ConditionsCriteria.AnyTrue:
-					foreach (var condition in _conditions)
-						if (condition.Check())
-							return true;
-
-					return false;
-
-				case ConditionsCriteria.AllTrue:
-					foreach (var condition in _conditions)
-						if (!condition.Check())
-							return false;
-
-					return true;
+				for (var i = 0; i < _conditions.Count; i++)
+					if (_conditions[i].Tick())
+						FromState.OnTransitionTrue(ToState);
 			}
 
-			return false;
+			void TickAllTrue()
+			{
+				var boolean = false;
+				for (var i = 0; i < _conditions.Count; i++)
+					boolean = _conditions[i].Tick();
+
+				if (boolean)
+					FromState.OnTransitionTrue(ToState);
+			}
 		}
 
 		public void CeaseRelevant()

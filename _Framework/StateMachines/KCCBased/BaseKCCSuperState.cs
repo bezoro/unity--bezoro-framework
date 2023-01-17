@@ -156,7 +156,7 @@ namespace Bezoro.StateMachines
 		{
 			OnAfterCharacterUpdate(deltaTime);
 			CurrentState.AfterCharacterUpdate(deltaTime);
-			TryTransition();
+			TickTransitions();
 		}
 
 		public void GroundHit
@@ -248,6 +248,9 @@ namespace Bezoro.StateMachines
 
 		#endregion
 
+		public void OnTransitionTrue(IKCCState toState) =>
+			ParentDoTransition(toState);
+
 		public void Exit()
 		{
 			CurrentState.Exit();
@@ -258,23 +261,12 @@ namespace Bezoro.StateMachines
 			OnExit();
 		}
 
-		public void SwitchParentCurrentState(IKCCState toState)
-		{
-			if (ParentState is null)
-			{
-				StateMachine.SwitchCurrentState(toState);
-				return;
-			}
-
-			ParentState.SwitchCurrentState(toState);
-		}
-
-		public void SwitchCurrentState(IKCCState stateToSwitchTo)
+		public void DoTransition(IKCCState toState)
 		{
 			LastState = CurrentState;
 
 			CurrentState.Exit();
-			CurrentState = stateToSwitchTo;
+			CurrentState = toState;
 			CurrentState.Enter();
 		}
 
@@ -356,17 +348,21 @@ namespace Bezoro.StateMachines
 
 		#endregion
 
-		private void TryTransition()
+		private void TickTransitions()
 		{
 			for (var i = 0; i < _transitions.Count; i++)
-			{
-				var transition = _transitions[i];
-				if (!transition.CheckConditions())
-					continue;
+				_transitions[i].Tick();
+		}
 
-				SwitchParentCurrentState(transition.ToState);
+		private void ParentDoTransition(IKCCState toState)
+		{
+			if (ParentState is null)
+			{
+				StateMachine.DoTransition(toState);
 				return;
 			}
+
+			ParentState.DoTransition(toState);
 		}
 
 		private readonly List<KCCTransition> _transitions = new(4);
