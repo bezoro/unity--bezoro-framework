@@ -31,7 +31,7 @@ namespace Bezoro.StateMachines
 		where TCondition : BaseKCCCondition, new()
 		{
 			var newCondition = new TCondition();
-			newCondition.Init(StateMachine, inverted, StateMachine.Motor);
+			newCondition.Init(inverted, StateMachine, StateMachine.Motor);
 			Conditions.Add(newCondition);
 		}
 
@@ -45,11 +45,11 @@ namespace Bezoro.StateMachines
 		where TCondition2 : BaseKCCCondition, new()
 		{
 			var newCondition1 = new TCondition1();
-			newCondition1.Init(StateMachine, inverted1, StateMachine.Motor);
+			newCondition1.Init(inverted1, StateMachine, StateMachine.Motor);
 			Conditions.Add(newCondition1);
 
 			var newCondition2 = new TCondition2();
-			newCondition2.Init(StateMachine, inverted2, StateMachine.Motor);
+			newCondition2.Init(inverted2, StateMachine, StateMachine.Motor);
 			Conditions.Add(newCondition2);
 
 			ConditionsCriteria = conditionsCriteria;
