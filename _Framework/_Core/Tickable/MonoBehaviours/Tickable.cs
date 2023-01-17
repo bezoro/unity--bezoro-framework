@@ -38,27 +38,10 @@ namespace Bezoro.Core
 			}
 		}
 
-		protected virtual void OnDisable()
-		{
+		protected virtual void OnDisable() =>
 			UnregisterFromTickableManager();
 
-			void UnregisterFromTickableManager()
-			{
-				if ((tickType & TickType.Early) != 0)
-					TickableManager.Instance.RemoveEarlyTickable(this);
-
-				if ((tickType & TickType.Normal) != 0)
-					TickableManager.Instance.RemoveTickable(this);
-
-				if ((tickType & TickType.Fixed) != 0)
-					TickableManager.Instance.RemoveFixedTickable(this);
-
-				if ((tickType & TickType.Late) != 0)
-					TickableManager.Instance.RemoveLateTickable(this);
-			}
-		}
-
-		public void AddTickTypeFlag(TickType flag)
+		public void AddToTickPool(TickType flag)
 		{
 			if ((tickType & flag) != 0)
 				return;
@@ -82,7 +65,7 @@ namespace Bezoro.Core
 			}
 		}
 
-		public void RemoveTickTypeFlag(TickType flag)
+		public void RemoveFromTickPool(TickType flag)
 		{
 			if ((tickType & flag) == 0)
 				return;
@@ -104,6 +87,21 @@ namespace Bezoro.Core
 					TickableManager.Instance.RemoveLateTickable(this);
 					break;
 			}
+		}
+
+		public void UnregisterFromTickableManager()
+		{
+			if ((tickType & TickType.Early) != 0)
+				TickableManager.Instance.RemoveEarlyTickable(this);
+
+			if ((tickType & TickType.Normal) != 0)
+				TickableManager.Instance.RemoveTickable(this);
+
+			if ((tickType & TickType.Fixed) != 0)
+				TickableManager.Instance.RemoveFixedTickable(this);
+
+			if ((tickType & TickType.Late) != 0)
+				TickableManager.Instance.RemoveLateTickable(this);
 		}
 	}
 
