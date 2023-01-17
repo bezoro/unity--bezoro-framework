@@ -8,8 +8,6 @@ namespace Bezoro.StateMachines
 
 		public IKCCState ToState { get; }
 
-		public List<BaseKCCCondition> Conditions { get; } = new(4);
-
 		public ConditionsCriteria ConditionsCriteria { get; private set; } =
 			ConditionsCriteria.AnyTrue;
 
@@ -32,7 +30,7 @@ namespace Bezoro.StateMachines
 		{
 			var newCondition = new TCondition();
 			newCondition.Init(inverted, StateMachine, StateMachine.Motor);
-			Conditions.Add(newCondition);
+			_conditions.Add(newCondition);
 		}
 
 		public void WithConditions<TCondition1, TCondition2>
@@ -46,18 +44,18 @@ namespace Bezoro.StateMachines
 		{
 			var newCondition1 = new TCondition1();
 			newCondition1.Init(inverted1, StateMachine, StateMachine.Motor);
-			Conditions.Add(newCondition1);
+			_conditions.Add(newCondition1);
 
 			var newCondition2 = new TCondition2();
 			newCondition2.Init(inverted2, StateMachine, StateMachine.Motor);
-			Conditions.Add(newCondition2);
+			_conditions.Add(newCondition2);
 
 			ConditionsCriteria = conditionsCriteria;
 		}
 
 		public void BecomeRelevant()
 		{
-			foreach (var condition in Conditions)
+			foreach (var condition in _conditions)
 				condition.BecomeRelevant();
 		}
 
@@ -69,14 +67,14 @@ namespace Bezoro.StateMachines
 					break;
 
 				case ConditionsCriteria.AnyTrue:
-					foreach (var condition in Conditions)
+					foreach (var condition in _conditions)
 						if (condition.Check())
 							return true;
 
 					return false;
 
 				case ConditionsCriteria.AllTrue:
-					foreach (var condition in Conditions)
+					foreach (var condition in _conditions)
 						if (!condition.Check())
 							return false;
 
@@ -88,8 +86,10 @@ namespace Bezoro.StateMachines
 
 		public void CeaseRelevant()
 		{
-			foreach (var condition in Conditions)
+			foreach (var condition in _conditions)
 				condition.CeaseRelevant();
 		}
+
+		private readonly List<BaseKCCCondition> _conditions = new(4);
 	}
 }
