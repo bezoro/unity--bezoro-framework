@@ -27,11 +27,7 @@ namespace Bezoro.StateMachines
 
 		public IKCCState LastState { get; private set; }
 
-		public IKCCState CurrentState
-		{
-			get => _currentState;
-			private set => _currentState = value;
-		}
+		public IKCCState CurrentState => _currentState;
 
 		public void SetMotor(KinematicCharacterMotor motor) =>
 			Motor = motor;
