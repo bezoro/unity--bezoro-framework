@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace Bezoro.StateMachines
 {
@@ -30,7 +29,7 @@ namespace Bezoro.StateMachines
 		where TCondition : BaseKCCCondition, new()
 		{
 			var newCondition = new TCondition();
-			newCondition.Init(inverted, StateMachine, StateMachine.Motor, this);
+			newCondition.Init(inverted, StateMachine);
 			_conditions.Add(newCondition);
 		}
 
@@ -44,11 +43,11 @@ namespace Bezoro.StateMachines
 		where TCondition2 : BaseKCCCondition, new()
 		{
 			var newCondition1 = new TCondition1();
-			newCondition1.Init(inverted1, StateMachine, StateMachine.Motor, this);
+			newCondition1.Init(inverted1, StateMachine);
 			_conditions.Add(newCondition1);
 
 			var newCondition2 = new TCondition2();
-			newCondition2.Init(inverted2, StateMachine, StateMachine.Motor, this);
+			newCondition2.Init(inverted2, StateMachine);
 			_conditions.Add(newCondition2);
 
 			ConditionsCriteria = conditionsCriteria;

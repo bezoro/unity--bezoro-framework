@@ -1,26 +1,18 @@
 ﻿using UnityEngine;
 using UnityEngine.Assertions;
-using KinematicCharacterController;
 
 namespace Bezoro.StateMachines
 {
-	public abstract class BaseKCCCondition<TAgent, TBlackBoard> :
-		BaseKCCCondition<TAgent>
+	public abstract class BaseKCCCondition<TAgent, TBlackBoard> : BaseKCCCondition<TAgent>
 	where TAgent : MonoBehaviour
 	where TBlackBoard : BlackBoard
 	{
-		public override void Init
-		(
-			bool inverted,
-			BaseKCCStateMachine masterStateMachine,
-			KinematicCharacterMotor motor,
-			KCCTransition transition
-		)
+		public override void Init(bool inverted, BaseKCCStateMachine masterStateMachine)
 		{
 			BlackBoard = masterStateMachine.TryGetBlackBoard<TBlackBoard>();
 			Assert.IsNotNull(BlackBoard);
 
-			base.Init(inverted, masterStateMachine, motor, transition);
+			base.Init(inverted, masterStateMachine);
 		}
 
 		protected TBlackBoard BlackBoard { get; private set; }
@@ -29,16 +21,10 @@ namespace Bezoro.StateMachines
 	public abstract class BaseKCCCondition<TAgent> : BaseKCCCondition
 	where TAgent : MonoBehaviour
 	{
-		public override void Init
-		(
-			bool inverted,
-			BaseKCCStateMachine masterStateMachine,
-			KinematicCharacterMotor motor,
-			KCCTransition transition
-		)
+		public override void Init(bool inverted, BaseKCCStateMachine masterStateMachine)
 		{
 			Agent = masterStateMachine.gameObject.GetComponent<TAgent>();
-			base.Init(inverted, masterStateMachine, motor, transition);
+			base.Init(inverted, masterStateMachine);
 		}
 
 		protected TAgent Agent { get; private set; }
@@ -46,30 +32,20 @@ namespace Bezoro.StateMachines
 
 	public abstract class BaseKCCCondition
 	{
-		public bool Inverted { get; private set; }
+		public bool Inverted => _inverted;
 
-		protected KinematicCharacterMotor Motor { get; private set; }
-
-		public virtual void Init
-		(
-			bool inverted,
-			BaseKCCStateMachine masterStateMachine,
-			KinematicCharacterMotor motor,
-			KCCTransition transition
-		)
+		public virtual void Init(bool inverted, BaseKCCStateMachine masterStateMachine)
 		{
-			Inverted = inverted;
-			Motor = motor;
-			_transition = transition;
+			_inverted = inverted;
 			OnInit();
 		}
 
 		public void BecomeRelevant() =>
 			OnBecomeRelevant();
 
-		public bool Tick() => 
-			Inverted ? !OnTick() : OnTick();
-		
+		public bool Tick() =>
+			_inverted ? !OnTick() : OnTick();
+
 
 		public void CeaseRelevant() =>
 			OnCeaseRelevant();
@@ -82,8 +58,6 @@ namespace Bezoro.StateMachines
 
 		protected abstract void OnCeaseRelevant();
 
-		private KCCTransition _transition;
-
-		private bool _state;
+		private bool _inverted;
 	}
 }
