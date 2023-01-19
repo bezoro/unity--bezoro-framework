@@ -118,6 +118,9 @@ namespace Bezoro.StateMachines
 
 		protected Coroutine StartCoroutine(IEnumerator routine) =>
 			_masterStateMachine.StartCoroutine(routine);
+		
+		protected void StopCoroutine(Coroutine routine) =>
+			_masterStateMachine.StopCoroutine(routine);
 
 		protected bool TryGetComponent<T>(out T component)
 		where T : Component
@@ -132,9 +135,8 @@ namespace Bezoro.StateMachines
 			return false;
 		}
 
-		protected void RegisterStartState<T>()
-		where T : class, ITickableState, new() =>
-			_startState = CreateState<T>();
+		protected void SetStartState(IEventState state) =>
+			_startState = state;
 
 		protected void RegisterState<T>(out T outState)
 		where T : class, ITickableState, new() =>

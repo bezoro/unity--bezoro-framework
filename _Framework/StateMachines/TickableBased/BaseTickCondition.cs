@@ -23,6 +23,9 @@ namespace Bezoro.StateMachines
 
 		protected Coroutine StartCoroutine(IEnumerator routine) =>
 			_stateMachine.StartCoroutine(routine);
+		
+		protected void StopCoroutine(Coroutine routine) =>
+			_stateMachine.StopCoroutine(routine);
 
 		protected bool TryGetComponent<T>(out T component)
 		where T : Component
