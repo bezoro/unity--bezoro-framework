@@ -12,6 +12,8 @@ namespace Bezoro.StateMachines
 
 		public IKCCState LastState => _lastState;
 
+		public KinematicCharacterMotor Motor => _motor;
+
 		public List<Type> MonoBehaviourTypesToIgnoreCollisionsWith { get; } = new(12);
 
 		public virtual void Init
