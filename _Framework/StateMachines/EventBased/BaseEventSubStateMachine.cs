@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Bezoro.StateMachines
@@ -78,6 +79,9 @@ namespace Bezoro.StateMachines
 
 		protected abstract void OnExit();
 
+		protected Coroutine StartCoroutine(IEnumerator routine) =>
+			_masterStateMachine.StartCoroutine(routine);
+		
 		protected bool TryGetComponent<T>(out T component)
 		where T : Component
 		{
