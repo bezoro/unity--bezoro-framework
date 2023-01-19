@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace Bezoro.StateMachines
 {
-	public abstract class BaseSubEventStateMachine : IEventStateMachine, IEventState
+	public abstract class BaseEventSubStateMachine : IEventStateMachine, IEventState
 	{
 		public IEventState CurrentState => _currentState;
 
