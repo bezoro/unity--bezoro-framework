@@ -9,19 +9,19 @@ namespace Bezoro.StateMachines
 		(
 			ITickableState fromState,
 			ITickableState toState,
-			BaseTickableStateMachine masterStateMachine
+			BaseTickableStateMachine stateMachine
 		)
 		{
 			_fromState = fromState;
 			_toState = toState;
-			_masterStateMachine = masterStateMachine;
+			_stateMachine = stateMachine;
 		}
 
 		public void WithCondition<T>(bool inverted = false)
 		where T : BaseTickCondition, new()
 		{
 			var newCondition = new T();
-			newCondition.Init(_masterStateMachine, inverted);
+			newCondition.Init(_stateMachine, inverted);
 			_conditions.Add(newCondition);
 		}
 
@@ -35,11 +35,11 @@ namespace Bezoro.StateMachines
 		where T1 : BaseTickCondition, new()
 		{
 			var newCondition0 = new T0();
-			newCondition0.Init(_masterStateMachine, inverted0);
+			newCondition0.Init(_stateMachine, inverted0);
 			_conditions.Add(newCondition0);
 
 			var newCondition1 = new T1();
-			newCondition1.Init(_masterStateMachine, inverted1);
+			newCondition1.Init(_stateMachine, inverted1);
 			_conditions.Add(newCondition1);
 
 			_conditionsCriteria = conditionsCriteria;
@@ -57,15 +57,15 @@ namespace Bezoro.StateMachines
 		where T2 : BaseTickCondition, new()
 		{
 			var newCondition0 = new T0();
-			newCondition0.Init(_masterStateMachine, inverted0);
+			newCondition0.Init(_stateMachine, inverted0);
 			_conditions.Add(newCondition0);
 
 			var newCondition1 = new T1();
-			newCondition1.Init(_masterStateMachine, inverted1);
+			newCondition1.Init(_stateMachine, inverted1);
 			_conditions.Add(newCondition1);
 
 			var newCondition2 = new T2();
-			newCondition2.Init(_masterStateMachine, inverted2);
+			newCondition2.Init(_stateMachine, inverted2);
 			_conditions.Add(newCondition2);
 
 			_conditionsCriteria = conditionsCriteria;
@@ -115,8 +115,8 @@ namespace Bezoro.StateMachines
 
 		private readonly ITickableState _fromState;
 		private readonly ITickableState _toState;
-		private readonly List<BaseTickCondition> _conditions = new();
-		private readonly BaseTickableStateMachine _masterStateMachine;
+		private readonly List<BaseTickCondition> _conditions = new(4);
+		private readonly BaseTickableStateMachine _stateMachine;
 	}
 
 	public enum ConditionsCriteria
