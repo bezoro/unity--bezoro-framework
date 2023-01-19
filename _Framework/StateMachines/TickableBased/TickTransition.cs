@@ -117,11 +117,4 @@ namespace Bezoro.StateMachines
 		private readonly List<BaseTickCondition> _conditions = new(4);
 		private readonly BaseTickableStateMachine _stateMachine;
 	}
-
-	public enum ConditionsCriteria
-	{
-		None = -1,
-		AnyTrue,
-		AllTrue
-	}
 }
