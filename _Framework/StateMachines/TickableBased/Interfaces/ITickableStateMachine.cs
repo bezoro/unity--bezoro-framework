@@ -2,9 +2,9 @@
 {
 	public interface ITickableStateMachine
 	{
-		ITickableState CurrentState { get; }
+		public ITickableState CurrentState { get; }
 
-		ITickableState LastState { get; }
+		public ITickableState LastState { get; }
 
 		public void DoTransition(ITickableState toState);
 	}

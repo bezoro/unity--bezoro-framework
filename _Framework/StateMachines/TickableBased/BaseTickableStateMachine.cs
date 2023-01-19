@@ -22,9 +22,9 @@ namespace Bezoro.StateMachines
 		where T : class, ITickableState, new() =>
 			_startState = CreateState<T>();
 
-		protected void RegisterState<T>(out T createdState)
+		protected void RegisterState<T>(out T outState)
 		where T : class, ITickableState, new() =>
-			createdState = CreateState<T>();
+			outState = CreateState<T>();
 
 		private void Start()
 		{
@@ -41,6 +41,18 @@ namespace Bezoro.StateMachines
 			if (DisableMethod is DisableMethod.Restart)
 				_currentState = _startState;
 		}
+
+		public override void EarlyTick() =>
+			_currentState.EarlyTick();
+
+		public override void Tick() =>
+			_currentState.Tick();
+
+		public override void FixedTick() =>
+			_currentState.FixedTick();
+
+		public override void LateTick() =>
+			_currentState.LateTick();
 
 		public void DoTransition(ITickableState toState)
 		{
@@ -124,18 +136,6 @@ namespace Bezoro.StateMachines
 			}
 		}
 
-		public override void EarlyTick() =>
-			_currentState.EarlyTick();
-
-		public override void Tick() =>
-			_currentState.Tick();
-
-		public override void FixedTick() =>
-			_currentState.FixedTick();
-
-		public override void LateTick() =>
-			_currentState.LateTick();
-
 		private T CreateState<T>()
 		where T : class, ITickableState, new()
 		{
@@ -147,16 +147,16 @@ namespace Bezoro.StateMachines
 		private static bool IsSubStateMachine
 		(
 			ITickableState state,
-			out ITickableStateMachine outStateMachine
+			out ITickableStateMachine outSubStateMachine
 		)
 		{
 			if (state is ITickableStateMachine stateMachine)
 			{
-				outStateMachine = stateMachine;
+				outSubStateMachine = stateMachine;
 				return true;
 			}
 
-			outStateMachine = null;
+			outSubStateMachine = null;
 			return false;
 		}
 
