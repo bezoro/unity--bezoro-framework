@@ -284,11 +284,7 @@ namespace Bezoro.StateMachines
 
 		protected abstract void SetUp();
 
-		private static bool IsSuperState
-		(
-			IKCCState state,
-			out IKCCSuperState outSuperState
-		)
+		private static bool IsSuperState(IKCCState state, out IKCCSuperState outSuperState)
 		{
 			if (state is IKCCSuperState superState)
 			{
