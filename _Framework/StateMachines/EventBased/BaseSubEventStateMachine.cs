@@ -36,7 +36,6 @@ namespace Bezoro.StateMachines
 			for (var i = 0; i < _transitions.Count; i++)
 				_transitions[i].BecomeRelevant();
 
-
 			_currentState.Enter();
 		}
 
