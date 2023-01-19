@@ -3,6 +3,9 @@
 	public interface IEventStateMachine
 	{
 		IEventState CurrentState { get; }
-		public void SwitchCurrentState(IEventState stateToSwitchTo);
+
+		IEventState LastState { get; }
+
+		public void DoTransition(IEventState toState);
 	}
 }
