@@ -1,42 +1,59 @@
 ﻿using Bezoro.Core;
 using UnityEngine;
-using UnityEngine.Assertions;
 using System.Collections.Generic;
 using KinematicCharacterController;
 using Debug = Sisus.Debugging.Debug;
 
 namespace Bezoro.StateMachines
 {
-	public abstract class BaseKCCStateMachine<TBlackBoard> : BaseKCCStateMachine
-	where TBlackBoard : BlackBoard
-	{
-		[field: SerializeField]
-		public TBlackBoard BlackBoard { get; private set; }
-
-		public void SetBlackBoard(BlackBoard blackBoard) =>
-			BlackBoard = blackBoard as TBlackBoard;
-	}
-
 	[DisallowMultipleComponent]
 	public abstract class BaseKCCStateMachine : Tickable,
-		ICharacterController
+		IKCCStateMachine, ICharacterController
 	{
 		[field: SerializeField]
 		public KinematicCharacterMotor Motor { get; private set; }
 
+		public IKCCState CurrentState => _currentState;
+
+		public IKCCState LastState => _lastState;
+
+		[field: SerializeField]
+		public DisableMethod DisableMethod { get; private set; } = DisableMethod.Continue;
+
 		public void SetMotor(KinematicCharacterMotor motor) =>
 			Motor = motor;
 
-		private void Awake()
-		{
+		private void Awake() =>
 			SetUp();
-			Assert.IsNotNull(_currentState);
+
+		protected abstract void SetUp();
+
+		protected void RegisterStartState<T>()
+		where T : class, IKCCState, new() =>
+			_startState = CreateState<T>();
+
+		protected void RegisterState<T>(out T outState)
+		where T : class, IKCCState, new() =>
+			outState = CreateState<T>();
+
+		private void Start()
+		{
+			_currentState = _startState;
+			_currentState.Enter();
 		}
 
-		private void Start() =>
-			_currentState.Enter();
+		protected override void OnDisable()
+		{
+			base.OnDisable();
 
-		public override void EarlyTick() { }
+			_currentState.Disable();
+
+			if (DisableMethod is DisableMethod.Restart)
+				_currentState = _startState;
+		}
+
+		public override void EarlyTick() =>
+			_currentState.EarlyTick();
 
 		public override void Tick() =>
 			_currentState.Tick();
@@ -73,7 +90,7 @@ namespace Bezoro.StateMachines
 				if (CheckInState(_currentState))
 					return true;
 
-				if (!IsSuperState(_currentState, out var rootSuperState))
+				if (!IsSubStateMachine(_currentState, out var rootSuperState))
 					return false;
 
 				var parentState = rootSuperState;
@@ -85,7 +102,7 @@ namespace Bezoro.StateMachines
 					if (CheckInState(currentState))
 						return true;
 
-					if (!IsSuperState(currentState, out var superState))
+					if (!IsSubStateMachine(currentState, out var superState))
 						return false;
 
 					parentState = superState;
@@ -159,22 +176,21 @@ namespace Bezoro.StateMachines
 		public void DoTransition(IKCCState toState)
 		{
 			_lastState = _currentState;
-
 			_currentState.Exit();
 			_currentState = toState;
 			_currentState.Enter();
 		}
 
-		public bool TryFindStateInCurrentHierarchy<TState>(out IKCCState outState)
-		where TState : IKCCState
+		public bool TryFindStateInCurrentHierarchy<T>(out IKCCState outState)
+		where T : IKCCState
 		{
-			if (_currentState is TState)
+			if (_currentState is T)
 			{
 				outState = _currentState;
 				return true;
 			}
 
-			if (!IsSuperState(_currentState, out var rootSuperState))
+			if (!IsSubStateMachine(_currentState, out var rootSuperState))
 			{
 				outState = null;
 				return false;
@@ -186,13 +202,13 @@ namespace Bezoro.StateMachines
 			{
 				var currentState = parentState.CurrentState;
 
-				if (currentState is TState)
+				if (currentState is T)
 				{
 					outState = currentState;
 					return true;
 				}
 
-				if (!IsSuperState(currentState, out var superState))
+				if (!IsSubStateMachine(currentState, out var superState))
 				{
 					outState = null;
 					return false;
@@ -202,16 +218,16 @@ namespace Bezoro.StateMachines
 			}
 		}
 
-		public bool TryFindStateInLastHierarchy<TState>(out IKCCState outState)
-		where TState : IKCCState
+		public bool TryFindStateInLastHierarchy<T>(out IKCCState outState)
+		where T : IKCCState
 		{
-			if (_lastState is TState)
+			if (_lastState is T)
 			{
 				outState = _lastState;
 				return true;
 			}
 
-			if (!IsSuperState(_lastState, out var rootSuperState))
+			if (!IsSubStateMachine(_lastState, out var rootSuperState))
 			{
 				outState = null;
 				return false;
@@ -223,13 +239,13 @@ namespace Bezoro.StateMachines
 			{
 				var lastState = parentState.LastState;
 
-				if (lastState is TState)
+				if (lastState is T)
 				{
 					outState = lastState;
 					return true;
 				}
 
-				if (!IsSuperState(lastState, out var superState))
+				if (!IsSubStateMachine(lastState, out var superState))
 				{
 					outState = null;
 					return false;
@@ -243,7 +259,7 @@ namespace Bezoro.StateMachines
 		{
 			var currentStateHierarchy = new List<IKCCState> { _currentState };
 
-			if (_currentState is not IKCCSuperState rootSuperState)
+			if (_currentState is not IKCCStateMachine rootSuperState)
 				return currentStateHierarchy;
 
 			var parentState = rootSuperState;
@@ -254,7 +270,7 @@ namespace Bezoro.StateMachines
 
 				currentStateHierarchy.Add(currentState);
 
-				if (currentState is not IKCCSuperState superState)
+				if (currentState is not IKCCStateMachine superState)
 					return currentStateHierarchy;
 
 				parentState = superState;
@@ -271,31 +287,31 @@ namespace Bezoro.StateMachines
 			return null;
 		}
 
-		protected void RegisterState<TState>(out TState createdState)
-		where TState : class, IKCCState, new()
+		private T CreateState<T>()
+		where T : class, IKCCState, new()
 		{
-			var newState = new TState();
-			newState.Init(this, null, Motor);
-			createdState = newState;
-
-			if (_currentState is null or NullKCCState)
-				_currentState = newState;
+			var newState = new T();
+			newState.Init(this, this, Motor);
+			return newState;
 		}
 
-		protected abstract void SetUp();
-
-		private static bool IsSuperState(IKCCState state, out IKCCSuperState outSuperState)
+		private static bool IsSubStateMachine
+		(
+			IKCCState state,
+			out IKCCStateMachine outSubStateMachine
+		)
 		{
-			if (state is IKCCSuperState superState)
+			if (state is IKCCStateMachine stateMachine)
 			{
-				outSuperState = superState;
+				outSubStateMachine = stateMachine;
 				return true;
 			}
 
-			outSuperState = null;
+			outSubStateMachine = null;
 			return false;
 		}
 
+		private IKCCState _startState = new NullKCCState();
 		private IKCCState _currentState = new NullKCCState();
 		private IKCCState _lastState = new NullKCCState();
 	}

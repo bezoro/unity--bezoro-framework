@@ -4,15 +4,6 @@ namespace Bezoro.StateMachines
 {
 	public class KCCTransition
 	{
-		public IKCCState FromState { get; }
-
-		public IKCCState ToState { get; }
-
-		public ConditionsCriteria ConditionsCriteria { get; private set; } =
-			ConditionsCriteria.AnyTrue;
-
-		public BaseKCCStateMachine StateMachine { get; }
-
 		public KCCTransition
 		(
 			IKCCState fromState,
@@ -20,16 +11,16 @@ namespace Bezoro.StateMachines
 			BaseKCCStateMachine stateMachine
 		)
 		{
-			FromState = fromState;
-			ToState = toState;
-			StateMachine = stateMachine;
+			_fromState = fromState;
+			_toState = toState;
+			_stateMachine = stateMachine;
 		}
 
 		public void WithCondition<TCondition>(bool inverted = false)
 		where TCondition : BaseKCCCondition, new()
 		{
 			var newCondition = new TCondition();
-			newCondition.Init(inverted, StateMachine);
+			newCondition.Init(_stateMachine, inverted);
 			_conditions.Add(newCondition);
 		}
 
@@ -43,20 +34,20 @@ namespace Bezoro.StateMachines
 		where TCondition2 : BaseKCCCondition, new()
 		{
 			var newCondition1 = new TCondition1();
-			newCondition1.Init(inverted1, StateMachine);
+			newCondition1.Init(_stateMachine, inverted1);
 			_conditions.Add(newCondition1);
 
 			var newCondition2 = new TCondition2();
-			newCondition2.Init(inverted2, StateMachine);
+			newCondition2.Init(_stateMachine, inverted2);
 			_conditions.Add(newCondition2);
 
-			ConditionsCriteria = conditionsCriteria;
+			_conditionsCriteria = conditionsCriteria;
 		}
 
 		public void BecomeRelevant()
 		{
-			foreach (var condition in _conditions)
-				condition.BecomeRelevant();
+			for (var i = 0; i < _conditions.Count; i++)
+				_conditions[i].BecomeRelevant();
 		}
 
 		public void Tick() =>
@@ -64,36 +55,40 @@ namespace Bezoro.StateMachines
 
 		private void TickConditions()
 		{
-			if (ConditionsCriteria is ConditionsCriteria.AnyTrue)
+			if (_conditionsCriteria is ConditionsCriteria.AnyTrue)
 				TickAnyTrue();
 
-			else if (ConditionsCriteria is ConditionsCriteria.AllTrue)
+			else if (_conditionsCriteria is ConditionsCriteria.AllTrue)
 				TickAllTrue();
 
 			void TickAnyTrue()
 			{
 				for (var i = 0; i < _conditions.Count; i++)
 					if (_conditions[i].Tick())
-						FromState.OnTransitionTrue(ToState);
+						_fromState.OnTransitionTrue(_toState);
 			}
 
 			void TickAllTrue()
 			{
-				var boolean = false;
 				for (var i = 0; i < _conditions.Count; i++)
-					boolean = _conditions[i].Tick();
+					if (!_conditions[i].Tick())
+						return;
 
-				if (boolean)
-					FromState.OnTransitionTrue(ToState);
+				_fromState.OnTransitionTrue(_toState);
 			}
 		}
 
 		public void CeaseRelevant()
 		{
-			foreach (var condition in _conditions)
-				condition.CeaseRelevant();
+			for (var i = 0; i < _conditions.Count; i++)
+				_conditions[i].CeaseRelevant();
 		}
 
+		private ConditionsCriteria _conditionsCriteria = ConditionsCriteria.AnyTrue;
+
+		private readonly IKCCState _fromState;
+		private readonly IKCCState _toState;
 		private readonly List<BaseKCCCondition> _conditions = new(4);
+		private readonly BaseKCCStateMachine _stateMachine;
 	}
 }
