@@ -28,9 +28,8 @@ namespace Bezoro.StateMachines
 
 		protected abstract void SetUp();
 
-		protected void RegisterStartState<T>()
-		where T : class, IKCCState, new() =>
-			_startState = CreateState<T>();
+		protected void SetStartState(IEventState state) =>
+			_startState = state;
 
 		protected void RegisterState<T>(out T outState)
 		where T : class, IKCCState, new() =>
