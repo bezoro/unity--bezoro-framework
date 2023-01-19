@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Collections;
+using UnityEngine;
 using System.Collections.Generic;
 
 namespace Bezoro.StateMachines
@@ -60,6 +61,9 @@ namespace Bezoro.StateMachines
 			OnExit();
 		}
 
+		protected Coroutine StartCoroutine(IEnumerator routine) =>
+			_masterStateMachine.StartCoroutine(routine);
+
 		protected bool TryGetComponent<T>(out T component)
 		where T : Component
 		{
@@ -72,6 +76,8 @@ namespace Bezoro.StateMachines
 			component = null;
 			return false;
 		}
+
+		#region Protected Abstract Methods
 
 		protected abstract void OnInit();
 
@@ -88,6 +94,8 @@ namespace Bezoro.StateMachines
 		protected abstract void OnDisable();
 
 		protected abstract void OnExit();
+
+		#endregion
 
 		private void TickTransitions()
 		{

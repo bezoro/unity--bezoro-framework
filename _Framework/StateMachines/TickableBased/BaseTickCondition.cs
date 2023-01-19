@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Collections;
+using UnityEngine;
 
 namespace Bezoro.StateMachines
 {
@@ -19,7 +20,10 @@ namespace Bezoro.StateMachines
 
 		public void CeaseRelevant() =>
 			OnCeaseRelevant();
-		
+
+		protected Coroutine StartCoroutine(IEnumerator routine) =>
+			_stateMachine.StartCoroutine(routine);
+
 		protected bool TryGetComponent<T>(out T component)
 		where T : Component
 		{

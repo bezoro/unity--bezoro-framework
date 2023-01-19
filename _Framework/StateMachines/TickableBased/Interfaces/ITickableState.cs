@@ -2,7 +2,11 @@
 {
 	public interface ITickableState
 	{
-		public void Init(ITickableStateMachine owningStateMachine, BaseTickableStateMachine masterStateMachine);
+		public void Init
+		(
+			ITickableStateMachine owningStateMachine,
+			BaseTickableStateMachine masterStateMachine
+		);
 
 		public void Enter();
 
@@ -14,9 +18,9 @@
 
 		public void LateTick();
 
-		public void Exit();
-
 		public void Disable();
+
+		public void Exit();
 
 		public void OnTransitionTrue(ITickableState toState);
 	}

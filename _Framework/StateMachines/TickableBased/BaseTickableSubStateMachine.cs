@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Collections;
+using UnityEngine;
 using System.Collections.Generic;
 
 namespace Bezoro.StateMachines
@@ -74,14 +75,6 @@ namespace Bezoro.StateMachines
 			TickTransitions();
 		}
 
-		public void DoTransition(ITickableState toState)
-		{
-			_lastState = _currentState;
-			_currentState.Exit();
-			_currentState = toState;
-			_currentState.Enter();
-		}
-
 		public void OnTransitionTrue(ITickableState toState) =>
 			_owningStateMachine.DoTransition(toState);
 
@@ -95,6 +88,16 @@ namespace Bezoro.StateMachines
 			OnExit();
 		}
 
+		public void DoTransition(ITickableState toState)
+		{
+			_lastState = _currentState;
+			_currentState.Exit();
+			_currentState = toState;
+			_currentState.Enter();
+		}
+
+		#region Protected Abstract Methods
+		
 		protected abstract void SetUp();
 
 		protected abstract void OnEnter();
@@ -110,6 +113,11 @@ namespace Bezoro.StateMachines
 		protected abstract void OnDisable();
 
 		protected abstract void OnExit();
+		
+		#endregion
+
+		protected Coroutine StartCoroutine(IEnumerator routine) =>
+			_masterStateMachine.StartCoroutine(routine);
 
 		protected bool TryGetComponent<T>(out T component)
 		where T : Component
@@ -152,6 +160,6 @@ namespace Bezoro.StateMachines
 		private ITickableStateMachine _owningStateMachine;
 		private BaseTickableStateMachine _masterStateMachine;
 
-		private readonly List<TickTransition> _transitions = new();
+		private readonly List<TickTransition> _transitions = new(4);
 	}
 }
