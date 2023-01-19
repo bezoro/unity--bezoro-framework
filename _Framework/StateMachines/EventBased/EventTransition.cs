@@ -8,19 +8,19 @@ namespace Bezoro.StateMachines
 		(
 			IEventState fromState,
 			IEventState toState,
-			BaseEventStateMachine masterStateMachine
+			BaseEventStateMachine stateMachine
 		)
 		{
 			_fromState = fromState;
 			_toState = toState;
-			_masterStateMachine = masterStateMachine;
+			_stateMachine = stateMachine;
 		}
 
 		public void WithCondition<T>()
 		where T : BaseEventCondition, new()
 		{
 			var newCondition = new T();
-			newCondition.Init(this, _masterStateMachine);
+			newCondition.Init(this, _stateMachine);
 			_conditions.Add(newCondition);
 		}
 
@@ -29,11 +29,11 @@ namespace Bezoro.StateMachines
 		where T1 : BaseEventCondition, new()
 		{
 			var newCondition0 = new T0();
-			newCondition0.Init(this, _masterStateMachine);
+			newCondition0.Init(this, _stateMachine);
 			_conditions.Add(newCondition0);
 
 			var newCondition1 = new T1();
-			newCondition1.Init(this, _masterStateMachine);
+			newCondition1.Init(this, _stateMachine);
 			_conditions.Add(newCondition1);
 		}
 
@@ -43,15 +43,15 @@ namespace Bezoro.StateMachines
 		where T2 : BaseEventCondition, new()
 		{
 			var newCondition0 = new T0();
-			newCondition0.Init(this, _masterStateMachine);
+			newCondition0.Init(this, _stateMachine);
 			_conditions.Add(newCondition0);
 
 			var newCondition1 = new T1();
-			newCondition1.Init(this, _masterStateMachine);
+			newCondition1.Init(this, _stateMachine);
 			_conditions.Add(newCondition1);
 
 			var newCondition2 = new T2();
-			newCondition2.Init(this, _masterStateMachine);
+			newCondition2.Init(this, _stateMachine);
 			_conditions.Add(newCondition2);
 		}
 
@@ -72,7 +72,7 @@ namespace Bezoro.StateMachines
 
 		private readonly IEventState _fromState;
 		private readonly IEventState _toState;
-		private readonly BaseEventStateMachine _masterStateMachine;
+		private readonly BaseEventStateMachine _stateMachine;
 		private readonly List<BaseEventCondition> _conditions = new();
 	}
 }
