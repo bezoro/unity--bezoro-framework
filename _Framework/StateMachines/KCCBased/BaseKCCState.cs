@@ -8,7 +8,7 @@ namespace Bezoro.StateMachines
 {
 	public abstract class BaseKCCState : IKCCState
 	{
-		protected KinematicCharacterMotor Motor { get; private set; }
+		public KinematicCharacterMotor Motor => _motor;
 
 		public List<Type> MonoBehaviourTypesToIgnoreCollisionsWith { get; } = new(12);
 
@@ -21,7 +21,7 @@ namespace Bezoro.StateMachines
 		{
 			_masterStateMachine = masterStateMachine;
 			_owningStateMachine = owningStateMachine;
-			Motor = motor;
+			_motor = motor;
 			OnInit();
 		}
 
@@ -149,7 +149,7 @@ namespace Bezoro.StateMachines
 
 		protected Coroutine StartCoroutine(IEnumerator routine) =>
 			_masterStateMachine.StartCoroutine(routine);
-		
+
 		protected bool TryGetComponent<T>(out T component)
 		where T : Component
 		{
@@ -229,6 +229,7 @@ namespace Bezoro.StateMachines
 
 		private IKCCStateMachine _owningStateMachine;
 		private BaseKCCStateMachine _masterStateMachine;
+		private KinematicCharacterMotor _motor;
 
 		private readonly List<KCCTransition> _transitions = new(4);
 	}
