@@ -16,12 +16,43 @@ namespace Bezoro.StateMachines
 			_masterStateMachine = masterStateMachine;
 		}
 
-		public void WithCondition<TCondition>()
-		where TCondition : BaseEventCondition, new()
+		public void WithCondition<T>()
+		where T : BaseEventCondition, new()
 		{
-			var newCondition = new TCondition();
+			var newCondition = new T();
 			newCondition.Init(this, _masterStateMachine);
 			_conditions.Add(newCondition);
+		}
+
+		public void WithConditions<T0, T1>()
+		where T0 : BaseEventCondition, new()
+		where T1 : BaseEventCondition, new()
+		{
+			var newCondition0 = new T0();
+			newCondition0.Init(this, _masterStateMachine);
+			_conditions.Add(newCondition0);
+
+			var newCondition1 = new T1();
+			newCondition1.Init(this, _masterStateMachine);
+			_conditions.Add(newCondition1);
+		}
+
+		public void WithConditions<T0, T1, T2>()
+		where T0 : BaseEventCondition, new()
+		where T1 : BaseEventCondition, new()
+		where T2 : BaseEventCondition, new()
+		{
+			var newCondition0 = new T0();
+			newCondition0.Init(this, _masterStateMachine);
+			_conditions.Add(newCondition0);
+
+			var newCondition1 = new T1();
+			newCondition1.Init(this, _masterStateMachine);
+			_conditions.Add(newCondition1);
+
+			var newCondition2 = new T2();
+			newCondition2.Init(this, _masterStateMachine);
+			_conditions.Add(newCondition2);
 		}
 
 		public void BecomeRelevant()
