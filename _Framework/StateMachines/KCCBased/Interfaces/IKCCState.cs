@@ -7,18 +7,14 @@ namespace Bezoro.StateMachines
 {
 	public interface IKCCState
 	{
-		public KinematicCharacterMotor Motor { get; }
-
-		public List<Type> MonoBehaviourTypesToIgnoreCollisionsWith { get; }
-
 		public void Init
 		(
-			BaseKCCStateMachine stateMachine,
-			IKCCSuperState parentState,
+			BaseKCCStateMachine masterStateMachine,
+			IKCCStateMachine owningStateMachine,
 			KinematicCharacterMotor motor
 		);
 
-		public KCCTransition TransitionsTo(IKCCState state);
+		public List<Type> MonoBehaviourTypesToIgnoreCollisionsWith { get; }
 
 		public void Enter();
 
@@ -71,6 +67,8 @@ namespace Bezoro.StateMachines
 		public void DiscreteCollisionDetected(Collider hitCollider);
 
 		#endregion
+
+		public void Disable();
 
 		public void Exit();
 
