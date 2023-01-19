@@ -22,7 +22,7 @@ namespace Bezoro.StateMachines
 			_startState = CreateState<T>();
 
 		protected void RegisterState<T>(out T createdState)
-		where T : BaseEventState, new() =>
+		where T : class, IEventState, new() =>
 			createdState = CreateState<T>();
 
 		private void Start()
