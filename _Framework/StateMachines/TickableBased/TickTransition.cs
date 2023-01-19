@@ -82,26 +82,26 @@ namespace Bezoro.StateMachines
 
 		private void TickConditions()
 		{
-			switch (_conditionsCriteria)
+			if (_conditionsCriteria is ConditionsCriteria.AnyTrue)
+				TickAnyTrue();
+
+			else if (_conditionsCriteria is ConditionsCriteria.AllTrue)
+				TickAllTrue();
+
+			void TickAnyTrue()
 			{
-				case ConditionsCriteria.AnyTrue:
-				{
-					for (var i = 0; i < _conditions.Count; i++)
-						if (_conditions[i].Tick())
-							_fromState.OnTransitionTrue(_toState);
+				for (var i = 0; i < _conditions.Count; i++)
+					if (_conditions[i].Tick())
+						_fromState.OnTransitionTrue(_toState);
+			}
 
-					return;
-				}
-				case ConditionsCriteria.AllTrue:
-				{
-					for (var i = 0; i < _conditions.Count; i++)
-						if (!_conditions[i].Tick())
-							return;
+			void TickAllTrue()
+			{
+				for (var i = 0; i < _conditions.Count; i++)
+					if (!_conditions[i].Tick())
+						return;
 
-					_fromState.OnTransitionTrue(_toState);
-					return;
-				}
-				default: return;
+				_fromState.OnTransitionTrue(_toState);
 			}
 		}
 
