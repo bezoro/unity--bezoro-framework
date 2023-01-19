@@ -149,17 +149,4 @@ namespace Bezoro.StateMachines
 		private IEventState _currentState = new NullEventState();
 		private IEventState _lastState = new NullEventState();
 	}
-
-	[Tooltip
-		(
-			"What to do when Disabling the State Machine." + "/n" +
-			"Restart = Restart as if it just started for the first time." +
-			"Continue = Continue from where it was."
-		)]
-	public enum DisableMethod
-	{
-		None = 0,
-		Restart = 1,
-		Continue = 2
-	}
 }
