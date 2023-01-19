@@ -2,31 +2,12 @@
 
 namespace Bezoro.StateMachines
 {
-	public abstract class BaseEventCondition<TAgent> : BaseEventCondition
-	where TAgent : MonoBehaviour
-	{
-		public override void Init
-		(
-			EventTransition owningTransition,
-			BaseEventStateMachine masterStateMachine
-		)
-		{
-			Agent = masterStateMachine.GetComponent<TAgent>();
-			base.Init(owningTransition, masterStateMachine);
-		}
-
-		protected TAgent Agent { get; private set; }
-	}
-
 	public abstract class BaseEventCondition
 	{
-		public virtual void Init
-		(
-			EventTransition owningTransition,
-			BaseEventStateMachine masterStateMachine
-		)
+		public virtual void Init(EventTransition transition, BaseEventStateMachine stateMachine)
 		{
-			_owningTransition = owningTransition;
+			_transition = transition;
+			_stateMachine = stateMachine;
 			OnInit();
 		}
 
@@ -34,10 +15,23 @@ namespace Bezoro.StateMachines
 			OnBecomeRelevant();
 
 		protected void Raise() =>
-			_owningTransition.OnConditionRaised();
+			_transition.OnConditionRaised();
 
 		public void CeaseRelevant() =>
 			OnCeaseRelevant();
+
+		protected bool TryGetComponent<T>(out T component)
+		where T : Component
+		{
+			if (_stateMachine.TryGetComponent<T>(out var c))
+			{
+				component = c;
+				return true;
+			}
+
+			component = null;
+			return false;
+		}
 
 		protected abstract void OnInit();
 
@@ -45,7 +39,7 @@ namespace Bezoro.StateMachines
 
 		protected abstract void OnCeaseRelevant();
 
-		private EventTransition _owningTransition;
-		private BaseEventStateMachine _masterStateMachine;
+		private EventTransition _transition;
+		private BaseEventStateMachine _stateMachine;
 	}
 }
