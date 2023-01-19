@@ -310,7 +310,7 @@ namespace Bezoro.StateMachines
 			return false;
 		}
 
-		protected void SetStartState(IEventState state) =>
+		protected void SetStartState(IKCCState state) =>
 			_startState = state;
 
 		protected void RegisterState<T>(out T outState)
