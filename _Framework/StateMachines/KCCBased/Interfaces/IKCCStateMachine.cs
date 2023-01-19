@@ -1,10 +1,10 @@
 ﻿namespace Bezoro.StateMachines
 {
-	public interface IKCCSuperState : IKCCState
+	public interface IKCCStateMachine
 	{
-		public IKCCState LastState { get; }
-
 		public IKCCState CurrentState { get; }
+
+		public IKCCState LastState { get; }
 
 		public void DoTransition(IKCCState toState);
 	}
