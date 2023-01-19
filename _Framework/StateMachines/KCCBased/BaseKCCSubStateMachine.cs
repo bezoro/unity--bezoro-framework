@@ -1,129 +1,83 @@
 ﻿using System;
+using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using KinematicCharacterController;
-using UnityEngine;
-using UnityEngine.Assertions;
 
 namespace Bezoro.StateMachines
 {
-	public abstract class BaseKCCSuperState<TAgent, TBlackBoard> :
-		BaseKCCSuperState<TAgent>
-	where TAgent : MonoBehaviour
-	where TBlackBoard : BlackBoard
+	public abstract class BaseKCCSubStateMachine : IKCCStateMachine, IKCCState
 	{
-		public override void Init
-		(
-			BaseKCCStateMachine stateMachine,
-			IKCCSuperState parentState,
-			KinematicCharacterMotor motor
-		)
-		{
-			BlackBoard = stateMachine.TryGetBlackBoard<TBlackBoard>();
-			Assert.IsNotNull(BlackBoard);
+		public IKCCState CurrentState => _currentState;
 
-			base.Init(stateMachine, parentState, motor);
-		}
-
-		protected TBlackBoard BlackBoard { get; private set; }
-	}
-
-	public abstract class BaseKCCSuperState<TAgent> : BaseKCCSuperState
-	where TAgent : MonoBehaviour
-	{
-		public override void Init
-		(
-			BaseKCCStateMachine stateMachine,
-			IKCCSuperState parentState,
-			KinematicCharacterMotor motor
-		)
-		{
-			Agent = stateMachine.gameObject.GetComponent<TAgent>();
-			base.Init(stateMachine, parentState, motor);
-		}
-
-		protected TAgent Agent { get; private set; }
-	}
-
-	public abstract class BaseKCCSuperState : IKCCSuperState
-	{
-		public IKCCState StartingState { get; private set; }
-
-		public IKCCState LastState { get; private set; }
-
-		public IKCCState CurrentState { get; private set; }
-
-		public KinematicCharacterMotor Motor { get; private set; }
-
-		public BaseKCCStateMachine StateMachine { get; private set; }
-
-		public IKCCSuperState ParentState { get; private set; }
+		public IKCCState LastState => _lastState;
 
 		public List<Type> MonoBehaviourTypesToIgnoreCollisionsWith { get; } = new(12);
 
 		public virtual void Init
 		(
-			BaseKCCStateMachine stateMachine,
-			IKCCSuperState parentState,
+			BaseKCCStateMachine masterStateMachine,
+			IKCCStateMachine owningStateMachine,
 			KinematicCharacterMotor motor
 		)
 		{
-			StateMachine = stateMachine;
-			ParentState = parentState;
-			Motor = motor;
+			_masterStateMachine = masterStateMachine;
+			_owningStateMachine = owningStateMachine;
+			_motor = motor;
 			SetUp();
-
-			Assert.IsNotNull(StartingState);
-			Assert.IsNotNull(CurrentState);
 		}
 
 		public KCCTransition TransitionsTo(IKCCState state)
 		{
-			var transition = new KCCTransition
-				(
-				 this,
-				 state,
-				 StateMachine
-				);
-
+			var transition = new KCCTransition(this, state, _masterStateMachine);
 			_transitions.Add(transition);
 			return transition;
 		}
 
 		public void Enter()
 		{
-			CurrentState = StartingState;
+			_currentState = _startState;
 
 			OnEnter();
 
-			foreach (var transition in _transitions)
-				transition.BecomeRelevant();
+			for (var i = 0; i < _transitions.Count; i++)
+				_transitions[i].BecomeRelevant();
 
-			CurrentState.Enter();
+			_currentState.Enter();
+		}
+
+		public void Disable()
+		{
+			OnDisable();
+
+			_currentState.Disable();
+
+			if (_masterStateMachine.DisableMethod is DisableMethod.Restart)
+				_currentState = _startState;
 		}
 
 		public void EarlyTick()
 		{
 			OnEarlyTick();
-			CurrentState.EarlyTick();
+			_currentState.EarlyTick();
 		}
 
 		public void Tick()
 		{
 			OnTick();
-			CurrentState.Tick();
+			_currentState.Tick();
 		}
 
 		public void FixedTick()
 		{
 			OnFixedTick();
-			CurrentState.FixedTick();
+			_currentState.FixedTick();
 		}
 
 		public void LateTick()
 		{
 			OnLateTick();
-			CurrentState.LateTick();
+			_currentState.LateTick();
 		}
 
 		#region KCC Methods
@@ -131,31 +85,31 @@ namespace Bezoro.StateMachines
 		public void UpdateRotation(ref Quaternion currentRotation, float deltaTime)
 		{
 			OnUpdateRotation(ref currentRotation, deltaTime);
-			CurrentState.UpdateRotation(ref currentRotation, deltaTime);
+			_currentState.UpdateRotation(ref currentRotation, deltaTime);
 		}
 
 		public void UpdateVelocity(ref Vector3 currentVelocity, float deltaTime)
 		{
 			OnUpdateVelocity(ref currentVelocity, deltaTime);
-			CurrentState.UpdateVelocity(ref currentVelocity, deltaTime);
+			_currentState.UpdateVelocity(ref currentVelocity, deltaTime);
 		}
 
 		public void BeforeCharacterUpdate(float deltaTime)
 		{
 			OnBeforeCharacterUpdate(deltaTime);
-			CurrentState.BeforeCharacterUpdate(deltaTime);
+			_currentState.BeforeCharacterUpdate(deltaTime);
 		}
 
 		public void PostGroundingUpdate(float deltaTime)
 		{
 			OnPostGroundingUpdate(deltaTime);
-			CurrentState.PostGroundingUpdate(deltaTime);
+			_currentState.PostGroundingUpdate(deltaTime);
 		}
 
 		public void AfterCharacterUpdate(float deltaTime)
 		{
 			OnAfterCharacterUpdate(deltaTime);
-			CurrentState.AfterCharacterUpdate(deltaTime);
+			_currentState.AfterCharacterUpdate(deltaTime);
 			TickTransitions();
 		}
 
@@ -175,7 +129,7 @@ namespace Bezoro.StateMachines
 				 ref hitStabilityReport
 				);
 
-			CurrentState.GroundHit
+			_currentState.GroundHit
 				(
 				 hitCollider,
 				 hitNormal,
@@ -200,7 +154,7 @@ namespace Bezoro.StateMachines
 				 ref hitStabilityReport
 				);
 
-			CurrentState.MovementHit
+			_currentState.MovementHit
 				(
 				 hitCollider,
 				 hitNormal,
@@ -229,7 +183,7 @@ namespace Bezoro.StateMachines
 				 ref hitStabilityReport
 				);
 
-			CurrentState.ProcessHitStabilityReport
+			_currentState.ProcessHitStabilityReport
 				(
 				 hitCollider,
 				 hitNormal,
@@ -243,53 +197,31 @@ namespace Bezoro.StateMachines
 		public void DiscreteCollisionDetected(Collider hitCollider)
 		{
 			OnDiscreteCollisionDetected(hitCollider);
-			CurrentState.DiscreteCollisionDetected(hitCollider);
+			_currentState.DiscreteCollisionDetected(hitCollider);
 		}
 
 		#endregion
 
 		public void OnTransitionTrue(IKCCState toState) =>
-			ParentDoTransition(toState);
+			_owningStateMachine.DoTransition(toState);
 
 		public void Exit()
 		{
-			CurrentState.Exit();
+			_currentState.Exit();
 
-			foreach (var transition in _transitions)
-				transition.CeaseRelevant();
+			for (var i = 0; i < _transitions.Count; i++)
+				_transitions[i].CeaseRelevant();
 
 			OnExit();
 		}
 
 		public void DoTransition(IKCCState toState)
 		{
-			LastState = CurrentState;
-
-			CurrentState.Exit();
-			CurrentState = toState;
-			CurrentState.Enter();
+			_lastState = _currentState;
+			_currentState.Exit();
+			_currentState = toState;
+			_currentState.Enter();
 		}
-
-		protected void RegisterState<TState>(out TState createdState)
-		where TState : class, IKCCState, new()
-		{
-			var newState = new TState();
-			newState.Init(StateMachine, this, Motor);
-			createdState = newState;
-
-			StartingState ??= newState;
-			CurrentState ??= StartingState;
-		}
-
-		protected void AddMonoBehaviourTypeToIgnoreCollisionsWith<TMonoBehaviour>()
-		where TMonoBehaviour : MonoBehaviour
-		{
-			var type = typeof(TMonoBehaviour);
-			MonoBehaviourTypesToIgnoreCollisionsWith.Add(type);
-		}
-
-		protected Coroutine StartCoroutine(IEnumerator routine) =>
-			StateMachine.StartCoroutine(routine);
 
 		#region Protected Abstract Methods
 
@@ -344,9 +276,50 @@ namespace Bezoro.StateMachines
 
 		protected abstract void OnDiscreteCollisionDetected(Collider hitCollider);
 
+		protected abstract void OnDisable();
+
 		protected abstract void OnExit();
 
 		#endregion
+
+		protected void AddMonoBehaviourTypeToIgnoreCollisionsWith<TMonoBehaviour>()
+		where TMonoBehaviour : MonoBehaviour
+		{
+			var type = typeof(TMonoBehaviour);
+			MonoBehaviourTypesToIgnoreCollisionsWith.Add(type);
+		}
+
+		protected Coroutine StartCoroutine(IEnumerator routine) =>
+			_masterStateMachine.StartCoroutine(routine);
+
+		protected bool TryGetComponent<T>(out T component)
+		where T : Component
+		{
+			if (_masterStateMachine.TryGetComponent<T>(out var c))
+			{
+				component = c;
+				return true;
+			}
+
+			component = null;
+			return false;
+		}
+
+		protected void RegisterStartState<T>()
+		where T : class, IKCCState, new() =>
+			_startState = CreateState<T>();
+
+		protected void RegisterState<T>(out T outState)
+		where T : class, IKCCState, new() =>
+			outState = CreateState<T>();
+
+		private T CreateState<T>()
+		where T : class, IKCCState, new()
+		{
+			var newState = new T();
+			newState.Init(_masterStateMachine, this, _motor);
+			return newState;
+		}
 
 		private void TickTransitions()
 		{
@@ -354,16 +327,12 @@ namespace Bezoro.StateMachines
 				_transitions[i].Tick();
 		}
 
-		private void ParentDoTransition(IKCCState toState)
-		{
-			if (ParentState is null)
-			{
-				StateMachine.DoTransition(toState);
-				return;
-			}
-
-			ParentState.DoTransition(toState);
-		}
+		private IKCCState _startState = new NullKCCState();
+		private IKCCState _currentState = new NullKCCState();
+		private IKCCState _lastState = new NullKCCState();
+		private IKCCStateMachine _owningStateMachine;
+		private BaseKCCStateMachine _masterStateMachine;
+		private KinematicCharacterMotor _motor;
 
 		private readonly List<KCCTransition> _transitions = new(4);
 	}
