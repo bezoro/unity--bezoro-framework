@@ -2,7 +2,6 @@
 using UnityEngine;
 using System.Collections.Generic;
 using KinematicCharacterController;
-using Debug = Sisus.Debugging.Debug;
 
 namespace Bezoro.StateMachines
 {
