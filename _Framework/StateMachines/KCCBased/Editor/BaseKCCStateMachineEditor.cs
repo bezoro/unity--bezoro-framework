@@ -5,11 +5,12 @@ using System.Reflection;
 using Bezoro.Core.Extensions;
 using UnityEngine.Assertions;
 using KinematicCharacterController;
+using Sirenix.OdinInspector.Editor;
 
 namespace Bezoro.StateMachines.Editor
 {
 	[CustomEditor(typeof(BaseKCCStateMachine), true)]
-	public class BaseKCCStateMachineEditor : UnityEditor.Editor
+	public class BaseKCCStateMachineEditor : OdinEditor
 	{
 		private BaseKCCStateMachine baseKCCStateMachine;
 
@@ -20,8 +21,10 @@ namespace Bezoro.StateMachines.Editor
 		private Type _blackBoardType;
 		private MethodInfo _setBlackBoardMethod;
 
-		private void OnEnable()
+		protected override void OnEnable()
 		{
+			base.OnEnable();
+
 			baseKCCStateMachine = target as BaseKCCStateMachine;
 			Assert.IsNotNull(baseKCCStateMachine);
 
@@ -80,8 +83,10 @@ namespace Bezoro.StateMachines.Editor
 			}
 		}
 
-		private void OnDisable()
+		protected override void OnDisable()
 		{
+			base.OnDisable();
+
 			if (target.EqualsNull())
 			{
 				DestroyImmediate(_motor);
