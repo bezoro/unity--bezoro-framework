@@ -276,16 +276,6 @@ namespace Bezoro.StateMachines
 			}
 		}
 
-		public TBlackBoard TryGetBlackBoard<TBlackBoard>()
-		where TBlackBoard : BlackBoard
-		{
-			if (TryGetComponent<TBlackBoard>(out var bb))
-				return bb;
-
-			Debug.LogWarning($"BlackBoard not found in {gameObject.name}", gameObject);
-			return null;
-		}
-
 		private T CreateState<T>()
 		where T : class, IKCCState, new()
 		{
@@ -314,7 +304,4 @@ namespace Bezoro.StateMachines
 		private IKCCState _currentState = new NullKCCState();
 		private IKCCState _lastState = new NullKCCState();
 	}
-
-	[DisallowMultipleComponent]
-	public abstract class BlackBoard : MonoBehaviour { }
 }
