@@ -7,8 +7,8 @@ namespace Bezoro.Core
 	[SelectionBase]
 	public abstract class Tickable : MonoBehaviour
 	{
-		[SerializeField]
-		private TickType tickType = TickType.Normal;
+		[field: SerializeField]
+		public TickType TickType { get; protected set; } = TickType.Normal;
 
 		public abstract void EarlyTick();
 
@@ -24,16 +24,16 @@ namespace Bezoro.Core
 
 			void RegisterWithTickableManager()
 			{
-				if ((tickType & TickType.Early) != 0)
+				if ((TickType & TickType.Early) != 0)
 					TickableManager.Instance.AddUniqueEarlyTickable(this);
 
-				if ((tickType & TickType.Normal) != 0)
+				if ((TickType & TickType.Normal) != 0)
 					TickableManager.Instance.AddUniqueTickable(this);
 
-				if ((tickType & TickType.Fixed) != 0)
+				if ((TickType & TickType.Fixed) != 0)
 					TickableManager.Instance.AddUniqueFixedTickable(this);
 
-				if ((tickType & TickType.Late) != 0)
+				if ((TickType & TickType.Late) != 0)
 					TickableManager.Instance.AddUniqueLateTickable(this);
 			}
 		}
@@ -43,10 +43,10 @@ namespace Bezoro.Core
 
 		public void AddToTickPool(TickType flag)
 		{
-			if ((tickType & flag) != 0)
+			if ((TickType & flag) != 0)
 				return;
 
-			tickType |= flag;
+			TickType |= flag;
 
 			switch (flag)
 			{
@@ -67,10 +67,10 @@ namespace Bezoro.Core
 
 		public void RemoveFromTickPool(TickType flag)
 		{
-			if ((tickType & flag) == 0)
+			if ((TickType & flag) == 0)
 				return;
 
-			tickType &= ~flag;
+			TickType &= ~flag;
 
 			switch (flag)
 			{
@@ -91,16 +91,16 @@ namespace Bezoro.Core
 
 		public void UnregisterFromTickableManager()
 		{
-			if ((tickType & TickType.Early) != 0)
+			if ((TickType & TickType.Early) != 0)
 				TickableManager.Instance.RemoveEarlyTickable(this);
 
-			if ((tickType & TickType.Normal) != 0)
+			if ((TickType & TickType.Normal) != 0)
 				TickableManager.Instance.RemoveTickable(this);
 
-			if ((tickType & TickType.Fixed) != 0)
+			if ((TickType & TickType.Fixed) != 0)
 				TickableManager.Instance.RemoveFixedTickable(this);
 
-			if ((tickType & TickType.Late) != 0)
+			if ((TickType & TickType.Late) != 0)
 				TickableManager.Instance.RemoveLateTickable(this);
 		}
 	}
