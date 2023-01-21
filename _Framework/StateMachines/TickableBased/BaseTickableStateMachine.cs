@@ -3,6 +3,7 @@ using UnityEngine;
 
 namespace Bezoro.StateMachines
 {
+	[DisallowMultipleComponent]
 	public abstract class BaseTickableStateMachine : Tickable,
 		ITickableStateMachine
 	{
