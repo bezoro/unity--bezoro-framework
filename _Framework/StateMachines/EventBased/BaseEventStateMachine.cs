@@ -2,6 +2,7 @@
 
 namespace Bezoro.StateMachines
 {
+	[DisallowMultipleComponent]
 	public abstract class BaseEventStateMachine : MonoBehaviour,
 		IEventStateMachine
 	{
