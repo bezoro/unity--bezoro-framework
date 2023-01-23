@@ -32,5 +32,32 @@ namespace Bezoro.Core.Extensions
 			Array.Resize(ref array, array.Length * 2);
 			array[oldLength] = element;
 		}
+
+		public static void Remove<T>(ref T[] array, T element)
+		where T : class
+		{
+			if (array.IsNullOrEmpty())
+				return;
+
+			if (element == null)
+				return;
+
+			for (var i = 0; i < array.Length; i++)
+				if (array[i] == element)
+				{
+					array[i] = null;
+					return;
+				}
+		}
+
+		public static void Clear<T>(ref T[] array)
+		where T : class
+		{
+			if (array.IsNullOrEmpty())
+				return;
+
+			for (var i = 0; i < array.Length; i++)
+				array[i] = null;
+		}
 	}
 }
