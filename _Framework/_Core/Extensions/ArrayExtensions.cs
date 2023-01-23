@@ -1,26 +1,36 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using Sirenix.Utilities;
+﻿using System;
 
 namespace Bezoro.Core.Extensions
 {
 	public static class ArrayExtensions
 	{
-		public static void Add<T>(this IList<T> list, T element) =>
-			list.Add(element);
+		public static bool IsNullOrEmpty<T>(this T[] array) =>
+			(array == null || array.Length == 0);
 
-		public static void AddUnique<T>(this IList<T> list, T element)
+		public static void Add<T>(ref T[] array, T element)
 		{
-			if (list.Contains(element))
+			if (element == null)
 				return;
-			
-			list.Add(element);
+
+			if (array.IsNullOrEmpty())
+			{
+				Array.Resize(ref array, 1);
+				array[0] = element;
+				return;
+			}
+
+			for (var i = 0; i < array.Length; i++)
+			{
+				if (array[i] != null)
+					continue;
+
+				array[i] = element;
+				return;
+			}
+
+			var oldLength = array.Length;
+			Array.Resize(ref array, array.Length * 2);
+			array[oldLength] = element;
 		}
-
-		public static void Remove<T>(this IList<T> list, T element) =>
-			list.Remove(element);
-
-		public static void RemoveAt<T>(this IList<T> list, int index) =>
-			list.RemoveAt(index);
 	}
 }
