@@ -9,7 +9,12 @@ namespace Bezoro.StateMachines
 		{
 			var transitions = state.Transitions;
 			for (var i = 0; i < transitions.Length; i++)
+			{
+				if (transitions[i] == null)
+					continue;
+
 				transitions[i].Tick();
+			}
 		}
 
 		public static void AddMonoBehaviourTypeToIgnoreCollisionsWith<T>(this IKCCState state)
@@ -26,14 +31,24 @@ namespace Bezoro.StateMachines
 		{
 			var transitions = state.Transitions;
 			for (var i = 0; i < transitions.Length; i++)
+			{
+				if (transitions[i] == null)
+					continue;
+
 				transitions[i].BecomeRelevant();
+			}
 		}
 
 		public static void AllTransitionsCeaseRelevant(this IState state)
 		{
 			var transitions = state.Transitions;
 			for (var i = 0; i < transitions.Length; i++)
+			{
+				if (transitions[i] == null)
+					continue;
+
 				transitions[i].CeaseRelevant();
+			}
 		}
 
 		public static Coroutine StartCoroutine(this IState state, IEnumerator routine) =>

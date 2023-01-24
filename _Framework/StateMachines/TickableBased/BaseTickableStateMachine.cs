@@ -58,9 +58,11 @@ namespace Bezoro.StateMachines
 		void IStateMachine.DoTransition(IState toState) =>
 			this.DoTransition_Ext(toState);
 
-		void IStateMachine.SetCurrentState(IState state) { }
+		void IStateMachine.SetCurrentState(IState state) =>
+			_currentState = state as ITickableState;
 
-		void IStateMachine.SetLastState(IState state) { }
+		void IStateMachine.SetLastState(IState state) =>
+			_lastState = state as ITickableState;
 
 		protected abstract void SetUp();
 
