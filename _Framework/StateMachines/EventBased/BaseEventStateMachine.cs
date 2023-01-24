@@ -6,144 +6,56 @@ namespace Bezoro.StateMachines
 	public abstract class BaseEventStateMachine : MonoBehaviour,
 		IEventStateMachine
 	{
+		private void Awake() =>
+			SetUp();
+
+		public IState StartState => _startState;
+
 		public IEventState CurrentState => _currentState;
 
 		public IEventState LastState => _lastState;
 
-		[field: SerializeField]
-		public DisableMethod DisableMethod { get; private set; } = DisableMethod.Continue;
+		IEventState IEventStateMachine.StartState => _startState;
 
-		private void Awake() =>
-			SetUp();
+		IState IStateMachine.CurrentState => _currentState;
+
+		IState IStateMachine.LastState => _lastState;
+
+		[field: SerializeField]
+		public DisableMethod DisableMethod { get; private set; }
+
+		private void Start() =>
+			this.Start_Ext();
+
+		private void OnDisable() =>
+			this.Disable_Ext();
+
+		public void DoTransition(IEventState toState) =>
+			this.DoTransition_Ext(toState);
+
+		public void SetCurrentState(IEventState state) =>
+			_currentState = state;
+
+		public void SetLastState(IEventState state) =>
+			_lastState = state;
+
+		void IStateMachine.DoTransition(IState toState) =>
+			this.DoTransition_Ext(toState);
+
+		void IStateMachine.SetCurrentState(IState state) =>
+			_currentState = state as IEventState;
+
+		void IStateMachine.SetLastState(IState state) =>
+			_lastState = state as IEventState;
 
 		protected abstract void SetUp();
 
-		protected void SetStartState(IEventState state) =>
-			_startState = state;
-
 		protected void RegisterState<T>(out T createdState)
 		where T : class, IEventState, new() =>
-			createdState = CreateState<T>();
+			createdState = this.CreateState<T>(this);
 
-		private void Start()
-		{
-			_currentState = _startState;
-			_currentState.Enter();
-		}
-
-		private void OnDisable()
-		{
-			_currentState.Disable();
-
-			if (DisableMethod is DisableMethod.Restart)
-				_currentState = _startState;
-		}
-
-		public void DoTransition(IEventState toState)
-		{
-			_lastState = _currentState;
-			_currentState.Exit();
-			_currentState = toState;
-			_currentState.Enter();
-		}
-
-		public bool TryFindStateInCurrentHierarchy<T>(out IEventState outState)
-		where T : class, IEventState
-		{
-			if (_currentState is T)
-			{
-				outState = _currentState;
-				return true;
-			}
-
-			if (!IsSubStateMachine(_currentState, out var rootSuperState))
-			{
-				outState = null;
-				return false;
-			}
-
-			var parentState = rootSuperState;
-
-			while (true)
-			{
-				var currentState = parentState.CurrentState;
-
-				if (currentState is T)
-				{
-					outState = currentState;
-					return true;
-				}
-
-				if (!IsSubStateMachine(currentState, out var superState))
-				{
-					outState = null;
-					return false;
-				}
-
-				parentState = superState;
-			}
-		}
-
-		public bool TryFindStateInLastHierarchy<T>(out IEventState outState)
-		where T : IEventState
-		{
-			if (_lastState is T)
-			{
-				outState = _lastState;
-				return true;
-			}
-
-			if (!IsSubStateMachine(_lastState, out var rootSuperState))
-			{
-				outState = null;
-				return false;
-			}
-
-			var parentState = rootSuperState;
-
-			while (true)
-			{
-				var lastState = parentState.LastState;
-
-				if (lastState is T)
-				{
-					outState = lastState;
-					return true;
-				}
-
-				if (!IsSubStateMachine(lastState, out var superState))
-				{
-					outState = null;
-					return false;
-				}
-
-				parentState = superState;
-			}
-		}
-
-		private T CreateState<T>()
-		where T : class, IEventState, new()
-		{
-			var newState = new T();
-			newState.Init(this, this);
-			return newState;
-		}
-
-		private static bool IsSubStateMachine
-		(
-			IEventState state,
-			out IEventStateMachine outStateMachine
-		)
-		{
-			if (state is IEventStateMachine stateMachine)
-			{
-				outStateMachine = stateMachine;
-				return true;
-			}
-
-			outStateMachine = null;
-			return false;
-		}
+		protected void SetStartState(IEventState state) =>
+			_startState = state;
 
 		private IEventState _startState = new NullEventState();
 		private IEventState _currentState = new NullEventState();

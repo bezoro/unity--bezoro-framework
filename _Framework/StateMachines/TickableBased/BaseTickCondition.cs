@@ -5,7 +5,7 @@ namespace Bezoro.StateMachines
 {
 	public abstract class BaseTickCondition
 	{
-		public void Init(BaseTickableStateMachine stateMachine, bool inverted = false)
+		public void Init(MonoBehaviour stateMachine, bool inverted = false)
 		{
 			_stateMachine = stateMachine;
 			_inverted = inverted;
@@ -49,6 +49,6 @@ namespace Bezoro.StateMachines
 		protected abstract void OnCeaseRelevant();
 
 		private bool _inverted;
-		private BaseTickableStateMachine _stateMachine;
+		private MonoBehaviour _stateMachine;
 	}
 }

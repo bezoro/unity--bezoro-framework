@@ -5,7 +5,7 @@ namespace Bezoro.StateMachines
 {
 	public abstract class BaseKCCCondition
 	{
-		public void Init(BaseKCCStateMachine stateMachine, bool inverted = false)
+		public void Init(MonoBehaviour stateMachine, bool inverted = false)
 		{
 			_stateMachine = stateMachine;
 			_inverted = inverted;
@@ -23,10 +23,10 @@ namespace Bezoro.StateMachines
 
 		protected Coroutine StartCoroutine(IEnumerator routine) =>
 			_stateMachine.StartCoroutine(routine);
-		
+
 		protected void StopCoroutine(Coroutine routine) =>
 			_stateMachine.StopCoroutine(routine);
-		
+
 		protected bool TryGetComponent<T>(out T component)
 		where T : Component
 		{
@@ -39,7 +39,7 @@ namespace Bezoro.StateMachines
 			component = null;
 			return false;
 		}
-		
+
 		protected abstract void OnInit();
 
 		protected abstract void OnBecomeRelevant();
@@ -49,6 +49,6 @@ namespace Bezoro.StateMachines
 		protected abstract void OnCeaseRelevant();
 
 		private bool _inverted;
-		private BaseKCCStateMachine _stateMachine;
+		private MonoBehaviour _stateMachine;
 	}
 }
