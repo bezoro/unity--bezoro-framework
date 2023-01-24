@@ -38,33 +38,35 @@ namespace Bezoro.StateMachines
 			(this IStateMachine stateMachine, out T outState)
 		where T : class, IState
 		{
-			if (stateMachine.CurrentState is T foundState0)
+			var currentState = stateMachine.CurrentState;
+			if (currentState is T)
 			{
-				outState = foundState0;
+				outState = currentState as T;
 				return true;
 			}
 
-			if (!stateMachine.CurrentState.IsSubStateMachine(out var rootSubStateMachine0))
+			if (!currentState.IsSubStateMachine(out IStateMachine rootSubStateMachine))
 			{
 				outState = null;
 				return false;
 			}
 
+			currentState = rootSubStateMachine.CurrentState;
 			while (true)
 			{
-				if (rootSubStateMachine0.CurrentState is T foundState1)
+				if (currentState is T)
 				{
-					outState = foundState1;
+					outState = currentState as T;
 					return true;
 				}
 
-				if (!stateMachine.CurrentState.IsSubStateMachine(out var rootSubStateMachine1))
+				if (!currentState.IsSubStateMachine(out IStateMachine subStateMachine))
 				{
 					outState = null;
 					return false;
 				}
 
-				rootSubStateMachine0 = rootSubStateMachine1;
+				currentState = subStateMachine.CurrentState;
 			}
 		}
 
@@ -73,35 +75,34 @@ namespace Bezoro.StateMachines
 		where T : class, IState
 		{
 			var lastState = stateMachine.LastState;
-
-			if (lastState is T foundState0)
+			if (lastState is T)
 			{
-				outState = foundState0;
+				outState = lastState as T;
 				return true;
 			}
 
-			if (!lastState.IsSubStateMachine(out var rootSubStateMachine))
+			if (!lastState.IsSubStateMachine(out IStateMachine rootSubStateMachine))
 			{
 				outState = null;
 				return false;
 			}
 
+			lastState = rootSubStateMachine.LastState;
 			while (true)
 			{
-				lastState = rootSubStateMachine.LastState;
 				if (lastState is T foundState1)
 				{
 					outState = foundState1;
 					return true;
 				}
 
-				if (!lastState.IsSubStateMachine(out var subStateMachine))
+				if (!lastState.IsSubStateMachine(out IStateMachine subStateMachine))
 				{
 					outState = null;
 					return false;
 				}
 
-				rootSubStateMachine = subStateMachine;
+				lastState = subStateMachine.LastState;
 			}
 		}
 	}

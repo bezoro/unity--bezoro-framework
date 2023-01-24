@@ -10,7 +10,7 @@ namespace Bezoro.StateMachines.Editor
 		{
 			DrawStateLabels(source);
 
-			void DrawStateLabels(ITickableStateMachine stateMachine, int index = 0)
+			void DrawStateLabels(IStateMachine stateMachine, int index = 0)
 			{
 				while (true)
 				{

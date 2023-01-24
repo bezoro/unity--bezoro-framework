@@ -1,20 +1,26 @@
-﻿using System.Collections;
+﻿using UnityEngine;
+using System.Collections;
 using System.Collections.Generic;
-using UnityEngine;
 
 namespace Bezoro.StateMachines
 {
 	public abstract class BaseEventState : IEventState
 	{
 		public virtual void Init
-		(
-			IEventStateMachine owningStateMachine,
-			BaseEventStateMachine masterStateMachine
-		)
+		(MonoBehaviour masterStateMachine,
+		 IEventStateMachine owningStateMachine)
 		{
-			_owningStateMachine = owningStateMachine;
 			_masterStateMachine = masterStateMachine;
+			_owningStateMachine = owningStateMachine;
 			OnInit();
+		}
+
+		void IState.Init
+		(MonoBehaviour masterStateMachine,
+		 IStateMachine owningStateMachine)
+		{
+			_masterStateMachine = masterStateMachine;
+			_owningStateMachine = owningStateMachine;
 		}
 
 		public EventTransition TransitionsTo(IEventState toState)
@@ -73,23 +79,27 @@ namespace Bezoro.StateMachines
 
 		protected abstract void OnExit();
 
-		private IEventStateMachine _owningStateMachine;
-		private BaseEventStateMachine _masterStateMachine;
+		private IStateMachine _owningStateMachine;
+		private MonoBehaviour _masterStateMachine;
 
 		private readonly List<EventTransition> _transitions = new();
 	}
 
 	public sealed class NullEventState : IEventState
 	{
+		public void Init
+		(MonoBehaviour masterStateMachine,
+		 IEventStateMachine owningStateMachine) { }
+
+		void IState.Init
+		(MonoBehaviour masterStateMachine,
+		 IStateMachine owningStateMachine) { }
+
 		public void Enter() { }
 
 		public void Exit() { }
 
 		public void Disable() { }
-
-		public void Init
-		(IEventStateMachine owningStateMachine,
-		 BaseEventStateMachine masterStateMachine) { }
 
 		public void OnTransitionRaised(IEventState toState) { }
 	}

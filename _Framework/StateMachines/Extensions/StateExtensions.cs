@@ -2,11 +2,12 @@
 {
 	public static class StateExtensions
 	{
-		public static bool IsSubStateMachine(this IState state, out IStateMachine outStateMachine)
+		public static bool IsSubStateMachine<T1>(this IState state, out T1 outStateMachine)
+		where T1: class, IStateMachine
 		{
 			if (state is IStateMachine stateMachine)
 			{
-				outStateMachine = stateMachine;
+				outStateMachine = stateMachine as T1;
 				return true;
 			}
 

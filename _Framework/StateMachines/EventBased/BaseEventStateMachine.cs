@@ -22,7 +22,7 @@ namespace Bezoro.StateMachines
 		IState IStateMachine.LastState => _lastState;
 
 		[field: SerializeField]
-		public DisableMethod DisableMethod { get; private set; } = DisableMethod.Continue;
+		public DisableMethod DisableMethod { get; private set; }
 
 		private void Start() =>
 			this.Start_Ext();
@@ -33,14 +33,14 @@ namespace Bezoro.StateMachines
 		public void DoTransition(IEventState toState) =>
 			this.DoTransition_Ext(toState);
 
-		void IStateMachine.DoTransition(IState toState) =>
-			this.DoTransition_Ext(toState);
-
 		public void SetCurrentState(IEventState state) =>
 			_currentState = state;
 
 		public void SetLastState(IEventState state) =>
 			_lastState = state;
+
+		void IStateMachine.DoTransition(IState toState) =>
+			this.DoTransition_Ext(toState);
 
 		void IStateMachine.SetCurrentState(IState state) =>
 			_currentState = state as IEventState;
@@ -50,12 +50,12 @@ namespace Bezoro.StateMachines
 
 		protected abstract void SetUp();
 
-		protected void SetStartState(IEventState state) =>
-			_startState = state;
-
 		protected void RegisterState<T>(out T createdState)
 		where T : class, IEventState, new() =>
 			createdState = this.CreateState<T>(this);
+
+		protected void SetStartState(IEventState state) =>
+			_startState = state;
 
 		private IEventState _startState = new NullEventState();
 		private IEventState _currentState = new NullEventState();
