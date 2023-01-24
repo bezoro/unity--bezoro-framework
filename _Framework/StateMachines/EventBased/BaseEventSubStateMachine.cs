@@ -109,7 +109,7 @@ namespace Bezoro.StateMachines
 		where T : class, IEventState, new()
 		{
 			var newState = new T();
-			newState.Init(this, _masterStateMachine);
+			newState.Init(_masterStateMachine, this);
 			return newState;
 		}
 

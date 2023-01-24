@@ -45,13 +45,13 @@ namespace Bezoro.StateMachines
 
 			OnExit();
 		}
-		
+
 		protected Coroutine StartCoroutine(IEnumerator routine) =>
 			_masterStateMachine.StartCoroutine(routine);
-		
+
 		protected void StopCoroutine(Coroutine routine) =>
 			_masterStateMachine.StopCoroutine(routine);
-		
+
 		protected bool TryGetComponent<T>(out T component)
 		where T : Component
 		{
@@ -79,14 +79,18 @@ namespace Bezoro.StateMachines
 		private readonly List<EventTransition> _transitions = new();
 	}
 
-	public sealed class NullEventState : BaseEventState
+	public sealed class NullEventState : IEventState
 	{
-		protected override void OnInit() { }
+		public void Enter() { }
 
-		protected override void OnEnter() { }
+		public void Exit() { }
 
-		protected override void OnDisable() { }
+		public void Disable() { }
 
-		protected override void OnExit() { }
+		public void Init
+		(IEventStateMachine owningStateMachine,
+		 BaseEventStateMachine masterStateMachine) { }
+
+		public void OnTransitionRaised(IEventState toState) { }
 	}
 }

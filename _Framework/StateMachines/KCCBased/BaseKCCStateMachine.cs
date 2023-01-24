@@ -14,7 +14,15 @@ namespace Bezoro.StateMachines
 
 		public IKCCState CurrentState => _currentState;
 
+		ITickableState ITickableStateMachine.CurrentState => _currentState;
+
+		IState IStateMachine.CurrentState => _currentState;
+
 		public IKCCState LastState => _lastState;
+
+		ITickableState ITickableStateMachine.LastState => _lastState;
+
+		IState IStateMachine.LastState => _lastState;
 
 		[field: SerializeField]
 		public DisableMethod DisableMethod { get; private set; } = DisableMethod.Continue;
@@ -178,6 +186,22 @@ namespace Bezoro.StateMachines
 			_currentState = toState;
 			_currentState.Enter();
 		}
+		
+		public void DoTransition(ITickableState toState)
+		{
+			_lastState = _currentState;
+			_currentState.Exit();
+			_currentState = toState as IKCCState;
+			_currentState.Enter();
+		}
+		
+		public void DoTransition(IState toState)
+		{
+			_lastState = _currentState;
+			_currentState.Exit();
+			_currentState = toState as IKCCState;
+			_currentState.Enter();
+		}
 
 		public bool TryFindStateInCurrentHierarchy<T>(out IKCCState outState)
 		where T : IKCCState
@@ -284,10 +308,8 @@ namespace Bezoro.StateMachines
 		}
 
 		private static bool IsSubStateMachine
-		(
-			IKCCState state,
-			out IKCCStateMachine outSubStateMachine
-		)
+		(IKCCState state,
+		 out IKCCStateMachine outSubStateMachine)
 		{
 			if (state is IKCCStateMachine stateMachine)
 			{

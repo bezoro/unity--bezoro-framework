@@ -9,7 +9,11 @@ namespace Bezoro.StateMachines
 	{
 		public ITickableState CurrentState => _currentState;
 
+		IState IStateMachine.CurrentState => _currentState;
+
 		public ITickableState LastState => _lastState;
+
+		IState IStateMachine.LastState => _lastState;
 
 		[field: SerializeField]
 		public DisableMethod DisableMethod { get; private set; } = DisableMethod.Continue;
@@ -62,6 +66,14 @@ namespace Bezoro.StateMachines
 			_currentState.Enter();
 		}
 
+		void IStateMachine.DoTransition(IState toState)
+		{
+			_lastState = _currentState;
+			_currentState.Exit();
+			_currentState = toState as ITickableState;
+			_currentState.Enter();
+		}
+
 		public bool TryFindStateInCurrentHierarchy<T>(out ITickableState outState)
 		where T : class, ITickableState
 		{
@@ -83,9 +95,9 @@ namespace Bezoro.StateMachines
 			{
 				var currentState = parentState.CurrentState;
 
-				if (currentState is T)
+				if (currentState is T state)
 				{
-					outState = currentState;
+					outState = state;
 					return true;
 				}
 
@@ -100,7 +112,7 @@ namespace Bezoro.StateMachines
 		}
 
 		public bool TryFindStateInLastHierarchy<T>(out ITickableState outState)
-		where T : ITickableState
+		where T : class, ITickableState
 		{
 			if (_lastState is T)
 			{
@@ -120,9 +132,9 @@ namespace Bezoro.StateMachines
 			{
 				var lastState = parentState.LastState;
 
-				if (lastState is T)
+				if (lastState is T state)
 				{
-					outState = lastState;
+					outState = state;
 					return true;
 				}
 
@@ -145,10 +157,8 @@ namespace Bezoro.StateMachines
 		}
 
 		private static bool IsSubStateMachine
-		(
-			ITickableState state,
-			out ITickableStateMachine outSubStateMachine
-		)
+		(IState state,
+		 out ITickableStateMachine outSubStateMachine)
 		{
 			if (state is ITickableStateMachine stateMachine)
 			{
