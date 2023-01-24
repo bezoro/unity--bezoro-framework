@@ -7,7 +7,7 @@ namespace Bezoro.Core.Singletons
 {
 	public sealed class TickableManager : MonoBehaviour
 	{
-		[field: AssetInstance] [UsedImplicitly]
+		[AssetInstance] [UsedImplicitly]
 		public static TickableManager Instance { get; private set; }
 
 		[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
