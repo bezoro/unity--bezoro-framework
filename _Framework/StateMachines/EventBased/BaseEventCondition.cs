@@ -5,7 +5,9 @@ namespace Bezoro.StateMachines
 {
 	public abstract class BaseEventCondition
 	{
-		public virtual void Init(EventTransition transition, BaseEventStateMachine stateMachine)
+		public void Init
+		(EventTransition transition,
+		 MonoBehaviour stateMachine)
 		{
 			_transition = transition;
 			_stateMachine = stateMachine;
@@ -47,6 +49,6 @@ namespace Bezoro.StateMachines
 		protected abstract void OnCeaseRelevant();
 
 		private EventTransition _transition;
-		private BaseEventStateMachine _stateMachine;
+		private MonoBehaviour _stateMachine;
 	}
 }

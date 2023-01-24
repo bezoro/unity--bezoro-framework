@@ -1,62 +1,83 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
+using Bezoro.Core.Helpers;
 
 namespace Bezoro.StateMachines
 {
-	public abstract class BaseEventSubStateMachine : IEventStateMachine, IEventState
+	public abstract class BaseEventSubStateMachine :
+		IEventSubStateMachine
 	{
+		public void Init
+		(MonoBehaviour masterStateMachine,
+		 IEventStateMachine owningStateMachine)
+		{
+			_masterStateMachine = masterStateMachine;
+			_owningStateMachine = owningStateMachine;
+			SetUp();
+		}
+
+		void IState.Init
+		(MonoBehaviour masterStateMachine,
+		 IStateMachine owningStateMachine)
+		{
+			_masterStateMachine = masterStateMachine;
+			_owningStateMachine = owningStateMachine as IEventStateMachine;
+			SetUp();
+		}
+
+		public IEventState StartState => _startState;
+
 		public IEventState CurrentState => _currentState;
 
 		public IEventState LastState => _lastState;
 
-		public virtual void Init
-		(
-			IEventStateMachine owningStateMachine,
-			BaseEventStateMachine masterStateMachine
-		)
-		{
-			_owningStateMachine = owningStateMachine;
-			_masterStateMachine = masterStateMachine;
-			SetUp();
-		}
+		public MonoBehaviour MasterStateMachine => _masterStateMachine;
+
+		public ITransition[] Transitions => _transitions;
+
+		IState IStateMachine.StartState => _startState;
+
+		IState IStateMachine.CurrentState => _currentState;
+
+		IState IStateMachine.LastState => _lastState;
 
 		public EventTransition TransitionsTo(IEventState toState)
 		{
 			var newTransition = new EventTransition(this, toState, _masterStateMachine);
-			_transitions.Add(newTransition);
+			ArrayHelpers.Add(ref _transitions, newTransition);
 			return newTransition;
 		}
+
+		public void SetCurrentState(IEventState state) =>
+			_currentState = state;
+
+		public void SetLastState(IEventState state) =>
+			_lastState = state;
+
+		void IStateMachine.SetCurrentState(IState state) =>
+			_currentState = state as IEventState;
+
+		void IStateMachine.SetLastState(IState state) =>
+			_lastState = state as IEventState;
 
 		public void Enter()
 		{
 			_currentState = _startState;
-
 			OnEnter();
-
-			for (var i = 0; i < _transitions.Count; i++)
-				_transitions[i].BecomeRelevant();
-
+			this.AllTransitionsBecomeRelevant();
 			_currentState.Enter();
 		}
 
 		public void Disable()
 		{
 			OnDisable();
-
-			_currentState.Disable();
-
-			if (_masterStateMachine.DisableMethod is DisableMethod.Restart)
-				_currentState = _startState;
+			this.Disable_Ext();
 		}
 
-		public void DoTransition(IEventState toState)
-		{
-			_lastState = _currentState;
-			_currentState.Exit();
-			_currentState = toState;
-			_currentState.Enter();
-		}
+		public void DoTransition(IEventState toState) =>
+			this.DoTransition_Ext(toState);
+
+		void IStateMachine.DoTransition(IState toState) =>
+			this.DoTransition_Ext(toState);
 
 		public void OnTransitionRaised(IEventState toState) =>
 			_owningStateMachine.DoTransition(toState);
@@ -64,12 +85,11 @@ namespace Bezoro.StateMachines
 		public void Exit()
 		{
 			_currentState.Exit();
-
-			for (var i = 0; i < _transitions.Count; i++)
-				_transitions[i].CeaseRelevant();
-
+			this.AllTransitionsCeaseRelevant();
 			OnExit();
 		}
+
+		#region Abstract Methods
 
 		protected abstract void SetUp();
 
@@ -79,46 +99,20 @@ namespace Bezoro.StateMachines
 
 		protected abstract void OnExit();
 
-		protected Coroutine StartCoroutine(IEnumerator routine) =>
-			_masterStateMachine.StartCoroutine(routine);
-		
-		protected void StopCoroutine(Coroutine routine) =>
-			_masterStateMachine.StopCoroutine(routine);
-		
-		protected bool TryGetComponent<T>(out T component)
-		where T : Component
-		{
-			if (_masterStateMachine.TryGetComponent<T>(out var c))
-			{
-				component = c;
-				return true;
-			}
-
-			component = null;
-			return false;
-		}
+		#endregion
 
 		protected void SetStartState(IEventState state) =>
 			_startState = state;
 
 		protected void RegisterState<T>(out T outState)
 		where T : class, IEventState, new() =>
-			outState = CreateState<T>();
-
-		private T CreateState<T>()
-		where T : class, IEventState, new()
-		{
-			var newState = new T();
-			newState.Init(this, _masterStateMachine);
-			return newState;
-		}
+			outState = this.CreateState<T>(_masterStateMachine);
 
 		private IEventState _startState = new NullEventState();
 		private IEventState _currentState = new NullEventState();
 		private IEventState _lastState = new NullEventState();
 		private IEventStateMachine _owningStateMachine;
-		private BaseEventStateMachine _masterStateMachine;
-
-		private readonly List<EventTransition> _transitions = new();
+		private MonoBehaviour _masterStateMachine;
+		private ITransition[] _transitions = new ITransition[4];
 	}
 }

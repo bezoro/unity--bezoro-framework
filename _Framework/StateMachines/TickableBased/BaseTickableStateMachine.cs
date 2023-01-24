@@ -7,40 +7,26 @@ namespace Bezoro.StateMachines
 	public abstract class BaseTickableStateMachine : Tickable,
 		ITickableStateMachine
 	{
+		private void Awake() =>
+			SetUp();
+
+		public ITickableState StartState => _startState;
+
 		public ITickableState CurrentState => _currentState;
 
 		public ITickableState LastState => _lastState;
 
+		IState IStateMachine.StartState => _startState;
+
+		IState IStateMachine.CurrentState => _currentState;
+
+		IState IStateMachine.LastState => _lastState;
+
 		[field: SerializeField]
-		public DisableMethod DisableMethod { get; private set; } = DisableMethod.Continue;
+		public DisableMethod DisableMethod { get; private set; }
 
-		private void Awake() =>
-			SetUp();
-
-		protected abstract void SetUp();
-
-		protected void SetStartState(ITickableState state) =>
-			_startState = state;
-
-		protected void RegisterState<T>(out T outState)
-		where T : class, ITickableState, new() =>
-			outState = CreateState<T>();
-
-		private void Start()
-		{
-			_currentState = _startState;
-			_currentState.Enter();
-		}
-
-		protected override void OnDisable()
-		{
-			base.OnDisable();
-
-			_currentState.Disable();
-
-			if (DisableMethod is DisableMethod.Restart)
-				_currentState = _startState;
-		}
+		private void Start() =>
+			this.Start_Ext();
 
 		public override void EarlyTick() =>
 			_currentState.EarlyTick();
@@ -54,111 +40,39 @@ namespace Bezoro.StateMachines
 		public override void LateTick() =>
 			_currentState.LateTick();
 
-		public void DoTransition(ITickableState toState)
+		protected override void OnDisable()
 		{
-			_lastState = _currentState;
-			_currentState.Exit();
-			_currentState = toState;
-			_currentState.Enter();
+			base.OnDisable();
+			this.Disable_Ext();
 		}
 
-		public bool TryFindStateInCurrentHierarchy<T>(out ITickableState outState)
-		where T : class, ITickableState
-		{
-			if (_currentState is T)
-			{
-				outState = _currentState;
-				return true;
-			}
+		public void DoTransition(ITickableState toState) =>
+			this.DoTransition_Ext(toState);
 
-			if (!IsSubStateMachine(_currentState, out var rootSuperState))
-			{
-				outState = null;
-				return false;
-			}
+		public void SetCurrentState(ITickableState state) =>
+			_currentState = state;
 
-			var parentState = rootSuperState;
+		public void SetLastState(ITickableState state) =>
+			_lastState = state;
 
-			while (true)
-			{
-				var currentState = parentState.CurrentState;
+		void IStateMachine.DoTransition(IState toState) =>
+			this.DoTransition_Ext(toState);
 
-				if (currentState is T)
-				{
-					outState = currentState;
-					return true;
-				}
+		void IStateMachine.SetCurrentState(IState state) =>
+			_currentState = state as ITickableState;
 
-				if (!IsSubStateMachine(currentState, out var superState))
-				{
-					outState = null;
-					return false;
-				}
+		void IStateMachine.SetLastState(IState state) =>
+			_lastState = state as ITickableState;
 
-				parentState = superState;
-			}
-		}
+		protected abstract void SetUp();
 
-		public bool TryFindStateInLastHierarchy<T>(out ITickableState outState)
-		where T : ITickableState
-		{
-			if (_lastState is T)
-			{
-				outState = _lastState;
-				return true;
-			}
+		protected void RegisterState<T>(out T outState)
+		where T : class, ITickableState, new() =>
+			outState = this.CreateState<T>(this);
 
-			if (!IsSubStateMachine(_lastState, out var rootSuperState))
-			{
-				outState = null;
-				return false;
-			}
 
-			var parentState = rootSuperState;
-
-			while (true)
-			{
-				var lastState = parentState.LastState;
-
-				if (lastState is T)
-				{
-					outState = lastState;
-					return true;
-				}
-
-				if (!IsSubStateMachine(lastState, out var superState))
-				{
-					outState = null;
-					return false;
-				}
-
-				parentState = superState;
-			}
-		}
-
-		private T CreateState<T>()
-		where T : class, ITickableState, new()
-		{
-			var newState = new T();
-			newState.Init(this, this);
-			return newState;
-		}
-
-		private static bool IsSubStateMachine
-		(
-			ITickableState state,
-			out ITickableStateMachine outSubStateMachine
-		)
-		{
-			if (state is ITickableStateMachine stateMachine)
-			{
-				outSubStateMachine = stateMachine;
-				return true;
-			}
-
-			outSubStateMachine = null;
-			return false;
-		}
+		protected void SetStartState(ITickableState state) =>
+			_startState = state;
 
 		private ITickableState _startState = new NullTickableState();
 		private ITickableState _currentState = new NullTickableState();

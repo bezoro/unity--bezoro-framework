@@ -1,35 +1,50 @@
-﻿using System.Collections;
-using UnityEngine;
-using System.Collections.Generic;
+﻿using UnityEngine;
+using Bezoro.Core.Helpers;
 
 namespace Bezoro.StateMachines
 {
-	public abstract class BaseTickableState : ITickableState
+	public abstract class BaseTickableState : 
+		ITickableState
 	{
-		public virtual void Init
-		(
-			ITickableStateMachine owningStateMachine,
-			BaseTickableStateMachine masterStateMachine
-		)
+		public void Init
+		(MonoBehaviour masterStateMachine,
+		 ITickableStateMachine owningStateMachine)
 		{
-			_owningStateMachine = owningStateMachine;
 			_masterStateMachine = masterStateMachine;
+			_owningStateMachine = owningStateMachine;
 			OnInit();
 		}
 
-		public TickTransition TransitionsTo(ITickableState state)
+		void IState.Init
+		(MonoBehaviour masterStateMachine,
+		 IStateMachine owningStateMachine)
 		{
-			var transition = new TickTransition(this, state, _masterStateMachine);
-			_transitions.Add(transition);
-			return transition;
+			_masterStateMachine = masterStateMachine;
+			_owningStateMachine = owningStateMachine;
+			OnInit();
+		}
+
+		public MonoBehaviour MasterStateMachine => _masterStateMachine;
+
+		public ITickTransition[] Transitions => _transitions;
+
+		ITransition[] IState.Transitions => _transitions;
+
+		public TickTransition TransitionsTo(ITickableState toState)
+		{
+			var newTransition = new TickTransition
+				(this,
+				 toState,
+				 _masterStateMachine);
+
+			ArrayHelpers.Add(ref _transitions, newTransition);
+			return newTransition;
 		}
 
 		public void Enter()
 		{
 			OnEnter();
-
-			for (var i = 0; i < _transitions.Count; i++)
-				_transitions[i].BecomeRelevant();
+			this.AllTransitionsBecomeRelevant();
 		}
 
 		public void EarlyTick() =>
@@ -44,7 +59,7 @@ namespace Bezoro.StateMachines
 		public void LateTick()
 		{
 			OnLateTick();
-			TickTransitions();
+			this.AllTransitionsTick();
 		}
 
 		public void Disable() =>
@@ -55,32 +70,11 @@ namespace Bezoro.StateMachines
 
 		public void Exit()
 		{
-			for (var i = 0; i < _transitions.Count; i++)
-				_transitions[i].CeaseRelevant();
-
+			this.AllTransitionsCeaseRelevant();
 			OnExit();
 		}
 
-		protected Coroutine StartCoroutine(IEnumerator routine) =>
-			_masterStateMachine.StartCoroutine(routine);
-		
-		protected void StopCoroutine(Coroutine routine) =>
-			_masterStateMachine.StopCoroutine(routine);
-
-		protected bool TryGetComponent<T>(out T component)
-		where T : Component
-		{
-			if (_masterStateMachine.TryGetComponent<T>(out var c))
-			{
-				component = c;
-				return true;
-			}
-
-			component = null;
-			return false;
-		}
-
-		#region Protected Abstract Methods
+		#region Abstract Methods
 
 		protected abstract void OnInit();
 
@@ -100,34 +94,41 @@ namespace Bezoro.StateMachines
 
 		#endregion
 
-		private void TickTransitions()
-		{
-			for (var i = 0; i < _transitions.Count; i++)
-				_transitions[i].Tick();
-		}
-
-		private ITickableStateMachine _owningStateMachine;
-		private BaseTickableStateMachine _masterStateMachine;
-
-		private readonly List<TickTransition> _transitions = new();
+		private MonoBehaviour _masterStateMachine;
+		private IStateMachine _owningStateMachine;
+		private ITickTransition[] _transitions = new ITickTransition[4];
 	}
 
-	public class NullTickableState : BaseTickableState
+	public class NullTickableState : ITickableState
 	{
-		protected override void OnInit() { }
+		public void Init
+		(MonoBehaviour masterStateMachine,
+		 IStateMachine owningStateMachine) { }
 
-		protected override void OnEnter() { }
+		public void Init
+		(MonoBehaviour masterStateMachine,
+		 ITickableStateMachine owningStateMachine) { }
 
-		protected override void OnEarlyTick() { }
+		public MonoBehaviour MasterStateMachine { get; }
 
-		protected override void OnTick() { }
+		public ITickTransition[] Transitions { get; }
 
-		protected override void OnFixedTick() { }
+		ITransition[] IState.Transitions { get; }
 
-		protected override void OnLateTick() { }
+		public void Enter() { }
 
-		protected override void OnDisable() { }
+		public void Exit() { }
 
-		protected override void OnExit() { }
+		public void Disable() { }
+
+		public void EarlyTick() { }
+
+		public void Tick() { }
+
+		public void FixedTick() { }
+
+		public void LateTick() { }
+
+		public void OnTransitionTrue(ITickableState toState) { }
 	}
 }
