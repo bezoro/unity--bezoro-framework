@@ -1,14 +1,16 @@
 ﻿using System.Collections.Generic;
+using UnityEngine;
 
 namespace Bezoro.StateMachines
 {
-	public class TickTransition
+	public class TickTransition:
+		ITickTransition
 	{
 		public TickTransition
 		(
 			ITickableState fromState,
 			ITickableState toState,
-			BaseTickableStateMachine stateMachine
+			MonoBehaviour stateMachine
 		)
 		{
 			_fromState = fromState;
@@ -115,6 +117,6 @@ namespace Bezoro.StateMachines
 		private readonly ITickableState _fromState;
 		private readonly ITickableState _toState;
 		private readonly List<BaseTickCondition> _conditions = new(4);
-		private readonly BaseTickableStateMachine _stateMachine;
+		private readonly MonoBehaviour _stateMachine;
 	}
 }
