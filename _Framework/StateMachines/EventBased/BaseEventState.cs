@@ -1,12 +1,12 @@
 ﻿using UnityEngine;
-using System.Collections;
-using System.Collections.Generic;
+using Bezoro.Core.Helpers;
 
 namespace Bezoro.StateMachines
 {
-	public abstract class BaseEventState : IEventState
+	public abstract class BaseEventState :
+		IEventState
 	{
-		public virtual void Init
+		public void Init
 		(MonoBehaviour masterStateMachine,
 		 IEventStateMachine owningStateMachine)
 		{
@@ -20,22 +20,29 @@ namespace Bezoro.StateMachines
 		 IStateMachine owningStateMachine)
 		{
 			_masterStateMachine = masterStateMachine;
-			_owningStateMachine = owningStateMachine;
+			_owningStateMachine = owningStateMachine as IEventStateMachine;
+			OnInit();
 		}
+
+		public MonoBehaviour MasterStateMachine => _masterStateMachine;
+
+		public ITransition[] Transitions => _transitions;
 
 		public EventTransition TransitionsTo(IEventState toState)
 		{
-			var newTransition = new EventTransition(this, toState, _masterStateMachine);
-			_transitions.Add(newTransition);
+			var newTransition = new EventTransition
+				(this,
+				 toState,
+				 _masterStateMachine);
+
+			ArrayHelpers.Add(ref _transitions, newTransition);
 			return newTransition;
 		}
 
 		public void Enter()
 		{
 			OnEnter();
-
-			for (var i = 0; i < _transitions.Count; i++)
-				_transitions[i].BecomeRelevant();
+			this.AllTransitionsBecomeRelevant();
 		}
 
 		public void Disable() =>
@@ -46,30 +53,11 @@ namespace Bezoro.StateMachines
 
 		public void Exit()
 		{
-			for (var i = 0; i < _transitions.Count; i++)
-				_transitions[i].CeaseRelevant();
-
+			this.AllTransitionsCeaseRelevant();
 			OnExit();
 		}
 
-		protected Coroutine StartCoroutine(IEnumerator routine) =>
-			_masterStateMachine.StartCoroutine(routine);
-
-		protected void StopCoroutine(Coroutine routine) =>
-			_masterStateMachine.StopCoroutine(routine);
-
-		protected bool TryGetComponent<T>(out T component)
-		where T : Component
-		{
-			if (_masterStateMachine.TryGetComponent<T>(out var c))
-			{
-				component = c;
-				return true;
-			}
-
-			component = null;
-			return false;
-		}
+		#region Abstract Methods
 
 		protected abstract void OnInit();
 
@@ -79,10 +67,11 @@ namespace Bezoro.StateMachines
 
 		protected abstract void OnExit();
 
-		private IStateMachine _owningStateMachine;
-		private MonoBehaviour _masterStateMachine;
+		#endregion
 
-		private readonly List<EventTransition> _transitions = new();
+		private MonoBehaviour _masterStateMachine;
+		private IEventStateMachine _owningStateMachine;
+		private ITransition[] _transitions = new ITransition[4];
 	}
 
 	public sealed class NullEventState : IEventState
@@ -94,6 +83,10 @@ namespace Bezoro.StateMachines
 		void IState.Init
 		(MonoBehaviour masterStateMachine,
 		 IStateMachine owningStateMachine) { }
+
+		public MonoBehaviour MasterStateMachine { get; }
+
+		public ITransition[] Transitions { get; }
 
 		public void Enter() { }
 

@@ -26,7 +26,8 @@ namespace Bezoro.StateMachines
 		}
 
 		public static T CreateState<T>
-			(this IStateMachine stateMachine, MonoBehaviour masterStateMachine)
+		(this IStateMachine stateMachine,
+		 MonoBehaviour masterStateMachine)
 		where T : class, IState, new()
 		{
 			var newState = new T();

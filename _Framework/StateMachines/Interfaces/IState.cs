@@ -14,6 +14,8 @@ namespace Bezoro.StateMachines
 
 		public List<Type> MonoBehaviourTypesToIgnoreCollisionsWith { get; }
 
+		public new IKCCTransition[] Transitions { get; }
+
 		#region KCC Methods
 
 		public void UpdateRotation(ref Quaternion currentRotation, float deltaTime);
@@ -57,6 +59,8 @@ namespace Bezoro.StateMachines
 		(MonoBehaviour masterStateMachine,
 		 ITickableStateMachine owningStateMachine);
 
+		public new ITickTransition[] Transitions { get; }
+
 		public void EarlyTick();
 
 		public void Tick();
@@ -82,6 +86,10 @@ namespace Bezoro.StateMachines
 		public void Init
 		(MonoBehaviour masterStateMachine,
 		 IStateMachine owningStateMachine);
+
+		public MonoBehaviour MasterStateMachine { get; }
+
+		public ITransition[] Transitions { get; }
 
 		public void Enter();
 

@@ -1,14 +1,16 @@
 ﻿using System.Collections.Generic;
+using UnityEngine;
 
 namespace Bezoro.StateMachines
 {
-	public class KCCTransition
+	public class KCCTransition :
+		IKCCTransition
 	{
 		public KCCTransition
 		(
 			IKCCState fromState,
 			IKCCState toState,
-			BaseKCCStateMachine stateMachine
+			MonoBehaviour stateMachine
 		)
 		{
 			_fromState = fromState;
@@ -89,6 +91,6 @@ namespace Bezoro.StateMachines
 		private readonly IKCCState _fromState;
 		private readonly IKCCState _toState;
 		private readonly List<BaseKCCCondition> _conditions = new(4);
-		private readonly BaseKCCStateMachine _stateMachine;
+		private readonly MonoBehaviour _stateMachine;
 	}
 }

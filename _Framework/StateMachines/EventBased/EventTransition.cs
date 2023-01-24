@@ -1,15 +1,15 @@
 ﻿using System.Collections.Generic;
+using UnityEngine;
 
 namespace Bezoro.StateMachines
 {
-	public sealed class EventTransition
+	public sealed class EventTransition :
+		IEventTransition
 	{
 		public EventTransition
-		(
-			IEventState fromState,
-			IEventState toState,
-			BaseEventStateMachine stateMachine
-		)
+		(IEventState fromState,
+		 IEventState toState,
+		 MonoBehaviour stateMachine)
 		{
 			_fromState = fromState;
 			_toState = toState;
@@ -72,7 +72,7 @@ namespace Bezoro.StateMachines
 
 		private readonly IEventState _fromState;
 		private readonly IEventState _toState;
-		private readonly BaseEventStateMachine _stateMachine;
+		private readonly MonoBehaviour _stateMachine;
 		private readonly List<BaseEventCondition> _conditions = new();
 	}
 }
