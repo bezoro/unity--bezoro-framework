@@ -1,18 +1,21 @@
-﻿using System.Collections;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace Bezoro.StateMachines
 {
-	public abstract class BaseEventCondition
+	public abstract class BaseEventCondition :
+		IEventCondition
 	{
-		public void Init
-		(EventTransition transition,
-		 MonoBehaviour stateMachine)
+		public void Init(IEventTransition transition, MonoBehaviour stateMachine)
 		{
 			_transition = transition;
 			_stateMachine = stateMachine;
 			OnInit();
 		}
+
+		void ICondition.Init(ITransition transition, MonoBehaviour stateMachine) =>
+			Init(transition as IEventTransition, stateMachine);
+
+		public MonoBehaviour StateMachine => _stateMachine;
 
 		public void BecomeRelevant() =>
 			OnBecomeRelevant();
@@ -23,24 +26,7 @@ namespace Bezoro.StateMachines
 		public void CeaseRelevant() =>
 			OnCeaseRelevant();
 
-		protected Coroutine StartCoroutine(IEnumerator routine) =>
-			_stateMachine.StartCoroutine(routine);
-
-		protected void StopCoroutine(Coroutine routine) =>
-			_stateMachine.StopCoroutine(routine);
-
-		protected bool TryGetComponent<T>(out T component)
-		where T : Component
-		{
-			if (_stateMachine.TryGetComponent<T>(out var c))
-			{
-				component = c;
-				return true;
-			}
-
-			component = null;
-			return false;
-		}
+		#region Abstract Methods
 
 		protected abstract void OnInit();
 
@@ -48,7 +34,9 @@ namespace Bezoro.StateMachines
 
 		protected abstract void OnCeaseRelevant();
 
-		private EventTransition _transition;
+		#endregion
+
+		private IEventTransition _transition;
 		private MonoBehaviour _stateMachine;
 	}
 }

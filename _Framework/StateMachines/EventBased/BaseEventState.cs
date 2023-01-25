@@ -17,24 +17,17 @@ namespace Bezoro.StateMachines
 
 		void IState.Init
 		(MonoBehaviour masterStateMachine,
-		 IStateMachine owningStateMachine)
-		{
-			_masterStateMachine = masterStateMachine;
-			_owningStateMachine = owningStateMachine as IEventStateMachine;
-			OnInit();
-		}
+		 IStateMachine owningStateMachine) =>
+			Init(masterStateMachine,
+				 owningStateMachine as IEventStateMachine);
 
 		public MonoBehaviour MasterStateMachine => _masterStateMachine;
 
 		public ITransition[] Transitions => _transitions;
 
-		public EventTransition TransitionsTo(IEventState toState)
+		public IEventTransition TransitionsTo(IEventState toState)
 		{
-			var newTransition = new EventTransition
-				(this,
-				 toState,
-				 _masterStateMachine);
-
+			var newTransition = this.CreateTransition<EventTransition>(toState);
 			ArrayHelpers.Add(ref _transitions, newTransition);
 			return newTransition;
 		}

@@ -51,6 +51,14 @@ namespace Bezoro.StateMachines
 			}
 		}
 
+		public static T CreateTransition<T>(this IState state, IState toState)
+		where T: class, ITransition, new()
+		{
+			var newTransition = new T();
+			newTransition.Init(state, toState, state.MasterStateMachine);
+			return newTransition;
+		}
+		
 		public static Coroutine StartCoroutine(this IState state, IEnumerator routine) =>
 			state.MasterStateMachine.StartCoroutine(routine);
 

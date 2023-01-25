@@ -1,12 +1,12 @@
-﻿using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
+using Bezoro.Core.Helpers;
 
 namespace Bezoro.StateMachines
 {
 	public sealed class EventTransition :
 		IEventTransition
 	{
-		public EventTransition
+		public void Init
 		(IEventState fromState,
 		 IEventState toState,
 		 MonoBehaviour stateMachine)
@@ -16,63 +16,53 @@ namespace Bezoro.StateMachines
 			_stateMachine = stateMachine;
 		}
 
-		public void WithCondition<T>()
-		where T : BaseEventCondition, new()
+		void ITransition.Init
+			(IState fromState, IState toState, MonoBehaviour stateMachine)
 		{
-			var newCondition = new T();
-			newCondition.Init(this, _stateMachine);
-			_conditions.Add(newCondition);
+			Init(fromState as IEventState,
+				 toState as IEventState,
+				 stateMachine);
 		}
 
-		public void WithConditions<T0, T1>()
-		where T0 : BaseEventCondition, new()
-		where T1 : BaseEventCondition, new()
-		{
-			var newCondition0 = new T0();
-			newCondition0.Init(this, _stateMachine);
-			_conditions.Add(newCondition0);
+		public ICondition[] Conditions => _conditions;
 
-			var newCondition1 = new T1();
-			newCondition1.Init(this, _stateMachine);
-			_conditions.Add(newCondition1);
+		public MonoBehaviour StateMachine => _stateMachine;
+
+		public void WithCondition<T>()
+		where T : class, IEventCondition, new() =>
+			ArrayHelpers.Add(ref _conditions, this.CreateCondition<T>());
+
+		public void WithConditions<T0, T1>()
+		where T0 : class, IEventCondition, new()
+		where T1 : class, IEventCondition, new()
+		{
+			ArrayHelpers.Add(ref _conditions, this.CreateCondition<T0>());
+			ArrayHelpers.Add(ref _conditions, this.CreateCondition<T1>());
 		}
 
 		public void WithConditions<T0, T1, T2>()
-		where T0 : BaseEventCondition, new()
-		where T1 : BaseEventCondition, new()
-		where T2 : BaseEventCondition, new()
+		where T0 : class, IEventCondition, new()
+		where T1 : class, IEventCondition, new()
+		where T2 : class, IEventCondition, new()
 		{
-			var newCondition0 = new T0();
-			newCondition0.Init(this, _stateMachine);
-			_conditions.Add(newCondition0);
-
-			var newCondition1 = new T1();
-			newCondition1.Init(this, _stateMachine);
-			_conditions.Add(newCondition1);
-
-			var newCondition2 = new T2();
-			newCondition2.Init(this, _stateMachine);
-			_conditions.Add(newCondition2);
+			ArrayHelpers.Add(ref _conditions, this.CreateCondition<T0>());
+			ArrayHelpers.Add(ref _conditions, this.CreateCondition<T1>());
+			ArrayHelpers.Add(ref _conditions, this.CreateCondition<T2>());
 		}
 
-		public void BecomeRelevant()
-		{
-			for (var i = 0; i < _conditions.Count; i++)
-				_conditions[i].BecomeRelevant();
-		}
+		public void BecomeRelevant() =>
+			this.AllConditionsBecomeRelevant();
 
 		public void OnConditionRaised() =>
 			_fromState.OnTransitionRaised(_toState);
 
-		public void CeaseRelevant()
-		{
-			for (var i = 0; i < _conditions.Count; i++)
-				_conditions[i].CeaseRelevant();
-		}
+		public void CeaseRelevant() =>
+			this.AllConditionsCeaseRelevant();
 
-		private readonly IEventState _fromState;
-		private readonly IEventState _toState;
-		private readonly MonoBehaviour _stateMachine;
-		private readonly List<BaseEventCondition> _conditions = new();
+
+		private ICondition[] _conditions = new ICondition[4];
+		private IEventState _fromState;
+		private IEventState _toState;
+		private MonoBehaviour _stateMachine;
 	}
 }

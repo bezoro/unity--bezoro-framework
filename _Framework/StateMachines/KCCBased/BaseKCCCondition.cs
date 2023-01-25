@@ -1,9 +1,9 @@
-﻿using System.Collections;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace Bezoro.StateMachines
 {
-	public abstract class BaseKCCCondition
+	public abstract class BaseKCCCondition :
+		IKCCCondition
 	{
 		public void Init(MonoBehaviour stateMachine, bool inverted = false)
 		{
@@ -12,43 +12,35 @@ namespace Bezoro.StateMachines
 			OnInit();
 		}
 
+		void ICondition.Init(ITransition transition, MonoBehaviour stateMachine) =>
+			Init(stateMachine);
+
+		public bool Inverted => _inverted;
+
+		public MonoBehaviour StateMachine => _stateMachine;
+
 		public void BecomeRelevant() =>
 			OnBecomeRelevant();
 
 		public bool Tick() =>
-			_inverted ? !OnTick() : OnTick();
+			this.Tick_Ext();
 
 		public void CeaseRelevant() =>
 			OnCeaseRelevant();
 
-		protected Coroutine StartCoroutine(IEnumerator routine) =>
-			_stateMachine.StartCoroutine(routine);
-
-		protected void StopCoroutine(Coroutine routine) =>
-			_stateMachine.StopCoroutine(routine);
-
-		protected bool TryGetComponent<T>(out T component)
-		where T : Component
-		{
-			if (_stateMachine.TryGetComponent<T>(out var c))
-			{
-				component = c;
-				return true;
-			}
-
-			component = null;
-			return false;
-		}
+		#region Abstract Methods
 
 		protected abstract void OnInit();
 
 		protected abstract void OnBecomeRelevant();
 
-		protected abstract bool OnTick();
+		public abstract bool OnTick();
 
 		protected abstract void OnCeaseRelevant();
 
-		private bool _inverted;
+		#endregion
+
 		private MonoBehaviour _stateMachine;
+		private bool _inverted;
 	}
 }
