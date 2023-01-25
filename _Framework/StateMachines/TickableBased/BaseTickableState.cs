@@ -3,7 +3,7 @@ using Bezoro.Core.Helpers;
 
 namespace Bezoro.StateMachines
 {
-	public abstract class BaseTickableState : 
+	public abstract class BaseTickableState :
 		ITickableState
 	{
 		public void Init
@@ -19,9 +19,8 @@ namespace Bezoro.StateMachines
 		(MonoBehaviour masterStateMachine,
 		 IStateMachine owningStateMachine)
 		{
-			_masterStateMachine = masterStateMachine;
-			_owningStateMachine = owningStateMachine;
-			OnInit();
+			Init(masterStateMachine,
+				 owningStateMachine as ITickableStateMachine);
 		}
 
 		public MonoBehaviour MasterStateMachine => _masterStateMachine;
@@ -30,13 +29,9 @@ namespace Bezoro.StateMachines
 
 		ITransition[] IState.Transitions => _transitions;
 
-		public TickTransition TransitionsTo(ITickableState toState)
+		public ITickTransition TransitionsTo(ITickableState toState)
 		{
-			var newTransition = new TickTransition
-				(this,
-				 toState,
-				 _masterStateMachine);
-
+			var newTransition = this.CreateTransition<TickTransition>(toState);
 			ArrayHelpers.Add(ref _transitions, newTransition);
 			return newTransition;
 		}

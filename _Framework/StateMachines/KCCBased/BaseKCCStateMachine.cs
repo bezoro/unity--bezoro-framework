@@ -9,8 +9,11 @@ namespace Bezoro.StateMachines
 	public abstract class BaseKCCStateMachine : Tickable,
 		IKCCStateMachine, ICharacterController
 	{
-		private void Awake() =>
+		private void Awake()
+		{
+			Motor.CharacterController = this;
 			SetUp();
+		}
 
 		public IKCCState StartState => _startState;
 
@@ -117,22 +120,20 @@ namespace Bezoro.StateMachines
 		 Vector3 hitNormal,
 		 Vector3 hitPoint,
 		 ref HitStabilityReport hitStabilityReport) =>
-			_currentState.GroundHit
-				(hitCollider,
-				 hitNormal,
-				 hitPoint,
-				 ref hitStabilityReport);
+			_currentState.GroundHit(hitCollider,
+								    hitNormal,
+								    hitPoint,
+								    ref hitStabilityReport);
 
 		public void OnMovementHit
 		(Collider hitCollider,
 		 Vector3 hitNormal,
 		 Vector3 hitPoint,
 		 ref HitStabilityReport hitStabilityReport) =>
-			_currentState.MovementHit
-				(hitCollider,
-				 hitNormal,
-				 hitPoint,
-				 ref hitStabilityReport);
+			_currentState.MovementHit(hitCollider,
+									  hitNormal,
+									  hitPoint,
+									  ref hitStabilityReport);
 
 		public void ProcessHitStabilityReport
 		(Collider hitCollider,
@@ -141,13 +142,12 @@ namespace Bezoro.StateMachines
 		 Vector3 atCharacterPosition,
 		 Quaternion atCharacterRotation,
 		 ref HitStabilityReport hitStabilityReport) =>
-			_currentState.ProcessHitStabilityReport
-				(hitCollider,
-				 hitNormal,
-				 hitPoint,
-				 atCharacterPosition,
-				 atCharacterRotation,
-				 ref hitStabilityReport);
+			_currentState.ProcessHitStabilityReport(hitCollider,
+												    hitNormal,
+												    hitPoint,
+												    atCharacterPosition,
+												    atCharacterRotation,
+												    ref hitStabilityReport);
 
 		public void OnDiscreteCollisionDetected(Collider hitCollider) =>
 			_currentState.DiscreteCollisionDetected(hitCollider);

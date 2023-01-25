@@ -40,9 +40,9 @@ namespace Bezoro.StateMachines
 
 		IState IStateMachine.LastState => _lastState;
 
-		public EventTransition TransitionsTo(IEventState toState)
+		public IEventTransition TransitionsTo(IEventState toState)
 		{
-			var newTransition = new EventTransition(this, toState, _masterStateMachine);
+			var newTransition = this.CreateTransition<EventTransition>(toState);
 			ArrayHelpers.Add(ref _transitions, newTransition);
 			return newTransition;
 		}

@@ -1,96 +1,90 @@
-﻿using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
+using Bezoro.Core.Helpers;
 
 namespace Bezoro.StateMachines
 {
 	public class KCCTransition :
 		IKCCTransition
 	{
-		public KCCTransition
-		(
-			IKCCState fromState,
-			IKCCState toState,
-			MonoBehaviour stateMachine
-		)
+		public void Init(IKCCState fromState, IKCCState toState, MonoBehaviour stateMachine)
 		{
 			_fromState = fromState;
 			_toState = toState;
 			_stateMachine = stateMachine;
 		}
 
-		public void WithCondition<TCondition>(bool inverted = false)
-		where TCondition : BaseKCCCondition, new()
+		void ITickTransition.Init
+		(ITickableState fromState,
+		 ITickableState toState,
+		 MonoBehaviour stateMachine) =>
+			Init(fromState as IKCCState,
+				 toState as IKCCState,
+				 stateMachine);
+
+		void ITransition.Init
+		(IState fromState,
+		 IState toState,
+		 MonoBehaviour stateMachine) =>
+			Init(fromState as IKCCState,
+				 toState as IKCCState,
+				 stateMachine);
+
+		public ITickableState FromState => _fromState;
+
+		public ITickableState ToState => _toState;
+
+		ITickCondition[] ITickTransition.Conditions => _conditions;
+
+		ICondition[] ITransition.Conditions => _conditions;
+
+		public ConditionsCriteria ConditionsCriteria => _conditionsCriteria;
+
+		public MonoBehaviour StateMachine => _stateMachine;
+
+		public void WithCondition<T>(bool inverted = false)
+		where T : class, ITickCondition, new() =>
+			ArrayHelpers.Add(ref _conditions, this.CreateCondition<T>(inverted));
+
+		public void WithConditions<T0, T1>
+		(ConditionsCriteria conditionsCriteria = ConditionsCriteria.AnyTrue,
+		 bool inverted0 = false,
+		 bool inverted1 = false)
+		where T0 : class, ITickCondition, new()
+		where T1 : class, ITickCondition, new()
 		{
-			var newCondition = new TCondition();
-			newCondition.Init(_stateMachine, inverted);
-			_conditions.Add(newCondition);
-		}
-
-		public void WithConditions<TCondition1, TCondition2>
-		(
-			ConditionsCriteria conditionsCriteria = ConditionsCriteria.AnyTrue,
-			bool inverted1 = false,
-			bool inverted2 = false
-		)
-		where TCondition1 : BaseKCCCondition, new()
-		where TCondition2 : BaseKCCCondition, new()
-		{
-			var newCondition1 = new TCondition1();
-			newCondition1.Init(_stateMachine, inverted1);
-			_conditions.Add(newCondition1);
-
-			var newCondition2 = new TCondition2();
-			newCondition2.Init(_stateMachine, inverted2);
-			_conditions.Add(newCondition2);
-
+			ArrayHelpers.Add(ref _conditions, this.CreateCondition<T0>(inverted0));
+			ArrayHelpers.Add(ref _conditions, this.CreateCondition<T1>(inverted1));
 			_conditionsCriteria = conditionsCriteria;
 		}
 
-		public void BecomeRelevant()
+		public void WithConditions<T0, T1, T2>
+		(ConditionsCriteria conditionsCriteria = ConditionsCriteria.AnyTrue,
+		 bool inverted0 = false,
+		 bool inverted1 = false,
+		 bool inverted2 = false)
+		where T0 : class, ITickCondition, new()
+		where T1 : class, ITickCondition, new()
+		where T2 : class, ITickCondition, new()
 		{
-			for (var i = 0; i < _conditions.Count; i++)
-				_conditions[i].BecomeRelevant();
+			ArrayHelpers.Add(ref _conditions, this.CreateCondition<T0>(inverted0));
+			ArrayHelpers.Add(ref _conditions, this.CreateCondition<T1>(inverted1));
+			ArrayHelpers.Add(ref _conditions, this.CreateCondition<T2>(inverted2));
+			_conditionsCriteria = conditionsCriteria;
 		}
+
+		public void BecomeRelevant() =>
+			this.AllConditionsBecomeRelevant();
 
 		public void Tick() =>
-			TickConditions();
+			this.TickConditions();
 
-		private void TickConditions()
-		{
-			if (_conditionsCriteria is ConditionsCriteria.AnyTrue)
-				TickAnyTrue();
+		public void CeaseRelevant() =>
+			this.AllConditionsCeaseRelevant();
 
-			else if (_conditionsCriteria is ConditionsCriteria.AllTrue)
-				TickAllTrue();
-
-			void TickAnyTrue()
-			{
-				for (var i = 0; i < _conditions.Count; i++)
-					if (_conditions[i].Tick())
-						_fromState.OnTransitionTrue(_toState);
-			}
-
-			void TickAllTrue()
-			{
-				for (var i = 0; i < _conditions.Count; i++)
-					if (!_conditions[i].Tick())
-						return;
-
-				_fromState.OnTransitionTrue(_toState);
-			}
-		}
-
-		public void CeaseRelevant()
-		{
-			for (var i = 0; i < _conditions.Count; i++)
-				_conditions[i].CeaseRelevant();
-		}
-
+		private ITickCondition[] _conditions = new ITickCondition[4];
 		private ConditionsCriteria _conditionsCriteria = ConditionsCriteria.AnyTrue;
-
-		private readonly IKCCState _fromState;
-		private readonly IKCCState _toState;
-		private readonly List<BaseKCCCondition> _conditions = new(4);
-		private readonly MonoBehaviour _stateMachine;
+		private IKCCState _fromState;
+		private IKCCState _toState;
+		private MonoBehaviour _stateMachine;
 	}
 }

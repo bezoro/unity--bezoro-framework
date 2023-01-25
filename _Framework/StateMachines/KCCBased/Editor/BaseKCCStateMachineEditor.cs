@@ -51,7 +51,7 @@ namespace Bezoro.StateMachines.Editor
 		{
 			base.OnDisable();
 
-			if (target.EqualsNull())
+			if (target == null)
 			{
 				DestroyImmediate(_motor);
 				DestroyImmediate(_capsuleCollider);
