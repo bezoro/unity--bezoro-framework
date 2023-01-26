@@ -1,19 +1,9 @@
 ﻿namespace Bezoro.StateMachines
 {
-	public static class KCCTransitionExtensions
-	{
-		public static T CreateCondition<T>(this IKCCTransition transition, bool inverted)
-		where T : class, IKCCCondition, new()
-		{
-			var newCondition = new T();
-			newCondition.Init(transition.StateMachine, inverted);
-			return newCondition;
-		}
-	}
-	
 	public static class TickTransitionExtensions
 	{
-		public static void TickConditions(this ITickTransition transition)
+		public static void TickConditions<T>(this T transition)
+		where T : ITickTransition
 		{
 			var conditions = transition.Conditions;
 
@@ -50,10 +40,11 @@
 			}
 		}
 
-		public static T CreateCondition<T>(this ITickTransition transition, bool inverted)
-		where T : class, ITickCondition, new()
+		public static T1 CreateCondition<T0, T1>(this T0 transition, bool inverted)
+		where T0 : class, ITickTransition
+		where T1 : class, ITickCondition, new()
 		{
-			var newCondition = new T();
+			var newCondition = new T1();
 			newCondition.Init(transition.StateMachine, inverted);
 			return newCondition;
 		}
@@ -69,7 +60,8 @@
 			return newCondition;
 		}
 
-		public static void AllConditionsBecomeRelevant(this ITransition transition)
+		public static void AllConditionsBecomeRelevant<T>(this T transition)
+		where T : ITransition
 		{
 			var conditions = transition.Conditions;
 			for (var i = 0; i < conditions.Length; i++)
@@ -81,7 +73,8 @@
 			}
 		}
 
-		public static void AllConditionsCeaseRelevant(this ITransition transition)
+		public static void AllConditionsCeaseRelevant<T>(this T transition)
+		where T : ITransition
 		{
 			var conditions = transition.Conditions;
 			for (var i = 0; i < conditions.Length; i++)

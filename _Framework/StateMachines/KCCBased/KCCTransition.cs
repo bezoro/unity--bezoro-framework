@@ -17,17 +17,13 @@ namespace Bezoro.StateMachines
 		(ITickableState fromState,
 		 ITickableState toState,
 		 MonoBehaviour stateMachine) =>
-			Init(fromState as IKCCState,
-				 toState as IKCCState,
-				 stateMachine);
+			Init(fromState as IKCCState, toState as IKCCState, stateMachine);
 
 		void ITransition.Init
 		(IState fromState,
 		 IState toState,
 		 MonoBehaviour stateMachine) =>
-			Init(fromState as IKCCState,
-				 toState as IKCCState,
-				 stateMachine);
+			Init(fromState as IKCCState, toState as IKCCState, stateMachine);
 
 		public ITickableState FromState => _fromState;
 
@@ -43,7 +39,7 @@ namespace Bezoro.StateMachines
 
 		public void WithCondition<T>(bool inverted = false)
 		where T : class, ITickCondition, new() =>
-			ArrayHelpers.Add(ref _conditions, this.CreateCondition<T>(inverted));
+			ArrayHelpers.Add(ref _conditions, this.CreateCondition<IKCCTransition, T>(inverted));
 
 		public void WithConditions<T0, T1>
 		(ConditionsCriteria conditionsCriteria = ConditionsCriteria.AnyTrue,
@@ -52,8 +48,8 @@ namespace Bezoro.StateMachines
 		where T0 : class, ITickCondition, new()
 		where T1 : class, ITickCondition, new()
 		{
-			ArrayHelpers.Add(ref _conditions, this.CreateCondition<T0>(inverted0));
-			ArrayHelpers.Add(ref _conditions, this.CreateCondition<T1>(inverted1));
+			ArrayHelpers.Add(ref _conditions, this.CreateCondition<IKCCTransition, T0>(inverted0));
+			ArrayHelpers.Add(ref _conditions, this.CreateCondition<IKCCTransition, T1>(inverted1));
 			_conditionsCriteria = conditionsCriteria;
 		}
 
@@ -66,9 +62,9 @@ namespace Bezoro.StateMachines
 		where T1 : class, ITickCondition, new()
 		where T2 : class, ITickCondition, new()
 		{
-			ArrayHelpers.Add(ref _conditions, this.CreateCondition<T0>(inverted0));
-			ArrayHelpers.Add(ref _conditions, this.CreateCondition<T1>(inverted1));
-			ArrayHelpers.Add(ref _conditions, this.CreateCondition<T2>(inverted2));
+			ArrayHelpers.Add(ref _conditions, this.CreateCondition<IKCCTransition, T0>(inverted0));
+			ArrayHelpers.Add(ref _conditions, this.CreateCondition<IKCCTransition, T1>(inverted1));
+			ArrayHelpers.Add(ref _conditions, this.CreateCondition<IKCCTransition, T2>(inverted2));
 			_conditionsCriteria = conditionsCriteria;
 		}
 
