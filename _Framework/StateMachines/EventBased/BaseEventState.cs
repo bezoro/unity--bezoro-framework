@@ -27,7 +27,9 @@ namespace Bezoro.StateMachines
 
 		public IEventTransition TransitionsTo(IEventState toState)
 		{
-			var newTransition = this.CreateTransition<EventTransition>(toState);
+			var newTransition =
+				this.CreateTransition<EventTransition, IEventState, IEventState>(toState);
+
 			ArrayHelpers.Add(ref _transitions, newTransition);
 			return newTransition;
 		}
