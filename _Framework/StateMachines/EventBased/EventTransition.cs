@@ -6,23 +6,15 @@ namespace Bezoro.StateMachines
 	public sealed class EventTransition :
 		IEventTransition
 	{
-		public void Init
-		(IEventState fromState,
-		 IEventState toState,
-		 MonoBehaviour stateMachine)
+		public void Init(IEventState fromState, IEventState toState, MonoBehaviour stateMachine)
 		{
 			_fromState = fromState;
 			_toState = toState;
 			_stateMachine = stateMachine;
 		}
 
-		void ITransition.Init
-			(IState fromState, IState toState, MonoBehaviour stateMachine)
-		{
-			Init(fromState as IEventState,
-				 toState as IEventState,
-				 stateMachine);
-		}
+		void ITransition.Init(IState fromState, IState toState, MonoBehaviour stateMachine) =>
+			Init(fromState as IEventState, toState as IEventState, stateMachine);
 
 		public ICondition[] Conditions => _conditions;
 

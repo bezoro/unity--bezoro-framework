@@ -56,8 +56,7 @@ namespace Bezoro.StateMachines
 	public interface ITickableState : IState
 	{
 		public void Init
-		(MonoBehaviour masterStateMachine,
-		 ITickableStateMachine owningStateMachine);
+			(MonoBehaviour masterStateMachine, ITickableStateMachine owningStateMachine);
 
 		public new ITickTransition[] Transitions { get; }
 
@@ -74,18 +73,14 @@ namespace Bezoro.StateMachines
 
 	public interface IEventState : IState
 	{
-		public void Init
-		(MonoBehaviour masterStateMachine,
-		 IEventStateMachine owningStateMachine);
+		public void Init(MonoBehaviour masterStateMachine, IEventStateMachine owningStateMachine);
 
 		public void OnTransitionRaised(IEventState toState);
 	}
 
 	public interface IState
 	{
-		public void Init
-		(MonoBehaviour masterStateMachine,
-		 IStateMachine owningStateMachine);
+		public void Init(MonoBehaviour masterStateMachine, IStateMachine owningStateMachine);
 
 		public MonoBehaviour MasterStateMachine { get; }
 

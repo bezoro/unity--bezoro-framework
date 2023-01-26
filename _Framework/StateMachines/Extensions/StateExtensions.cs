@@ -54,10 +54,8 @@ namespace Bezoro.StateMachines
 			}
 		}
 
-		public static T0 CreateTransition<T0, T1, T2>(this T1 state, T2 toState)
+		public static T0 CreateTransition<T0>(this IState state, IState toState) 
 		where T0 : class, ITransition, new()
-		where T1 : class, IState
-		where T2 : class, IState
 		{
 			var newTransition = new T0();
 			newTransition.Init(state, toState, state.MasterStateMachine);
