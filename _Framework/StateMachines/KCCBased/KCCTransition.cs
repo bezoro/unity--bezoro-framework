@@ -14,15 +14,10 @@ namespace Bezoro.StateMachines
 		}
 
 		void ITickTransition.Init
-		(ITickableState fromState,
-		 ITickableState toState,
-		 MonoBehaviour stateMachine) =>
+			(ITickableState fromState, ITickableState toState, MonoBehaviour stateMachine) =>
 			Init(fromState as IKCCState, toState as IKCCState, stateMachine);
 
-		void ITransition.Init
-		(IState fromState,
-		 IState toState,
-		 MonoBehaviour stateMachine) =>
+		void ITransition.Init(IState fromState, IState toState, MonoBehaviour stateMachine) =>
 			Init(fromState as IKCCState, toState as IKCCState, stateMachine);
 
 		public ITickableState FromState => _fromState;

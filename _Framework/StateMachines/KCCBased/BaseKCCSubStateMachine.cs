@@ -62,7 +62,7 @@ namespace Bezoro.StateMachines
 
 		public IKCCTransition TransitionsTo(IKCCState toState)
 		{
-			var newTransition = this.CreateTransition<KCCTransition, IKCCState, IKCCState>(toState);
+			var newTransition = this.CreateTransition<KCCTransition>(toState);
 			ArrayHelpers.Add(ref _transitions, newTransition);
 			return newTransition;
 		}

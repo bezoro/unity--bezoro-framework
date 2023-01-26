@@ -47,7 +47,7 @@ namespace Bezoro.StateMachines
 
 		public IKCCTransition TransitionsTo(IKCCState toState)
 		{
-			var newTransition = this.CreateTransition<KCCTransition, IKCCState, IKCCState>(toState);
+			var newTransition = this.CreateTransition<KCCTransition>(toState);
 			ArrayHelpers.Add(ref _transitions, newTransition);
 			return newTransition;
 		}
@@ -221,9 +221,9 @@ namespace Bezoro.StateMachines
 
 		public List<Type> MonoBehaviourTypesToIgnoreCollisionsWith { get; }
 
-		ITickTransition[] ITickableState.Transitions { get; }
+		ITickTransition[] ITickableState.Transitions { get; } = Array.Empty<ITickTransition>();
 
-		ITransition[] IState.Transitions { get; }
+		ITransition[] IState.Transitions { get; } = Array.Empty<ITransition>();
 
 		public void Enter() { }
 

@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 using Bezoro.Core.Helpers;
 
 namespace Bezoro.StateMachines
@@ -6,22 +7,15 @@ namespace Bezoro.StateMachines
 	public abstract class BaseTickableState :
 		ITickableState
 	{
-		public void Init
-		(MonoBehaviour masterStateMachine,
-		 ITickableStateMachine owningStateMachine)
+		public void Init(MonoBehaviour masterStateMachine, ITickableStateMachine owningStateMachine)
 		{
 			_masterStateMachine = masterStateMachine;
 			_owningStateMachine = owningStateMachine;
 			OnInit();
 		}
 
-		void IState.Init
-		(MonoBehaviour masterStateMachine,
-		 IStateMachine owningStateMachine)
-		{
-			Init(masterStateMachine,
-				 owningStateMachine as ITickableStateMachine);
-		}
+		void IState.Init(MonoBehaviour masterStateMachine, IStateMachine owningStateMachine) =>
+			Init(masterStateMachine, owningStateMachine as ITickableStateMachine);
 
 		public MonoBehaviour MasterStateMachine => _masterStateMachine;
 
@@ -31,9 +25,7 @@ namespace Bezoro.StateMachines
 
 		public ITickTransition TransitionsTo(ITickableState toState)
 		{
-			var newTransition =
-				this.CreateTransition<TickTransition, ITickableState, ITickableState>(toState);
-
+			var newTransition = this.CreateTransition<TickTransition>(toState);
 			ArrayHelpers.Add(ref _transitions, newTransition);
 			return newTransition;
 		}
@@ -108,9 +100,9 @@ namespace Bezoro.StateMachines
 
 		public MonoBehaviour MasterStateMachine { get; }
 
-		public ITickTransition[] Transitions { get; }
+		public ITickTransition[] Transitions { get; } = Array.Empty<ITickTransition>();
 
-		ITransition[] IState.Transitions { get; }
+		ITransition[] IState.Transitions { get; } = Array.Empty<ITransition>();
 
 		public void Enter() { }
 
