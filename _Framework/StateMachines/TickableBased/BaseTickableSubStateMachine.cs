@@ -44,7 +44,9 @@ namespace Bezoro.StateMachines
 
 		public ITickTransition TransitionsTo(ITickableState toState)
 		{
-			var newTransition = this.CreateTransition<TickTransition>(toState);
+			var newTransition =
+				this.CreateTransition<TickTransition, ITickableState, ITickableState>(toState);
+
 			ArrayHelpers.Add(ref _transitions, newTransition);
 			return newTransition;
 		}

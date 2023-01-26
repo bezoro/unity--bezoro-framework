@@ -5,7 +5,8 @@ namespace Bezoro.StateMachines
 {
 	public static class TickableStateExtensions
 	{
-		public static void AllTransitionsTick(this ITickableState state)
+		public static void AllTransitionsTick<T>(this T state)
+		where T : ITickableState
 		{
 			var transitions = state.Transitions;
 			for (var i = 0; i < transitions.Length; i++)
@@ -27,7 +28,8 @@ namespace Bezoro.StateMachines
 
 	public static class StateExtensions
 	{
-		public static void AllTransitionsBecomeRelevant(this IState state)
+		public static void AllTransitionsBecomeRelevant<T>(this T state)
+		where T : IState
 		{
 			var transitions = state.Transitions;
 			for (var i = 0; i < transitions.Length; i++)
@@ -39,7 +41,8 @@ namespace Bezoro.StateMachines
 			}
 		}
 
-		public static void AllTransitionsCeaseRelevant(this IState state)
+		public static void AllTransitionsCeaseRelevant<T>(this T state)
+		where T : IState
 		{
 			var transitions = state.Transitions;
 			for (var i = 0; i < transitions.Length; i++)
@@ -51,14 +54,16 @@ namespace Bezoro.StateMachines
 			}
 		}
 
-		public static T CreateTransition<T>(this IState state, IState toState)
-		where T: class, ITransition, new()
+		public static T0 CreateTransition<T0, T1, T2>(this T1 state, T2 toState)
+		where T0 : class, ITransition, new()
+		where T1 : class, IState
+		where T2 : class, IState
 		{
-			var newTransition = new T();
+			var newTransition = new T0();
 			newTransition.Init(state, toState, state.MasterStateMachine);
 			return newTransition;
 		}
-		
+
 		public static Coroutine StartCoroutine(this IState state, IEnumerator routine) =>
 			state.MasterStateMachine.StartCoroutine(routine);
 
@@ -81,12 +86,13 @@ namespace Bezoro.StateMachines
 			return false;
 		}
 
-		public static bool IsSubStateMachine<T>(this IState state, out T outStateMachine)
-		where T : class, IStateMachine
+		public static bool IsSubStateMachine<T0, T1>(this T1 state, out T0 outStateMachine)
+		where T0 : class, IStateMachine
+		where T1 : class, IState
 		{
 			if (state is IStateMachine stateMachine)
 			{
-				outStateMachine = stateMachine as T;
+				outStateMachine = stateMachine as T0;
 				return true;
 			}
 
