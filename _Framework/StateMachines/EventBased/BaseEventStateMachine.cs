@@ -4,13 +4,10 @@ namespace Bezoro.StateMachines
 {
 	[DisallowMultipleComponent]
 	public abstract class BaseEventStateMachine : MonoBehaviour,
-		IEventStateMachine
+		IMonoEventStateMachine
 	{
-		private void Awake()
-		{
-			RegisterStates();
-			SetUpTransitions();
-		}
+		private void Awake() =>
+			this.Awake_Ext();
 
 		public IEventState CurrentState => _currentState;
 
@@ -20,29 +17,19 @@ namespace Bezoro.StateMachines
 
 		IState IStateMachine.LastState => _lastState;
 
+		public bool Restarted => _restarted;
+
 		[field: SerializeField]
 		public DisableMethod DisableMethod { get; private set; }
 
-		private void Start()
-		{
-			_currentState = ResolveStartState();
-			_currentState.Enter();
-		}
+		private void Start() =>
+			this.Start_Ext();
 
-		private void OnEnable()
-		{
-			if (_restarted)
-			{
-				_currentState = ResolveStartState();
-				_currentState.Enter();
-			}
-		}
+		private void OnEnable() =>
+			this.OnEnable_Ext();
 
-		private void OnDisable()
-		{
-			if (DisableMethod is DisableMethod.Restart)
-				_restarted = true;
-		}
+		private void OnDisable() =>
+			this.OnDisable_Ext();
 
 		public void DoTransition(IEventState toState) =>
 			this.DoTransition_Ext(toState);
@@ -62,13 +49,16 @@ namespace Bezoro.StateMachines
 		void IStateMachine.SetLastState(IState state) =>
 			_lastState = state as IEventState;
 
+		public void SetRestarted(bool value) =>
+			_restarted = value;
+
 		#region Abstract Methods
 
-		protected abstract void RegisterStates();
+		public abstract void RegisterStates();
 
-		protected abstract void SetUpTransitions();
+		public abstract void SetUpTransitions();
 
-		protected abstract IEventState ResolveStartState();
+		public abstract IState ResolveStartState();
 
 		#endregion
 

@@ -3,12 +3,6 @@ using System.Collections;
 
 namespace Bezoro.StateMachines
 {
-	public static class TickConditionExtensions
-	{
-		public static bool Tick_Ext(this ITickCondition condition) =>
-			condition.Inverted ? !condition.OnTick() : condition.OnTick();
-	}
-
 	public static class ConditionExtensions
 	{
 		public static Coroutine StartCoroutine(this ICondition condition, IEnumerator routine) =>

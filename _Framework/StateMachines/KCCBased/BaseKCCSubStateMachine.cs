@@ -28,6 +28,8 @@ namespace Bezoro.StateMachines
 		void IState.Init(MonoBehaviour masterStateMachine, IStateMachine owningStateMachine) =>
 			Init(masterStateMachine, owningStateMachine as IKCCStateMachine, null);
 
+		#region Public Properties
+
 		public MonoBehaviour MasterStateMachine => _masterStateMachine;
 
 		public IKCCState CurrentState => _currentState;
@@ -52,19 +54,12 @@ namespace Bezoro.StateMachines
 
 		public List<Type> MonoBehaviourTypesToIgnoreCollisionsWith { get; } = new(12);
 
-		public IKCCTransition TransitionsTo(IKCCState toState)
-		{
-			var newTransition = this.CreateTransition<KCCTransition>(toState);
-			ArrayHelpers.Add(ref _transitions, newTransition);
-			return newTransition;
-		}
+		#endregion
 
 		public void Enter()
 		{
 			OnEnter();
-			this.AllTransitionsBecomeRelevant();
-			_currentState = ResolveStartState();
-			_currentState.Enter();
+			this.Enter_Ext();
 		}
 
 		public void EarlyTick()
@@ -195,10 +190,34 @@ namespace Bezoro.StateMachines
 
 		public void Exit()
 		{
-			_currentState.Exit();
-			this.AllTransitionsCeaseRelevant();
+			this.Exit_Ext();
 			OnExit();
 		}
+
+		public IKCCTransition TransitionsTo(IKCCState toState)
+		{
+			var newTransition = this.CreateTransition<KCCTransition>(toState);
+			ArrayHelpers.Add(ref _transitions, newTransition);
+			return newTransition;
+		}
+
+		public void SetCurrentState(IKCCState state) =>
+			_currentState = state;
+
+		void ITickableStateMachine.SetCurrentState(ITickableState state) =>
+			SetCurrentState(state as IKCCState);
+
+		void IStateMachine.SetCurrentState(IState state) =>
+			SetCurrentState(state as IKCCState);
+
+		public void SetLastState(IKCCState state) =>
+			_lastState = state;
+
+		void ITickableStateMachine.SetLastState(ITickableState state) =>
+			SetLastState(state as IKCCState);
+
+		void IStateMachine.SetLastState(IState state) =>
+			SetLastState(state as IKCCState);
 
 		public void DoTransition(IKCCState toState) =>
 			this.DoTransition_Ext(toState);
@@ -209,31 +228,13 @@ namespace Bezoro.StateMachines
 		void IStateMachine.DoTransition(IState toState) =>
 			this.DoTransition_Ext(toState);
 
-		public void SetLastState(IKCCState state) =>
-			_lastState = state;
-
-		void ITickableStateMachine.SetLastState(ITickableState state) =>
-			_lastState = state as IKCCState;
-
-		void IStateMachine.SetLastState(IState state) =>
-			_lastState = state as IKCCState;
-
-		public void SetCurrentState(IKCCState state) =>
-			_currentState = state;
-
-		void ITickableStateMachine.SetCurrentState(ITickableState state) =>
-			_currentState = state as IKCCState;
-
-		void IStateMachine.SetCurrentState(IState state) =>
-			_currentState = state as IKCCState;
-
 		#region Abstract Methods
 
-		protected abstract void RegisterStates();
+		public abstract void RegisterStates();
 
-		protected abstract void SetUpTransitions();
+		public abstract void SetUpTransitions();
 
-		protected abstract IKCCState ResolveStartState();
+		public abstract IState ResolveStartState();
 
 		protected abstract void OnEnter();
 
@@ -286,7 +287,6 @@ namespace Bezoro.StateMachines
 		where T : class, IKCCState, new() =>
 			this.CreateState<T, IKCCStateMachine>(_masterStateMachine);
 
-		private IKCCState _startState = new NullKCCState();
 		private IKCCState _currentState = new NullKCCState();
 		private IKCCState _lastState = new NullKCCState();
 		private IKCCStateMachine _owningStateMachine;

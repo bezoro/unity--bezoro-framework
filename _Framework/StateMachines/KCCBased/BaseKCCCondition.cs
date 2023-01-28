@@ -15,9 +15,9 @@ namespace Bezoro.StateMachines
 		void ICondition.Init(ITransition transition, MonoBehaviour stateMachine) =>
 			Init(stateMachine);
 
-		public bool Inverted => _inverted;
-
 		public MonoBehaviour StateMachine => _stateMachine;
+
+		public bool Inverted => _inverted;
 
 		public void BecomeRelevant() =>
 			OnBecomeRelevant();

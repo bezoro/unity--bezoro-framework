@@ -23,13 +23,6 @@ namespace Bezoro.StateMachines
 
 		ITransition[] IState.Transitions => _transitions;
 
-		public ITickTransition TransitionsTo(ITickableState toState)
-		{
-			var newTransition = this.CreateTransition<TickTransition>(toState);
-			ArrayHelpers.Add(ref _transitions, newTransition);
-			return newTransition;
-		}
-
 		public void Enter()
 		{
 			OnEnter();
@@ -60,6 +53,13 @@ namespace Bezoro.StateMachines
 			OnExit();
 		}
 
+		public ITickTransition TransitionsTo(ITickableState toState)
+		{
+			var newTransition = this.CreateTransition<TickTransition>(toState);
+			ArrayHelpers.Add(ref _transitions, newTransition);
+			return newTransition;
+		}
+
 		#region Abstract Methods
 
 		protected abstract void OnInit();
@@ -85,13 +85,10 @@ namespace Bezoro.StateMachines
 
 	public class NullTickableState : ITickableState
 	{
-		public void Init
-		(MonoBehaviour masterStateMachine,
-		 IStateMachine owningStateMachine) { }
+		public void Init(MonoBehaviour masterStateMachine, IStateMachine owningStateMachine) { }
 
 		public void Init
-		(MonoBehaviour masterStateMachine,
-		 ITickableStateMachine owningStateMachine) { }
+			(MonoBehaviour masterStateMachine, ITickableStateMachine owningStateMachine) { }
 
 		public MonoBehaviour MasterStateMachine { get; }
 

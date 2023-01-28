@@ -17,6 +17,8 @@ namespace Bezoro.StateMachines
 		void IState.Init(MonoBehaviour masterStateMachine, IStateMachine owningStateMachine) =>
 			Init(masterStateMachine, owningStateMachine as IEventStateMachine);
 
+		#region Public Properties
+
 		public IEventState CurrentState => _currentState;
 
 		IState IStateMachine.CurrentState => _currentState;
@@ -29,6 +31,23 @@ namespace Bezoro.StateMachines
 
 		public ITransition[] Transitions => _transitions;
 
+		#endregion
+
+		public void Enter()
+		{
+			OnEnter();
+			this.Enter_Ext();
+		}
+
+		public void OnTransitionRaised(IEventState toState) =>
+			_owningStateMachine.DoTransition(toState);
+
+		public void Exit()
+		{
+			this.Exit_Ext();
+			OnExit();
+		}
+
 		public IEventTransition TransitionsTo(IEventState toState)
 		{
 			var newTransition = this.CreateTransition<EventTransition>(toState);
@@ -40,21 +59,13 @@ namespace Bezoro.StateMachines
 			_currentState = state;
 
 		void IStateMachine.SetCurrentState(IState state) =>
-			_currentState = state as IEventState;
+			SetCurrentState(state as IEventState);
 
 		public void SetLastState(IEventState state) =>
 			_lastState = state;
 
 		void IStateMachine.SetLastState(IState state) =>
-			_lastState = state as IEventState;
-
-		public void Enter()
-		{
-			OnEnter();
-			this.AllTransitionsBecomeRelevant();
-			_currentState = ResolveStartState();
-			_currentState.Enter();
-		}
+			SetLastState(state as IEventState);
 
 		public void DoTransition(IEventState toState) =>
 			this.DoTransition_Ext(toState);
@@ -62,23 +73,13 @@ namespace Bezoro.StateMachines
 		void IStateMachine.DoTransition(IState toState) =>
 			this.DoTransition_Ext(toState);
 
-		public void OnTransitionRaised(IEventState toState) =>
-			_owningStateMachine.DoTransition(toState);
-
-		public void Exit()
-		{
-			_currentState.Exit();
-			this.AllTransitionsCeaseRelevant();
-			OnExit();
-		}
-
 		#region Abstract Methods
 
-		protected abstract void RegisterStates();
+		public abstract void RegisterStates();
 
-		protected abstract void SetUpTransitions();
+		public abstract void SetUpTransitions();
 
-		protected abstract IEventState ResolveStartState();
+		public abstract IState ResolveStartState();
 
 		protected abstract void OnEnter();
 
@@ -90,7 +91,6 @@ namespace Bezoro.StateMachines
 		where T : class, IEventState, new() =>
 			this.CreateState<T, IEventStateMachine>(_masterStateMachine);
 
-		private IEventState _startState = new NullEventState();
 		private IEventState _currentState = new NullEventState();
 		private IEventState _lastState = new NullEventState();
 		private IEventStateMachine _owningStateMachine;

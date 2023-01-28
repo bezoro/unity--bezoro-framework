@@ -45,12 +45,16 @@
 
 		public IState LastState { get; }
 
-		public DisableMethod DisableMethod => DisableMethod.Continue;
-
 		public void SetCurrentState(IState state);
 
 		public void SetLastState(IState state);
 
 		public void DoTransition(IState toState);
+
+		public IState ResolveStartState();
+
+		void RegisterStates();
+
+		void SetUpTransitions();
 	}
 }
