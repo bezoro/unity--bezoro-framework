@@ -1,15 +1,19 @@
-﻿using System.Collections.Generic;
+﻿using Weaver;
+using UnityEngine;
 using Bezoro.Core.Helpers;
 using JetBrains.Annotations;
-using UnityEngine;
-using Weaver;
+using System.Collections.Generic;
 
 namespace Bezoro.Core.Singletons
 {
 	public sealed class AITickManager : MonoBehaviour
 	{
 		[AssetInstance] [UsedImplicitly]
-		public static readonly AITickManager Instance;
+		public static AITickManager Instance { get; private set; }
+
+		[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+		private static void Init() =>
+			Instance = null;
 
 		public float TickFrequency => 0.1f;
 
