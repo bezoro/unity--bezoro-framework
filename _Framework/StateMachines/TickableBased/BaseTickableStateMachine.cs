@@ -7,26 +7,38 @@ namespace Bezoro.StateMachines
 	public abstract class BaseTickableStateMachine : Tickable,
 		ITickableStateMachine
 	{
-		private void Awake() =>
-			SetUp();
-
-		public ITickableState StartState => _startState;
+		private void Awake()
+		{
+			RegisterStates();
+			SetUpTransitions();
+		}
 
 		public ITickableState CurrentState => _currentState;
 
-		public ITickableState LastState => _lastState;
-
-		IState IStateMachine.StartState => _startState;
-
 		IState IStateMachine.CurrentState => _currentState;
+
+		public ITickableState LastState => _lastState;
 
 		IState IStateMachine.LastState => _lastState;
 
 		[field: SerializeField]
 		public DisableMethod DisableMethod { get; private set; }
 
-		private void Start() =>
-			this.Start_Ext();
+		private void Start()
+		{
+			_currentState = ResolveStartState();
+			_currentState.Enter();
+		}
+
+		protected override void OnEnable()
+		{
+			base.OnEnable();
+			if (_restarted)
+			{
+				_currentState = ResolveStartState();
+				_currentState.Enter();
+			}
+		}
 
 		public override void EarlyTick() =>
 			_currentState.EarlyTick();
@@ -43,7 +55,8 @@ namespace Bezoro.StateMachines
 		protected override void OnDisable()
 		{
 			base.OnDisable();
-			this.Disable_Ext();
+			if (DisableMethod is DisableMethod.Restart)
+				_restarted = true;
 		}
 
 		public void DoTransition(ITickableState toState) =>
@@ -64,18 +77,22 @@ namespace Bezoro.StateMachines
 		void IStateMachine.SetLastState(IState state) =>
 			_lastState = state as ITickableState;
 
-		protected abstract void SetUp();
+		#region Abstract Methods
 
-		protected void RegisterState<T>(out T outState)
+		protected abstract void RegisterStates();
+
+		protected abstract void SetUpTransitions();
+
+		protected abstract ITickableState ResolveStartState();
+
+		#endregion
+
+		protected T RegisterState<T>()
 		where T : class, ITickableState, new() =>
-			outState = this.CreateState<T>(this);
+			this.CreateState<T, ITickableStateMachine>(this);
 
-
-		protected void SetStartState(ITickableState state) =>
-			_startState = state;
-
-		private ITickableState _startState = new NullTickableState();
 		private ITickableState _currentState = new NullTickableState();
 		private ITickableState _lastState = new NullTickableState();
+		private bool _restarted;
 	}
 }

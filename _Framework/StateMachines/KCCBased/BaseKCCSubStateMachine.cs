@@ -17,26 +17,18 @@ namespace Bezoro.StateMachines
 			_masterStateMachine = masterStateMachine;
 			_owningStateMachine = owningStateMachine;
 			_motor = motor;
-			SetUp();
+			RegisterStates();
+			SetUpTransitions();
 		}
 
 		void ITickableState.Init
-		(MonoBehaviour masterStateMachine,
-		 ITickableStateMachine owningStateMachine) =>
+			(MonoBehaviour masterStateMachine, ITickableStateMachine owningStateMachine) =>
 			Init(masterStateMachine, owningStateMachine as IKCCStateMachine, null);
 
-		void IState.Init
-		(MonoBehaviour masterStateMachine,
-		 IStateMachine owningStateMachine) =>
+		void IState.Init(MonoBehaviour masterStateMachine, IStateMachine owningStateMachine) =>
 			Init(masterStateMachine, owningStateMachine as IKCCStateMachine, null);
 
 		public MonoBehaviour MasterStateMachine => _masterStateMachine;
-
-		public IKCCState StartState => _startState;
-
-		ITickableState ITickableStateMachine.StartState => _startState;
-
-		IState IStateMachine.StartState => _startState;
 
 		public IKCCState CurrentState => _currentState;
 
@@ -69,16 +61,10 @@ namespace Bezoro.StateMachines
 
 		public void Enter()
 		{
-			_currentState = _startState;
 			OnEnter();
 			this.AllTransitionsBecomeRelevant();
+			_currentState = ResolveStartState();
 			_currentState.Enter();
-		}
-
-		public void Disable()
-		{
-			OnDisable();
-			this.Disable_Ext();
 		}
 
 		public void EarlyTick()
@@ -243,7 +229,11 @@ namespace Bezoro.StateMachines
 
 		#region Abstract Methods
 
-		protected abstract void SetUp();
+		protected abstract void RegisterStates();
+
+		protected abstract void SetUpTransitions();
+
+		protected abstract IKCCState ResolveStartState();
 
 		protected abstract void OnEnter();
 
@@ -288,18 +278,13 @@ namespace Bezoro.StateMachines
 
 		protected abstract void OnDiscreteCollisionDetected(Collider hitCollider);
 
-		protected abstract void OnDisable();
-
 		protected abstract void OnExit();
 
 		#endregion
 
-		protected void SetStartState(IKCCState state) =>
-			_startState = state;
-
-		protected void RegisterState<T>(out T outState)
+		protected T RegisterState<T>()
 		where T : class, IKCCState, new() =>
-			outState = this.CreateState<T>(_masterStateMachine);
+			this.CreateState<T, IKCCStateMachine>(_masterStateMachine);
 
 		private IKCCState _startState = new NullKCCState();
 		private IKCCState _currentState = new NullKCCState();

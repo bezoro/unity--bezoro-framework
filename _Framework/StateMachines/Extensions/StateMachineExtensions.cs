@@ -4,19 +4,6 @@ namespace Bezoro.StateMachines
 {
 	public static class StateMachineExtensions
 	{
-		public static void Start_Ext(this IStateMachine stateMachine)
-		{
-			stateMachine.SetCurrentState(stateMachine.StartState);
-			stateMachine.CurrentState.Enter();
-		}
-
-		public static void Disable_Ext(this IStateMachine stateMachine)
-		{
-			stateMachine.CurrentState.Disable();
-			if (stateMachine.DisableMethod is DisableMethod.Restart)
-				stateMachine.SetCurrentState(stateMachine.StartState);
-		}
-
 		public static void DoTransition_Ext(this IStateMachine stateMachine, IState toState)
 		{
 			stateMachine.SetLastState(stateMachine.CurrentState);
@@ -25,12 +12,11 @@ namespace Bezoro.StateMachines
 			stateMachine.CurrentState.Enter();
 		}
 
-		public static T CreateState<T>
-		(this IStateMachine stateMachine,
-		 MonoBehaviour masterStateMachine)
-		where T : class, IState, new()
+		public static T0 CreateState<T0, T1>(this T1 stateMachine, MonoBehaviour masterStateMachine)
+		where T0 : class, IState, new()
+		where T1 : class, IStateMachine
 		{
-			var newState = new T();
+			var newState = new T0();
 			newState.Init(masterStateMachine, stateMachine);
 			return newState;
 		}
