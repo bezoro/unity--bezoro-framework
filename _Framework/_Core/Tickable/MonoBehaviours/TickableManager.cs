@@ -11,7 +11,8 @@ namespace Bezoro.Core.Singletons
 		public static TickableManager Instance { get; private set; }
 
 		[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-		private static void Init() { Instance = null; }
+		private static void Init() =>
+			Instance = null;
 
 		public void AddUniqueEarlyTickable(Tickable tickable)
 		{
