@@ -34,9 +34,6 @@ namespace Bezoro.StateMachines
 			this.AllTransitionsBecomeRelevant();
 		}
 
-		public void Disable() =>
-			OnDisable();
-
 		public void OnTransitionRaised(IEventState toState) =>
 			_owningStateMachine.DoTransition(toState);
 
@@ -51,8 +48,6 @@ namespace Bezoro.StateMachines
 		protected abstract void OnInit();
 
 		protected abstract void OnEnter();
-
-		protected abstract void OnDisable();
 
 		protected abstract void OnExit();
 
@@ -77,8 +72,6 @@ namespace Bezoro.StateMachines
 		public void Enter() { }
 
 		public void Exit() { }
-
-		public void Disable() { }
 
 		public void OnTransitionRaised(IEventState toState) { }
 	}

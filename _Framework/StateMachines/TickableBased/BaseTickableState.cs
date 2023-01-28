@@ -51,9 +51,6 @@ namespace Bezoro.StateMachines
 			this.AllTransitionsTick();
 		}
 
-		public void Disable() =>
-			OnDisable();
-
 		public void OnTransitionTrue(ITickableState toState) =>
 			_owningStateMachine.DoTransition(toState);
 
@@ -76,8 +73,6 @@ namespace Bezoro.StateMachines
 		protected abstract void OnFixedTick();
 
 		protected abstract void OnLateTick();
-
-		protected abstract void OnDisable();
 
 		protected abstract void OnExit();
 
@@ -107,8 +102,6 @@ namespace Bezoro.StateMachines
 		public void Enter() { }
 
 		public void Exit() { }
-
-		public void Disable() { }
 
 		public void EarlyTick() { }
 

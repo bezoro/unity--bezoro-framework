@@ -12,24 +12,19 @@ namespace Bezoro.StateMachines
 		private void Awake()
 		{
 			Motor.CharacterController = this;
-			SetUp();
+			RegisterStates();
+			SetUpTransitions();
 		}
-
-		public IKCCState StartState => _startState;
 
 		public IKCCState CurrentState => _currentState;
 
-		public IKCCState LastState => _lastState;
-
-		ITickableState ITickableStateMachine.StartState => _startState;
-
 		ITickableState ITickableStateMachine.CurrentState => _currentState;
 
-		ITickableState ITickableStateMachine.LastState => _lastState;
-
-		IState IStateMachine.StartState => _startState;
-
 		IState IStateMachine.CurrentState => _currentState;
+
+		public IKCCState LastState => _lastState;
+
+		ITickableState ITickableStateMachine.LastState => _lastState;
 
 		IState IStateMachine.LastState => _lastState;
 
@@ -39,13 +34,20 @@ namespace Bezoro.StateMachines
 		[field: SerializeField]
 		public KinematicCharacterMotor Motor { get; private set; }
 
-		private void Start() =>
-			this.Start_Ext();
-
-		protected override void OnDisable()
+		private void Start()
 		{
-			base.OnDisable();
-			this.Disable_Ext();
+			_currentState = ResolveStartState();
+			_currentState.Enter();
+		}
+
+		protected override void OnEnable()
+		{
+			base.OnEnable();
+			if (_restarted)
+			{
+				_currentState = ResolveStartState();
+				_currentState.Enter();
+			}
 		}
 
 		public override void EarlyTick() =>
@@ -154,11 +156,15 @@ namespace Bezoro.StateMachines
 
 		#endregion
 
+		protected override void OnDisable()
+		{
+			base.OnDisable();
+			if (DisableMethod is DisableMethod.Restart)
+				_restarted = true;
+		}
+
 		public void SetMotor(KinematicCharacterMotor motor) =>
 			Motor = motor;
-
-		public void DoTransition(IKCCState toState) =>
-			this.DoTransition_Ext(toState);
 
 		public List<IState> GetCurrentHierarchy()
 		{
@@ -181,24 +187,9 @@ namespace Bezoro.StateMachines
 				parentState = superState;
 			}
 		}
-
-		public void SetCurrentState(IKCCState state) =>
-			_currentState = state;
-
-		public void SetLastState(IKCCState state) =>
-			_lastState = state;
-
-		void ITickableStateMachine.SetCurrentState(ITickableState state) =>
-			_currentState = state as IKCCState;
-
-		void IStateMachine.SetCurrentState(IState state) =>
-			_currentState = state as IKCCState;
-
-		void ITickableStateMachine.SetLastState(ITickableState state) =>
-			_lastState = state as IKCCState;
-
-		void IStateMachine.SetLastState(IState state) =>
-			_lastState = state as IKCCState;
+		
+		public void DoTransition(IKCCState toState) =>
+			this.DoTransition_Ext(toState);
 
 		void ITickableStateMachine.DoTransition(ITickableState toState) =>
 			this.DoTransition_Ext(toState);
@@ -206,17 +197,40 @@ namespace Bezoro.StateMachines
 		void IStateMachine.DoTransition(IState toState) =>
 			this.DoTransition_Ext(toState);
 
-		protected abstract void SetUp();
+		public void SetCurrentState(IKCCState state) =>
+			_currentState = state;
 
-		protected void RegisterState<T>(out T outState)
+		void ITickableStateMachine.SetCurrentState(ITickableState state) =>
+			_currentState = state as IKCCState;
+
+		void IStateMachine.SetCurrentState(IState state) =>
+			_currentState = state as IKCCState;
+
+		public void SetLastState(IKCCState state) =>
+			_lastState = state;
+
+		void ITickableStateMachine.SetLastState(ITickableState state) =>
+			_lastState = state as IKCCState;
+
+		void IStateMachine.SetLastState(IState state) =>
+			_lastState = state as IKCCState;
+
+		#region Abstract Methods
+
+		protected abstract void RegisterStates();
+
+		protected abstract void SetUpTransitions();
+
+		protected abstract IKCCState ResolveStartState();
+
+		#endregion
+
+		protected T RegisterState<T>()
 		where T : class, IKCCState, new() =>
-			outState = this.CreateState<T>(this);
+			this.CreateState<T, IKCCStateMachine>(this);
 
-		protected void SetStartState(IKCCState state) =>
-			_startState = state;
-
-		private IKCCState _startState = new NullKCCState();
 		private IKCCState _currentState = new NullKCCState();
 		private IKCCState _lastState = new NullKCCState();
+		private bool _restarted;
 	}
 }

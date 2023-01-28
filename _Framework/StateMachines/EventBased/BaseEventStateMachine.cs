@@ -6,59 +6,78 @@ namespace Bezoro.StateMachines
 	public abstract class BaseEventStateMachine : MonoBehaviour,
 		IEventStateMachine
 	{
-		private void Awake() =>
-			SetUp();
-
-		public IState StartState => _startState;
+		private void Awake()
+		{
+			RegisterStates();
+			SetUpTransitions();
+		}
 
 		public IEventState CurrentState => _currentState;
 
-		public IEventState LastState => _lastState;
-
-		IEventState IEventStateMachine.StartState => _startState;
-
 		IState IStateMachine.CurrentState => _currentState;
+
+		public IEventState LastState => _lastState;
 
 		IState IStateMachine.LastState => _lastState;
 
 		[field: SerializeField]
 		public DisableMethod DisableMethod { get; private set; }
 
-		private void Start() =>
-			this.Start_Ext();
+		private void Start()
+		{
+			_currentState = ResolveStartState();
+			_currentState.Enter();
+		}
 
-		private void OnDisable() =>
-			this.Disable_Ext();
+		private void OnEnable()
+		{
+			if (_restarted)
+			{
+				_currentState = ResolveStartState();
+				_currentState.Enter();
+			}
+		}
+
+		private void OnDisable()
+		{
+			if (DisableMethod is DisableMethod.Restart)
+				_restarted = true;
+		}
 
 		public void DoTransition(IEventState toState) =>
+			this.DoTransition_Ext(toState);
+
+		void IStateMachine.DoTransition(IState toState) =>
 			this.DoTransition_Ext(toState);
 
 		public void SetCurrentState(IEventState state) =>
 			_currentState = state;
 
-		public void SetLastState(IEventState state) =>
-			_lastState = state;
-
-		void IStateMachine.DoTransition(IState toState) =>
-			this.DoTransition_Ext(toState);
-
 		void IStateMachine.SetCurrentState(IState state) =>
 			_currentState = state as IEventState;
+
+		public void SetLastState(IEventState state) =>
+			_lastState = state;
 
 		void IStateMachine.SetLastState(IState state) =>
 			_lastState = state as IEventState;
 
-		protected abstract void SetUp();
+		#region Abstract Methods
 
-		protected void RegisterState<T>(out T createdState)
+		protected abstract void RegisterStates();
+
+		protected abstract void SetUpTransitions();
+
+		protected abstract IEventState ResolveStartState();
+
+		#endregion
+
+		protected T RegisterState<T>()
 		where T : class, IEventState, new() =>
-			createdState = this.CreateState<T>(this);
+			this.CreateState<T, IEventStateMachine>(this);
 
-		protected void SetStartState(IEventState state) =>
-			_startState = state;
-
-		private IEventState _startState = new NullEventState();
 		private IEventState _currentState = new NullEventState();
 		private IEventState _lastState = new NullEventState();
+		private bool _restarted;
 	}
 }

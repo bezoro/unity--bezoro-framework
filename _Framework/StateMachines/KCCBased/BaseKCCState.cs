@@ -20,18 +20,11 @@ namespace Bezoro.StateMachines
 		}
 
 		void ITickableState.Init
-		(MonoBehaviour masterStateMachine,
-		 ITickableStateMachine owningStateMachine) =>
-			Init(masterStateMachine,
-				 owningStateMachine as IKCCStateMachine,
-				 null);
+			(MonoBehaviour masterStateMachine, ITickableStateMachine owningStateMachine) =>
+			Init(masterStateMachine, owningStateMachine as IKCCStateMachine, null);
 
-		void IState.Init
-		(MonoBehaviour masterStateMachine,
-		 IStateMachine owningStateMachine) =>
-			Init(masterStateMachine,
-				 owningStateMachine as IKCCStateMachine,
-				 null);
+		void IState.Init(MonoBehaviour masterStateMachine, IStateMachine owningStateMachine) =>
+			Init(masterStateMachine, owningStateMachine as IKCCStateMachine, null);
 
 		public MonoBehaviour MasterStateMachine => _masterStateMachine;
 
@@ -130,9 +123,6 @@ namespace Bezoro.StateMachines
 
 		#endregion
 
-		public void Disable() =>
-			OnDisable();
-
 		public void OnTransitionTrue(ITickableState toState) =>
 			_owningStateMachine.DoTransition(toState);
 
@@ -187,8 +177,6 @@ namespace Bezoro.StateMachines
 		 ref HitStabilityReport hitStabilityReport);
 
 		protected abstract void OnDiscreteCollisionDetected(Collider hitCollider);
-
-		protected abstract void OnDisable();
 
 		protected abstract void OnExit();
 
@@ -272,8 +260,6 @@ namespace Bezoro.StateMachines
 		public void DiscreteCollisionDetected(Collider hitCollider) { }
 
 		#endregion
-
-		public void Disable() { }
 
 		public void Exit() { }
 	}
