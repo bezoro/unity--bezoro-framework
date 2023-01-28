@@ -30,21 +30,13 @@ namespace Bezoro.StateMachines
 
 		public IKCCTransition[] Transitions => _transitions;
 
-		public KinematicCharacterMotor Motor => _motor;
-
-		public List<Type> MonoBehaviourTypesToIgnoreCollisionsWith { get; } = new(4);
-
 		ITickTransition[] ITickableState.Transitions => _transitions;
 
 		ITransition[] IState.Transitions => _transitions;
 
-		public IKCCTransition TransitionsTo(IKCCState toState)
-		{
-			var newTransition = this.CreateTransition<KCCTransition>(toState);
-			ArrayHelpers.Add(ref _transitions, newTransition);
-			return newTransition;
-		}
+		public KinematicCharacterMotor Motor => _motor;
 
+		public List<Type> MonoBehaviourTypesToIgnoreCollisionsWith { get; } = new(4);
 
 		public void Enter()
 		{
@@ -89,20 +81,14 @@ namespace Bezoro.StateMachines
 		 Vector3 hitNormal,
 		 Vector3 hitPoint,
 		 ref HitStabilityReport hitStabilityReport) =>
-			OnGroundHit(hitCollider,
-					    hitNormal,
-					    hitPoint,
-					    ref hitStabilityReport);
+			OnGroundHit(hitCollider, hitNormal, hitPoint, ref hitStabilityReport);
 
 		public void MovementHit
 		(Collider hitCollider,
 		 Vector3 hitNormal,
 		 Vector3 hitPoint,
 		 ref HitStabilityReport hitStabilityReport) =>
-			OnMovementHit(hitCollider,
-						  hitNormal,
-						  hitPoint,
-						  ref hitStabilityReport);
+			OnMovementHit(hitCollider, hitNormal, hitPoint, ref hitStabilityReport);
 
 		public void ProcessHitStabilityReport
 		(Collider hitCollider,
@@ -130,6 +116,13 @@ namespace Bezoro.StateMachines
 		{
 			this.AllTransitionsCeaseRelevant();
 			OnExit();
+		}
+
+		public IKCCTransition TransitionsTo(IKCCState toState)
+		{
+			var newTransition = this.CreateTransition<KCCTransition>(toState);
+			ArrayHelpers.Add(ref _transitions, newTransition);
+			return newTransition;
 		}
 
 		#region Abstract Methods
@@ -196,22 +189,19 @@ namespace Bezoro.StateMachines
 		 KinematicCharacterMotor motor) { }
 
 		void ITickableState.Init
-		(MonoBehaviour masterStateMachine,
-		 ITickableStateMachine owningStateMachine) { }
+			(MonoBehaviour masterStateMachine, ITickableStateMachine owningStateMachine) { }
 
-		void IState.Init
-		(MonoBehaviour masterStateMachine,
-		 IStateMachine owningStateMachine) { }
+		void IState.Init(MonoBehaviour masterStateMachine, IStateMachine owningStateMachine) { }
 
 		public MonoBehaviour MasterStateMachine { get; }
 
-		public IKCCTransition[] Transitions { get; }
-
-		public List<Type> MonoBehaviourTypesToIgnoreCollisionsWith { get; }
+		public IKCCTransition[] Transitions { get; } = Array.Empty<IKCCTransition>();
 
 		ITickTransition[] ITickableState.Transitions { get; } = Array.Empty<ITickTransition>();
 
 		ITransition[] IState.Transitions { get; } = Array.Empty<ITransition>();
+
+		public List<Type> MonoBehaviourTypesToIgnoreCollisionsWith { get; }
 
 		public void Enter() { }
 

@@ -5,13 +5,10 @@ namespace Bezoro.StateMachines
 {
 	[DisallowMultipleComponent]
 	public abstract class BaseTickableStateMachine : Tickable,
-		ITickableStateMachine
+		IMonoTickableStateMachine
 	{
-		private void Awake()
-		{
-			RegisterStates();
-			SetUpTransitions();
-		}
+		private void Awake() =>
+			this.Awake_Ext();
 
 		public ITickableState CurrentState => _currentState;
 
@@ -21,23 +18,18 @@ namespace Bezoro.StateMachines
 
 		IState IStateMachine.LastState => _lastState;
 
+		public bool Restarted => _restarted;
+
 		[field: SerializeField]
 		public DisableMethod DisableMethod { get; private set; }
 
-		private void Start()
-		{
-			_currentState = ResolveStartState();
-			_currentState.Enter();
-		}
+		private void Start() =>
+			this.Start_Ext();
 
 		protected override void OnEnable()
 		{
 			base.OnEnable();
-			if (_restarted)
-			{
-				_currentState = ResolveStartState();
-				_currentState.Enter();
-			}
+			this.OnEnable_Ext();
 		}
 
 		public override void EarlyTick() =>
@@ -55,8 +47,7 @@ namespace Bezoro.StateMachines
 		protected override void OnDisable()
 		{
 			base.OnDisable();
-			if (DisableMethod is DisableMethod.Restart)
-				_restarted = true;
+			this.OnDisable_Ext();
 		}
 
 		public void DoTransition(ITickableState toState) =>
@@ -77,13 +68,16 @@ namespace Bezoro.StateMachines
 		void IStateMachine.SetLastState(IState state) =>
 			_lastState = state as ITickableState;
 
+		public void SetRestarted(bool value) =>
+			_restarted = value;
+
 		#region Abstract Methods
 
-		protected abstract void RegisterStates();
+		public abstract void RegisterStates();
 
-		protected abstract void SetUpTransitions();
+		public abstract void SetUpTransitions();
 
-		protected abstract ITickableState ResolveStartState();
+		public abstract IState ResolveStartState();
 
 		#endregion
 

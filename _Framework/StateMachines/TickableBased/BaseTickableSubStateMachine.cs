@@ -17,6 +17,8 @@ namespace Bezoro.StateMachines
 		void IState.Init(MonoBehaviour masterStateMachine, IStateMachine owningStateMachine) =>
 			Init(masterStateMachine, owningStateMachine as ITickableStateMachine);
 
+		#region Public Properties
+
 		public MonoBehaviour MasterStateMachine => _masterStateMachine;
 
 		public ITickableState CurrentState => _currentState;
@@ -31,19 +33,12 @@ namespace Bezoro.StateMachines
 
 		ITransition[] IState.Transitions => _transitions;
 
-		public ITickTransition TransitionsTo(ITickableState toState)
-		{
-			var newTransition = this.CreateTransition<TickTransition>(toState);
-			ArrayHelpers.Add(ref _transitions, newTransition);
-			return newTransition;
-		}
+		#endregion
 
 		public void Enter()
 		{
 			OnEnter();
-			this.AllTransitionsBecomeRelevant();
-			_currentState = ResolveStartState();
-			_currentState.Enter();
+			this.Enter_Ext();
 		}
 
 		public void EarlyTick()
@@ -76,10 +71,28 @@ namespace Bezoro.StateMachines
 
 		public void Exit()
 		{
-			_currentState.Exit();
-			this.AllTransitionsCeaseRelevant();
+			this.Exit_Ext();
 			OnExit();
 		}
+
+		public ITickTransition TransitionsTo(ITickableState toState)
+		{
+			var newTransition = this.CreateTransition<TickTransition>(toState);
+			ArrayHelpers.Add(ref _transitions, newTransition);
+			return newTransition;
+		}
+
+		public void SetCurrentState(ITickableState state) =>
+			_currentState = state;
+
+		void IStateMachine.SetCurrentState(IState state) =>
+			SetCurrentState(state as ITickableState);
+
+		public void SetLastState(ITickableState state) =>
+			_lastState = state;
+
+		void IStateMachine.SetLastState(IState state) =>
+			SetLastState(state as ITickableState);
 
 		public void DoTransition(ITickableState toState) =>
 			this.DoTransition_Ext(toState);
@@ -87,25 +100,13 @@ namespace Bezoro.StateMachines
 		void IStateMachine.DoTransition(IState toState) =>
 			this.DoTransition_Ext(toState);
 
-		public void SetLastState(ITickableState state) =>
-			_lastState = state;
-
-		void IStateMachine.SetLastState(IState state) =>
-			_lastState = state as ITickableState;
-
-		public void SetCurrentState(ITickableState state) =>
-			_currentState = state;
-
-		void IStateMachine.SetCurrentState(IState state) =>
-			_currentState = state as ITickableState;
-
 		#region Abstract Methods
 
-		protected abstract void RegisterStates();
+		public abstract void RegisterStates();
 
-		protected abstract void SetUpTransitions();
+		public abstract void SetUpTransitions();
 
-		protected abstract ITickableState ResolveStartState();
+		public abstract IState ResolveStartState();
 
 		protected abstract void OnEnter();
 
@@ -125,7 +126,6 @@ namespace Bezoro.StateMachines
 		where T : class, ITickableState, new() =>
 			this.CreateState<T, ITickableStateMachine>(_masterStateMachine);
 
-		private ITickableState _startState = new NullTickableState();
 		private ITickableState _currentState = new NullTickableState();
 		private ITickableState _lastState = new NullTickableState();
 		private ITickableStateMachine _owningStateMachine;

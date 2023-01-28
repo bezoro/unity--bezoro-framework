@@ -22,14 +22,14 @@ namespace Bezoro.StateMachines
 
 		public void WithCondition<T>()
 		where T : class, IEventCondition, new() =>
-			ArrayHelpers.Add(ref _conditions, this.CreateCondition<T>());
+			ArrayHelpers.Add(ref _conditions, this.CreateCondition<T, IEventTransition>());
 
 		public void WithConditions<T0, T1>()
 		where T0 : class, IEventCondition, new()
 		where T1 : class, IEventCondition, new()
 		{
-			ArrayHelpers.Add(ref _conditions, this.CreateCondition<T0>());
-			ArrayHelpers.Add(ref _conditions, this.CreateCondition<T1>());
+			ArrayHelpers.Add(ref _conditions, this.CreateCondition<T0, IEventTransition>());
+			ArrayHelpers.Add(ref _conditions, this.CreateCondition<T1, IEventTransition>());
 		}
 
 		public void WithConditions<T0, T1, T2>()
@@ -37,9 +37,9 @@ namespace Bezoro.StateMachines
 		where T1 : class, IEventCondition, new()
 		where T2 : class, IEventCondition, new()
 		{
-			ArrayHelpers.Add(ref _conditions, this.CreateCondition<T0>());
-			ArrayHelpers.Add(ref _conditions, this.CreateCondition<T1>());
-			ArrayHelpers.Add(ref _conditions, this.CreateCondition<T2>());
+			ArrayHelpers.Add(ref _conditions, this.CreateCondition<T0, IEventTransition>());
+			ArrayHelpers.Add(ref _conditions, this.CreateCondition<T1, IEventTransition>());
+			ArrayHelpers.Add(ref _conditions, this.CreateCondition<T2, IEventTransition>());
 		}
 
 		public void BecomeRelevant() =>

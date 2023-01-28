@@ -7,9 +7,7 @@ namespace Bezoro.StateMachines
 		ITickTransition
 	{
 		public void Init
-		(ITickableState fromState,
-		 ITickableState toState,
-		 MonoBehaviour stateMachine)
+			(ITickableState fromState, ITickableState toState, MonoBehaviour stateMachine)
 		{
 			_fromState = fromState;
 			_toState = toState;
@@ -43,22 +41,22 @@ namespace Bezoro.StateMachines
 
 		public void WithCondition<T>(bool inverted = false)
 		where T : class, ITickCondition, new() =>
-			ArrayHelpers.Add(ref _conditions, this.CreateCondition<ITickTransition, T>(inverted));
+			ArrayHelpers.Add(ref _conditions, this.CreateCondition<T, ITickTransition>(inverted));
 
 		public void WithConditions<T0, T1>
-		(ConditionsCriteria conditionsCriteria,
+		(ConditionsCriteria conditionsCriteria = ConditionsCriteria.AnyTrue,
 		 bool inverted0 = false,
 		 bool inverted1 = false)
 		where T0 : class, ITickCondition, new()
 		where T1 : class, ITickCondition, new()
 		{
-			ArrayHelpers.Add(ref _conditions, this.CreateCondition<ITickTransition, T0>(inverted0));
-			ArrayHelpers.Add(ref _conditions, this.CreateCondition<ITickTransition, T1>(inverted1));
+			ArrayHelpers.Add(ref _conditions, this.CreateCondition<T0, ITickTransition>(inverted0));
+			ArrayHelpers.Add(ref _conditions, this.CreateCondition<T1, ITickTransition>(inverted1));
 			_conditionsCriteria = conditionsCriteria;
 		}
 
 		public void WithConditions<T0, T1, T2>
-		(ConditionsCriteria conditionsCriteria,
+		(ConditionsCriteria conditionsCriteria = ConditionsCriteria.AnyTrue,
 		 bool inverted0 = false,
 		 bool inverted1 = false,
 		 bool inverted2 = false)
@@ -66,9 +64,9 @@ namespace Bezoro.StateMachines
 		where T1 : class, ITickCondition, new()
 		where T2 : class, ITickCondition, new()
 		{
-			ArrayHelpers.Add(ref _conditions, this.CreateCondition<ITickTransition, T0>(inverted0));
-			ArrayHelpers.Add(ref _conditions, this.CreateCondition<ITickTransition, T1>(inverted1));
-			ArrayHelpers.Add(ref _conditions, this.CreateCondition<ITickTransition, T2>(inverted2));
+			ArrayHelpers.Add(ref _conditions, this.CreateCondition<T0, ITickTransition>(inverted0));
+			ArrayHelpers.Add(ref _conditions, this.CreateCondition<T1, ITickTransition>(inverted1));
+			ArrayHelpers.Add(ref _conditions, this.CreateCondition<T2, ITickTransition>(inverted2));
 			_conditionsCriteria = conditionsCriteria;
 		}
 

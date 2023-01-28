@@ -3,29 +3,6 @@ using System.Collections;
 
 namespace Bezoro.StateMachines
 {
-	public static class TickableStateExtensions
-	{
-		public static void AllTransitionsTick<T>(this T state)
-		where T : ITickableState
-		{
-			var transitions = state.Transitions;
-			for (var i = 0; i < transitions.Length; i++)
-			{
-				if (transitions[i] == null)
-					continue;
-
-				transitions[i].Tick();
-			}
-		}
-
-		public static void AddMonoBehaviourTypeToIgnoreCollisionsWith<T>(this IKCCState state)
-		where T : MonoBehaviour
-		{
-			var type = typeof(T);
-			state.MonoBehaviourTypesToIgnoreCollisionsWith.Add(type);
-		}
-	}
-
 	public static class StateExtensions
 	{
 		public static void AllTransitionsBecomeRelevant<T>(this T state)
@@ -54,10 +31,10 @@ namespace Bezoro.StateMachines
 			}
 		}
 
-		public static T0 CreateTransition<T0>(this IState state, IState toState) 
-		where T0 : class, ITransition, new()
+		public static T CreateTransition<T>(this IState state, IState toState)
+		where T : class, ITransition, new()
 		{
-			var newTransition = new T0();
+			var newTransition = new T();
 			newTransition.Init(state, toState, state.MasterStateMachine);
 			return newTransition;
 		}
@@ -84,13 +61,13 @@ namespace Bezoro.StateMachines
 			return false;
 		}
 
-		public static bool IsSubStateMachine<T0, T1>(this T1 state, out T0 outStateMachine)
-		where T0 : class, IStateMachine
-		where T1 : class, IState
+		public static bool IsSubStateMachine<T0, T1>(this T0 state, out T1 outStateMachine)
+		where T0 : class, IState
+		where T1 : class, ISubStateMachine
 		{
-			if (state is IStateMachine stateMachine)
+			if (state is ISubStateMachine stateMachine)
 			{
-				outStateMachine = stateMachine as T0;
+				outStateMachine = stateMachine as T1;
 				return true;
 			}
 

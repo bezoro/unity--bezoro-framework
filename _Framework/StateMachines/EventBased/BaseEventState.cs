@@ -21,13 +21,6 @@ namespace Bezoro.StateMachines
 
 		public ITransition[] Transitions => _transitions;
 
-		public IEventTransition TransitionsTo(IEventState toState)
-		{
-			var newTransition = this.CreateTransition<EventTransition>(toState);
-			ArrayHelpers.Add(ref _transitions, newTransition);
-			return newTransition;
-		}
-
 		public void Enter()
 		{
 			OnEnter();
@@ -41,6 +34,13 @@ namespace Bezoro.StateMachines
 		{
 			this.AllTransitionsCeaseRelevant();
 			OnExit();
+		}
+
+		public IEventTransition TransitionsTo(IEventState toState)
+		{
+			var newTransition = this.CreateTransition<EventTransition>(toState);
+			ArrayHelpers.Add(ref _transitions, newTransition);
+			return newTransition;
 		}
 
 		#region Abstract Methods

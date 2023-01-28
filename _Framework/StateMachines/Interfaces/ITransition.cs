@@ -4,18 +4,13 @@ namespace Bezoro.StateMachines
 {
 	public interface IKCCTransition : ITickTransition
 	{
-		public void Init
-		(IKCCState fromState,
-		 IKCCState toState,
-		 MonoBehaviour stateMachine);
+		public void Init(IKCCState fromState, IKCCState toState, MonoBehaviour stateMachine);
 	}
 
 	public interface ITickTransition : ITransition
 	{
 		public void Init
-		(ITickableState fromState,
-		 ITickableState toState,
-		 MonoBehaviour stateMachine);
+			(ITickableState fromState, ITickableState toState, MonoBehaviour stateMachine);
 
 		public ITickableState FromState { get; }
 
@@ -49,10 +44,7 @@ namespace Bezoro.StateMachines
 
 	public interface IEventTransition : ITransition
 	{
-		public void Init
-		(IEventState fromState,
-		 IEventState toState,
-		 MonoBehaviour stateMachine);
+		public void Init(IEventState fromState, IEventState toState, MonoBehaviour stateMachine);
 
 		public void WithCondition<T>()
 		where T : class, IEventCondition, new();
@@ -71,10 +63,7 @@ namespace Bezoro.StateMachines
 
 	public interface ITransition
 	{
-		public void Init
-		(IState fromState,
-		 IState toState,
-		 MonoBehaviour stateMachine);
+		public void Init(IState fromState, IState toState, MonoBehaviour stateMachine);
 
 		public ICondition[] Conditions { get; }
 

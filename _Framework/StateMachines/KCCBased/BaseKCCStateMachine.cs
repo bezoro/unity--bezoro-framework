@@ -1,5 +1,6 @@
 ﻿using Bezoro.Core;
 using UnityEngine;
+using UnityEngine.Profiling;
 using System.Collections.Generic;
 using KinematicCharacterController;
 
@@ -7,13 +8,12 @@ namespace Bezoro.StateMachines
 {
 	[DisallowMultipleComponent]
 	public abstract class BaseKCCStateMachine : Tickable,
-		IKCCStateMachine, ICharacterController
+		IMonoKCCStateMachine, ICharacterController
 	{
 		private void Awake()
 		{
 			Motor.CharacterController = this;
-			RegisterStates();
-			SetUpTransitions();
+			this.Awake_Ext();
 		}
 
 		public IKCCState CurrentState => _currentState;
@@ -28,26 +28,21 @@ namespace Bezoro.StateMachines
 
 		IState IStateMachine.LastState => _lastState;
 
+		public bool Restarted => _restarted;
+
 		[field: SerializeField]
 		public DisableMethod DisableMethod { get; private set; }
 
 		[field: SerializeField]
 		public KinematicCharacterMotor Motor { get; private set; }
 
-		private void Start()
-		{
-			_currentState = ResolveStartState();
-			_currentState.Enter();
-		}
+		private void Start() =>
+			this.Start_Ext();
 
 		protected override void OnEnable()
 		{
 			base.OnEnable();
-			if (_restarted)
-			{
-				_currentState = ResolveStartState();
-				_currentState.Enter();
-			}
+			this.OnEnable_Ext();
 		}
 
 		public override void EarlyTick() =>
@@ -88,7 +83,7 @@ namespace Bezoro.StateMachines
 				if (CheckInState(_currentState))
 					return true;
 
-				if (!_currentState.IsSubStateMachine(out IKCCStateMachine rootSubStateMachine))
+				if (!_currentState.IsSubStateMachine(out IKCCSubStateMachine rootSubStateMachine))
 					return false;
 
 				var currentState = rootSubStateMachine.CurrentState;
@@ -97,7 +92,7 @@ namespace Bezoro.StateMachines
 					if (CheckInState(currentState))
 						return true;
 
-					if (!currentState.IsSubStateMachine(out IKCCStateMachine subStateMachine))
+					if (!currentState.IsSubStateMachine(out IKCCSubStateMachine subStateMachine))
 						return false;
 
 					currentState = subStateMachine.CurrentState;
@@ -122,20 +117,14 @@ namespace Bezoro.StateMachines
 		 Vector3 hitNormal,
 		 Vector3 hitPoint,
 		 ref HitStabilityReport hitStabilityReport) =>
-			_currentState.GroundHit(hitCollider,
-								    hitNormal,
-								    hitPoint,
-								    ref hitStabilityReport);
+			_currentState.GroundHit(hitCollider, hitNormal, hitPoint, ref hitStabilityReport);
 
 		public void OnMovementHit
 		(Collider hitCollider,
 		 Vector3 hitNormal,
 		 Vector3 hitPoint,
 		 ref HitStabilityReport hitStabilityReport) =>
-			_currentState.MovementHit(hitCollider,
-									  hitNormal,
-									  hitPoint,
-									  ref hitStabilityReport);
+			_currentState.MovementHit(hitCollider, hitNormal, hitPoint, ref hitStabilityReport);
 
 		public void ProcessHitStabilityReport
 		(Collider hitCollider,
@@ -159,8 +148,7 @@ namespace Bezoro.StateMachines
 		protected override void OnDisable()
 		{
 			base.OnDisable();
-			if (DisableMethod is DisableMethod.Restart)
-				_restarted = true;
+			this.OnDisable_Ext();
 		}
 
 		public void SetMotor(KinematicCharacterMotor motor) =>
@@ -187,7 +175,7 @@ namespace Bezoro.StateMachines
 				parentState = superState;
 			}
 		}
-		
+
 		public void DoTransition(IKCCState toState) =>
 			this.DoTransition_Ext(toState);
 
@@ -215,13 +203,16 @@ namespace Bezoro.StateMachines
 		void IStateMachine.SetLastState(IState state) =>
 			_lastState = state as IKCCState;
 
+		public void SetRestarted(bool value) =>
+			_restarted = value;
+
 		#region Abstract Methods
 
-		protected abstract void RegisterStates();
+		public abstract void RegisterStates();
 
-		protected abstract void SetUpTransitions();
+		public abstract void SetUpTransitions();
 
-		protected abstract IKCCState ResolveStartState();
+		public abstract IState ResolveStartState();
 
 		#endregion
 
