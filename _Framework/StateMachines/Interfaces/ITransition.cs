@@ -42,24 +42,7 @@ namespace Bezoro.StateMachines
 		public void Tick();
 	}
 
-	public interface IEventTransition : ITransition
-	{
-		public void Init(IEventState fromState, IEventState toState, MonoBehaviour stateMachine);
-
-		public void WithCondition<T>()
-		where T : class, IEventCondition, new();
-
-		public void WithConditions<T0, T1>()
-		where T0 : class, IEventCondition, new()
-		where T1 : class, IEventCondition, new();
-
-		public void WithConditions<T0, T1, T2>()
-		where T0 : class, IEventCondition, new()
-		where T1 : class, IEventCondition, new()
-		where T2 : class, IEventCondition, new();
-
-		public void OnConditionRaised();
-	}
+	public interface IEventTransition { }
 
 	public interface ITransition
 	{

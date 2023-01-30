@@ -26,17 +26,11 @@
 		public void DoTransition(ITickableState toState);
 	}
 
-	public interface IEventStateMachine : IStateMachine
+	public interface IEventStateMachine
 	{
-		public new IEventState CurrentState { get; }
-
-		public new IEventState LastState { get; }
-
-		public void SetCurrentState(IEventState state);
-
-		public void SetLastState(IEventState state);
-
 		public void DoTransition(IEventState toState);
+
+		IEventState CurrentState { get; }
 	}
 
 	public interface IStateMachine

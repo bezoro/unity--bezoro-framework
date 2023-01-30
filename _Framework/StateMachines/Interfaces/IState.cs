@@ -71,11 +71,15 @@ namespace Bezoro.StateMachines
 		public void OnTransitionTrue(ITickableState toState);
 	}
 
-	public interface IEventState : IState
+	public interface IEventState
 	{
-		public void Init(MonoBehaviour masterStateMachine, IEventStateMachine owningStateMachine);
+		void Init(MonoBehaviour masterStateMachine, IEventStateMachine owningStateMachine);
 
-		public void OnTransitionRaised(IEventState toState);
+		void Enter();
+
+		void OnTransitionRaised(IEventState toState);
+
+		void Exit();
 	}
 
 	public interface IState
