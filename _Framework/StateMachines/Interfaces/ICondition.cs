@@ -15,10 +15,7 @@ namespace Bezoro.StateMachines
 		public bool OnTick();
 	}
 
-	public interface IEventCondition : ICondition
-	{
-		public void Init(IEventTransition transition, MonoBehaviour stateMachine);
-	}
+	public interface IEventCondition : ICondition { }
 
 	public interface ICondition
 	{

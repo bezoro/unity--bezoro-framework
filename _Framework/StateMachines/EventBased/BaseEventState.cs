@@ -1,11 +1,9 @@
-﻿using System;
-using UnityEngine;
+﻿using UnityEngine;
 using Bezoro.Core.Helpers;
 
 namespace Bezoro.StateMachines
 {
-	public abstract class BaseEventState :
-		IEventState
+	public abstract class BaseEventState : IEventState
 	{
 		public void Init(MonoBehaviour masterStateMachine, IEventStateMachine owningStateMachine)
 		{
@@ -14,17 +12,20 @@ namespace Bezoro.StateMachines
 			OnInit();
 		}
 
-		void IState.Init(MonoBehaviour masterStateMachine, IStateMachine owningStateMachine) =>
-			Init(masterStateMachine, owningStateMachine as IEventStateMachine);
-
 		public MonoBehaviour MasterStateMachine => _masterStateMachine;
 
-		public ITransition[] Transitions => _transitions;
+		public EventTransition[] Transitions => _transitions;
 
 		public void Enter()
 		{
 			OnEnter();
-			this.AllTransitionsBecomeRelevant();
+			for (var i = 0; i < _transitions.Length; i++)
+			{
+				if (_transitions[i] == null)
+					continue;
+
+				_transitions[i].BecomeRelevant();
+			}
 		}
 
 		public void OnTransitionRaised(IEventState toState) =>
@@ -32,13 +33,21 @@ namespace Bezoro.StateMachines
 
 		public void Exit()
 		{
-			this.AllTransitionsCeaseRelevant();
+			for (var i = 0; i < _transitions.Length; i++)
+			{
+				if (_transitions[i] == null)
+					continue;
+
+				_transitions[i].CeaseRelevant();
+			}
+
 			OnExit();
 		}
 
-		public IEventTransition TransitionsTo(IEventState toState)
+		public EventTransition TransitionsTo(IEventState toState)
 		{
-			var newTransition = this.CreateTransition<EventTransition>(toState);
+			var newTransition = new EventTransition();
+			newTransition.Init(this, toState, _masterStateMachine);
 			ArrayHelpers.Add(ref _transitions, newTransition);
 			return newTransition;
 		}
@@ -55,24 +64,6 @@ namespace Bezoro.StateMachines
 
 		private MonoBehaviour _masterStateMachine;
 		private IEventStateMachine _owningStateMachine;
-		private ITransition[] _transitions = new ITransition[4];
-	}
-
-	public sealed class NullEventState : IEventState
-	{
-		public void Init
-			(MonoBehaviour masterStateMachine, IEventStateMachine owningStateMachine) { }
-
-		void IState.Init(MonoBehaviour masterStateMachine, IStateMachine owningStateMachine) { }
-
-		public MonoBehaviour MasterStateMachine { get; }
-
-		public ITransition[] Transitions { get; } = Array.Empty<ITransition>();
-
-		public void Enter() { }
-
-		public void Exit() { }
-
-		public void OnTransitionRaised(IEventState toState) { }
+		private EventTransition[] _transitions = new EventTransition[4];
 	}
 }

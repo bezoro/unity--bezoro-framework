@@ -3,14 +3,14 @@ using UnityEngine;
 
 namespace Bezoro.StateMachines.Editor
 {
-	public static class BaseEventStateMachineGizmoDrawer
+	public static class BaseMonoEventStateMachineGizmoDrawer
 	{
 		[DrawGizmo(GizmoType.Active)]
-		private static void DrawGizmos(BaseEventStateMachine source, GizmoType gizmoType)
+		private static void DrawGizmos(BaseMonoEventStateMachine source, GizmoType gizmoType)
 		{
 			DrawStateLabels(source);
 
-			void DrawStateLabels(IStateMachine stateMachine, int index = 0)
+			void DrawStateLabels(IEventStateMachine stateMachine, int index = 0)
 			{
 				const float offset = 4f;
 				var labelPosition = source.transform.position + Vector3.up * offset;
