@@ -5,7 +5,6 @@ namespace Bezoro.StateMachines
 	public abstract class BaseEventCondition :
 		IEventCondition
 	{
-		//test
 		public void Init(IEventTransition transition, MonoBehaviour stateMachine)
 		{
 			_transition = transition;
