@@ -1,7 +1,7 @@
 ﻿using System;
 using UnityEngine;
-using System.Collections.Generic;
 using Bezoro.Core.Helpers;
+using System.Collections.Generic;
 using KinematicCharacterController;
 
 namespace Bezoro.StateMachines
@@ -20,46 +20,23 @@ namespace Bezoro.StateMachines
 		}
 
 		void ITickableState.Init
-		(MonoBehaviour masterStateMachine,
-		 ITickableStateMachine owningStateMachine)
-		{
-			_masterStateMachine = masterStateMachine;
-			_owningStateMachine = owningStateMachine as IKCCStateMachine;
-			OnInit();
-		}
+			(MonoBehaviour masterStateMachine, ITickableStateMachine owningStateMachine) =>
+			Init(masterStateMachine, owningStateMachine as IKCCStateMachine, null);
 
-		void IState.Init
-		(MonoBehaviour masterStateMachine,
-		 IStateMachine owningStateMachine)
-		{
-			_masterStateMachine = masterStateMachine;
-			_owningStateMachine = owningStateMachine as IKCCStateMachine;
-			OnInit();
-		}
+		void IState.Init(MonoBehaviour masterStateMachine, IStateMachine owningStateMachine) =>
+			Init(masterStateMachine, owningStateMachine as IKCCStateMachine, null);
 
 		public MonoBehaviour MasterStateMachine => _masterStateMachine;
 
 		public IKCCTransition[] Transitions => _transitions;
 
-		public KinematicCharacterMotor Motor => _motor;
-
-		public List<Type> MonoBehaviourTypesToIgnoreCollisionsWith { get; } = new(4);
-
 		ITickTransition[] ITickableState.Transitions => _transitions;
 
 		ITransition[] IState.Transitions => _transitions;
 
-		public KCCTransition TransitionsTo(IKCCState toState)
-		{
-			var newTransition = new KCCTransition
-				(this,
-				 toState,
-				 _masterStateMachine);
+		public KinematicCharacterMotor Motor => _motor;
 
-			ArrayHelpers.Add(ref _transitions, newTransition);
-			return newTransition;
-		}
-
+		public List<Type> MonoBehaviourTypesToIgnoreCollisionsWith { get; } = new(4);
 
 		public void Enter()
 		{
@@ -104,22 +81,14 @@ namespace Bezoro.StateMachines
 		 Vector3 hitNormal,
 		 Vector3 hitPoint,
 		 ref HitStabilityReport hitStabilityReport) =>
-			OnGroundHit
-				(hitCollider,
-				 hitNormal,
-				 hitPoint,
-				 ref hitStabilityReport);
+			OnGroundHit(hitCollider, hitNormal, hitPoint, ref hitStabilityReport);
 
 		public void MovementHit
 		(Collider hitCollider,
 		 Vector3 hitNormal,
 		 Vector3 hitPoint,
 		 ref HitStabilityReport hitStabilityReport) =>
-			OnMovementHit
-				(hitCollider,
-				 hitNormal,
-				 hitPoint,
-				 ref hitStabilityReport);
+			OnMovementHit(hitCollider, hitNormal, hitPoint, ref hitStabilityReport);
 
 		public void ProcessHitStabilityReport
 		(Collider hitCollider,
@@ -128,21 +97,17 @@ namespace Bezoro.StateMachines
 		 Vector3 atCharacterPosition,
 		 Quaternion atCharacterRotation,
 		 ref HitStabilityReport hitStabilityReport) =>
-			OnProcessHitStabilityReport
-				(hitCollider,
-				 hitNormal,
-				 hitPoint,
-				 atCharacterPosition,
-				 atCharacterRotation,
-				 ref hitStabilityReport);
+			OnProcessHitStabilityReport(hitCollider,
+									    hitNormal,
+									    hitPoint,
+									    atCharacterPosition,
+									    atCharacterRotation,
+									    ref hitStabilityReport);
 
 		public void DiscreteCollisionDetected(Collider hitCollider) =>
 			OnDiscreteCollisionDetected(hitCollider);
 
 		#endregion
-
-		public void Disable() =>
-			OnDisable();
 
 		public void OnTransitionTrue(ITickableState toState) =>
 			_owningStateMachine.DoTransition(toState);
@@ -151,6 +116,13 @@ namespace Bezoro.StateMachines
 		{
 			this.AllTransitionsCeaseRelevant();
 			OnExit();
+		}
+
+		public IKCCTransition TransitionsTo(IKCCState toState)
+		{
+			var newTransition = this.CreateTransition<KCCTransition>(toState);
+			ArrayHelpers.Add(ref _transitions, newTransition);
+			return newTransition;
 		}
 
 		#region Abstract Methods
@@ -167,13 +139,9 @@ namespace Bezoro.StateMachines
 
 		protected abstract void OnLateTick();
 
-		protected abstract void OnUpdateRotation
-		(ref Quaternion currentRotation,
-		 float deltaTime);
+		protected abstract void OnUpdateRotation(ref Quaternion currentRotation, float deltaTime);
 
-		protected abstract void OnUpdateVelocity
-		(ref Vector3 currentVelocity,
-		 float deltaTime);
+		protected abstract void OnUpdateVelocity(ref Vector3 currentVelocity, float deltaTime);
 
 		protected abstract void OnBeforeCharacterUpdate(float deltaTime);
 
@@ -203,8 +171,6 @@ namespace Bezoro.StateMachines
 
 		protected abstract void OnDiscreteCollisionDetected(Collider hitCollider);
 
-		protected abstract void OnDisable();
-
 		protected abstract void OnExit();
 
 		#endregion
@@ -223,22 +189,19 @@ namespace Bezoro.StateMachines
 		 KinematicCharacterMotor motor) { }
 
 		void ITickableState.Init
-		(MonoBehaviour masterStateMachine,
-		 ITickableStateMachine owningStateMachine) { }
+			(MonoBehaviour masterStateMachine, ITickableStateMachine owningStateMachine) { }
 
-		void IState.Init
-		(MonoBehaviour masterStateMachine,
-		 IStateMachine owningStateMachine) { }
+		void IState.Init(MonoBehaviour masterStateMachine, IStateMachine owningStateMachine) { }
 
 		public MonoBehaviour MasterStateMachine { get; }
 
-		public IKCCTransition[] Transitions { get; }
+		public IKCCTransition[] Transitions { get; } = Array.Empty<IKCCTransition>();
+
+		ITickTransition[] ITickableState.Transitions { get; } = Array.Empty<ITickTransition>();
+
+		ITransition[] IState.Transitions { get; } = Array.Empty<ITransition>();
 
 		public List<Type> MonoBehaviourTypesToIgnoreCollisionsWith { get; }
-
-		ITickTransition[] ITickableState.Transitions { get; }
-
-		ITransition[] IState.Transitions { get; }
 
 		public void Enter() { }
 
@@ -287,8 +250,6 @@ namespace Bezoro.StateMachines
 		public void DiscreteCollisionDetected(Collider hitCollider) { }
 
 		#endregion
-
-		public void Disable() { }
 
 		public void Exit() { }
 	}

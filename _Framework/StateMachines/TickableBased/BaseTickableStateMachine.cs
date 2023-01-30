@@ -5,28 +5,32 @@ namespace Bezoro.StateMachines
 {
 	[DisallowMultipleComponent]
 	public abstract class BaseTickableStateMachine : Tickable,
-		ITickableStateMachine
+		IMonoTickableStateMachine
 	{
 		private void Awake() =>
-			SetUp();
-
-		public ITickableState StartState => _startState;
+			this.Awake_Ext();
 
 		public ITickableState CurrentState => _currentState;
 
-		public ITickableState LastState => _lastState;
-
-		IState IStateMachine.StartState => _startState;
-
 		IState IStateMachine.CurrentState => _currentState;
 
+		public ITickableState LastState => _lastState;
+
 		IState IStateMachine.LastState => _lastState;
+
+		public bool Restarted => _restarted;
 
 		[field: SerializeField]
 		public DisableMethod DisableMethod { get; private set; }
 
 		private void Start() =>
 			this.Start_Ext();
+
+		protected override void OnEnable()
+		{
+			base.OnEnable();
+			this.OnEnable_Ext();
+		}
 
 		public override void EarlyTick() =>
 			_currentState.EarlyTick();
@@ -43,7 +47,7 @@ namespace Bezoro.StateMachines
 		protected override void OnDisable()
 		{
 			base.OnDisable();
-			this.Disable_Ext();
+			this.OnDisable_Ext();
 		}
 
 		public void DoTransition(ITickableState toState) =>
@@ -64,18 +68,25 @@ namespace Bezoro.StateMachines
 		void IStateMachine.SetLastState(IState state) =>
 			_lastState = state as ITickableState;
 
-		protected abstract void SetUp();
+		public void SetRestarted(bool value) =>
+			_restarted = value;
 
-		protected void RegisterState<T>(out T outState)
+		#region Abstract Methods
+
+		public abstract void RegisterStates();
+
+		public abstract void SetUpTransitions();
+
+		public abstract IState ResolveStartState();
+
+		#endregion
+
+		protected T RegisterState<T>()
 		where T : class, ITickableState, new() =>
-			outState = this.CreateState<T>(this);
+			this.CreateState<T, ITickableStateMachine>(this);
 
-
-		protected void SetStartState(ITickableState state) =>
-			_startState = state;
-
-		private ITickableState _startState = new NullTickableState();
 		private ITickableState _currentState = new NullTickableState();
 		private ITickableState _lastState = new NullTickableState();
+		private bool _restarted;
 	}
 }

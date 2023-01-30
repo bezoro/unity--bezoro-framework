@@ -4,20 +4,9 @@ namespace Bezoro.StateMachines
 {
 	public static class StateMachineExtensions
 	{
-		public static void Start_Ext(this IStateMachine stateMachine)
-		{
-			stateMachine.SetCurrentState(stateMachine.StartState);
-			stateMachine.CurrentState.Enter();
-		}
-
-		public static void Disable_Ext(this IStateMachine stateMachine)
-		{
-			stateMachine.CurrentState.Disable();
-			if (stateMachine.DisableMethod is DisableMethod.Restart)
-				stateMachine.SetCurrentState(stateMachine.StartState);
-		}
-
-		public static void DoTransition_Ext(this IStateMachine stateMachine, IState toState)
+		public static void DoTransition_Ext<T0, T1>(this T0 stateMachine, T1 toState)
+		where T0 : IStateMachine
+		where T1 : class, IState
 		{
 			stateMachine.SetLastState(stateMachine.CurrentState);
 			stateMachine.CurrentState.Exit();
@@ -25,12 +14,11 @@ namespace Bezoro.StateMachines
 			stateMachine.CurrentState.Enter();
 		}
 
-		public static T CreateState<T>
-		(this IStateMachine stateMachine,
-		 MonoBehaviour masterStateMachine)
-		where T : class, IState, new()
+		public static T0 CreateState<T0, T1>(this T1 stateMachine, MonoBehaviour masterStateMachine)
+		where T0 : class, IState, new()
+		where T1 : class, IStateMachine
 		{
-			var newState = new T();
+			var newState = new T0();
 			newState.Init(masterStateMachine, stateMachine);
 			return newState;
 		}
@@ -46,7 +34,7 @@ namespace Bezoro.StateMachines
 				return true;
 			}
 
-			if (!currentState.IsSubStateMachine(out IStateMachine rootSubStateMachine))
+			if (!currentState.IsSubStateMachine(out ISubStateMachine rootSubStateMachine))
 			{
 				outState = null;
 				return false;
@@ -61,7 +49,7 @@ namespace Bezoro.StateMachines
 					return true;
 				}
 
-				if (!currentState.IsSubStateMachine(out IStateMachine subStateMachine))
+				if (!currentState.IsSubStateMachine(out ISubStateMachine subStateMachine))
 				{
 					outState = null;
 					return false;
@@ -82,7 +70,7 @@ namespace Bezoro.StateMachines
 				return true;
 			}
 
-			if (!lastState.IsSubStateMachine(out IStateMachine rootSubStateMachine))
+			if (!lastState.IsSubStateMachine(out ISubStateMachine rootSubStateMachine))
 			{
 				outState = null;
 				return false;
@@ -97,7 +85,7 @@ namespace Bezoro.StateMachines
 					return true;
 				}
 
-				if (!lastState.IsSubStateMachine(out IStateMachine subStateMachine))
+				if (!lastState.IsSubStateMachine(out ISubStateMachine subStateMachine))
 				{
 					outState = null;
 					return false;

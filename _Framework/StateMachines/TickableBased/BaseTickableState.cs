@@ -1,45 +1,27 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 using Bezoro.Core.Helpers;
 
 namespace Bezoro.StateMachines
 {
-	public abstract class BaseTickableState : 
+	public abstract class BaseTickableState :
 		ITickableState
 	{
-		public void Init
-		(MonoBehaviour masterStateMachine,
-		 ITickableStateMachine owningStateMachine)
+		public void Init(MonoBehaviour masterStateMachine, ITickableStateMachine owningStateMachine)
 		{
 			_masterStateMachine = masterStateMachine;
 			_owningStateMachine = owningStateMachine;
 			OnInit();
 		}
 
-		void IState.Init
-		(MonoBehaviour masterStateMachine,
-		 IStateMachine owningStateMachine)
-		{
-			_masterStateMachine = masterStateMachine;
-			_owningStateMachine = owningStateMachine;
-			OnInit();
-		}
+		void IState.Init(MonoBehaviour masterStateMachine, IStateMachine owningStateMachine) =>
+			Init(masterStateMachine, owningStateMachine as ITickableStateMachine);
 
 		public MonoBehaviour MasterStateMachine => _masterStateMachine;
 
 		public ITickTransition[] Transitions => _transitions;
 
 		ITransition[] IState.Transitions => _transitions;
-
-		public TickTransition TransitionsTo(ITickableState toState)
-		{
-			var newTransition = new TickTransition
-				(this,
-				 toState,
-				 _masterStateMachine);
-
-			ArrayHelpers.Add(ref _transitions, newTransition);
-			return newTransition;
-		}
 
 		public void Enter()
 		{
@@ -62,9 +44,6 @@ namespace Bezoro.StateMachines
 			this.AllTransitionsTick();
 		}
 
-		public void Disable() =>
-			OnDisable();
-
 		public void OnTransitionTrue(ITickableState toState) =>
 			_owningStateMachine.DoTransition(toState);
 
@@ -72,6 +51,13 @@ namespace Bezoro.StateMachines
 		{
 			this.AllTransitionsCeaseRelevant();
 			OnExit();
+		}
+
+		public ITickTransition TransitionsTo(ITickableState toState)
+		{
+			var newTransition = this.CreateTransition<TickTransition>(toState);
+			ArrayHelpers.Add(ref _transitions, newTransition);
+			return newTransition;
 		}
 
 		#region Abstract Methods
@@ -88,8 +74,6 @@ namespace Bezoro.StateMachines
 
 		protected abstract void OnLateTick();
 
-		protected abstract void OnDisable();
-
 		protected abstract void OnExit();
 
 		#endregion
@@ -101,25 +85,20 @@ namespace Bezoro.StateMachines
 
 	public class NullTickableState : ITickableState
 	{
-		public void Init
-		(MonoBehaviour masterStateMachine,
-		 IStateMachine owningStateMachine) { }
+		public void Init(MonoBehaviour masterStateMachine, IStateMachine owningStateMachine) { }
 
 		public void Init
-		(MonoBehaviour masterStateMachine,
-		 ITickableStateMachine owningStateMachine) { }
+			(MonoBehaviour masterStateMachine, ITickableStateMachine owningStateMachine) { }
 
 		public MonoBehaviour MasterStateMachine { get; }
 
-		public ITickTransition[] Transitions { get; }
+		public ITickTransition[] Transitions { get; } = Array.Empty<ITickTransition>();
 
-		ITransition[] IState.Transitions { get; }
+		ITransition[] IState.Transitions { get; } = Array.Empty<ITransition>();
 
 		public void Enter() { }
 
 		public void Exit() { }
-
-		public void Disable() { }
 
 		public void EarlyTick() { }
 
