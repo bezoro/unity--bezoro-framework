@@ -6,65 +6,39 @@ namespace Bezoro.StateMachines
 	public abstract class BaseTickableSubStateMachine :
 		ITickableSubStateMachine
 	{
-		public void Init
-		(MonoBehaviour masterStateMachine,
-		 ITickableStateMachine owningStateMachine)
+		public void Init(MonoBehaviour masterStateMachine, ITickableStateMachine owningStateMachine)
 		{
 			_masterStateMachine = masterStateMachine;
 			_owningStateMachine = owningStateMachine;
-			SetUp();
+			RegisterStates();
+			SetUpTransitions();
 		}
 
-		public void Init
-		(MonoBehaviour masterStateMachine,
-		 IStateMachine owningStateMachine)
-		{
-			_masterStateMachine = masterStateMachine;
-			_owningStateMachine = owningStateMachine as ITickableStateMachine;
-			SetUp();
-		}
+		void IState.Init(MonoBehaviour masterStateMachine, IStateMachine owningStateMachine) =>
+			Init(masterStateMachine, owningStateMachine as ITickableStateMachine);
+
+		#region Public Properties
 
 		public MonoBehaviour MasterStateMachine => _masterStateMachine;
 
-		public ITickableState StartState => _startState;
-
 		public ITickableState CurrentState => _currentState;
-
-		public ITickableState LastState => _lastState;
-
-		public ITickTransition[] Transitions => _transitions;
-
-		IState IStateMachine.StartState => _startState;
 
 		IState IStateMachine.CurrentState => _currentState;
 
+		public ITickableState LastState => _lastState;
+
 		IState IStateMachine.LastState => _lastState;
+
+		public ITickTransition[] Transitions => _transitions;
 
 		ITransition[] IState.Transitions => _transitions;
 
-		public TickTransition TransitionsTo(ITickableState state)
-		{
-			var newTransition = new TickTransition
-				(this,
-				 state,
-				 _masterStateMachine);
-
-			ArrayHelpers.Add(ref _transitions, newTransition);
-			return newTransition;
-		}
+		#endregion
 
 		public void Enter()
 		{
-			_currentState = _startState;
 			OnEnter();
-			this.AllTransitionsBecomeRelevant();
-			_currentState.Enter();
-		}
-
-		public void Disable()
-		{
-			OnDisable();
-			this.Disable_Ext();
+			this.Enter_Ext();
 		}
 
 		public void EarlyTick()
@@ -97,10 +71,28 @@ namespace Bezoro.StateMachines
 
 		public void Exit()
 		{
-			_currentState.Exit();
-			this.AllTransitionsCeaseRelevant();
+			this.Exit_Ext();
 			OnExit();
 		}
+
+		public ITickTransition TransitionsTo(ITickableState toState)
+		{
+			var newTransition = this.CreateTransition<TickTransition>(toState);
+			ArrayHelpers.Add(ref _transitions, newTransition);
+			return newTransition;
+		}
+
+		public void SetCurrentState(ITickableState state) =>
+			_currentState = state;
+
+		void IStateMachine.SetCurrentState(IState state) =>
+			SetCurrentState(state as ITickableState);
+
+		public void SetLastState(ITickableState state) =>
+			_lastState = state;
+
+		void IStateMachine.SetLastState(IState state) =>
+			SetLastState(state as ITickableState);
 
 		public void DoTransition(ITickableState toState) =>
 			this.DoTransition_Ext(toState);
@@ -108,21 +100,13 @@ namespace Bezoro.StateMachines
 		void IStateMachine.DoTransition(IState toState) =>
 			this.DoTransition_Ext(toState);
 
-		public void SetLastState(ITickableState state) =>
-			_lastState = state;
-
-		void IStateMachine.SetLastState(IState state) =>
-			_lastState = state as ITickableState;
-
-		public void SetCurrentState(ITickableState state) =>
-			_currentState = state;
-
-		void IStateMachine.SetCurrentState(IState state) =>
-			_currentState = state as ITickableState;
-
 		#region Abstract Methods
 
-		protected abstract void SetUp();
+		public abstract void RegisterStates();
+
+		public abstract void SetUpTransitions();
+
+		public abstract IState ResolveStartState();
 
 		protected abstract void OnEnter();
 
@@ -134,20 +118,14 @@ namespace Bezoro.StateMachines
 
 		protected abstract void OnLateTick();
 
-		protected abstract void OnDisable();
-
 		protected abstract void OnExit();
 
 		#endregion
 
-		protected void SetStartState(ITickableState state) =>
-			_startState = state;
-
-		protected void RegisterState<T>(out T outState)
+		protected T RegisterState<T>()
 		where T : class, ITickableState, new() =>
-			outState = this.CreateState<T>(_masterStateMachine);
+			this.CreateState<T, ITickableStateMachine>(_masterStateMachine);
 
-		private ITickableState _startState = new NullTickableState();
 		private ITickableState _currentState = new NullTickableState();
 		private ITickableState _lastState = new NullTickableState();
 		private ITickableStateMachine _owningStateMachine;

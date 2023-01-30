@@ -1,15 +1,18 @@
-using UnityEngine;
-using System.Collections.Generic;
-using Bezoro.Core.Helpers;
-using JetBrains.Annotations;
 using Weaver;
+using UnityEngine;
+using JetBrains.Annotations;
+using System.Collections.Generic;
 
 namespace Bezoro.Core.Singletons
 {
 	public sealed class ReflectionProbeManager : MonoBehaviour
 	{
 		[AssetInstance] [UsedImplicitly]
-		public static readonly ReflectionProbeManager Instance;
+		public static ReflectionProbeManager Instance { get; private set; }
+
+		[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+		private static void Init() =>
+			Instance = null;
 
 		public float TickFrequency => 1f;
 

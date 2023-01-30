@@ -2,8 +2,6 @@
 {
 	public interface IKCCStateMachine : ITickableStateMachine
 	{
-		public new IKCCState StartState { get; }
-
 		public new IKCCState CurrentState { get; }
 
 		public new IKCCState LastState { get; }
@@ -17,8 +15,6 @@
 
 	public interface ITickableStateMachine : IStateMachine
 	{
-		public new ITickableState StartState { get; }
-
 		public new ITickableState CurrentState { get; }
 
 		public new ITickableState LastState { get; }
@@ -32,8 +28,6 @@
 
 	public interface IEventStateMachine : IStateMachine
 	{
-		public new IEventState StartState { get; }
-
 		public new IEventState CurrentState { get; }
 
 		public new IEventState LastState { get; }
@@ -47,18 +41,20 @@
 
 	public interface IStateMachine
 	{
-		public IState StartState { get; }
-
 		public IState CurrentState { get; }
 
 		public IState LastState { get; }
-
-		public DisableMethod DisableMethod => DisableMethod.Continue;
 
 		public void SetCurrentState(IState state);
 
 		public void SetLastState(IState state);
 
 		public void DoTransition(IState toState);
+
+		public IState ResolveStartState();
+
+		void RegisterStates();
+
+		void SetUpTransitions();
 	}
 }

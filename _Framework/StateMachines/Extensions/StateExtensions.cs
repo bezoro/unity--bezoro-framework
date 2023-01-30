@@ -3,31 +3,10 @@ using System.Collections;
 
 namespace Bezoro.StateMachines
 {
-	public static class TickableStateExtensions
-	{
-		public static void AllTransitionsTick(this ITickableState state)
-		{
-			var transitions = state.Transitions;
-			for (var i = 0; i < transitions.Length; i++)
-			{
-				if (transitions[i] == null)
-					continue;
-
-				transitions[i].Tick();
-			}
-		}
-
-		public static void AddMonoBehaviourTypeToIgnoreCollisionsWith<T>(this IKCCState state)
-		where T : MonoBehaviour
-		{
-			var type = typeof(T);
-			state.MonoBehaviourTypesToIgnoreCollisionsWith.Add(type);
-		}
-	}
-
 	public static class StateExtensions
 	{
-		public static void AllTransitionsBecomeRelevant(this IState state)
+		public static void AllTransitionsBecomeRelevant<T>(this T state)
+		where T : IState
 		{
 			var transitions = state.Transitions;
 			for (var i = 0; i < transitions.Length; i++)
@@ -39,7 +18,8 @@ namespace Bezoro.StateMachines
 			}
 		}
 
-		public static void AllTransitionsCeaseRelevant(this IState state)
+		public static void AllTransitionsCeaseRelevant<T>(this T state)
+		where T : IState
 		{
 			var transitions = state.Transitions;
 			for (var i = 0; i < transitions.Length; i++)
@@ -49,6 +29,14 @@ namespace Bezoro.StateMachines
 
 				transitions[i].CeaseRelevant();
 			}
+		}
+
+		public static T CreateTransition<T>(this IState state, IState toState)
+		where T : class, ITransition, new()
+		{
+			var newTransition = new T();
+			newTransition.Init(state, toState, state.MasterStateMachine);
+			return newTransition;
 		}
 
 		public static Coroutine StartCoroutine(this IState state, IEnumerator routine) =>
@@ -73,12 +61,13 @@ namespace Bezoro.StateMachines
 			return false;
 		}
 
-		public static bool IsSubStateMachine<T>(this IState state, out T outStateMachine)
-		where T : class, IStateMachine
+		public static bool IsSubStateMachine<T0, T1>(this T0 state, out T1 outStateMachine)
+		where T0 : class, IState
+		where T1 : class, ISubStateMachine
 		{
-			if (state is IStateMachine stateMachine)
+			if (state is ISubStateMachine stateMachine)
 			{
-				outStateMachine = stateMachine as T;
+				outStateMachine = stateMachine as T1;
 				return true;
 			}
 
