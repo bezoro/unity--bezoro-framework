@@ -5,31 +5,36 @@ namespace Bezoro.StateMachines
 {
 	[DisallowMultipleComponent]
 	public abstract class BaseTickableStateMachine : Tickable,
-		IMonoTickableStateMachine
+		ITickableStateMachine
 	{
-		private void Awake() =>
-			this.Awake_Ext();
+		private void Awake()
+		{
+			RegisterStates();
+			SetUpTransitions();
+		}
 
 		public ITickableState CurrentState => _currentState;
 
-		IState IStateMachine.CurrentState => _currentState;
-
 		public ITickableState LastState => _lastState;
-
-		IState IStateMachine.LastState => _lastState;
-
-		public bool Restarted => _restarted;
 
 		[field: SerializeField]
 		public DisableMethod DisableMethod { get; private set; }
 
-		private void Start() =>
-			this.Start_Ext();
+		private void Start()
+		{
+			_currentState = ResolveStartState();
+			_currentState.Enter();
+		}
 
 		protected override void OnEnable()
 		{
 			base.OnEnable();
-			this.OnEnable_Ext();
+			if (_restarted)
+			{
+				_restarted = false;
+				_currentState = ResolveStartState();
+				_currentState.Enter();
+			}
 		}
 
 		public override void EarlyTick() =>
@@ -47,46 +52,38 @@ namespace Bezoro.StateMachines
 		protected override void OnDisable()
 		{
 			base.OnDisable();
-			this.OnDisable_Ext();
+			if (DisableMethod is DisableMethod.Restart)
+				_restarted = true;
 		}
 
-		public void DoTransition(ITickableState toState) =>
-			this.DoTransition_Ext(toState);
-
-		public void SetCurrentState(ITickableState state) =>
-			_currentState = state;
-
-		public void SetLastState(ITickableState state) =>
-			_lastState = state;
-
-		void IStateMachine.DoTransition(IState toState) =>
-			this.DoTransition_Ext(toState);
-
-		void IStateMachine.SetCurrentState(IState state) =>
-			_currentState = state as ITickableState;
-
-		void IStateMachine.SetLastState(IState state) =>
-			_lastState = state as ITickableState;
-
-		public void SetRestarted(bool value) =>
-			_restarted = value;
+		public void DoTransition(ITickableState toState)
+		{
+			_currentState.Exit();
+			_lastState = _currentState;
+			_currentState = toState;
+			_currentState.Enter();
+		}
 
 		#region Abstract Methods
 
-		public abstract void RegisterStates();
+		protected abstract void RegisterStates();
 
-		public abstract void SetUpTransitions();
+		protected abstract void SetUpTransitions();
 
-		public abstract IState ResolveStartState();
+		protected abstract BaseTickableState ResolveStartState();
 
 		#endregion
 
 		protected T RegisterState<T>()
-		where T : class, ITickableState, new() =>
-			this.CreateState<T, ITickableStateMachine>(this);
+		where T : class, ITickableState, new()
+		{
+			var newState = new T();
+			newState.Init(this, this);
+			return newState;
+		}
 
-		private ITickableState _currentState = new NullTickableState();
-		private ITickableState _lastState = new NullTickableState();
+		private ITickableState _currentState;
+		private ITickableState _lastState;
 		private bool _restarted;
 	}
 }

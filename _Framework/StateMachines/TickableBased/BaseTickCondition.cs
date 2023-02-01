@@ -2,8 +2,7 @@
 
 namespace Bezoro.StateMachines
 {
-	public abstract class BaseTickCondition :
-		ITickCondition
+	public abstract class BaseTickCondition
 	{
 		public void Init(MonoBehaviour stateMachine, bool inverted = false)
 		{
@@ -11,9 +10,6 @@ namespace Bezoro.StateMachines
 			_inverted = inverted;
 			OnInit();
 		}
-
-		void ICondition.Init(ITransition transition, MonoBehaviour stateMachine) =>
-			Init(stateMachine);
 
 		public MonoBehaviour StateMachine => _stateMachine;
 
@@ -23,7 +19,7 @@ namespace Bezoro.StateMachines
 			OnBecomeRelevant();
 
 		public bool Tick() =>
-			this.Tick_Ext();
+			_inverted ? !OnTick() : OnTick();
 
 		public void CeaseRelevant() =>
 			OnCeaseRelevant();
@@ -34,7 +30,7 @@ namespace Bezoro.StateMachines
 
 		protected abstract void OnBecomeRelevant();
 
-		public abstract bool OnTick();
+		protected abstract bool OnTick();
 
 		protected abstract void OnCeaseRelevant();
 

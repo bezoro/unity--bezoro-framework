@@ -3,7 +3,8 @@ using Bezoro.Core.Helpers;
 
 namespace Bezoro.StateMachines
 {
-	public abstract class BaseEventSubStateMachine : IEventStateMachine, IEventState
+	public abstract class BaseEventSubStateMachine :
+		IEventStateMachine, IEventState
 	{
 		public void Init(MonoBehaviour masterStateMachine, IEventStateMachine owningStateMachine)
 		{
@@ -13,13 +14,9 @@ namespace Bezoro.StateMachines
 			SetUpTransitions();
 		}
 
-		public IEventState CurrentState => _currentState;
-
-		public IEventState LastState => _lastState;
-
 		public MonoBehaviour MasterStateMachine => _masterStateMachine;
 
-		public EventTransition[] Transitions => _transitions;
+		public IEventState CurrentState => _currentState;
 
 		public void Enter()
 		{
@@ -92,10 +89,10 @@ namespace Bezoro.StateMachines
 			return newState;
 		}
 
+		private MonoBehaviour _masterStateMachine;
+		private IEventStateMachine _owningStateMachine;
 		private IEventState _currentState;
 		private IEventState _lastState;
-		private IEventStateMachine _owningStateMachine;
-		private MonoBehaviour _masterStateMachine;
 		private EventTransition[] _transitions = new EventTransition[4];
 	}
 }

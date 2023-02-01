@@ -12,10 +12,6 @@ namespace Bezoro.StateMachines
 			_stateMachine = stateMachine;
 		}
 
-		public BaseEventCondition[] Conditions => _conditions;
-
-		public MonoBehaviour StateMachine => _stateMachine;
-
 		public void WithCondition<T>()
 		where T : BaseEventCondition, new()
 		{
@@ -80,9 +76,9 @@ namespace Bezoro.StateMachines
 			}
 		}
 
-		private BaseEventCondition[] _conditions = new BaseEventCondition[4];
+		private MonoBehaviour _stateMachine;
 		private IEventState _fromState;
 		private IEventState _toState;
-		private MonoBehaviour _stateMachine;
+		private BaseEventCondition[] _conditions = new BaseEventCondition[4];
 	}
 }
