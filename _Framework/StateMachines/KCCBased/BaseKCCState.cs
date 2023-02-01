@@ -73,7 +73,13 @@ namespace Bezoro.StateMachines
 		public void AfterCharacterUpdate(float deltaTime)
 		{
 			OnAfterCharacterUpdate(deltaTime);
-			this.AllTransitionsTick();
+			for (var i = 0; i < _transitions.Length; i++)
+			{
+				if (_transitions[i] == null)
+					continue;
+
+				_transitions[i].Tick();
+			}
 		}
 
 		public void GroundHit

@@ -3,8 +3,7 @@ using Bezoro.Core.Helpers;
 
 namespace Bezoro.StateMachines
 {
-	public class TickTransition :
-		ITickTransition
+	public class TickTransition
 	{
 		public void Init
 			(ITickableState fromState, ITickableState toState, MonoBehaviour stateMachine)
@@ -14,44 +13,29 @@ namespace Bezoro.StateMachines
 			_stateMachine = stateMachine;
 		}
 
-		void ITransition.Init(IState fromState, IState toState, MonoBehaviour stateMachine) =>
-			Init(fromState as ITickableState, toState as ITickableState, stateMachine);
-
-		public ITickableState FromState => _fromState;
-
-		public ITickableState ToState => _toState;
-
-		public ITickCondition[] Conditions => _conditions;
-
-		ICondition[] ITransition.Conditions => _conditions;
-
-		public ConditionsCriteria ConditionsCriteria => _conditionsCriteria;
-
-		public MonoBehaviour StateMachine => _stateMachine;
-
-		public void BecomeRelevant() =>
-			this.AllConditionsBecomeRelevant();
-
-		public void Tick() =>
-			this.TickConditions();
-
-
-		public void CeaseRelevant() =>
-			this.AllConditionsCeaseRelevant();
-
 		public void WithCondition<T>(bool inverted = false)
-		where T : class, ITickCondition, new() =>
-			ArrayHelpers.Add(ref _conditions, this.CreateCondition<T, ITickTransition>(inverted));
+		where T : BaseTickCondition, new()
+		{
+			var newCondition = new T();
+			newCondition.Init(_stateMachine, inverted);
+			ArrayHelpers.Add(ref _conditions, newCondition);
+		}
 
 		public void WithConditions<T0, T1>
 		(ConditionsCriteria conditionsCriteria = ConditionsCriteria.AnyTrue,
 		 bool inverted0 = false,
 		 bool inverted1 = false)
-		where T0 : class, ITickCondition, new()
-		where T1 : class, ITickCondition, new()
+		where T0 : BaseTickCondition, new()
+		where T1 : BaseTickCondition, new()
 		{
-			ArrayHelpers.Add(ref _conditions, this.CreateCondition<T0, ITickTransition>(inverted0));
-			ArrayHelpers.Add(ref _conditions, this.CreateCondition<T1, ITickTransition>(inverted1));
+			var newCondition0 = new T0();
+			newCondition0.Init(_stateMachine, inverted0);
+			ArrayHelpers.Add(ref _conditions, newCondition0);
+
+			var newCondition1 = new T1();
+			newCondition1.Init(_stateMachine, inverted1);
+			ArrayHelpers.Add(ref _conditions, newCondition1);
+
 			_conditionsCriteria = conditionsCriteria;
 		}
 
@@ -60,20 +44,91 @@ namespace Bezoro.StateMachines
 		 bool inverted0 = false,
 		 bool inverted1 = false,
 		 bool inverted2 = false)
-		where T0 : class, ITickCondition, new()
-		where T1 : class, ITickCondition, new()
-		where T2 : class, ITickCondition, new()
+		where T0 : BaseTickCondition, new()
+		where T1 : BaseTickCondition, new()
+		where T2 : BaseTickCondition, new()
 		{
-			ArrayHelpers.Add(ref _conditions, this.CreateCondition<T0, ITickTransition>(inverted0));
-			ArrayHelpers.Add(ref _conditions, this.CreateCondition<T1, ITickTransition>(inverted1));
-			ArrayHelpers.Add(ref _conditions, this.CreateCondition<T2, ITickTransition>(inverted2));
+			var newCondition0 = new T0();
+			newCondition0.Init(_stateMachine, inverted0);
+			ArrayHelpers.Add(ref _conditions, newCondition0);
+
+			var newCondition1 = new T1();
+			newCondition1.Init(_stateMachine, inverted1);
+			ArrayHelpers.Add(ref _conditions, newCondition1);
+
+			var newCondition2 = new T2();
+			newCondition2.Init(_stateMachine, inverted2);
+			ArrayHelpers.Add(ref _conditions, newCondition2);
+
 			_conditionsCriteria = conditionsCriteria;
 		}
 
-		private ITickCondition[] _conditions = new ITickCondition[4];
-		private ConditionsCriteria _conditionsCriteria = ConditionsCriteria.AnyTrue;
+		public void BecomeRelevant()
+		{
+			for (var i = 0; i < _conditions.Length; i++)
+			{
+				if (_conditions[i] == null)
+					continue;
+
+				_conditions[i].BecomeRelevant();
+			}
+		}
+
+		public void Tick() =>
+			TickConditions();
+
+
+		public void CeaseRelevant()
+		{
+			for (var i = 0; i < _conditions.Length; i++)
+			{
+				if (_conditions[i] == null)
+					continue;
+
+				_conditions[i].CeaseRelevant();
+			}
+		}
+
+		private void TickConditions()
+		{
+			if (_conditionsCriteria is ConditionsCriteria.AnyTrue)
+				TickAnyTrue();
+
+			else if (_conditionsCriteria is ConditionsCriteria.AllTrue)
+				TickAllTrue();
+
+			void TickAnyTrue()
+			{
+				for (var i = 0; i < _conditions.Length; i++)
+				{
+					if (_conditions[i] == null)
+						continue;
+
+					if (_conditions[i].Tick())
+						_fromState.OnTransitionTrue(_toState);
+				}
+			}
+
+			void TickAllTrue()
+			{
+				for (var i = 0; i < _conditions.Length; i++)
+				{
+					if (_conditions[i] == null)
+						continue;
+
+					if (!_conditions[i].Tick())
+						return;
+				}
+
+				_fromState.OnTransitionTrue(_toState);
+			}
+		}
+
+
+		private MonoBehaviour _stateMachine;
 		private ITickableState _fromState;
 		private ITickableState _toState;
-		private MonoBehaviour _stateMachine;
+		private BaseTickCondition[] _conditions = new BaseTickCondition[4];
+		private ConditionsCriteria _conditionsCriteria = ConditionsCriteria.AnyTrue;
 	}
 }

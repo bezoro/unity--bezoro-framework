@@ -1,5 +1,4 @@
-﻿using System;
-using UnityEngine;
+﻿using UnityEngine;
 using Bezoro.Core.Helpers;
 
 namespace Bezoro.StateMachines
@@ -14,19 +13,18 @@ namespace Bezoro.StateMachines
 			OnInit();
 		}
 
-		void IState.Init(MonoBehaviour masterStateMachine, IStateMachine owningStateMachine) =>
-			Init(masterStateMachine, owningStateMachine as ITickableStateMachine);
-
 		public MonoBehaviour MasterStateMachine => _masterStateMachine;
-
-		public ITickTransition[] Transitions => _transitions;
-
-		ITransition[] IState.Transitions => _transitions;
 
 		public void Enter()
 		{
 			OnEnter();
-			this.AllTransitionsBecomeRelevant();
+			for (var i = 0; i < _transitions.Length; i++)
+			{
+				if (_transitions[i] == null)
+					continue;
+
+				_transitions[i].BecomeRelevant();
+			}
 		}
 
 		public void EarlyTick() =>
@@ -41,7 +39,13 @@ namespace Bezoro.StateMachines
 		public void LateTick()
 		{
 			OnLateTick();
-			this.AllTransitionsTick();
+			for (var i = 0; i < _transitions.Length; i++)
+			{
+				if (_transitions[i] == null)
+					continue;
+
+				_transitions[i].Tick();
+			}
 		}
 
 		public void OnTransitionTrue(ITickableState toState) =>
@@ -49,13 +53,21 @@ namespace Bezoro.StateMachines
 
 		public void Exit()
 		{
-			this.AllTransitionsCeaseRelevant();
+			for (var i = 0; i < _transitions.Length; i++)
+			{
+				if (_transitions[i] == null)
+					continue;
+
+				_transitions[i].CeaseRelevant();
+			}
+
 			OnExit();
 		}
 
-		public ITickTransition TransitionsTo(ITickableState toState)
+		public TickTransition TransitionsTo(ITickableState toState)
 		{
-			var newTransition = this.CreateTransition<TickTransition>(toState);
+			var newTransition = new TickTransition();
+			newTransition.Init(this, toState, _masterStateMachine);
 			ArrayHelpers.Add(ref _transitions, newTransition);
 			return newTransition;
 		}
@@ -79,35 +91,7 @@ namespace Bezoro.StateMachines
 		#endregion
 
 		private MonoBehaviour _masterStateMachine;
-		private IStateMachine _owningStateMachine;
-		private ITickTransition[] _transitions = new ITickTransition[4];
-	}
-
-	public class NullTickableState : ITickableState
-	{
-		public void Init(MonoBehaviour masterStateMachine, IStateMachine owningStateMachine) { }
-
-		public void Init
-			(MonoBehaviour masterStateMachine, ITickableStateMachine owningStateMachine) { }
-
-		public MonoBehaviour MasterStateMachine { get; }
-
-		public ITickTransition[] Transitions { get; } = Array.Empty<ITickTransition>();
-
-		ITransition[] IState.Transitions { get; } = Array.Empty<ITransition>();
-
-		public void Enter() { }
-
-		public void Exit() { }
-
-		public void EarlyTick() { }
-
-		public void Tick() { }
-
-		public void FixedTick() { }
-
-		public void LateTick() { }
-
-		public void OnTransitionTrue(ITickableState toState) { }
+		private ITickableStateMachine _owningStateMachine;
+		private TickTransition[] _transitions = new TickTransition[4];
 	}
 }

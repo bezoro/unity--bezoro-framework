@@ -5,16 +5,16 @@ using KinematicCharacterController;
 
 namespace Bezoro.StateMachines
 {
-	public interface IKCCState : ITickableState
+	public interface IKCCState
 	{
-		public void Init
+		void Init
 		(MonoBehaviour masterStateMachine,
 		 IKCCStateMachine owningStateMachine,
 		 KinematicCharacterMotor motor);
 
-		public List<Type> MonoBehaviourTypesToIgnoreCollisionsWith { get; }
+		List<Type> MonoBehaviourTypesToIgnoreCollisionsWith { get; }
 
-		public new IKCCTransition[] Transitions { get; }
+		IKCCTransition[] Transitions { get; }
 
 		#region KCC Methods
 
@@ -53,22 +53,23 @@ namespace Bezoro.StateMachines
 		#endregion
 	}
 
-	public interface ITickableState : IState
+	public interface ITickableState
 	{
-		public void Init
-			(MonoBehaviour masterStateMachine, ITickableStateMachine owningStateMachine);
+		void Init(MonoBehaviour masterStateMachine, ITickableStateMachine owningStateMachine);
 
-		public new ITickTransition[] Transitions { get; }
+		void Enter();
 
-		public void EarlyTick();
+		void EarlyTick();
 
-		public void Tick();
+		void Tick();
 
-		public void FixedTick();
+		void FixedTick();
 
-		public void LateTick();
+		void LateTick();
 
-		public void OnTransitionTrue(ITickableState toState);
+		void OnTransitionTrue(ITickableState toState);
+
+		void Exit();
 	}
 
 	public interface IEventState
@@ -80,18 +81,5 @@ namespace Bezoro.StateMachines
 		void OnTransitionRaised(IEventState toState);
 
 		void Exit();
-	}
-
-	public interface IState
-	{
-		public void Init(MonoBehaviour masterStateMachine, IStateMachine owningStateMachine);
-
-		public MonoBehaviour MasterStateMachine { get; }
-
-		public ITransition[] Transitions { get; }
-
-		public void Enter();
-
-		public void Exit();
 	}
 }
