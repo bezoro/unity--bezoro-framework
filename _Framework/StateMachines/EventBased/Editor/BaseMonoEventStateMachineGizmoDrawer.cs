@@ -12,17 +12,26 @@ namespace Bezoro.StateMachines.Editor
 
 			void DrawStateLabels(IEventStateMachine stateMachine, int index = 0)
 			{
+				if (!Application.isPlaying)
+					return;
+
 				const float offset = 4f;
-				var labelPosition = source.transform.position + Vector3.up * offset;
 
-				Handles.Label
-					(labelPosition - (Vector3.up * index) * 0.75f,
-					 stateMachine.CurrentState.GetType().Name);
-
-				if (stateMachine.CurrentState is IEventStateMachine fsm)
+				while (true)
 				{
-					index++;
-					DrawStateLabels(fsm, index);
+					var labelPosition = source.transform.position + Vector3.up * offset;
+
+					Handles.Label(labelPosition - (Vector3.up * index) * 0.75f,
+								  stateMachine.CurrentState.GetType().Name);
+
+					if (stateMachine.CurrentState is IEventStateMachine fsm)
+					{
+						index++;
+						stateMachine = fsm;
+						continue;
+					}
+
+					break;
 				}
 			}
 		}
