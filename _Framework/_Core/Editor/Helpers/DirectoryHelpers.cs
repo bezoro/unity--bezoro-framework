@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace Bezoro.Core.Editor.Helpers
 {
-	public class DirectoryHelpers
+	public static class DirectoryHelpers
 	{
 		public static void CreateSymlink
 		(
