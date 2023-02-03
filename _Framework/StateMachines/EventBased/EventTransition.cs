@@ -53,12 +53,17 @@ namespace Bezoro.StateMachines
 
 		public void BecomeRelevant()
 		{
-			for (var i = 0; i < _conditions.Length; i++)
-			{
-				if (_conditions[i] == null)
-					continue;
+			AllConditionsBecomeRelevant();
 
-				_conditions[i].BecomeRelevant();
+			void AllConditionsBecomeRelevant()
+			{
+				for (var i = 0; i < _conditions.Length; i++)
+				{
+					if (_conditions[i] == null)
+						continue;
+
+					_conditions[i].BecomeRelevant();
+				}
 			}
 		}
 
@@ -67,12 +72,17 @@ namespace Bezoro.StateMachines
 
 		public void CeaseRelevant()
 		{
-			for (var i = 0; i < _conditions.Length; i++)
-			{
-				if (_conditions[i] == null)
-					continue;
+			AllConditionsCeaseRelevant();
 
-				_conditions[i].CeaseRelevant();
+			void AllConditionsCeaseRelevant()
+			{
+				for (var i = 0; i < _conditions.Length; i++)
+				{
+					if (_conditions[i] == null)
+						continue;
+
+					_conditions[i].CeaseRelevant();
+				}
 			}
 		}
 

@@ -5,7 +5,7 @@ using KinematicCharacterController;
 
 namespace Bezoro.StateMachines
 {
-	public interface IKCCState
+	public interface IKCCState : IState
 	{
 		void Init
 		(MonoBehaviour masterStateMachine,
@@ -14,7 +14,15 @@ namespace Bezoro.StateMachines
 
 		List<Type> MonoBehaviourTypesToIgnoreCollisionsWith { get; }
 
-		IKCCTransition[] Transitions { get; }
+		void Enter();
+
+		void EarlyTick();
+
+		void Tick();
+
+		void FixedTick();
+
+		void LateTick();
 
 		#region KCC Methods
 
@@ -51,9 +59,15 @@ namespace Bezoro.StateMachines
 		public void DiscreteCollisionDetected(Collider hitCollider);
 
 		#endregion
+
+		void Exit();
+
+		bool IsSubStateMachine(out IKCCStateMachine outStateMachine);
+
+		void OnTransitionTrue(IKCCState toState);
 	}
 
-	public interface ITickableState
+	public interface ITickableState : IState
 	{
 		void Init(MonoBehaviour masterStateMachine, ITickableStateMachine owningStateMachine);
 
@@ -72,7 +86,7 @@ namespace Bezoro.StateMachines
 		void Exit();
 	}
 
-	public interface IEventState
+	public interface IEventState : IState
 	{
 		void Init(MonoBehaviour masterStateMachine, IEventStateMachine owningStateMachine);
 
@@ -82,4 +96,6 @@ namespace Bezoro.StateMachines
 
 		void Exit();
 	}
+
+	public interface IState { }
 }

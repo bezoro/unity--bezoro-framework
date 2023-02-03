@@ -1,23 +1,18 @@
 ﻿namespace Bezoro.StateMachines
 {
-	public interface IKCCStateMachine
+	public interface IKCCStateMachine : IStateMachine<IKCCState> { }
+
+	public interface ITickableStateMachine : IStateMachine<ITickableState> { }
+
+	public interface IEventStateMachine : IStateMachine<IEventState> { }
+
+	public interface IStateMachine<TState>
+	where TState : IState
 	{
-		IKCCState CurrentState { get; }
+		TState CurrentState { get; }
 
-		void DoTransition(IKCCState toState);
-	}
+		TState LastState { get; }
 
-	public interface ITickableStateMachine
-	{
-		ITickableState CurrentState { get; }
-
-		void DoTransition(ITickableState toState);
-	}
-
-	public interface IEventStateMachine
-	{
-		IEventState CurrentState { get; }
-
-		void DoTransition(IEventState toState);
+		void DoTransition(TState toState);
 	}
 }

@@ -18,20 +18,25 @@ namespace Bezoro.StateMachines
 
 		public IEventState CurrentState => _currentState;
 
+		public IEventState LastState => _lastState;
+
 		public void Enter()
 		{
 			OnEnter();
-
-			for (var i = 0; i < _transitions.Length; i++)
-			{
-				if (_transitions[i] == null)
-					continue;
-
-				_transitions[i].BecomeRelevant();
-			}
-
+			AllTransitionsBecomeRelevant();
 			_currentState = ResolveStartState();
 			_currentState.Enter();
+
+			void AllTransitionsBecomeRelevant()
+			{
+				for (var i = 0; i < _transitions.Length; i++)
+				{
+					if (_transitions[i] == null)
+						continue;
+
+					_transitions[i].BecomeRelevant();
+				}
+			}
 		}
 
 		public void OnTransitionRaised(IEventState toState) =>
@@ -40,15 +45,19 @@ namespace Bezoro.StateMachines
 		public void Exit()
 		{
 			_currentState.Exit();
-			for (var i = 0; i < _transitions.Length; i++)
-			{
-				if (_transitions[i] == null)
-					continue;
-
-				_transitions[i].CeaseRelevant();
-			}
-
+			AllTransitionsCeaseRelevant();
 			OnExit();
+
+			void AllTransitionsCeaseRelevant()
+			{
+				for (var i = 0; i < _transitions.Length; i++)
+				{
+					if (_transitions[i] == null)
+						continue;
+
+					_transitions[i].CeaseRelevant();
+				}
+			}
 		}
 
 		public EventTransition TransitionsTo(IEventState toState)
@@ -69,14 +78,33 @@ namespace Bezoro.StateMachines
 
 		#region Abstract Methods
 
+		/// <summary>
+		/// Called once in the lifetime of the object, when it is created.
+		/// Use it to register all <b>States</b> needed for the <b>SubStateMachine</b> to work.
+		/// /// Use it like 'Awake' in a MonoBehaviour.
+		/// </summary>
 		protected abstract void RegisterStates();
 
+		/// <summary>
+		/// Called once in the lifetime of the object, when it is created.
+		/// Use it to set up all of the <b>States</b> <b>Transitions</b>.
+		/// </summary>
 		protected abstract void SetUpTransitions();
 
-		protected abstract BaseEventState ResolveStartState();
+		/// <summary>
+		/// Called when the <b>SubStateMachine</b> is <b>Entered</b>.
+		/// Use it to decide which should be the <b>Start</b> <b>State</b>, then return it.
+		/// </summary>
+		protected abstract IEventState ResolveStartState();
 
+		/// <summary>
+		/// Called when the <b>SubStateMachine</b> is <i>Entered</i>.
+		/// </summary>
 		protected abstract void OnEnter();
 
+		/// <summary>
+		/// Called when the <b>SubStateMachine</b> is <i>Exited</i>.
+		/// </summary>
 		protected abstract void OnExit();
 
 		#endregion

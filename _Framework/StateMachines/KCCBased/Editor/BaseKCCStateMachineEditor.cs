@@ -6,10 +6,10 @@ using Sirenix.OdinInspector.Editor;
 
 namespace Bezoro.StateMachines.Editor
 {
-	[CustomEditor(typeof(BaseKCCStateMachine), true)]
+	[CustomEditor(typeof(BaseMonoKCCStateMachine), true)]
 	public class BaseKCCStateMachineEditor : OdinEditor
 	{
-		private BaseKCCStateMachine baseKCCStateMachine;
+		private BaseMonoKCCStateMachine baseKCCStateMachine;
 
 		private KinematicCharacterMotor _motor;
 		private CapsuleCollider _capsuleCollider;
@@ -18,7 +18,7 @@ namespace Bezoro.StateMachines.Editor
 		{
 			base.OnEnable();
 
-			baseKCCStateMachine = target as BaseKCCStateMachine;
+			baseKCCStateMachine = target as BaseMonoKCCStateMachine;
 
 			TryGetDependencies();
 			TrySetDependencies();

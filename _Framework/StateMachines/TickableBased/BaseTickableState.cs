@@ -15,15 +15,22 @@ namespace Bezoro.StateMachines
 
 		public MonoBehaviour MasterStateMachine => _masterStateMachine;
 
+		public TickTransition[] transitions => _transitions;
+
 		public void Enter()
 		{
 			OnEnter();
-			for (var i = 0; i < _transitions.Length; i++)
-			{
-				if (_transitions[i] == null)
-					continue;
+			AllTransitionsBecomeRelevant();
 
-				_transitions[i].BecomeRelevant();
+			void AllTransitionsBecomeRelevant()
+			{
+				for (var i = 0; i < _transitions.Length; i++)
+				{
+					if (_transitions[i] == null)
+						continue;
+
+					_transitions[i].BecomeRelevant();
+				}
 			}
 		}
 
@@ -39,12 +46,17 @@ namespace Bezoro.StateMachines
 		public void LateTick()
 		{
 			OnLateTick();
-			for (var i = 0; i < _transitions.Length; i++)
-			{
-				if (_transitions[i] == null)
-					continue;
+			AllTransitionsTick();
 
-				_transitions[i].Tick();
+			void AllTransitionsTick()
+			{
+				for (var i = 0; i < _transitions.Length; i++)
+				{
+					if (_transitions[i] == null)
+						continue;
+
+					_transitions[i].Tick();
+				}
 			}
 		}
 
@@ -53,15 +65,19 @@ namespace Bezoro.StateMachines
 
 		public void Exit()
 		{
-			for (var i = 0; i < _transitions.Length; i++)
-			{
-				if (_transitions[i] == null)
-					continue;
-
-				_transitions[i].CeaseRelevant();
-			}
-
+			AllTransitionsCeaseRelevant();
 			OnExit();
+
+			void AllTransitionsCeaseRelevant()
+			{
+				for (var i = 0; i < _transitions.Length; i++)
+				{
+					if (_transitions[i] == null)
+						continue;
+
+					_transitions[i].CeaseRelevant();
+				}
+			}
 		}
 
 		public TickTransition TransitionsTo(ITickableState toState)
@@ -74,18 +90,40 @@ namespace Bezoro.StateMachines
 
 		#region Abstract Methods
 
+		/// <summary>
+		/// Called once in the lifetime of the object, when it is created.
+		/// Use it like <b>Awake</b> in a <b>MonoBehaviour</b>.
+		/// </summary>
 		protected abstract void OnInit();
 
+		/// <summary>
+		/// Called when the <b>SubStateMachine</b> is <i>Entered</i>.
+		/// </summary>
 		protected abstract void OnEnter();
 
+		/// <summary>
+		/// Called every frame, before <b>OnTick</b>.
+		/// </summary>
 		protected abstract void OnEarlyTick();
 
+		/// <summary>
+		/// Called every frame.
+		/// </summary>
 		protected abstract void OnTick();
 
+		/// <summary>
+		/// Called at the same rate as <b>FixedUpdate</b>.
+		/// </summary>
 		protected abstract void OnFixedTick();
 
+		/// <summary>
+		/// Called every frame after <b>OnTick</b>.
+		/// </summary>
 		protected abstract void OnLateTick();
 
+		/// <summary>
+		/// Called when the <b>SubStateMachine</b> is <i>Exited</i>.
+		/// </summary>
 		protected abstract void OnExit();
 
 		#endregion

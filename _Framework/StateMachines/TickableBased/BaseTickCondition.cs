@@ -26,12 +26,22 @@ namespace Bezoro.StateMachines
 
 		#region Abstract Methods
 
+		/// <summary>
+		/// Called once in the lifetime of the object, when it is created.
+		/// Use it like <b>Awake</b> in a <b>MonoBehaviour</b>.
+		/// </summary>
 		protected abstract void OnInit();
 
+		/// <summary>
+		/// Called when the <b>State</b> it belongs to is <i>Entered</i>.
+		/// </summary>
 		protected abstract void OnBecomeRelevant();
 
 		protected abstract bool OnTick();
 
+		/// <summary>
+		/// Called when the <b>State</b> it belongs to is <i>Exited</i>.
+		/// </summary>
 		protected abstract void OnCeaseRelevant();
 
 		#endregion
