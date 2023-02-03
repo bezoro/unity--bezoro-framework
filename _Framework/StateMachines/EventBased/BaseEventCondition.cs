@@ -25,19 +25,23 @@ namespace Bezoro.StateMachines
 
 		#region Abstract Methods
 
+		/// <summary>
+		/// Called once in the lifetime of the object, when it is created.
+		/// Use it like <b>Awake</b> in a <b>MonoBehaviour</b>.
+		/// </summary>
 		protected abstract void OnInit();
 
+		/// <summary>
+		/// Called when the <b>State</b> it belongs to is <i>Entered</i>.
+		/// </summary>
 		protected abstract void OnBecomeRelevant();
 
+		/// <summary>
+		/// Called when the <b>State</b> it belongs to is <i>Exited</i>.
+		/// </summary>
 		protected abstract void OnCeaseRelevant();
 
 		#endregion
-
-		protected Coroutine StartCoroutine(IEnumerator routine) =>
-			_stateMachine.StartCoroutine(routine);
-
-		protected void StopCoroutine(Coroutine routine) =>
-			_stateMachine.StopCoroutine(routine);
 
 		private EventTransition _transition;
 		private MonoBehaviour _stateMachine;

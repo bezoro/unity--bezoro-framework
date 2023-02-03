@@ -3,7 +3,8 @@ using Bezoro.Core.Helpers;
 
 namespace Bezoro.StateMachines
 {
-	public abstract class BaseEventState : IEventState
+	public abstract class BaseEventState :
+		IEventState
 	{
 		public void Init(MonoBehaviour masterStateMachine, IEventStateMachine owningStateMachine)
 		{
@@ -19,12 +20,17 @@ namespace Bezoro.StateMachines
 		public void Enter()
 		{
 			OnEnter();
-			for (var i = 0; i < _transitions.Length; i++)
-			{
-				if (_transitions[i] == null)
-					continue;
+			AllTransitionsBecomeRelevant();
 
-				_transitions[i].BecomeRelevant();
+			void AllTransitionsBecomeRelevant()
+			{
+				for (var i = 0; i < _transitions.Length; i++)
+				{
+					if (_transitions[i] == null)
+						continue;
+
+					_transitions[i].BecomeRelevant();
+				}
 			}
 		}
 
@@ -33,15 +39,19 @@ namespace Bezoro.StateMachines
 
 		public void Exit()
 		{
-			for (var i = 0; i < _transitions.Length; i++)
-			{
-				if (_transitions[i] == null)
-					continue;
-
-				_transitions[i].CeaseRelevant();
-			}
-
+			AllTransitionsCeaseRelevant();
 			OnExit();
+
+			void AllTransitionsCeaseRelevant()
+			{
+				for (var i = 0; i < _transitions.Length; i++)
+				{
+					if (_transitions[i] == null)
+						continue;
+
+					_transitions[i].CeaseRelevant();
+				}
+			}
 		}
 
 		public EventTransition TransitionsTo(IEventState toState)
@@ -54,10 +64,20 @@ namespace Bezoro.StateMachines
 
 		#region Abstract Methods
 
+		/// <summary>
+		/// Called once in the lifetime of the object, when it is created.
+		/// Use it like <b>Awake</b> in a <b>MonoBehaviour</b>.
+		/// </summary>
 		protected abstract void OnInit();
 
+		/// <summary>
+		/// Called once when the <b>State</b> is <i>Entered</i>.
+		/// </summary>
 		protected abstract void OnEnter();
 
+		/// <summary>
+		/// Called once when the <b>State</b> is <i>Exited</i>.
+		/// </summary>
 		protected abstract void OnExit();
 
 		#endregion

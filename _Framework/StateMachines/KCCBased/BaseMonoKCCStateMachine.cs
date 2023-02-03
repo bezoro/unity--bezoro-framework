@@ -1,32 +1,24 @@
 ﻿using Bezoro.Core;
 using UnityEngine;
-using UnityEngine.Profiling;
 using System.Collections.Generic;
 using KinematicCharacterController;
 
 namespace Bezoro.StateMachines
 {
 	[DisallowMultipleComponent]
-	public abstract class BaseKCCStateMachine : Tickable,
-		IMonoKCCStateMachine, ICharacterController
+	public abstract class BaseMonoKCCStateMachine : Tickable,
+		IKCCStateMachine, ICharacterController
 	{
 		private void Awake()
 		{
 			Motor.CharacterController = this;
-			this.Awake_Ext();
+			RegisterStates();
+			SetUpTransitions();
 		}
 
 		public IKCCState CurrentState => _currentState;
 
-		ITickableState ITickableStateMachine.CurrentState => _currentState;
-
-		IState IStateMachine.CurrentState => _currentState;
-
 		public IKCCState LastState => _lastState;
-
-		ITickableState ITickableStateMachine.LastState => _lastState;
-
-		IState IStateMachine.LastState => _lastState;
 
 		public bool Restarted => _restarted;
 
@@ -36,13 +28,26 @@ namespace Bezoro.StateMachines
 		[field: SerializeField]
 		public KinematicCharacterMotor Motor { get; private set; }
 
-		private void Start() =>
-			this.Start_Ext();
+		private void Start()
+		{
+			_currentState = ResolveStartState();
+			_currentState.Enter();
+		}
 
 		protected override void OnEnable()
 		{
 			base.OnEnable();
-			this.OnEnable_Ext();
+			HandleRestarted();
+
+			void HandleRestarted()
+			{
+				if (!_restarted)
+					return;
+
+				_restarted = false;
+				_currentState = ResolveStartState();
+				_currentState.Enter();
+			}
 		}
 
 		public override void EarlyTick() =>
@@ -83,7 +88,7 @@ namespace Bezoro.StateMachines
 				if (CheckInState(_currentState))
 					return true;
 
-				if (!_currentState.IsSubStateMachine(out IKCCSubStateMachine rootSubStateMachine))
+				if (!_currentState.IsSubStateMachine(out var rootSubStateMachine))
 					return false;
 
 				var currentState = rootSubStateMachine.CurrentState;
@@ -92,7 +97,7 @@ namespace Bezoro.StateMachines
 					if (CheckInState(currentState))
 						return true;
 
-					if (!currentState.IsSubStateMachine(out IKCCSubStateMachine subStateMachine))
+					if (!currentState.IsSubStateMachine(out var subStateMachine))
 						return false;
 
 					currentState = subStateMachine.CurrentState;
@@ -148,17 +153,31 @@ namespace Bezoro.StateMachines
 		protected override void OnDisable()
 		{
 			base.OnDisable();
-			this.OnDisable_Ext();
+			HandleDisableMethod();
+
+			void HandleDisableMethod()
+			{
+				if (DisableMethod is DisableMethod.Restart)
+					_restarted = true;
+			}
+		}
+
+		public void DoTransition(IKCCState toState)
+		{
+			_currentState.Exit();
+			_lastState = _currentState;
+			_currentState = toState;
+			_currentState.Enter();
 		}
 
 		public void SetMotor(KinematicCharacterMotor motor) =>
 			Motor = motor;
 
-		public List<IState> GetCurrentHierarchy()
+		public List<IKCCState> GetCurrentHierarchy()
 		{
-			var currentStateHierarchy = new List<IState> { _currentState };
+			var currentStateHierarchy = new List<IKCCState> { _currentState };
 
-			if (_currentState is not IStateMachine rootSuperState)
+			if (_currentState is not IKCCStateMachine rootSuperState)
 				return currentStateHierarchy;
 
 			var parentState = rootSuperState;
@@ -176,52 +195,54 @@ namespace Bezoro.StateMachines
 			}
 		}
 
-		public void DoTransition(IKCCState toState) =>
-			this.DoTransition_Ext(toState);
+		public bool TryFindStateInCurrentHierarchy<T>(out T outState)
+		where T : class, IState
+		{
+			var boolean = StateMachineExtensions.TryFindStateInCurrentHierarchy(this, out T state);
+			outState = state;
+			return boolean;
+		}
 
-		void ITickableStateMachine.DoTransition(ITickableState toState) =>
-			this.DoTransition_Ext(toState);
-
-		void IStateMachine.DoTransition(IState toState) =>
-			this.DoTransition_Ext(toState);
-
-		public void SetCurrentState(IKCCState state) =>
-			_currentState = state;
-
-		void ITickableStateMachine.SetCurrentState(ITickableState state) =>
-			_currentState = state as IKCCState;
-
-		void IStateMachine.SetCurrentState(IState state) =>
-			_currentState = state as IKCCState;
-
-		public void SetLastState(IKCCState state) =>
-			_lastState = state;
-
-		void ITickableStateMachine.SetLastState(ITickableState state) =>
-			_lastState = state as IKCCState;
-
-		void IStateMachine.SetLastState(IState state) =>
-			_lastState = state as IKCCState;
-
-		public void SetRestarted(bool value) =>
-			_restarted = value;
+		public bool TryFindStateInLastHierarchy<T>(out T outState)
+		where T : class, IState
+		{
+			var boolean = StateMachineExtensions.TryFindStateInLastHierarchy(this, out T state);
+			outState = state;
+			return boolean;
+		}
 
 		#region Abstract Methods
 
-		public abstract void RegisterStates();
+		/// <summary>
+		/// Called once in the lifetime of the object, in <b>Awake</b>.
+		/// Use it to register all <b>States</b> needed for the <b>StateMachine</b> to work.
+		/// </summary>
+		protected abstract void RegisterStates();
 
-		public abstract void SetUpTransitions();
+		/// <summary>
+		/// Called once in the lifetime of the object, in <b>Awake</b>.
+		/// Use it to set up all of the <b>States</b> <b>Transitions</b>.
+		/// </summary>
+		protected abstract void SetUpTransitions();
 
-		public abstract IState ResolveStartState();
+		/// <summary>
+		/// Called once in the lifetime of the object, in <b>Start</b>.
+		/// Use it to decide which should be the <b>Start</b> <b>State</b>, then return it.
+		/// </summary>
+		protected abstract IKCCState ResolveStartState();
 
 		#endregion
 
 		protected T RegisterState<T>()
-		where T : class, IKCCState, new() =>
-			this.CreateState<T, IKCCStateMachine>(this);
+		where T : class, IKCCState, new()
+		{
+			var newState = new T();
+			newState.Init(this, this, Motor);
+			return newState;
+		}
 
-		private IKCCState _currentState = new NullKCCState();
-		private IKCCState _lastState = new NullKCCState();
+		private IKCCState _currentState;
+		private IKCCState _lastState;
 		private bool _restarted;
 	}
 }

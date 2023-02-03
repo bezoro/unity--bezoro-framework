@@ -13,6 +13,79 @@ namespace Bezoro.StateMachines
 			_stateMachine = stateMachine;
 		}
 
+		public void BecomeRelevant()
+		{
+			AllConditionsBecomeRelevant();
+
+			void AllConditionsBecomeRelevant()
+			{
+				for (var i = 0; i < _conditions.Length; i++)
+				{
+					if (_conditions[i] == null)
+						continue;
+
+					_conditions[i].BecomeRelevant();
+				}
+			}
+		}
+
+		public void Tick()
+		{
+			TickConditions();
+
+			void TickConditions()
+			{
+				if (_conditionsCriteria is ConditionsCriteria.AnyTrue)
+					TickAnyTrue();
+
+				else if (_conditionsCriteria is ConditionsCriteria.AllTrue)
+					TickAllTrue();
+
+				void TickAnyTrue()
+				{
+					for (var i = 0; i < _conditions.Length; i++)
+					{
+						if (_conditions[i] == null)
+							continue;
+
+						if (_conditions[i].Tick())
+							_fromState.OnTransitionTrue(_toState);
+					}
+				}
+
+				void TickAllTrue()
+				{
+					for (var i = 0; i < _conditions.Length; i++)
+					{
+						if (_conditions[i] == null)
+							continue;
+
+						if (!_conditions[i].Tick())
+							return;
+					}
+
+					_fromState.OnTransitionTrue(_toState);
+				}
+			}
+		}
+
+
+		public void CeaseRelevant()
+		{
+			AllConditionsCeaseRelevant();
+
+			void AllConditionsCeaseRelevant()
+			{
+				for (var i = 0; i < _conditions.Length; i++)
+				{
+					if (_conditions[i] == null)
+						continue;
+
+					_conditions[i].CeaseRelevant();
+				}
+			}
+		}
+
 		public void WithCondition<T>(bool inverted = false)
 		where T : BaseTickCondition, new()
 		{
@@ -62,68 +135,6 @@ namespace Bezoro.StateMachines
 
 			_conditionsCriteria = conditionsCriteria;
 		}
-
-		public void BecomeRelevant()
-		{
-			for (var i = 0; i < _conditions.Length; i++)
-			{
-				if (_conditions[i] == null)
-					continue;
-
-				_conditions[i].BecomeRelevant();
-			}
-		}
-
-		public void Tick() =>
-			TickConditions();
-
-
-		public void CeaseRelevant()
-		{
-			for (var i = 0; i < _conditions.Length; i++)
-			{
-				if (_conditions[i] == null)
-					continue;
-
-				_conditions[i].CeaseRelevant();
-			}
-		}
-
-		private void TickConditions()
-		{
-			if (_conditionsCriteria is ConditionsCriteria.AnyTrue)
-				TickAnyTrue();
-
-			else if (_conditionsCriteria is ConditionsCriteria.AllTrue)
-				TickAllTrue();
-
-			void TickAnyTrue()
-			{
-				for (var i = 0; i < _conditions.Length; i++)
-				{
-					if (_conditions[i] == null)
-						continue;
-
-					if (_conditions[i].Tick())
-						_fromState.OnTransitionTrue(_toState);
-				}
-			}
-
-			void TickAllTrue()
-			{
-				for (var i = 0; i < _conditions.Length; i++)
-				{
-					if (_conditions[i] == null)
-						continue;
-
-					if (!_conditions[i].Tick())
-						return;
-				}
-
-				_fromState.OnTransitionTrue(_toState);
-			}
-		}
-
 
 		private MonoBehaviour _stateMachine;
 		private ITickableState _fromState;
