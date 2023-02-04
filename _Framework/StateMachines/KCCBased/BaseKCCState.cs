@@ -119,7 +119,7 @@ namespace Bezoro.StateMachines
 
 		#endregion
 
-		public void OnTransitionTrue(IKCCState toState) =>
+		public void OnTransitionRaised(IKCCState toState) =>
 			_owningStateMachine.DoTransition(toState);
 
 		public void Exit()

@@ -75,7 +75,7 @@ namespace Bezoro.StateMachines
 			}
 		}
 
-		public void OnTransitionTrue(ITickableState toState) =>
+		public void OnTransitionRaised(ITickableState toState) =>
 			_owningStateMachine.DoTransition(toState);
 
 		public void Exit()
