@@ -49,7 +49,7 @@ namespace Bezoro.StateMachines
 							continue;
 
 						if (_conditions[i].Tick())
-							_fromState.OnTransitionTrue(_toState);
+							_fromState.OnTransitionRaised(_toState);
 					}
 				}
 
@@ -64,7 +64,7 @@ namespace Bezoro.StateMachines
 							return;
 					}
 
-					_fromState.OnTransitionTrue(_toState);
+					_fromState.OnTransitionRaised(_toState);
 				}
 			}
 		}
