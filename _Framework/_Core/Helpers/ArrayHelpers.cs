@@ -55,7 +55,7 @@ namespace Bezoro.Core.Helpers
 				return;
 
 			for (var i = 0; i < array.Length; i++)
-				array[i] = null;
+				array[i] = default;
 		}
 	}
 }
