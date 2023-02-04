@@ -1,7 +1,7 @@
 ﻿using System;
-using UnityEngine;
 using System.Collections.Generic;
 using KinematicCharacterController;
+using UnityEngine;
 
 namespace Bezoro.StateMachines
 {
@@ -51,39 +51,5 @@ namespace Bezoro.StateMachines
 		#endregion
 
 		bool IsSubStateMachine(out IKCCStateMachine outStateMachine);
-	}
-
-	public interface ITickableState : IState, ITickable, IHasTransitions<ITickableState>
-	{
-		void Init(MonoBehaviour masterStateMachine, ITickableStateMachine owningStateMachine);
-	}
-
-	public interface ITickable
-	{
-		void EarlyTick();
-
-		void Tick();
-
-		void FixedTick();
-
-		void LateTick();
-	}
-
-	public interface IEventState : IState, IHasTransitions<IEventState>
-	{
-		void Init(MonoBehaviour masterStateMachine, IEventStateMachine owningStateMachine);
-	}
-
-	public interface IHasTransitions<T>
-	where T : IState
-	{
-		void OnTransitionRaised(T toState);
-	}
-
-	public interface IState
-	{
-		void Enter();
-
-		void Exit();
 	}
 }
