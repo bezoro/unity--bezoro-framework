@@ -96,12 +96,8 @@ namespace Bezoro
 			transform.rotation = Quaternion.AngleAxis(_yaw, Vector3.up) *
 								 Quaternion.AngleAxis(_pitch, Vector3.right);
 
-			transform.eulerAngles = new Vector3
-				(
-				 transform.eulerAngles.x,
-				 transform.eulerAngles.y,
-				 cameraRoll
-				);
+			transform.eulerAngles =
+				new Vector3(transform.eulerAngles.x, transform.eulerAngles.y, cameraRoll);
 
 			var speed = Time.deltaTime *
 						(Input.GetKey(KeyCode.LeftShift) ? sprintSpeed : moveSpeed);
@@ -110,8 +106,8 @@ namespace Bezoro
 
 			var right = speed * Input.GetAxis(HorizontalKey);
 
-			var up = speed * ((Input.GetKey(KeyCode.E) ? 1f : 0f) -
-							  (Input.GetKey(KeyCode.Q) ? 1f : 0f));
+			var up = speed *
+					 ((Input.GetKey(KeyCode.E) ? 1f : 0f) - (Input.GetKey(KeyCode.Q) ? 1f : 0f));
 
 			transform.position +=
 				transform.forward * forward + transform.right * right + Vector3.up * up;
@@ -120,12 +116,8 @@ namespace Bezoro
 		public void RefreshCameraRoll(float roll)
 		{
 			cameraRoll = roll;
-			transform.eulerAngles = new Vector3
-				(
-				 transform.eulerAngles.x,
-				 transform.eulerAngles.y,
-				 cameraRoll
-				);
+			transform.eulerAngles =
+				new Vector3(transform.eulerAngles.x, transform.eulerAngles.y, cameraRoll);
 		}
 
 		[SerializeField]
