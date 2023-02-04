@@ -11,9 +11,7 @@ public static class AssetFinder
 			var assetPath = AssetDatabase.GUIDToAssetPath(guid);
 			var asset = AssetDatabase.LoadAssetAtPath<T>(assetPath);
 			if (asset != null)
-			{
 				return asset;
-			}
 		}
 
 		return null;
