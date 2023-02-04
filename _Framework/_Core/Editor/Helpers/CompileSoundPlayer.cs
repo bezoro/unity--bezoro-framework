@@ -9,10 +9,7 @@ namespace Bezoro.Core.Editor.Helpers
 		[DidReloadScripts]
 		private static void PlaySound()
 		{
-			var go = new GameObject("CompileSFX")
-					 {
-						 hideFlags = HideFlags.HideAndDontSave
-					 };
+			var go = new GameObject("CompileSFX") { hideFlags = HideFlags.HideAndDontSave };
 
 			_audioSource = go.AddComponent<AudioSource>();
 			_audioSource.clip = Resources.Load<AudioClip>("SFX_Compiled");
@@ -25,8 +22,7 @@ namespace Bezoro.Core.Editor.Helpers
 		private static async UniTask Async_DestroyAudioWhenFinishedPlaying()
 		{
 			await UniTask.WaitUntil(() => _audioSource.isPlaying == false);
-
-			GameObject.DestroyImmediate(_audioSource.gameObject);
+			Object.DestroyImmediate(_audioSource.gameObject);
 		}
 
 		private static AudioSource _audioSource;
