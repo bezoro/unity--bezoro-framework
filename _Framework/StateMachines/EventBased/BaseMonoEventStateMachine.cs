@@ -16,8 +16,6 @@ namespace Bezoro.StateMachines
 
 		public IEventState LastState => _lastState;
 
-		public bool Restarted => _restarted;
-
 		[field: SerializeField]
 		public DisableMethod DisableMethod { get; private set; }
 
