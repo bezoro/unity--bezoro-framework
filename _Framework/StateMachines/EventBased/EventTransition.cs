@@ -12,6 +12,41 @@ namespace Bezoro.StateMachines
 			_stateMachine = stateMachine;
 		}
 
+		public void BecomeRelevant()
+		{
+			AllConditionsBecomeRelevant();
+
+			void AllConditionsBecomeRelevant()
+			{
+				for (var i = 0; i < _conditions.Length; i++)
+				{
+					if (_conditions[i] == null)
+						continue;
+
+					_conditions[i].BecomeRelevant();
+				}
+			}
+		}
+
+		public void OnConditionRaised() =>
+			_fromState.OnTransitionRaised(_toState);
+
+		public void CeaseRelevant()
+		{
+			AllConditionsCeaseRelevant();
+
+			void AllConditionsCeaseRelevant()
+			{
+				for (var i = 0; i < _conditions.Length; i++)
+				{
+					if (_conditions[i] == null)
+						continue;
+
+					_conditions[i].CeaseRelevant();
+				}
+			}
+		}
+
 		public void WithCondition<T>()
 		where T : BaseEventCondition, new()
 		{
@@ -49,41 +84,6 @@ namespace Bezoro.StateMachines
 			var newCondition2 = new T2();
 			newCondition2.Init(this, _stateMachine);
 			ArrayHelpers.Add(ref _conditions, newCondition2);
-		}
-
-		public void BecomeRelevant()
-		{
-			AllConditionsBecomeRelevant();
-
-			void AllConditionsBecomeRelevant()
-			{
-				for (var i = 0; i < _conditions.Length; i++)
-				{
-					if (_conditions[i] == null)
-						continue;
-
-					_conditions[i].BecomeRelevant();
-				}
-			}
-		}
-
-		public void OnConditionRaised() =>
-			_fromState.OnTransitionRaised(_toState);
-
-		public void CeaseRelevant()
-		{
-			AllConditionsCeaseRelevant();
-
-			void AllConditionsCeaseRelevant()
-			{
-				for (var i = 0; i < _conditions.Length; i++)
-				{
-					if (_conditions[i] == null)
-						continue;
-
-					_conditions[i].CeaseRelevant();
-				}
-			}
 		}
 
 		private MonoBehaviour _stateMachine;
