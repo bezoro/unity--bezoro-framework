@@ -12,10 +12,6 @@ namespace Bezoro.StateMachines
 			_stateMachine = stateMachine;
 		}
 
-		public ConditionsCriteria ConditionsCriteria => _conditionsCriteria;
-
-		public MonoBehaviour StateMachine => _stateMachine;
-
 		public void BecomeRelevant()
 		{
 			AllConditionsBecomeRelevant();
