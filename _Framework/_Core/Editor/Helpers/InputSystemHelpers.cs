@@ -13,17 +13,13 @@ namespace Bezoro.Core.Editor.Helpers
 		{
 			var playerSettingsSerializedObject = GetPlayerSettingsSerializedObject();
 			var property = playerSettingsSerializedObject.FindProperty("activeInputHandler");
-
 			property.intValue = (int)inputSystem;
-
 			playerSettingsSerializedObject.ApplyModifiedProperties();
 		}
 
-		public static SerializedObject GetPlayerSettingsSerializedObject()
+		private static SerializedObject GetPlayerSettingsSerializedObject()
 		{
-			var playerSettings = Resources
-								 .FindObjectsOfTypeAll<PlayerSettings>()
-								 .FirstOrDefault();
+			var playerSettings = Resources.FindObjectsOfTypeAll<PlayerSettings>().FirstOrDefault();
 
 			return new SerializedObject(playerSettings);
 		}

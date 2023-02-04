@@ -7,20 +7,13 @@ namespace Bezoro.Core.Editor.Helpers
 {
 	public static class DirectoryHelpers
 	{
-		public static void CreateSymlink
-		(
-			string targetPath,
-			string symlinkName,
-			string sourcePath
-		)
+		public static void CreateSymlink(string targetPath, string symlinkName, string sourcePath)
 		{
 			var fullTargetPath = Path.Combine(targetPath, symlinkName);
 
 			if (Directory.Exists(fullTargetPath))
 			{
-				Debug.LogWarning
-					($"Symlink <b>{symlinkName}</b> already exists at {targetPath}.");
-
+				Debug.LogWarning($"Symlink <b>{symlinkName}</b> already exists at {targetPath}.");
 				return;
 			}
 
