@@ -34,10 +34,10 @@ namespace Bezoro.Core.Helpers
 		public static void Remove<T>(ref T[] array, T element)
 		where T : class
 		{
-			if (array.IsNullOrEmpty())
+			if (element == null)
 				return;
 
-			if (element == null)
+			if (array.IsNullOrEmpty())
 				return;
 
 			for (var i = 0; i < array.Length; i++)
