@@ -60,11 +60,11 @@ namespace Bezoro.StateMachines
 
 		#endregion
 
+		void OnTransitionTrue(IKCCState toState);
+
 		void Exit();
 
 		bool IsSubStateMachine(out IKCCStateMachine outStateMachine);
-
-		void OnTransitionTrue(IKCCState toState);
 	}
 
 	public interface ITickableState : IState
