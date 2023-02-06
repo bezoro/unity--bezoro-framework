@@ -1,8 +1,11 @@
 ﻿namespace Bezoro.StateMachines
 {
-	public interface IHasTransitions<T>
-	where T : IState
+	public interface IHasTransitions<T0, T1>
+	where T0 : ITransition
+	where T1 : IState
 	{
-		void OnTransitionRaised(T toState);
+		T0[] Transitions { get; }
+
+		void OnTransitionRaised(T1 toState);
 	}
 }

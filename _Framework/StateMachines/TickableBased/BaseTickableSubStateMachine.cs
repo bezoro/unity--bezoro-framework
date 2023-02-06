@@ -20,6 +20,8 @@ namespace Bezoro.StateMachines
 
 		public ITickableState LastState => _lastState;
 
+		public TickTransition[] Transitions => _transitions;
+
 		public void Enter()
 		{
 			OnEnter();

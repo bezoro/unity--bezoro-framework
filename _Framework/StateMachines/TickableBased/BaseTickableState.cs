@@ -15,7 +15,7 @@ namespace Bezoro.StateMachines
 
 		public MonoBehaviour MasterStateMachine => _masterStateMachine;
 
-		public TickTransition[] transitions => _transitions;
+		public TickTransition[] Transitions => _transitions;
 
 		public void Enter()
 		{

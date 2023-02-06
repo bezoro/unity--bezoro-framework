@@ -22,6 +22,8 @@ namespace Bezoro.StateMachines
 
 		public MonoBehaviour MasterStateMachine => _masterStateMachine;
 
+		public KCCTransition[] Transitions => _transitions;
+
 		public KinematicCharacterMotor Motor => _motor;
 
 		public List<Type> MonoBehaviourTypesToIgnoreCollisionsWith { get; } = new(4);

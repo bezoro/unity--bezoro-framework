@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace Bezoro.StateMachines
 {
-	public interface IKCCState : IState, ITickable, IHasTransitions<IKCCState>
+	public interface IKCCState : IState, ITickable, IHasTransitions<KCCTransition, IKCCState>
 	{
 		void Init
 		(MonoBehaviour masterStateMachine,
