@@ -3,7 +3,7 @@ using Bezoro.Core.Helpers;
 
 namespace Bezoro.StateMachines
 {
-	public sealed class EventTransition
+	public sealed class EventTransition : ITransition
 	{
 		public void Init(IEventState fromState, IEventState toState, MonoBehaviour stateMachine)
 		{

@@ -20,6 +20,8 @@ namespace Bezoro.StateMachines
 
 		public IEventState LastState => _lastState;
 
+		public EventTransition[] Transitions => _transitions;
+
 		public void Enter()
 		{
 			OnEnter();

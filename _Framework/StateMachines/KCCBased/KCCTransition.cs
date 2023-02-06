@@ -3,7 +3,7 @@ using Bezoro.Core.Helpers;
 
 namespace Bezoro.StateMachines
 {
-	public class KCCTransition
+	public class KCCTransition : ITransition
 	{
 		public void Init(IKCCState fromState, IKCCState toState, MonoBehaviour stateMachine)
 		{

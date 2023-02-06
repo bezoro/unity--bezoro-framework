@@ -3,7 +3,7 @@ using Bezoro.Core.Helpers;
 
 namespace Bezoro.StateMachines
 {
-	public class TickTransition
+	public class TickTransition : ITransition
 	{
 		public void Init
 			(ITickableState fromState, ITickableState toState, MonoBehaviour stateMachine)
