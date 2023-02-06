@@ -56,6 +56,7 @@ namespace Bezoro.Core.Helpers
 			const int newLengthMultiplier = 2;
 			var newLength = to.Length * newLengthMultiplier;
 			var newAvailableIndices = newLength - occupiedIndices;
+
 			while (newAvailableIndices < from.Length)
 				newLength *= newLengthMultiplier;
 
@@ -101,6 +102,7 @@ namespace Bezoro.Core.Helpers
 			const int newLengthMultiplier = 2;
 			var newLength = to.Length * newLengthMultiplier;
 			var newAvailableIndices = newLength - occupiedIndices;
+
 			while (newAvailableIndices < from.Length)
 				newLength *= newLengthMultiplier;
 
