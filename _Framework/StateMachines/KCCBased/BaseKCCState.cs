@@ -6,7 +6,8 @@ using KinematicCharacterController;
 
 namespace Bezoro.StateMachines
 {
-	public abstract class BaseKCCState : IKCCState
+	public abstract class BaseKCCState : 
+		IKCCState
 	{
 		public void Init
 		(MonoBehaviour masterStateMachine,
@@ -19,20 +20,9 @@ namespace Bezoro.StateMachines
 			OnInit();
 		}
 
-		void ITickableState.Init
-			(MonoBehaviour masterStateMachine, ITickableStateMachine owningStateMachine) =>
-			Init(masterStateMachine, owningStateMachine as IKCCStateMachine, null);
-
-		void IState.Init(MonoBehaviour masterStateMachine, IStateMachine owningStateMachine) =>
-			Init(masterStateMachine, owningStateMachine as IKCCStateMachine, null);
-
 		public MonoBehaviour MasterStateMachine => _masterStateMachine;
 
-		public IKCCTransition[] Transitions => _transitions;
-
-		ITickTransition[] ITickableState.Transitions => _transitions;
-
-		ITransition[] IState.Transitions => _transitions;
+		public KCCTransition[] Transitions => _transitions;
 
 		public KinematicCharacterMotor Motor => _motor;
 
@@ -41,7 +31,18 @@ namespace Bezoro.StateMachines
 		public void Enter()
 		{
 			OnEnter();
-			this.AllTransitionsBecomeRelevant();
+			AllTransitionsBecomeRelevant();
+
+			void AllTransitionsBecomeRelevant()
+			{
+				for (var i = 0; i < _transitions.Length; i++)
+				{
+					if (_transitions[i] == null)
+						continue;
+
+					_transitions[i].BecomeRelevant();
+				}
+			}
 		}
 
 		public void EarlyTick() =>
@@ -73,7 +74,18 @@ namespace Bezoro.StateMachines
 		public void AfterCharacterUpdate(float deltaTime)
 		{
 			OnAfterCharacterUpdate(deltaTime);
-			this.AllTransitionsTick();
+			AllTransitionsTick();
+
+			void AllTransitionsTick()
+			{
+				for (var i = 0; i < _transitions.Length; i++)
+				{
+					if (_transitions[i] == null)
+						continue;
+
+					_transitions[i].Tick();
+				}
+			}
 		}
 
 		public void GroundHit
@@ -109,34 +121,71 @@ namespace Bezoro.StateMachines
 
 		#endregion
 
-		public void OnTransitionTrue(ITickableState toState) =>
+		public void OnTransitionRaised(IKCCState toState) =>
 			_owningStateMachine.DoTransition(toState);
 
 		public void Exit()
 		{
-			this.AllTransitionsCeaseRelevant();
+			AllTransitionsCeaseRelevant();
 			OnExit();
+
+			void AllTransitionsCeaseRelevant()
+			{
+				for (var i = 0; i < _transitions.Length; i++)
+				{
+					if (_transitions[i] == null)
+						continue;
+
+					_transitions[i].CeaseRelevant();
+				}
+			}
 		}
 
-		public IKCCTransition TransitionsTo(IKCCState toState)
+		public KCCTransition TransitionsTo(IKCCState toState)
 		{
-			var newTransition = this.CreateTransition<KCCTransition>(toState);
+			var newTransition = new KCCTransition();
+			newTransition.Init(this, toState, _masterStateMachine);
 			ArrayHelpers.Add(ref _transitions, newTransition);
 			return newTransition;
 		}
 
+		public bool IsSubStateMachine(out IKCCStateMachine outStateMachine)
+		{
+			outStateMachine = null;
+			return false;
+		}
+
 		#region Abstract Methods
 
+		/// <summary>
+		/// Called once in the lifetime of the object, when it is created.
+		/// Use it like <b>Awake</b> in a <b>MonoBehaviour</b>.
+		/// </summary>
 		protected abstract void OnInit();
 
+		/// <summary>
+		/// Called when the <b>SubStateMachine</b> is <i>Entered</i>.
+		/// </summary>
 		protected abstract void OnEnter();
 
+		/// <summary>
+		/// Called every frame, before <b>OnTick</b>.
+		/// </summary>
 		protected abstract void OnEarlyTick();
 
+		/// <summary>
+		/// Called every frame.
+		/// </summary>
 		protected abstract void OnTick();
 
+		/// <summary>
+		/// Called at the same rate as <b>FixedUpdate</b>.
+		/// </summary>
 		protected abstract void OnFixedTick();
 
+		/// <summary>
+		/// Called every frame after <b>OnTick</b>.
+		/// </summary>
 		protected abstract void OnLateTick();
 
 		protected abstract void OnUpdateRotation(ref Quaternion currentRotation, float deltaTime);
@@ -171,86 +220,16 @@ namespace Bezoro.StateMachines
 
 		protected abstract void OnDiscreteCollisionDetected(Collider hitCollider);
 
+		/// <summary>
+		/// Called when the <b>SubStateMachine</b> is <i>Exited</i>.
+		/// </summary>
 		protected abstract void OnExit();
 
 		#endregion
 
-		private IKCCStateMachine _owningStateMachine;
 		private MonoBehaviour _masterStateMachine;
-		private IKCCTransition[] _transitions = new IKCCTransition[4];
+		private IKCCStateMachine _owningStateMachine;
 		private KinematicCharacterMotor _motor;
-	}
-
-	public sealed class NullKCCState : IKCCState
-	{
-		public void Init
-		(MonoBehaviour masterStateMachine,
-		 IKCCStateMachine owningStateMachine,
-		 KinematicCharacterMotor motor) { }
-
-		void ITickableState.Init
-			(MonoBehaviour masterStateMachine, ITickableStateMachine owningStateMachine) { }
-
-		void IState.Init(MonoBehaviour masterStateMachine, IStateMachine owningStateMachine) { }
-
-		public MonoBehaviour MasterStateMachine { get; }
-
-		public IKCCTransition[] Transitions { get; } = Array.Empty<IKCCTransition>();
-
-		ITickTransition[] ITickableState.Transitions { get; } = Array.Empty<ITickTransition>();
-
-		ITransition[] IState.Transitions { get; } = Array.Empty<ITransition>();
-
-		public List<Type> MonoBehaviourTypesToIgnoreCollisionsWith { get; }
-
-		public void Enter() { }
-
-		public void EarlyTick() { }
-
-		public void Tick() { }
-
-		public void FixedTick() { }
-
-		public void LateTick() { }
-
-		public void OnTransitionTrue(ITickableState toState) { }
-
-		#region KCC Methods
-
-		public void UpdateRotation(ref Quaternion currentRotation, float deltaTime) { }
-
-		public void UpdateVelocity(ref Vector3 currentVelocity, float deltaTime) { }
-
-		public void BeforeCharacterUpdate(float deltaTime) { }
-
-		public void PostGroundingUpdate(float deltaTime) { }
-
-		public void AfterCharacterUpdate(float deltaTime) { }
-
-		public void GroundHit
-		(Collider hitCollider,
-		 Vector3 hitNormal,
-		 Vector3 hitPoint,
-		 ref HitStabilityReport hitStabilityReport) { }
-
-		public void MovementHit
-		(Collider hitCollider,
-		 Vector3 hitNormal,
-		 Vector3 hitPoint,
-		 ref HitStabilityReport hitStabilityReport) { }
-
-		public void ProcessHitStabilityReport
-		(Collider hitCollider,
-		 Vector3 hitNormal,
-		 Vector3 hitPoint,
-		 Vector3 atCharacterPosition,
-		 Quaternion atCharacterRotation,
-		 ref HitStabilityReport hitStabilityReport) { }
-
-		public void DiscreteCollisionDetected(Collider hitCollider) { }
-
-		#endregion
-
-		public void Exit() { }
+		private KCCTransition[] _transitions = new KCCTransition[4];
 	}
 }

@@ -3,8 +3,7 @@ using Bezoro.Core.Helpers;
 
 namespace Bezoro.StateMachines
 {
-	public sealed class EventTransition :
-		IEventTransition
+	public sealed class EventTransition : ITransition
 	{
 		public void Init(IEventState fromState, IEventState toState, MonoBehaviour stateMachine)
 		{
@@ -13,48 +12,83 @@ namespace Bezoro.StateMachines
 			_stateMachine = stateMachine;
 		}
 
-		void ITransition.Init(IState fromState, IState toState, MonoBehaviour stateMachine) =>
-			Init(fromState as IEventState, toState as IEventState, stateMachine);
-
-		public ICondition[] Conditions => _conditions;
-
-		public MonoBehaviour StateMachine => _stateMachine;
-
-		public void WithCondition<T>()
-		where T : class, IEventCondition, new() =>
-			ArrayHelpers.Add(ref _conditions, this.CreateCondition<T, IEventTransition>());
-
-		public void WithConditions<T0, T1>()
-		where T0 : class, IEventCondition, new()
-		where T1 : class, IEventCondition, new()
+		public void BecomeRelevant()
 		{
-			ArrayHelpers.Add(ref _conditions, this.CreateCondition<T0, IEventTransition>());
-			ArrayHelpers.Add(ref _conditions, this.CreateCondition<T1, IEventTransition>());
-		}
+			AllConditionsBecomeRelevant();
 
-		public void WithConditions<T0, T1, T2>()
-		where T0 : class, IEventCondition, new()
-		where T1 : class, IEventCondition, new()
-		where T2 : class, IEventCondition, new()
-		{
-			ArrayHelpers.Add(ref _conditions, this.CreateCondition<T0, IEventTransition>());
-			ArrayHelpers.Add(ref _conditions, this.CreateCondition<T1, IEventTransition>());
-			ArrayHelpers.Add(ref _conditions, this.CreateCondition<T2, IEventTransition>());
-		}
+			void AllConditionsBecomeRelevant()
+			{
+				for (var i = 0; i < _conditions.Length; i++)
+				{
+					if (_conditions[i] == null)
+						continue;
 
-		public void BecomeRelevant() =>
-			this.AllConditionsBecomeRelevant();
+					_conditions[i].BecomeRelevant();
+				}
+			}
+		}
 
 		public void OnConditionRaised() =>
 			_fromState.OnTransitionRaised(_toState);
 
-		public void CeaseRelevant() =>
-			this.AllConditionsCeaseRelevant();
+		public void CeaseRelevant()
+		{
+			AllConditionsCeaseRelevant();
 
+			void AllConditionsCeaseRelevant()
+			{
+				for (var i = 0; i < _conditions.Length; i++)
+				{
+					if (_conditions[i] == null)
+						continue;
 
-		private ICondition[] _conditions = new ICondition[4];
+					_conditions[i].CeaseRelevant();
+				}
+			}
+		}
+
+		public void WithCondition<T>()
+		where T : BaseEventCondition, new()
+		{
+			var newCondition = new T();
+			newCondition.Init(this, _stateMachine);
+			ArrayHelpers.Add(ref _conditions, newCondition);
+		}
+
+		public void WithConditions<T0, T1>()
+		where T0 : BaseEventCondition, new()
+		where T1 : BaseEventCondition, new()
+		{
+			var newCondition0 = new T0();
+			newCondition0.Init(this, _stateMachine);
+			ArrayHelpers.Add(ref _conditions, newCondition0);
+
+			var newCondition1 = new T1();
+			newCondition1.Init(this, _stateMachine);
+			ArrayHelpers.Add(ref _conditions, newCondition1);
+		}
+
+		public void WithConditions<T0, T1, T2>()
+		where T0 : BaseEventCondition, new()
+		where T1 : BaseEventCondition, new()
+		where T2 : BaseEventCondition, new()
+		{
+			var newCondition0 = new T0();
+			newCondition0.Init(this, _stateMachine);
+			ArrayHelpers.Add(ref _conditions, newCondition0);
+
+			var newCondition1 = new T1();
+			newCondition1.Init(this, _stateMachine);
+			ArrayHelpers.Add(ref _conditions, newCondition1);
+
+			var newCondition2 = new T2();
+			newCondition2.Init(this, _stateMachine);
+			ArrayHelpers.Add(ref _conditions, newCondition2);
+		}
+
+		private MonoBehaviour _stateMachine;
 		private IEventState _fromState;
 		private IEventState _toState;
-		private MonoBehaviour _stateMachine;
+		private BaseEventCondition[] _conditions = new BaseEventCondition[4];
 	}
 }

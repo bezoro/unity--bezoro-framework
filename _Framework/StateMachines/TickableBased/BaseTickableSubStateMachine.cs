@@ -4,7 +4,7 @@ using Bezoro.Core.Helpers;
 namespace Bezoro.StateMachines
 {
 	public abstract class BaseTickableSubStateMachine :
-		ITickableSubStateMachine
+		ITickableStateMachine, ITickableState
 	{
 		public void Init(MonoBehaviour masterStateMachine, ITickableStateMachine owningStateMachine)
 		{
@@ -14,31 +14,31 @@ namespace Bezoro.StateMachines
 			SetUpTransitions();
 		}
 
-		void IState.Init(MonoBehaviour masterStateMachine, IStateMachine owningStateMachine) =>
-			Init(masterStateMachine, owningStateMachine as ITickableStateMachine);
-
-		#region Public Properties
-
 		public MonoBehaviour MasterStateMachine => _masterStateMachine;
 
 		public ITickableState CurrentState => _currentState;
 
-		IState IStateMachine.CurrentState => _currentState;
-
 		public ITickableState LastState => _lastState;
 
-		IState IStateMachine.LastState => _lastState;
-
-		public ITickTransition[] Transitions => _transitions;
-
-		ITransition[] IState.Transitions => _transitions;
-
-		#endregion
+		public TickTransition[] Transitions => _transitions;
 
 		public void Enter()
 		{
 			OnEnter();
-			this.Enter_Ext();
+			AllTransitionsBecomeRelevant();
+			_currentState = ResolveStartState();
+			_currentState.Enter();
+
+			void AllTransitionsBecomeRelevant()
+			{
+				for (var i = 0; i < _transitions.Length; i++)
+				{
+					if (_transitions[i] == null)
+						continue;
+
+					_transitions[i].BecomeRelevant();
+				}
+			}
 		}
 
 		public void EarlyTick()
@@ -63,73 +63,122 @@ namespace Bezoro.StateMachines
 		{
 			OnLateTick();
 			_currentState.LateTick();
-			this.AllTransitionsTick();
+			AllTransitionsTick();
+
+			void AllTransitionsTick()
+			{
+				for (var i = 0; i < _transitions.Length; i++)
+				{
+					if (_transitions[i] == null)
+						continue;
+
+					_transitions[i].Tick();
+				}
+			}
 		}
 
-		public void OnTransitionTrue(ITickableState toState) =>
+		public void OnTransitionRaised(ITickableState toState) =>
 			_owningStateMachine.DoTransition(toState);
 
 		public void Exit()
 		{
-			this.Exit_Ext();
+			_currentState.Exit();
+			AllTransitionsCeaseRelevant();
 			OnExit();
+
+			void AllTransitionsCeaseRelevant()
+			{
+				for (var i = 0; i < _transitions.Length; i++)
+				{
+					if (_transitions[i] == null)
+						continue;
+
+					_transitions[i].CeaseRelevant();
+				}
+			}
 		}
 
-		public ITickTransition TransitionsTo(ITickableState toState)
+		public TickTransition TransitionsTo(ITickableState toState)
 		{
-			var newTransition = this.CreateTransition<TickTransition>(toState);
+			var newTransition = new TickTransition();
+			newTransition.Init(this, toState, _masterStateMachine);
 			ArrayHelpers.Add(ref _transitions, newTransition);
 			return newTransition;
 		}
 
-		public void SetCurrentState(ITickableState state) =>
-			_currentState = state;
-
-		void IStateMachine.SetCurrentState(IState state) =>
-			SetCurrentState(state as ITickableState);
-
-		public void SetLastState(ITickableState state) =>
-			_lastState = state;
-
-		void IStateMachine.SetLastState(IState state) =>
-			SetLastState(state as ITickableState);
-
-		public void DoTransition(ITickableState toState) =>
-			this.DoTransition_Ext(toState);
-
-		void IStateMachine.DoTransition(IState toState) =>
-			this.DoTransition_Ext(toState);
+		public void DoTransition(ITickableState toState)
+		{
+			_currentState.Exit();
+			_lastState = _currentState;
+			_currentState = toState;
+			_currentState.Enter();
+		}
 
 		#region Abstract Methods
 
-		public abstract void RegisterStates();
+		/// <summary>
+		/// Called once in the lifetime of the object, when it is created.
+		/// Use it to register all <b>States</b> needed for the <b>SubStateMachine</b> to work.
+		/// /// Use it like 'Awake' in a MonoBehaviour.
+		/// </summary>
+		protected abstract void RegisterStates();
 
-		public abstract void SetUpTransitions();
+		/// <summary>
+		/// Called once in the lifetime of the object, when it is created.
+		/// Use it to set up all of the <b>States</b> <b>Transitions</b>.
+		/// </summary>
+		protected abstract void SetUpTransitions();
 
-		public abstract IState ResolveStartState();
+		/// <summary>
+		/// Called when the <b>SubStateMachine</b> is <b>Entered</b>.
+		/// Use it to decide which should be the <b>Start</b> <b>State</b>, then return it.
+		/// </summary>
+		protected abstract ITickableState ResolveStartState();
 
+		/// <summary>
+		/// Called when the <b>SubStateMachine</b> is <i>Entered</i>.
+		/// </summary>
 		protected abstract void OnEnter();
 
+		/// <summary>
+		/// Called every frame, before <b>OnTick</b>.
+		/// </summary>
 		protected abstract void OnEarlyTick();
 
+		/// <summary>
+		/// Called every frame.
+		/// </summary>
 		protected abstract void OnTick();
 
+		/// <summary>
+		/// Called at the same rate as <b>FixedUpdate</b>.
+		/// </summary>
 		protected abstract void OnFixedTick();
 
+		/// <summary>
+		/// Called every frame after <b>OnTick</b>.
+		/// </summary>
 		protected abstract void OnLateTick();
 
+		/// <summary>
+		/// Called when the <b>SubStateMachine</b> is <i>Exited</i>.
+		/// </summary>
 		protected abstract void OnExit();
 
 		#endregion
 
 		protected T RegisterState<T>()
-		where T : class, ITickableState, new() =>
-			this.CreateState<T, ITickableStateMachine>(_masterStateMachine);
+		where T : class, ITickableState, new()
+		{
+			var newState = new T();
+			newState.Init(_masterStateMachine, this);
+			return newState;
+		}
 
-		private ITickableState _currentState = new NullTickableState();
-		private ITickableState _lastState = new NullTickableState();
-		private ITickableStateMachine _owningStateMachine;
 		private MonoBehaviour _masterStateMachine;
-		private ITickTransition[] _transitions = new ITickTransition[4];
+		private ITickableStateMachine _owningStateMachine;
+		private ITickableState _currentState;
+		private ITickableState _lastState;
+		private TickTransition[] _transitions = new TickTransition[4];
 	}
 }

@@ -1,19 +1,16 @@
 ﻿using UnityEngine;
+using System.Collections;
 
 namespace Bezoro.StateMachines
 {
-	public abstract class BaseEventCondition :
-		IEventCondition
+	public abstract class BaseEventCondition
 	{
-		public void Init(IEventTransition transition, MonoBehaviour stateMachine)
+		public void Init(EventTransition transition, MonoBehaviour stateMachine)
 		{
 			_transition = transition;
 			_stateMachine = stateMachine;
 			OnInit();
 		}
-
-		void ICondition.Init(ITransition transition, MonoBehaviour stateMachine) =>
-			Init(transition as IEventTransition, stateMachine);
 
 		public MonoBehaviour StateMachine => _stateMachine;
 
@@ -28,15 +25,25 @@ namespace Bezoro.StateMachines
 
 		#region Abstract Methods
 
+		/// <summary>
+		/// Called once in the lifetime of the object, when it is created.
+		/// Use it like <b>Awake</b> in a <b>MonoBehaviour</b>.
+		/// </summary>
 		protected abstract void OnInit();
 
+		/// <summary>
+		/// Called when the <b>State</b> it belongs to is <i>Entered</i>.
+		/// </summary>
 		protected abstract void OnBecomeRelevant();
 
+		/// <summary>
+		/// Called when the <b>State</b> it belongs to is <i>Exited</i>.
+		/// </summary>
 		protected abstract void OnCeaseRelevant();
 
 		#endregion
 
-		private IEventTransition _transition;
+		private EventTransition _transition;
 		private MonoBehaviour _stateMachine;
 	}
 }

@@ -1,20 +1,18 @@
 ﻿using System;
-using UnityEngine;
 using System.Collections.Generic;
 using KinematicCharacterController;
+using UnityEngine;
 
 namespace Bezoro.StateMachines
 {
-	public interface IKCCState : ITickableState
+	public interface IKCCState : IState, ITickable, IHasTransitions<KCCTransition, IKCCState>
 	{
-		public void Init
+		void Init
 		(MonoBehaviour masterStateMachine,
 		 IKCCStateMachine owningStateMachine,
 		 KinematicCharacterMotor motor);
 
-		public List<Type> MonoBehaviourTypesToIgnoreCollisionsWith { get; }
-
-		public new IKCCTransition[] Transitions { get; }
+		List<Type> MonoBehaviourTypesToIgnoreCollisionsWith { get; }
 
 		#region KCC Methods
 
@@ -51,43 +49,7 @@ namespace Bezoro.StateMachines
 		public void DiscreteCollisionDetected(Collider hitCollider);
 
 		#endregion
-	}
 
-	public interface ITickableState : IState
-	{
-		public void Init
-			(MonoBehaviour masterStateMachine, ITickableStateMachine owningStateMachine);
-
-		public new ITickTransition[] Transitions { get; }
-
-		public void EarlyTick();
-
-		public void Tick();
-
-		public void FixedTick();
-
-		public void LateTick();
-
-		public void OnTransitionTrue(ITickableState toState);
-	}
-
-	public interface IEventState : IState
-	{
-		public void Init(MonoBehaviour masterStateMachine, IEventStateMachine owningStateMachine);
-
-		public void OnTransitionRaised(IEventState toState);
-	}
-
-	public interface IState
-	{
-		public void Init(MonoBehaviour masterStateMachine, IStateMachine owningStateMachine);
-
-		public MonoBehaviour MasterStateMachine { get; }
-
-		public ITransition[] Transitions { get; }
-
-		public void Enter();
-
-		public void Exit();
+		bool IsSubStateMachine(out IKCCStateMachine outStateMachine);
 	}
 }

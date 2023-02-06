@@ -16,11 +16,9 @@ namespace Bezoro.Core.Helpers
 							};
 
 			if (asAdmin)
-			{
 				startInfo.Verb = "runas";
-			}
 
-			var proc = new Process() { StartInfo = startInfo };
+			var proc = new Process { StartInfo = startInfo };
 
 			using (proc)
 			{
@@ -28,9 +26,7 @@ namespace Bezoro.Core.Helpers
 				proc.WaitForExit();
 
 				if (!asAdmin && !proc.StandardError.EndOfStream)
-				{
 					UnityEngine.Debug.LogError(proc.StandardError.ReadToEnd());
-				}
 			}
 		}
 	}
