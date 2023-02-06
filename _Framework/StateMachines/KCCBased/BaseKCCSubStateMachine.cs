@@ -7,7 +7,7 @@ using KinematicCharacterController;
 namespace Bezoro.StateMachines
 {
 	public abstract class BaseKCCSubStateMachine :
-		IKCCSubStateMachine
+		IKCCStateMachine, IKCCState
 	{
 		public void Init
 		(MonoBehaviour masterStateMachine,
@@ -21,45 +21,35 @@ namespace Bezoro.StateMachines
 			SetUpTransitions();
 		}
 
-		void ITickableState.Init
-			(MonoBehaviour masterStateMachine, ITickableStateMachine owningStateMachine) =>
-			Init(masterStateMachine, owningStateMachine as IKCCStateMachine, null);
-
-		void IState.Init(MonoBehaviour masterStateMachine, IStateMachine owningStateMachine) =>
-			Init(masterStateMachine, owningStateMachine as IKCCStateMachine, null);
-
-		#region Public Properties
-
 		public MonoBehaviour MasterStateMachine => _masterStateMachine;
 
 		public IKCCState CurrentState => _currentState;
 
-		ITickableState ITickableStateMachine.CurrentState => _currentState;
-
-		IState IStateMachine.CurrentState => _currentState;
-
 		public IKCCState LastState => _lastState;
 
-		ITickableState ITickableStateMachine.LastState => _lastState;
-
-		IState IStateMachine.LastState => _lastState;
-
-		public IKCCTransition[] Transitions => _transitions;
-
-		ITickTransition[] ITickableState.Transitions => _transitions;
-
-		ITransition[] IState.Transitions => _transitions;
+		public KCCTransition[] Transitions => _transitions;
 
 		public KinematicCharacterMotor Motor => _motor;
 
 		public List<Type> MonoBehaviourTypesToIgnoreCollisionsWith { get; } = new(12);
 
-		#endregion
-
 		public void Enter()
 		{
 			OnEnter();
-			this.Enter_Ext();
+			AllTransitionsBecomeRelevant();
+			_currentState = ResolveStartState();
+			_currentState.Enter();
+
+			void AllTransitionsBecomeRelevant()
+			{
+				for (var i = 0; i < _transitions.Length; i++)
+				{
+					if (_transitions[i] == null)
+						continue;
+
+					_transitions[i].BecomeRelevant();
+				}
+			}
 		}
 
 		public void EarlyTick()
@@ -116,7 +106,18 @@ namespace Bezoro.StateMachines
 		{
 			OnAfterCharacterUpdate(deltaTime);
 			_currentState.AfterCharacterUpdate(deltaTime);
-			this.AllTransitionsTick();
+			AllTransitionsTick();
+
+			void AllTransitionsTick()
+			{
+				for (var i = 0; i < _transitions.Length; i++)
+				{
+					if (_transitions[i] == null)
+						continue;
+
+					_transitions[i].Tick();
+				}
+			}
 		}
 
 		public void GroundHit
@@ -184,66 +185,93 @@ namespace Bezoro.StateMachines
 
 		#endregion
 
-		public void OnTransitionTrue(ITickableState toState) =>
+		public void OnTransitionRaised(IKCCState toState) =>
 			_owningStateMachine.DoTransition(toState);
-
 
 		public void Exit()
 		{
-			this.Exit_Ext();
+			_currentState.Exit();
+			AllTransitionsCeaseRelevant();
 			OnExit();
+
+			void AllTransitionsCeaseRelevant()
+			{
+				for (var i = 0; i < _transitions.Length; i++)
+				{
+					if (_transitions[i] == null)
+						continue;
+
+					_transitions[i].CeaseRelevant();
+				}
+			}
 		}
 
-		public IKCCTransition TransitionsTo(IKCCState toState)
+		public KCCTransition TransitionsTo(IKCCState toState)
 		{
-			var newTransition = this.CreateTransition<KCCTransition>(toState);
+			var newTransition = new KCCTransition();
+			newTransition.Init(this, toState, _masterStateMachine);
 			ArrayHelpers.Add(ref _transitions, newTransition);
 			return newTransition;
 		}
 
-		public void SetCurrentState(IKCCState state) =>
-			_currentState = state;
+		public void DoTransition(IKCCState toState)
+		{
+			_currentState.Exit();
+			_lastState = _currentState;
+			_currentState = toState;
+			_currentState.Enter();
+		}
 
-		void ITickableStateMachine.SetCurrentState(ITickableState state) =>
-			SetCurrentState(state as IKCCState);
-
-		void IStateMachine.SetCurrentState(IState state) =>
-			SetCurrentState(state as IKCCState);
-
-		public void SetLastState(IKCCState state) =>
-			_lastState = state;
-
-		void ITickableStateMachine.SetLastState(ITickableState state) =>
-			SetLastState(state as IKCCState);
-
-		void IStateMachine.SetLastState(IState state) =>
-			SetLastState(state as IKCCState);
-
-		public void DoTransition(IKCCState toState) =>
-			this.DoTransition_Ext(toState);
-
-		void ITickableStateMachine.DoTransition(ITickableState toState) =>
-			this.DoTransition_Ext(toState);
-
-		void IStateMachine.DoTransition(IState toState) =>
-			this.DoTransition_Ext(toState);
+		public bool IsSubStateMachine(out IKCCStateMachine outStateMachine)
+		{
+			outStateMachine = this;
+			return true;
+		}
 
 		#region Abstract Methods
 
-		public abstract void RegisterStates();
+		/// <summary>
+		/// Called once in the lifetime of the object, when it is created.
+		/// Use it to register all <b>States</b> needed for the <b>SubStateMachine</b> to work.
+		/// /// Use it like 'Awake' in a MonoBehaviour.
+		/// </summary>
+		protected abstract void RegisterStates();
 
-		public abstract void SetUpTransitions();
+		/// <summary>
+		/// Called once in the lifetime of the object, when it is created.
+		/// Use it to set up all of the <b>States</b> <b>Transitions</b>.
+		/// </summary>
+		protected abstract void SetUpTransitions();
 
-		public abstract IState ResolveStartState();
+		/// <summary>
+		/// Called when the <b>SubStateMachine</b> is <b>Entered</b>.
+		/// Use it to decide which should be the <b>Start</b> <b>State</b>, then return it.
+		/// </summary>
+		protected abstract IKCCState ResolveStartState();
 
+		/// <summary>
+		/// Called when the <b>SubStateMachine</b> is <i>Entered</i>.
+		/// </summary>
 		protected abstract void OnEnter();
 
+		/// <summary>
+		/// Called every frame, before <b>OnTick</b>.
+		/// </summary>
 		protected abstract void OnEarlyTick();
 
+		/// <summary>
+		/// Called every frame.
+		/// </summary>
 		protected abstract void OnTick();
 
+		/// <summary>
+		/// Called at the same rate as <b>FixedUpdate</b>.
+		/// </summary>
 		protected abstract void OnFixedTick();
 
+		/// <summary>
+		/// Called every frame after <b>OnTick</b>.
+		/// </summary>
 		protected abstract void OnLateTick();
 
 		protected abstract void OnUpdateRotation(ref Quaternion currentRotation, float deltaTime);
@@ -279,19 +307,26 @@ namespace Bezoro.StateMachines
 
 		protected abstract void OnDiscreteCollisionDetected(Collider hitCollider);
 
+		/// <summary>
+		/// Called when the <b>SubStateMachine</b> is <i>Exited</i>.
+		/// </summary>
 		protected abstract void OnExit();
 
 		#endregion
 
 		protected T RegisterState<T>()
-		where T : class, IKCCState, new() =>
-			this.CreateState<T, IKCCStateMachine>(_masterStateMachine);
+		where T : class, IKCCState, new()
+		{
+			var newState = new T();
+			newState.Init(_masterStateMachine, this, _motor);
+			return newState;
+		}
 
-		private IKCCState _currentState = new NullKCCState();
-		private IKCCState _lastState = new NullKCCState();
-		private IKCCStateMachine _owningStateMachine;
 		private MonoBehaviour _masterStateMachine;
+		private IKCCStateMachine _owningStateMachine;
+		private IKCCState _currentState;
+		private IKCCState _lastState;
 		private KinematicCharacterMotor _motor;
-		private IKCCTransition[] _transitions = new IKCCTransition[4];
+		private KCCTransition[] _transitions = new KCCTransition[4];
 	}
 }

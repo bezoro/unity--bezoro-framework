@@ -2,8 +2,7 @@
 
 namespace Bezoro.StateMachines
 {
-	public abstract class BaseTickCondition :
-		ITickCondition
+	public abstract class BaseTickCondition
 	{
 		public void Init(MonoBehaviour stateMachine, bool inverted = false)
 		{
@@ -11,9 +10,6 @@ namespace Bezoro.StateMachines
 			_inverted = inverted;
 			OnInit();
 		}
-
-		void ICondition.Init(ITransition transition, MonoBehaviour stateMachine) =>
-			Init(stateMachine);
 
 		public MonoBehaviour StateMachine => _stateMachine;
 
@@ -23,19 +19,29 @@ namespace Bezoro.StateMachines
 			OnBecomeRelevant();
 
 		public bool Tick() =>
-			this.Tick_Ext();
+			_inverted ? !OnTick() : OnTick();
 
 		public void CeaseRelevant() =>
 			OnCeaseRelevant();
 
 		#region Abstract Methods
 
+		/// <summary>
+		/// Called once in the lifetime of the object, when it is created.
+		/// Use it like <b>Awake</b> in a <b>MonoBehaviour</b>.
+		/// </summary>
 		protected abstract void OnInit();
 
+		/// <summary>
+		/// Called when the <b>State</b> it belongs to is <i>Entered</i>.
+		/// </summary>
 		protected abstract void OnBecomeRelevant();
 
-		public abstract bool OnTick();
+		protected abstract bool OnTick();
 
+		/// <summary>
+		/// Called when the <b>State</b> it belongs to is <i>Exited</i>.
+		/// </summary>
 		protected abstract void OnCeaseRelevant();
 
 		#endregion

@@ -1,40 +1,20 @@
-﻿using UnityEngine;
-
-namespace Bezoro.StateMachines
+﻿namespace Bezoro.StateMachines
 {
 	public static class StateMachineExtensions
 	{
-		public static void DoTransition_Ext<T0, T1>(this T0 stateMachine, T1 toState)
-		where T0 : IStateMachine
+		public static bool TryFindStateInCurrentHierarchy<T0, T1>
+			(this IStateMachine<T0> stateMachine, out T1 outState)
+		where T0 : class, IState
 		where T1 : class, IState
 		{
-			stateMachine.SetLastState(stateMachine.CurrentState);
-			stateMachine.CurrentState.Exit();
-			stateMachine.SetCurrentState(toState);
-			stateMachine.CurrentState.Enter();
-		}
-
-		public static T0 CreateState<T0, T1>(this T1 stateMachine, MonoBehaviour masterStateMachine)
-		where T0 : class, IState, new()
-		where T1 : class, IStateMachine
-		{
-			var newState = new T0();
-			newState.Init(masterStateMachine, stateMachine);
-			return newState;
-		}
-
-		public static bool TryFindStateInCurrentHierarchy<T>
-			(this IStateMachine stateMachine, out T outState)
-		where T : class, IState
-		{
 			var currentState = stateMachine.CurrentState;
-			if (currentState is T)
+			if (currentState is T1)
 			{
-				outState = currentState as T;
+				outState = currentState as T1;
 				return true;
 			}
 
-			if (!currentState.IsSubStateMachine(out ISubStateMachine rootSubStateMachine))
+			if (currentState is not IStateMachine<T0> rootSubStateMachine)
 			{
 				outState = null;
 				return false;
@@ -43,13 +23,13 @@ namespace Bezoro.StateMachines
 			currentState = rootSubStateMachine.CurrentState;
 			while (true)
 			{
-				if (currentState is T)
+				if (currentState is T1)
 				{
-					outState = currentState as T;
+					outState = currentState as T1;
 					return true;
 				}
 
-				if (!currentState.IsSubStateMachine(out ISubStateMachine subStateMachine))
+				if (currentState is not IStateMachine<T0> subStateMachine)
 				{
 					outState = null;
 					return false;
@@ -59,18 +39,19 @@ namespace Bezoro.StateMachines
 			}
 		}
 
-		public static bool TryFindStateInLastHierarchy<T>
-			(this IStateMachine stateMachine, out T outState)
-		where T : class, IState
+		public static bool TryFindStateInLastHierarchy<T0, T1>
+			(this IStateMachine<T0> stateMachine, out T1 outState)
+		where T0 : class, IState
+		where T1 : class, IState
 		{
 			var lastState = stateMachine.LastState;
-			if (lastState is T)
+			if (lastState is T1)
 			{
-				outState = lastState as T;
+				outState = lastState as T1;
 				return true;
 			}
 
-			if (!lastState.IsSubStateMachine(out ISubStateMachine rootSubStateMachine))
+			if (lastState is not IStateMachine<T0> rootSubStateMachine)
 			{
 				outState = null;
 				return false;
@@ -79,13 +60,13 @@ namespace Bezoro.StateMachines
 			lastState = rootSubStateMachine.LastState;
 			while (true)
 			{
-				if (lastState is T foundState1)
+				if (lastState is T1)
 				{
-					outState = foundState1;
+					outState = lastState as T1;
 					return true;
 				}
 
-				if (!lastState.IsSubStateMachine(out ISubStateMachine subStateMachine))
+				if (lastState is not IStateMachine<T0> subStateMachine)
 				{
 					outState = null;
 					return false;

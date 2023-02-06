@@ -6,13 +6,13 @@ using Bezoro.Core.Editor.Extensions;
 
 namespace Bezoro.StateMachines.Editor
 {
-	[CustomEditor(typeof(BaseTickableStateMachine), true)]
+	[CustomEditor(typeof(BaseMonoTickableStateMachine), true)]
 	public class BaseTickableStateMachineEditor : OdinEditor
 	{
-		private BaseTickableStateMachine _obj;
+		private BaseMonoTickableStateMachine _obj;
 
 		private void Awake() =>
-			_obj = target as BaseTickableStateMachine;
+			_obj = target as BaseMonoTickableStateMachine;
 
 		public override void OnInspectorGUI()
 		{

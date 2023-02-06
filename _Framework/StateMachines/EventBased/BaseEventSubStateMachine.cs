@@ -4,7 +4,7 @@ using Bezoro.Core.Helpers;
 namespace Bezoro.StateMachines
 {
 	public abstract class BaseEventSubStateMachine :
-		IEventSubStateMachine
+		IEventStateMachine, IEventState
 	{
 		public void Init(MonoBehaviour masterStateMachine, IEventStateMachine owningStateMachine)
 		{
@@ -14,29 +14,31 @@ namespace Bezoro.StateMachines
 			SetUpTransitions();
 		}
 
-		void IState.Init(MonoBehaviour masterStateMachine, IStateMachine owningStateMachine) =>
-			Init(masterStateMachine, owningStateMachine as IEventStateMachine);
-
-		#region Public Properties
+		public MonoBehaviour MasterStateMachine => _masterStateMachine;
 
 		public IEventState CurrentState => _currentState;
 
-		IState IStateMachine.CurrentState => _currentState;
-
 		public IEventState LastState => _lastState;
 
-		IState IStateMachine.LastState => _lastState;
-
-		public MonoBehaviour MasterStateMachine => _masterStateMachine;
-
-		public ITransition[] Transitions => _transitions;
-
-		#endregion
+		public EventTransition[] Transitions => _transitions;
 
 		public void Enter()
 		{
 			OnEnter();
-			this.Enter_Ext();
+			AllTransitionsBecomeRelevant();
+			_currentState = ResolveStartState();
+			_currentState.Enter();
+
+			void AllTransitionsBecomeRelevant()
+			{
+				for (var i = 0; i < _transitions.Length; i++)
+				{
+					if (_transitions[i] == null)
+						continue;
+
+					_transitions[i].BecomeRelevant();
+				}
+			}
 		}
 
 		public void OnTransitionRaised(IEventState toState) =>
@@ -44,57 +46,83 @@ namespace Bezoro.StateMachines
 
 		public void Exit()
 		{
-			this.Exit_Ext();
+			_currentState.Exit();
+			AllTransitionsCeaseRelevant();
 			OnExit();
+
+			void AllTransitionsCeaseRelevant()
+			{
+				for (var i = 0; i < _transitions.Length; i++)
+				{
+					if (_transitions[i] == null)
+						continue;
+
+					_transitions[i].CeaseRelevant();
+				}
+			}
 		}
 
-		public IEventTransition TransitionsTo(IEventState toState)
+		public EventTransition TransitionsTo(IEventState toState)
 		{
-			var newTransition = this.CreateTransition<EventTransition>(toState);
+			var newTransition = new EventTransition();
+			newTransition.Init(this, toState, _masterStateMachine);
 			ArrayHelpers.Add(ref _transitions, newTransition);
 			return newTransition;
 		}
 
-		public void SetCurrentState(IEventState state) =>
-			_currentState = state;
-
-		void IStateMachine.SetCurrentState(IState state) =>
-			SetCurrentState(state as IEventState);
-
-		public void SetLastState(IEventState state) =>
-			_lastState = state;
-
-		void IStateMachine.SetLastState(IState state) =>
-			SetLastState(state as IEventState);
-
-		public void DoTransition(IEventState toState) =>
-			this.DoTransition_Ext(toState);
-
-		void IStateMachine.DoTransition(IState toState) =>
-			this.DoTransition_Ext(toState);
+		public void DoTransition(IEventState toState)
+		{
+			_currentState.Exit();
+			_lastState = _currentState;
+			_currentState = toState;
+			_currentState.Enter();
+		}
 
 		#region Abstract Methods
 
-		public abstract void RegisterStates();
+		/// <summary>
+		/// Called once in the lifetime of the object, when it is created.
+		/// Use it to register all <b>States</b> needed for the <b>SubStateMachine</b> to work.
+		/// /// Use it like 'Awake' in a MonoBehaviour.
+		/// </summary>
+		protected abstract void RegisterStates();
 
-		public abstract void SetUpTransitions();
+		/// <summary>
+		/// Called once in the lifetime of the object, when it is created.
+		/// Use it to set up all of the <b>States</b> <b>Transitions</b>.
+		/// </summary>
+		protected abstract void SetUpTransitions();
 
-		public abstract IState ResolveStartState();
+		/// <summary>
+		/// Called when the <b>SubStateMachine</b> is <b>Entered</b>.
+		/// Use it to decide which should be the <b>Start</b> <b>State</b>, then return it.
+		/// </summary>
+		protected abstract IEventState ResolveStartState();
 
+		/// <summary>
+		/// Called when the <b>SubStateMachine</b> is <i>Entered</i>.
+		/// </summary>
 		protected abstract void OnEnter();
 
+		/// <summary>
+		/// Called when the <b>SubStateMachine</b> is <i>Exited</i>.
+		/// </summary>
 		protected abstract void OnExit();
 
 		#endregion
 
 		protected T RegisterState<T>()
-		where T : class, IEventState, new() =>
-			this.CreateState<T, IEventStateMachine>(_masterStateMachine);
+		where T : class, IEventState, new()
+		{
+			var newState = new T();
+			newState.Init(_masterStateMachine, this);
+			return newState;
+		}
 
-		private IEventState _currentState = new NullEventState();
-		private IEventState _lastState = new NullEventState();
-		private IEventStateMachine _owningStateMachine;
 		private MonoBehaviour _masterStateMachine;
-		private ITransition[] _transitions = new ITransition[4];
+		private IEventStateMachine _owningStateMachine;
+		private IEventState _currentState;
+		private IEventState _lastState;
+		private EventTransition[] _transitions = new EventTransition[4];
 	}
 }
