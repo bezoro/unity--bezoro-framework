@@ -1,5 +1,4 @@
 ﻿using System;
-using UnityEngine;
 using Bezoro.Core.Extensions;
 
 namespace Bezoro.Core.Helpers
@@ -41,7 +40,10 @@ namespace Bezoro.Core.Helpers
 
 			if (to.IsNullOrEmpty())
 			{
-				ResizeAndFill(from, ref to);
+				Array.Resize(ref to, from.Length);
+				for (var i = 0; i < to.Length; i++)
+					to[i] = from[i];
+
 				return;
 			}
 
@@ -67,61 +69,32 @@ namespace Bezoro.Core.Helpers
 			void MergeArrays(T[] from, ref T[] to)
 			{
 				var index = 0;
-				for (var i = 0; i < to.Length; i++)
+				if (from is UnityEngine.Object[] fromUnityObjects &&
+				    to is UnityEngine.Object[] toUnityObjects)
 				{
-					if (to[i] != null)
-						continue;
+					for (var i = 0; i < toUnityObjects.Length; i++)
+					{
+						if (toUnityObjects[i] != null)
+							continue;
 
-					to[i] = from[index];
-					index++;
-					if (index > from.Length - 1)
-						return;
+						toUnityObjects[i] = fromUnityObjects[index];
+						index++;
+						if (index > from.Length - 1)
+							return;
+					}
 				}
-			}
-		}
-
-		public static void Merge(GameObject[] from, ref GameObject[] to)
-		{
-			if (from.IsNullOrEmpty())
-				return;
-
-			if (to.IsNullOrEmpty())
-			{
-				ResizeAndFill(from, ref to);
-				return;
-			}
-
-			var availableIndices = to.CountEmptyIndices();
-			if (availableIndices >= from.Length)
-			{
-				MergeArrays(from, ref to);
-				return;
-			}
-
-			var occupiedIndices = to.Length - availableIndices;
-			const int newLengthMultiplier = 2;
-			var newLength = to.Length * newLengthMultiplier;
-			var newAvailableIndices = newLength - occupiedIndices;
-
-			while (newAvailableIndices < from.Length)
-				newLength *= newLengthMultiplier;
-
-			Array.Resize(ref to, newLength);
-
-			MergeArrays(from, ref to);
-
-			void MergeArrays(GameObject[] from, ref GameObject[] to)
-			{
-				var index = 0;
-				for (var i = 0; i < to.Length; i++)
+				else
 				{
-					if (to[i] != null)
-						continue;
+					for (var i = 0; i < to.Length; i++)
+					{
+						if (to[i] != null)
+							continue;
 
-					to[i] = from[index];
-					index++;
-					if (index > from.Length - 1)
-						return;
+						to[i] = from[index];
+						index++;
+						if (index > from.Length - 1)
+							return;
+					}
 				}
 			}
 		}
@@ -151,14 +124,6 @@ namespace Bezoro.Core.Helpers
 
 			for (var i = 0; i < array.Length; i++)
 				array[i] = default;
-		}
-
-		private static void ResizeAndFill<T>(T[] from, ref T[] to)
-		where T : class
-		{
-			Array.Resize(ref to, from.Length);
-			for (var i = 0; i < to.Length; i++)
-				to[i] = from[i];
 		}
 	}
 }
