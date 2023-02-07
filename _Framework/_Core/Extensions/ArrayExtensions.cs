@@ -11,19 +11,18 @@ namespace Bezoro.Core.Extensions
 		where T : class
 		{
 			var numberOfEmptyIndices = 0;
-			for (var i = 0; i < array.Length; i++)
-				if (array[i] == null)
-					numberOfEmptyIndices++;
-
-			return numberOfEmptyIndices;
-		}
-
-		public static int CountEmptyIndices(this GameObject[] array)
-		{
-			var numberOfEmptyIndices = 0;
-			for (var i = 0; i < array.Length; i++)
-				if (array[i] == null)
-					numberOfEmptyIndices++;
+			if (array is UnityEngine.Object[] unityObjects)
+			{
+				for (var i = 0; i < unityObjects.Length; i++)
+					if (unityObjects[i] == null)
+						numberOfEmptyIndices++;
+			}
+			else
+			{
+				for (var i = 0; i < array.Length; i++)
+					if (array[i] == null)
+						numberOfEmptyIndices++;
+			}
 
 			return numberOfEmptyIndices;
 		}
@@ -32,22 +31,17 @@ namespace Bezoro.Core.Extensions
 		where T : class
 		{
 			var numberOfFilledIndices = 0;
-			for (var i = 0; i < array.Length; i++)
+			if (array is Object[] unityObjects)
 			{
-				if (array[i] != null)
-					numberOfFilledIndices++;
+				for (var i = 0; i < unityObjects.Length; i++)
+					if (unityObjects[i] != null)
+						numberOfFilledIndices++;
 			}
-
-			return numberOfFilledIndices;
-		}
-
-		public static int CountFilledIndices(this GameObject[] array)
-		{
-			var numberOfFilledIndices = 0;
-			for (var i = 0; i < array.Length; i++)
+			else
 			{
-				if (array[i] != null)
-					numberOfFilledIndices++;
+				for (var i = 0; i < array.Length; i++)
+					if (array[i] != null)
+						numberOfFilledIndices++;
 			}
 
 			return numberOfFilledIndices;
