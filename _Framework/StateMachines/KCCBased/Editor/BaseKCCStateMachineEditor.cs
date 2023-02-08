@@ -1,6 +1,5 @@
 ﻿using UnityEditor;
 using UnityEngine;
-using Bezoro.Core.Extensions;
 using KinematicCharacterController;
 using Sirenix.OdinInspector.Editor;
 
