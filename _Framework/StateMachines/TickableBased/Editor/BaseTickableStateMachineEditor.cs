@@ -18,15 +18,19 @@ namespace Bezoro.StateMachines.Editor
 		{
 			if (!_obj.TickType.HasFlag(TickType.Late))
 			{
-				EditorGUILayout.HelpBox
-					(
-					 "Tickable State Machines need at least LateTick to be called, " +
-					 "otherwise transitions will not be evaluated.",
-					 MessageType.Warning
-					);
+				EditorGUILayout
+					.HelpBox("Tickable State Machines need at least LateTick to be called, " +
+							 "otherwise transitions will not be evaluated.",
+							 MessageType.Warning);
 
 				if (GUILayout.Button("Fix"))
 				{
+					if (Application.isPlaying)
+					{
+						_obj.AddToTickPool(TickType.Late);
+						return;
+					}
+
 					var tickTypeProperty =
 						serializedObject.FindPropertyByAutoPropertyName("TickType");
 
