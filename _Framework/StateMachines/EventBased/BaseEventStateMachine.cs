@@ -5,8 +5,6 @@ namespace Bezoro.StateMachines
 	public abstract class BaseEventStateMachine : ScriptableObject,
 		IEventStateMachine
 	{
-		protected const string MenuName = "Bezoro/StateMachines/Event/";
-
 		public void Init(EventStateMachineOwner owner)
 		{
 			_owner = owner;
