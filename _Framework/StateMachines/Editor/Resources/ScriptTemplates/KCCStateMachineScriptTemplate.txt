@@ -1,0 +1,23 @@
+﻿using UnityEngine;
+using Bezoro.StateMachines;
+using Bezoro.StateMachines.Editor;
+
+    #ROOTNAMESPACEBEGIN#
+[CreateAssetMenu(fileName = nameof(#SCRIPTNAME#),
+			     menuName =
+			         StateMachineEditorUtils.KCCMenuName +
+                     "/" +
+                     nameof(#SCRIPTNAME#))]
+public sealed class #SCRIPTNAME# : BaseKCCStateMachine
+{
+    protected override void RegisterStates() { }
+    
+    protected override void SetUpTransitions() { }
+    
+    protected override IKCCState ResolveStartState()
+    {
+        //TODO: Make sure to return a valid IKCCState, otherwise you will get an Exception.
+        return null;
+    }
+}
+#ROOTNAMESPACEEND#

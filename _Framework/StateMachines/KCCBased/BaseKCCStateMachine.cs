@@ -7,8 +7,6 @@ namespace Bezoro.StateMachines
 	public abstract class BaseKCCStateMachine : ScriptableObject,
 		IKCCStateMachine
 	{
-		protected const string MenuName = "Bezoro/StateMachines/KCC/";
-
 		public void Init(KCCStateMachineOwner owner)
 		{
 			_owner = owner;

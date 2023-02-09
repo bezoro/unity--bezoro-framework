@@ -5,8 +5,6 @@ namespace Bezoro.StateMachines
 	public abstract class BaseTickableStateMachine : ScriptableObject,
 		ITickableStateMachine
 	{
-		protected const string MenuName = "Bezoro/StateMachines/Tickable/";
-
 		public void Init(TickableStateMachineOwner owner)
 		{
 			_owner = owner;

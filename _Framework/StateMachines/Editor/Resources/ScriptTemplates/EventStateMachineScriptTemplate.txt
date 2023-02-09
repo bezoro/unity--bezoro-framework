@@ -1,0 +1,23 @@
+﻿using UnityEngine;
+using Bezoro.StateMachines;
+using Bezoro.StateMachines.Editor;
+
+    #ROOTNAMESPACEBEGIN#
+[CreateAssetMenu(fileName = nameof(#SCRIPTNAME#),
+			     menuName =
+			         StateMachineEditorUtils.EventMenuName +
+                     "/" +
+                     nameof(#SCRIPTNAME#))]
+public sealed class #SCRIPTNAME# : BaseEventStateMachine
+{
+    protected override void RegisterStates() { }
+
+    protected override void SetUpTransitions() { }
+    
+    protected override IEventState ResolveStartState()
+    {
+        //TODO: Make sure to return a valid IEventState, otherwise you will get an Exception.
+        return null;
+    }
+}
+#ROOTNAMESPACEEND#
