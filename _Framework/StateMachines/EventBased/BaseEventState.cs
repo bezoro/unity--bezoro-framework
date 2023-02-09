@@ -6,14 +6,14 @@ namespace Bezoro.StateMachines
 	public abstract class BaseEventState :
 		IEventState
 	{
-		public void Init(MonoBehaviour masterStateMachine, IEventStateMachine owningStateMachine)
+		public void Init(EventStateMachineOwner owner, IEventStateMachine owningStateMachine)
 		{
-			_masterStateMachine = masterStateMachine;
+			_owner = owner;
 			_owningStateMachine = owningStateMachine;
 			OnInit();
 		}
 
-		public MonoBehaviour MasterStateMachine => _masterStateMachine;
+		public MonoBehaviour Owner => _owner;
 
 		public EventTransition[] Transitions => _transitions;
 
@@ -57,7 +57,7 @@ namespace Bezoro.StateMachines
 		public EventTransition TransitionsTo(IEventState toState)
 		{
 			var newTransition = new EventTransition();
-			newTransition.Init(this, toState, _masterStateMachine);
+			newTransition.Init(this, toState, _owner);
 			ArrayHelpers.Add(ref _transitions, newTransition);
 			return newTransition;
 		}
@@ -82,7 +82,7 @@ namespace Bezoro.StateMachines
 
 		#endregion
 
-		private MonoBehaviour _masterStateMachine;
+		private EventStateMachineOwner _owner;
 		private IEventStateMachine _owningStateMachine;
 		private EventTransition[] _transitions = new EventTransition[4];
 	}

@@ -6,9 +6,9 @@ namespace Bezoro.StateMachines.Editor
 	public static class BaseMonoEventStateMachineGizmoDrawer
 	{
 		[DrawGizmo(GizmoType.Active)]
-		private static void DrawGizmos(BaseMonoEventStateMachine source, GizmoType gizmoType)
+		private static void DrawGizmos(EventStateMachineOwner source, GizmoType gizmoType)
 		{
-			DrawStateLabels(source);
+			DrawStateLabels(source.StateMachine);
 
 			void DrawStateLabels(IEventStateMachine stateMachine, int index = 0)
 			{
