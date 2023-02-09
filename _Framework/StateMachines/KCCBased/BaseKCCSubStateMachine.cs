@@ -10,18 +10,18 @@ namespace Bezoro.StateMachines
 		IKCCStateMachine, IKCCState
 	{
 		public void Init
-		(MonoBehaviour masterStateMachine,
+		(KCCStateMachineOwner owner,
 		 IKCCStateMachine owningStateMachine,
 		 KinematicCharacterMotor motor)
 		{
-			_masterStateMachine = masterStateMachine;
+			_owner = owner;
 			_owningStateMachine = owningStateMachine;
 			_motor = motor;
 			RegisterStates();
 			SetUpTransitions();
 		}
 
-		public MonoBehaviour MasterStateMachine => _masterStateMachine;
+		public MonoBehaviour Owner => _owner;
 
 		public IKCCState CurrentState => _currentState;
 
@@ -209,7 +209,7 @@ namespace Bezoro.StateMachines
 		public KCCTransition TransitionsTo(IKCCState toState)
 		{
 			var newTransition = new KCCTransition();
-			newTransition.Init(this, toState, _masterStateMachine);
+			newTransition.Init(this, toState, _owner);
 			ArrayHelpers.Add(ref _transitions, newTransition);
 			return newTransition;
 		}
@@ -227,6 +227,10 @@ namespace Bezoro.StateMachines
 			outStateMachine = this;
 			return true;
 		}
+
+		public void AddMonoBehaviourToIgnoreCollisionsWith<T>()
+		where T : MonoBehaviour =>
+			KCCStateExtensions.AddMonoBehaviourToIgnoreCollisionsWith<T>(this);
 
 		#region Abstract Methods
 
@@ -318,11 +322,11 @@ namespace Bezoro.StateMachines
 		where T : class, IKCCState, new()
 		{
 			var newState = new T();
-			newState.Init(_masterStateMachine, this, _motor);
+			newState.Init(_owner, this, _motor);
 			return newState;
 		}
 
-		private MonoBehaviour _masterStateMachine;
+		private KCCStateMachineOwner _owner;
 		private IKCCStateMachine _owningStateMachine;
 		private IKCCState _currentState;
 		private IKCCState _lastState;
