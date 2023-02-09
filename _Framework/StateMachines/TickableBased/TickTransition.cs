@@ -6,11 +6,13 @@ namespace Bezoro.StateMachines
 	public class TickTransition : ITransition
 	{
 		public void Init
-			(ITickableState fromState, ITickableState toState, MonoBehaviour stateMachine)
+		(ITickableState fromState,
+		 ITickableState toState,
+		 TickableStateMachineOwner owner)
 		{
 			_fromState = fromState;
 			_toState = toState;
-			_stateMachine = stateMachine;
+			_owner = owner;
 		}
 
 		public void BecomeRelevant()
@@ -90,7 +92,7 @@ namespace Bezoro.StateMachines
 		where T : BaseTickCondition, new()
 		{
 			var newCondition = new T();
-			newCondition.Init(_stateMachine, inverted);
+			newCondition.Init(_owner, inverted);
 			ArrayHelpers.Add(ref _conditions, newCondition);
 		}
 
@@ -102,11 +104,11 @@ namespace Bezoro.StateMachines
 		where T1 : BaseTickCondition, new()
 		{
 			var newCondition0 = new T0();
-			newCondition0.Init(_stateMachine, inverted0);
+			newCondition0.Init(_owner, inverted0);
 			ArrayHelpers.Add(ref _conditions, newCondition0);
 
 			var newCondition1 = new T1();
-			newCondition1.Init(_stateMachine, inverted1);
+			newCondition1.Init(_owner, inverted1);
 			ArrayHelpers.Add(ref _conditions, newCondition1);
 
 			_conditionsCriteria = conditionsCriteria;
@@ -122,21 +124,21 @@ namespace Bezoro.StateMachines
 		where T2 : BaseTickCondition, new()
 		{
 			var newCondition0 = new T0();
-			newCondition0.Init(_stateMachine, inverted0);
+			newCondition0.Init(_owner, inverted0);
 			ArrayHelpers.Add(ref _conditions, newCondition0);
 
 			var newCondition1 = new T1();
-			newCondition1.Init(_stateMachine, inverted1);
+			newCondition1.Init(_owner, inverted1);
 			ArrayHelpers.Add(ref _conditions, newCondition1);
 
 			var newCondition2 = new T2();
-			newCondition2.Init(_stateMachine, inverted2);
+			newCondition2.Init(_owner, inverted2);
 			ArrayHelpers.Add(ref _conditions, newCondition2);
 
 			_conditionsCriteria = conditionsCriteria;
 		}
 
-		private MonoBehaviour _stateMachine;
+		private TickableStateMachineOwner _owner;
 		private ITickableState _fromState;
 		private ITickableState _toState;
 		private BaseTickCondition[] _conditions = new BaseTickCondition[4];

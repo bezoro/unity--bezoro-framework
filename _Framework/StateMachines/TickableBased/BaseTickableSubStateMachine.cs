@@ -6,15 +6,15 @@ namespace Bezoro.StateMachines
 	public abstract class BaseTickableSubStateMachine :
 		ITickableStateMachine, ITickableState
 	{
-		public void Init(MonoBehaviour masterStateMachine, ITickableStateMachine owningStateMachine)
+		public void Init(TickableStateMachineOwner owner, ITickableStateMachine owningStateMachine)
 		{
-			_masterStateMachine = masterStateMachine;
+			_owner = owner;
 			_owningStateMachine = owningStateMachine;
 			RegisterStates();
 			SetUpTransitions();
 		}
 
-		public MonoBehaviour MasterStateMachine => _masterStateMachine;
+		public MonoBehaviour Owner => _owner;
 
 		public ITickableState CurrentState => _currentState;
 
@@ -101,7 +101,7 @@ namespace Bezoro.StateMachines
 		public TickTransition TransitionsTo(ITickableState toState)
 		{
 			var newTransition = new TickTransition();
-			newTransition.Init(this, toState, _masterStateMachine);
+			newTransition.Init(this, toState, _owner);
 			ArrayHelpers.Add(ref _transitions, newTransition);
 			return newTransition;
 		}
@@ -171,11 +171,11 @@ namespace Bezoro.StateMachines
 		where T : class, ITickableState, new()
 		{
 			var newState = new T();
-			newState.Init(_masterStateMachine, this);
+			newState.Init(_owner, this);
 			return newState;
 		}
 
-		private MonoBehaviour _masterStateMachine;
+		private TickableStateMachineOwner _owner;
 		private ITickableStateMachine _owningStateMachine;
 		private ITickableState _currentState;
 		private ITickableState _lastState;
