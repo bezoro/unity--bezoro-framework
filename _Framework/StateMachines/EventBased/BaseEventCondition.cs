@@ -4,14 +4,14 @@ namespace Bezoro.StateMachines
 {
 	public abstract class BaseEventCondition
 	{
-		public void Init(EventTransition transition, MonoBehaviour stateMachine)
+		public void Init(EventStateMachineOwner owner, EventTransition transition)
 		{
 			_transition = transition;
-			_stateMachine = stateMachine;
+			_owner = owner;
 			OnInit();
 		}
 
-		public MonoBehaviour StateMachine => _stateMachine;
+		public MonoBehaviour Owner => _owner;
 
 		public void BecomeRelevant() =>
 			OnBecomeRelevant();
@@ -42,7 +42,7 @@ namespace Bezoro.StateMachines
 
 		#endregion
 
+		private EventStateMachineOwner _owner;
 		private EventTransition _transition;
-		private MonoBehaviour _stateMachine;
 	}
 }
