@@ -6,21 +6,21 @@ using KinematicCharacterController;
 
 namespace Bezoro.StateMachines
 {
-	public abstract class BaseKCCState : 
+	public abstract class BaseKCCState :
 		IKCCState
 	{
 		public void Init
-		(MonoBehaviour masterStateMachine,
+		(KCCStateMachineOwner owner,
 		 IKCCStateMachine owningStateMachine,
 		 KinematicCharacterMotor motor)
 		{
-			_masterStateMachine = masterStateMachine;
+			_owner = owner;
 			_owningStateMachine = owningStateMachine;
 			_motor = motor;
 			OnInit();
 		}
 
-		public MonoBehaviour MasterStateMachine => _masterStateMachine;
+		public MonoBehaviour Owner => _owner;
 
 		public KCCTransition[] Transitions => _transitions;
 
@@ -144,7 +144,7 @@ namespace Bezoro.StateMachines
 		public KCCTransition TransitionsTo(IKCCState toState)
 		{
 			var newTransition = new KCCTransition();
-			newTransition.Init(this, toState, _masterStateMachine);
+			newTransition.Init(this, toState, _owner);
 			ArrayHelpers.Add(ref _transitions, newTransition);
 			return newTransition;
 		}
@@ -154,6 +154,10 @@ namespace Bezoro.StateMachines
 			outStateMachine = null;
 			return false;
 		}
+
+		public void AddMonoBehaviourToIgnoreCollisionsWith<T>()
+		where T : MonoBehaviour =>
+			KCCStateExtensions.AddMonoBehaviourToIgnoreCollisionsWith<T>(this);
 
 		#region Abstract Methods
 
@@ -227,7 +231,7 @@ namespace Bezoro.StateMachines
 
 		#endregion
 
-		private MonoBehaviour _masterStateMachine;
+		private KCCStateMachineOwner _owner;
 		private IKCCStateMachine _owningStateMachine;
 		private KinematicCharacterMotor _motor;
 		private KCCTransition[] _transitions = new KCCTransition[4];
