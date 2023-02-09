@@ -3,12 +3,12 @@ using UnityEngine;
 
 namespace Bezoro.StateMachines.Editor
 {
-	public static class BaseTickableStateMachineGizmoDrawer
+	public static class TickableStateMachineOwnerGizmoDrawer
 	{
 		[DrawGizmo(GizmoType.Active)]
-		private static void DrawGizmos(BaseMonoTickableStateMachine source, GizmoType gizmoType)
+		private static void DrawGizmos(TickableStateMachineOwner source, GizmoType gizmoType)
 		{
-			DrawStateLabels(source);
+			DrawStateLabels(source.StateMachine);
 
 			void DrawStateLabels(ITickableStateMachine stateMachine, int index = 0)
 			{
