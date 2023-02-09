@@ -2,12 +2,14 @@
 
 namespace Bezoro.StateMachines
 {
-	[DisallowMultipleComponent]
-	public abstract class BaseMonoEventStateMachine : MonoBehaviour,
+	public abstract class BaseEventStateMachine : ScriptableObject,
 		IEventStateMachine
 	{
-		private void Awake()
+		protected const string MenuName = "Bezoro/StateMachines/Event/";
+
+		public void Init(EventStateMachineOwner owner)
 		{
+			_owner = owner;
 			RegisterStates();
 			SetUpTransitions();
 		}
@@ -19,13 +21,13 @@ namespace Bezoro.StateMachines
 		[field: SerializeField]
 		public DisableMethod DisableMethod { get; private set; }
 
-		private void Start()
+		public void Start()
 		{
 			_currentState = ResolveStartState();
 			_currentState.Enter();
 		}
 
-		private void OnEnable()
+		public void Enable()
 		{
 			HandleRestarted();
 
@@ -40,7 +42,7 @@ namespace Bezoro.StateMachines
 			}
 		}
 
-		private void OnDisable()
+		public void Disable()
 		{
 			HandleDisableMethod();
 
@@ -59,21 +61,8 @@ namespace Bezoro.StateMachines
 			_currentState.Enter();
 		}
 
-		public bool TryFindStateInCurrentHierarchy<T>(out T outState)
-		where T : class, IState
-		{
-			var boolean = StateMachineExtensions.TryFindStateInCurrentHierarchy(this, out T state);
-			outState = state;
-			return boolean;
-		}
-
-		public bool TryFindStateInLastHierarchy<T>(out T outState)
-		where T : class, IState
-		{
-			var boolean = StateMachineExtensions.TryFindStateInLastHierarchy(this, out T state);
-			outState = state;
-			return boolean;
-		}
+		public void Exit() =>
+			_currentState.Exit();
 
 		#region Abstract Methods
 
@@ -101,10 +90,11 @@ namespace Bezoro.StateMachines
 		where T : class, IEventState, new()
 		{
 			var newState = new T();
-			newState.Init(this, this);
+			newState.Init(_owner, this);
 			return newState;
 		}
 
+		private EventStateMachineOwner _owner;
 		private IEventState _currentState;
 		private IEventState _lastState;
 		private bool _restarted;

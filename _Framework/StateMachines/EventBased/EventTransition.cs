@@ -5,11 +5,11 @@ namespace Bezoro.StateMachines
 {
 	public sealed class EventTransition : ITransition
 	{
-		public void Init(IEventState fromState, IEventState toState, MonoBehaviour stateMachine)
+		public void Init(IEventState fromState, IEventState toState, EventStateMachineOwner owner)
 		{
 			_fromState = fromState;
 			_toState = toState;
-			_stateMachine = stateMachine;
+			_owner = owner;
 		}
 
 		public void BecomeRelevant()
@@ -51,7 +51,7 @@ namespace Bezoro.StateMachines
 		where T : BaseEventCondition, new()
 		{
 			var newCondition = new T();
-			newCondition.Init(this, _stateMachine);
+			newCondition.Init(_owner, this);
 			ArrayHelpers.Add(ref _conditions, newCondition);
 		}
 
@@ -60,11 +60,11 @@ namespace Bezoro.StateMachines
 		where T1 : BaseEventCondition, new()
 		{
 			var newCondition0 = new T0();
-			newCondition0.Init(this, _stateMachine);
+			newCondition0.Init(_owner, this);
 			ArrayHelpers.Add(ref _conditions, newCondition0);
 
 			var newCondition1 = new T1();
-			newCondition1.Init(this, _stateMachine);
+			newCondition1.Init(_owner, this);
 			ArrayHelpers.Add(ref _conditions, newCondition1);
 		}
 
@@ -74,19 +74,19 @@ namespace Bezoro.StateMachines
 		where T2 : BaseEventCondition, new()
 		{
 			var newCondition0 = new T0();
-			newCondition0.Init(this, _stateMachine);
+			newCondition0.Init(_owner, this);
 			ArrayHelpers.Add(ref _conditions, newCondition0);
 
 			var newCondition1 = new T1();
-			newCondition1.Init(this, _stateMachine);
+			newCondition1.Init(_owner, this);
 			ArrayHelpers.Add(ref _conditions, newCondition1);
 
 			var newCondition2 = new T2();
-			newCondition2.Init(this, _stateMachine);
+			newCondition2.Init(_owner, this);
 			ArrayHelpers.Add(ref _conditions, newCondition2);
 		}
 
-		private MonoBehaviour _stateMachine;
+		private EventStateMachineOwner _owner;
 		private IEventState _fromState;
 		private IEventState _toState;
 		private BaseEventCondition[] _conditions = new BaseEventCondition[4];
