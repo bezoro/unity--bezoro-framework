@@ -4,14 +4,14 @@ namespace Bezoro.StateMachines
 {
 	public abstract class BaseTickCondition
 	{
-		public void Init(MonoBehaviour stateMachine, bool inverted = false)
+		public void Init(TickableStateMachineOwner owner, bool inverted = false)
 		{
-			_stateMachine = stateMachine;
+			_owner = owner;
 			_inverted = inverted;
 			OnInit();
 		}
 
-		public MonoBehaviour StateMachine => _stateMachine;
+		public MonoBehaviour Owner => _owner;
 
 		public bool Inverted => _inverted;
 
@@ -46,7 +46,7 @@ namespace Bezoro.StateMachines
 
 		#endregion
 
-		private MonoBehaviour _stateMachine;
+		private TickableStateMachineOwner _owner;
 		private bool _inverted;
 	}
 }
