@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace Bezoro.StateMachines.Editor
 {
-	public static class BaseMonoEventStateMachineGizmoDrawer
+	public static class EventStateMachineOwnerGizmoDrawer
 	{
 		[DrawGizmo(GizmoType.Active)]
 		private static void DrawGizmos(EventStateMachineOwner source, GizmoType gizmoType)
