@@ -4,10 +4,10 @@ using UnityEngine;
 
 namespace Bezoro.StateMachines.Editor
 {
-	public static class BaseMonoKCCStateMachineGizmoDrawer
+	public static class KCCStateMachineOwnerGizmoDrawer
 	{
 		[DrawGizmo(GizmoType.Active)]
-		private static void DrawGizmos(BaseMonoKCCStateMachine source, GizmoType gizmoType)
+		private static void DrawGizmos(KCCStateMachineOwner source, GizmoType gizmoType)
 		{
 			DrawDebugInfo();
 
@@ -27,23 +27,19 @@ namespace Bezoro.StateMachines.Editor
 
 						var bounds = childRenderer.bounds;
 
-						var positionToDrawLabel = new Vector3(
-															  0f,
+						var positionToDrawLabel = new Vector3(0f,
 															  bounds.size.y + i * 0.5f,
-															  0f
-															 );
+															  0f);
 
 						states.Reverse();
 
 						using (Draw.InLocalSpace(source.transform))
 						{
-							Draw.Label2D(
-										 positionToDrawLabel,
+							Draw.Label2D(positionToDrawLabel,
 										 $"{states[i].GetType().Name}",
 										 24f,
 										 LabelAlignment.Center,
-										 Color.blue
-										);
+										 Color.blue);
 						}
 
 						states.Reverse();

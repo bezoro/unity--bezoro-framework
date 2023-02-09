@@ -1,17 +1,17 @@
-﻿using Bezoro.Core;
-using UnityEngine;
+﻿using UnityEngine;
 using System.Collections.Generic;
 using KinematicCharacterController;
 
 namespace Bezoro.StateMachines
 {
-	[DisallowMultipleComponent]
-	public abstract class BaseMonoKCCStateMachine : Tickable,
-		IKCCStateMachine, ICharacterController
+	public abstract class BaseKCCStateMachine : ScriptableObject,
+		IKCCStateMachine
 	{
-		private void Awake()
+		protected const string MenuName = "Bezoro/StateMachines/KCC/";
+
+		public void Init(KCCStateMachineOwner owner)
 		{
-			Motor.CharacterController = this;
+			_owner = owner;
 			RegisterStates();
 			SetUpTransitions();
 		}
@@ -23,18 +23,14 @@ namespace Bezoro.StateMachines
 		[field: SerializeField]
 		public DisableMethod DisableMethod { get; private set; }
 
-		[field: SerializeField]
-		public KinematicCharacterMotor Motor { get; private set; }
-
-		private void Start()
+		public void Start()
 		{
 			_currentState = ResolveStartState();
 			_currentState.Enter();
 		}
 
-		protected override void OnEnable()
+		public void Enable()
 		{
-			base.OnEnable();
 			HandleRestarted();
 
 			void HandleRestarted()
@@ -48,16 +44,16 @@ namespace Bezoro.StateMachines
 			}
 		}
 
-		public override void EarlyTick() =>
+		public void EarlyTick() =>
 			_currentState.EarlyTick();
 
-		public override void Tick() =>
+		public void Tick() =>
 			_currentState.Tick();
 
-		public override void FixedTick() =>
+		public void FixedTick() =>
 			_currentState.FixedTick();
 
-		public override void LateTick() =>
+		public void LateTick() =>
 			_currentState.LateTick();
 
 		#region KCC Methods
@@ -148,9 +144,8 @@ namespace Bezoro.StateMachines
 
 		#endregion
 
-		protected override void OnDisable()
+		public void Disable()
 		{
-			base.OnDisable();
 			HandleDisableMethod();
 
 			void HandleDisableMethod()
@@ -168,46 +163,8 @@ namespace Bezoro.StateMachines
 			_currentState.Enter();
 		}
 
-		public void SetMotor(KinematicCharacterMotor motor) =>
-			Motor = motor;
-
-		public List<IKCCState> GetCurrentHierarchy()
-		{
-			var currentStateHierarchy = new List<IKCCState> { _currentState };
-
-			if (_currentState is not IKCCStateMachine rootSuperState)
-				return currentStateHierarchy;
-
-			var parentState = rootSuperState;
-
-			while (true)
-			{
-				var currentState = parentState.CurrentState;
-
-				currentStateHierarchy.Add(currentState);
-
-				if (currentState is not IKCCStateMachine superState)
-					return currentStateHierarchy;
-
-				parentState = superState;
-			}
-		}
-
-		public bool TryFindStateInCurrentHierarchy<T>(out T outState)
-		where T : class, IState
-		{
-			var boolean = StateMachineExtensions.TryFindStateInCurrentHierarchy(this, out T state);
-			outState = state;
-			return boolean;
-		}
-
-		public bool TryFindStateInLastHierarchy<T>(out T outState)
-		where T : class, IState
-		{
-			var boolean = StateMachineExtensions.TryFindStateInLastHierarchy(this, out T state);
-			outState = state;
-			return boolean;
-		}
+		public void Exit() =>
+			_currentState.Exit();
 
 		#region Abstract Methods
 
@@ -235,10 +192,11 @@ namespace Bezoro.StateMachines
 		where T : class, IKCCState, new()
 		{
 			var newState = new T();
-			newState.Init(this, this, Motor);
+			newState.Init(_owner, this, _owner.Motor);
 			return newState;
 		}
 
+		private KCCStateMachineOwner _owner;
 		private IKCCState _currentState;
 		private IKCCState _lastState;
 		private bool _restarted;
