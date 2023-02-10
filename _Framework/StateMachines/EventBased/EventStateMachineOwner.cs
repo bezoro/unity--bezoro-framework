@@ -27,6 +27,9 @@ namespace Bezoro.StateMachines
 		private void OnDisable() =>
 			stateMachine.Disable();
 
+		private void OnDestroy() =>
+			stateMachine.Destroy();
+
 		public bool TryFindStateInCurrentHierarchy<T>(out T outState)
 		where T : class, IState
 		{
