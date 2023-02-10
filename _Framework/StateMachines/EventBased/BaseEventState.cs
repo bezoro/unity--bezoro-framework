@@ -17,21 +17,16 @@ namespace Bezoro.StateMachines
 
 		public EventTransition[] Transitions => _transitions;
 
+		public void Enable()
+		{
+			OnEnable();
+			AllTransitionsBecomeRelevant();
+		}
+
 		public void Enter()
 		{
 			OnEnter();
 			AllTransitionsBecomeRelevant();
-
-			void AllTransitionsBecomeRelevant()
-			{
-				for (var i = 0; i < _transitions.Length; i++)
-				{
-					if (_transitions[i] == null)
-						continue;
-
-					_transitions[i].BecomeRelevant();
-				}
-			}
 		}
 
 		public void OnTransitionRaised(IEventState toState) =>
@@ -39,20 +34,19 @@ namespace Bezoro.StateMachines
 
 		public void Exit()
 		{
-			AllTransitionsCeaseRelevant();
 			OnExit();
-
-			void AllTransitionsCeaseRelevant()
-			{
-				for (var i = 0; i < _transitions.Length; i++)
-				{
-					if (_transitions[i] == null)
-						continue;
-
-					_transitions[i].CeaseRelevant();
-				}
-			}
+			AllTransitionsCeaseRelevant();
 		}
+
+		public void Disable()
+		{
+			OnDisable();
+			AllTransitionsCeaseRelevant();
+		}
+
+
+		public void Destroy() =>
+			OnDestroy();
 
 		public EventTransition TransitionsTo(IEventState toState)
 		{
@@ -71,6 +65,11 @@ namespace Bezoro.StateMachines
 		protected abstract void OnInit();
 
 		/// <summary>
+		/// Called when the <b>Owner</b> is <i>Enabled</i> while this object is still being executed.
+		/// </summary>
+		protected abstract void OnEnable();
+
+		/// <summary>
 		/// Called once when the <b>State</b> is <i>Entered</i>.
 		/// </summary>
 		protected abstract void OnEnter();
@@ -80,7 +79,39 @@ namespace Bezoro.StateMachines
 		/// </summary>
 		protected abstract void OnExit();
 
+		/// <summary>
+		/// Called when the <b>Owner</b> is <i>Disabled</i> while this object is still being executed.
+		/// </summary>
+		protected abstract void OnDisable();
+
+		/// <summary>
+		/// Called when the <b>Owner</b> is <i>Destroyed</i> while this object is still being executed.
+		/// </summary>
+		protected abstract void OnDestroy();
+
 		#endregion
+
+		private void AllTransitionsBecomeRelevant()
+		{
+			for (var i = 0; i < _transitions.Length; i++)
+			{
+				if (_transitions[i] == null)
+					continue;
+
+				_transitions[i].BecomeRelevant();
+			}
+		}
+
+		private void AllTransitionsCeaseRelevant()
+		{
+			for (var i = 0; i < _transitions.Length; i++)
+			{
+				if (_transitions[i] == null)
+					continue;
+
+				_transitions[i].CeaseRelevant();
+			}
+		}
 
 		private EventStateMachineOwner _owner;
 		private IEventStateMachine _owningStateMachine;
