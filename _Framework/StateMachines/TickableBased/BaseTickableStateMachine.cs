@@ -29,15 +29,17 @@ namespace Bezoro.StateMachines
 
 		public void Enable()
 		{
-			OnEnabled();
 			if (_wasDisabled && DisableMethod is DisableMethod.Restart)
 			{
+				OnEnabled();
+				_currentState.Enable();
 				_currentState = ResolveStartState();
 				_currentState.Enter();
 				_wasDisabled = false;
 			}
 			else if (_wasDisabled)
 			{
+				OnEnabled();
 				_currentState.Enable();
 				_wasDisabled = false;
 			}
@@ -114,7 +116,7 @@ namespace Bezoro.StateMachines
 		protected abstract void OnStart();
 
 		/// <summary>
-		/// Called every time the Owner gets enabled, while its being executed.
+		/// Called every time the <b>Owner</b> gets <i>Enabled</i> and this object was previously <i>Disabled</i>, while its being executed.
 		/// </summary>
 		protected abstract void OnEnabled();
 
