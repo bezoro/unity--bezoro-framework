@@ -4,11 +4,5 @@
 		IHasTransitions<TickTransition, ITickableState>
 	{
 		void Init(TickableStateMachineOwner owner, ITickableStateMachine owningStateMachine);
-
-		void Enable();
-
-		void Disable();
-
-		void Destroy();
 	}
 }

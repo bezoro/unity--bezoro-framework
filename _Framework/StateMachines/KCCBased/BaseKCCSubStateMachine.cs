@@ -19,6 +19,7 @@ namespace Bezoro.StateMachines
 			_motor = motor;
 			RegisterStates();
 			SetUpTransitions();
+			OnInit();
 		}
 
 		public MonoBehaviour Owner => _owner;
@@ -33,23 +34,19 @@ namespace Bezoro.StateMachines
 
 		public List<Type> MonoBehaviourTypesToIgnoreCollisionsWith { get; } = new(12);
 
+		public void Enable()
+		{
+			OnEnable();
+			AllTransitionsBecomeRelevant();
+			_currentState.Enable();
+		}
+
 		public void Enter()
 		{
 			OnEnter();
 			AllTransitionsBecomeRelevant();
 			_currentState = ResolveStartState();
 			_currentState.Enter();
-
-			void AllTransitionsBecomeRelevant()
-			{
-				for (var i = 0; i < _transitions.Length; i++)
-				{
-					if (_transitions[i] == null)
-						continue;
-
-					_transitions[i].BecomeRelevant();
-				}
-			}
 		}
 
 		public void EarlyTick()
@@ -190,21 +187,20 @@ namespace Bezoro.StateMachines
 
 		public void Exit()
 		{
+			OnExit();
 			_currentState.Exit();
 			AllTransitionsCeaseRelevant();
-			OnExit();
-
-			void AllTransitionsCeaseRelevant()
-			{
-				for (var i = 0; i < _transitions.Length; i++)
-				{
-					if (_transitions[i] == null)
-						continue;
-
-					_transitions[i].CeaseRelevant();
-				}
-			}
 		}
+
+		public void Disable()
+		{
+			OnDisable();
+			_currentState.Disable();
+			AllTransitionsCeaseRelevant();
+		}
+
+		public void Destroy() =>
+			OnDestroy();
 
 		public KCCTransition TransitionsTo(IKCCState toState)
 		{
@@ -248,10 +244,21 @@ namespace Bezoro.StateMachines
 		protected abstract void SetUpTransitions();
 
 		/// <summary>
+		/// Called once in the lifetime of the object, when it is created.
+		/// Use it like <b>Awake</b> in a <b>MonoBehaviour</b>.
+		/// </summary>
+		protected abstract void OnInit();
+
+		/// <summary>
 		/// Called when the <b>SubStateMachine</b> is <b>Entered</b>.
 		/// Use it to decide which should be the <b>Start</b> <b>State</b>, then return it.
 		/// </summary>
 		protected abstract IKCCState ResolveStartState();
+
+		/// <summary>
+		/// Called when the <b>Owner</b> is <i>Enabled</i> while this object is still being executed.
+		/// </summary>
+		protected abstract void OnEnable();
 
 		/// <summary>
 		/// Called when the <b>SubStateMachine</b> is <i>Entered</i>.
@@ -316,6 +323,16 @@ namespace Bezoro.StateMachines
 		/// </summary>
 		protected abstract void OnExit();
 
+		/// <summary>
+		/// Called when the <b>Owner</b> is <i>Disabled</i> while this object is still being executed.
+		/// </summary>
+		protected abstract void OnDisable();
+
+		/// <summary>
+		/// Called when the <b>Owner</b> is <i>Destroyed</i> while this object is still being executed.
+		/// </summary>
+		protected abstract void OnDestroy();
+
 		#endregion
 
 		protected T RegisterState<T>()
@@ -324,6 +341,28 @@ namespace Bezoro.StateMachines
 			var newState = new T();
 			newState.Init(_owner, this, _motor);
 			return newState;
+		}
+
+		private void AllTransitionsBecomeRelevant()
+		{
+			for (var i = 0; i < _transitions.Length; i++)
+			{
+				if (_transitions[i] == null)
+					continue;
+
+				_transitions[i].BecomeRelevant();
+			}
+		}
+
+		private void AllTransitionsCeaseRelevant()
+		{
+			for (var i = 0; i < _transitions.Length; i++)
+			{
+				if (_transitions[i] == null)
+					continue;
+
+				_transitions[i].CeaseRelevant();
+			}
 		}
 
 		private KCCStateMachineOwner _owner;
