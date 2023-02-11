@@ -28,21 +28,16 @@ namespace Bezoro.StateMachines
 
 		public List<Type> MonoBehaviourTypesToIgnoreCollisionsWith { get; } = new(4);
 
+		public void Enable()
+		{
+			OnEnable();
+			AllTransitionsBecomeRelevant();
+		}
+
 		public void Enter()
 		{
 			OnEnter();
 			AllTransitionsBecomeRelevant();
-
-			void AllTransitionsBecomeRelevant()
-			{
-				for (var i = 0; i < _transitions.Length; i++)
-				{
-					if (_transitions[i] == null)
-						continue;
-
-					_transitions[i].BecomeRelevant();
-				}
-			}
 		}
 
 		public void EarlyTick() =>
@@ -128,18 +123,16 @@ namespace Bezoro.StateMachines
 		{
 			AllTransitionsCeaseRelevant();
 			OnExit();
-
-			void AllTransitionsCeaseRelevant()
-			{
-				for (var i = 0; i < _transitions.Length; i++)
-				{
-					if (_transitions[i] == null)
-						continue;
-
-					_transitions[i].CeaseRelevant();
-				}
-			}
 		}
+
+		public void Disable()
+		{
+			OnDisable();
+			AllTransitionsCeaseRelevant();
+		}
+
+		public void Destroy() =>
+			OnDestroy();
 
 		public KCCTransition TransitionsTo(IKCCState toState)
 		{
@@ -166,6 +159,11 @@ namespace Bezoro.StateMachines
 		/// Use it like <b>Awake</b> in a <b>MonoBehaviour</b>.
 		/// </summary>
 		protected abstract void OnInit();
+
+		/// <summary>
+		/// Called when the <b>Owner</b> is <i>Enabled</i> while this object is still being executed.
+		/// </summary>
+		protected abstract void OnEnable();
 
 		/// <summary>
 		/// Called when the <b>SubStateMachine</b> is <i>Entered</i>.
@@ -229,7 +227,39 @@ namespace Bezoro.StateMachines
 		/// </summary>
 		protected abstract void OnExit();
 
+		/// <summary>
+		/// Called when the <b>Owner</b> is <i>Disabled</i> while this object is still being executed.
+		/// </summary>
+		protected abstract void OnDisable();
+
+		/// <summary>
+		/// Called when the <b>Owner</b> is <i>Destroyed</i> while this object is still being executed.
+		/// </summary>
+		protected abstract void OnDestroy();
+
 		#endregion
+
+		private void AllTransitionsBecomeRelevant()
+		{
+			for (var i = 0; i < _transitions.Length; i++)
+			{
+				if (_transitions[i] == null)
+					continue;
+
+				_transitions[i].BecomeRelevant();
+			}
+		}
+
+		private void AllTransitionsCeaseRelevant()
+		{
+			for (var i = 0; i < _transitions.Length; i++)
+			{
+				if (_transitions[i] == null)
+					continue;
+
+				_transitions[i].CeaseRelevant();
+			}
+		}
 
 		private KCCStateMachineOwner _owner;
 		private IKCCStateMachine _owningStateMachine;
