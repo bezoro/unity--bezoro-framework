@@ -114,12 +114,6 @@ namespace Bezoro.StateMachines
 
 		/// <summary>
 		/// Called once in the lifetime of the object, when it is created.
-		/// Use it like <b>Awake</b> in a <b>MonoBehaviour</b>.
-		/// </summary>
-		protected abstract void OnInit();
-
-		/// <summary>
-		/// Called once in the lifetime of the object, when it is created.
 		/// Use it to register all <b>States</b> needed for the <b>SubStateMachine</b> to work.
 		/// /// Use it like 'Awake' in a MonoBehaviour.
 		/// </summary>
@@ -130,6 +124,12 @@ namespace Bezoro.StateMachines
 		/// Use it to set up all of the <b>States</b> <b>Transitions</b>.
 		/// </summary>
 		protected abstract void SetUpTransitions();
+
+		/// <summary>
+		/// Called once in the lifetime of the object, when it is created.
+		/// Use it like <b>Awake</b> in a <b>MonoBehaviour</b>.
+		/// </summary>
+		protected abstract void OnInit();
 
 		/// <summary>
 		/// Called when the <b>SubStateMachine</b> is <b>Entered</b>.
