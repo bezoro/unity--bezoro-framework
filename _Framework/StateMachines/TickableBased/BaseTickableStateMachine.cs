@@ -10,6 +10,7 @@ namespace Bezoro.StateMachines
 			_owner = owner;
 			RegisterStates();
 			SetUpTransitions();
+			OnInit();
 		}
 
 		public ITickableState CurrentState => _currentState;
@@ -21,22 +22,24 @@ namespace Bezoro.StateMachines
 
 		public void Start()
 		{
+			OnStart();
 			_currentState = ResolveStartState();
 			_currentState.Enter();
 		}
 
 		public void Enable()
 		{
-			HandleRestarted();
-
-			void HandleRestarted()
+			OnEnabled();
+			if (_wasDisabled && DisableMethod is DisableMethod.Restart)
 			{
-				if (!_restarted)
-					return;
-
-				_restarted = false;
 				_currentState = ResolveStartState();
 				_currentState.Enter();
+				_wasDisabled = false;
+			}
+			else if (_wasDisabled)
+			{
+				_currentState.Enable();
+				_wasDisabled = false;
 			}
 		}
 
@@ -52,15 +55,23 @@ namespace Bezoro.StateMachines
 		public void LateTick() =>
 			_currentState.LateTick();
 
+		public void Exit()
+		{
+			OnExit();
+			_currentState.Exit();
+		}
+
 		public void Disable()
 		{
-			HandleDisableMethod();
+			OnDisabled();
+			_currentState.Disable();
+			_wasDisabled = true;
+		}
 
-			void HandleDisableMethod()
-			{
-				if (DisableMethod is DisableMethod.Restart)
-					_restarted = true;
-			}
+		public void Destroy()
+		{
+			OnDestroyed();
+			_currentState.Destroy();
 		}
 
 		public void DoTransition(ITickableState toState)
@@ -70,9 +81,6 @@ namespace Bezoro.StateMachines
 			_currentState = toState;
 			_currentState.Enter();
 		}
-
-		public void Exit() =>
-			_currentState.Exit();
 
 		#region Abstract Methods
 
@@ -89,10 +97,41 @@ namespace Bezoro.StateMachines
 		protected abstract void SetUpTransitions();
 
 		/// <summary>
+		/// Called once in the lifetime of the object, when it is created.
+		/// Use it like <b>Awake</b> in a <b>MonoBehaviour</b>.
+		/// </summary>
+		protected abstract void OnInit();
+
+		/// <summary>
 		/// Called once in the lifetime of the object, in <b>Start</b>.
 		/// Use it to decide which should be the <b>Start</b> <b>State</b>, then return it.
 		/// </summary>
 		protected abstract ITickableState ResolveStartState();
+
+		/// <summary>
+		/// Called once in the lifetime of the object when it is <i>Started</i>.
+		/// </summary>
+		protected abstract void OnStart();
+
+		/// <summary>
+		/// Called every time the Owner gets enabled, while its being executed.
+		/// </summary>
+		protected abstract void OnEnabled();
+
+		/// <summary>
+		/// Called once when the Owner switches State Machines.
+		/// </summary>
+		protected abstract void OnExit();
+
+		/// <summary>
+		/// Called every time the Owner gets disabled, while its being executed.
+		/// </summary>
+		protected abstract void OnDisabled();
+
+		/// <summary>
+		/// Called when the Owner gets destroyed, while its being executed.
+		/// </summary>
+		protected abstract void OnDestroyed();
 
 		#endregion
 
@@ -107,6 +146,6 @@ namespace Bezoro.StateMachines
 		private TickableStateMachineOwner _owner;
 		private ITickableState _currentState;
 		private ITickableState _lastState;
-		private bool _restarted;
+		private bool _wasDisabled;
 	}
 }
