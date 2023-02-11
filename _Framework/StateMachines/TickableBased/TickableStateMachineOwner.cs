@@ -45,6 +45,9 @@ namespace Bezoro.StateMachines
 			stateMachine.Disable();
 		}
 
+		private void OnDestroy() =>
+			stateMachine.Destroy();
+
 		public bool TryFindStateInCurrentHierarchy<T>(out T outState)
 		where T : class, IState
 		{
