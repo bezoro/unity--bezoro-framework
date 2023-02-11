@@ -4,9 +4,9 @@
 	{
 		void Init(EventStateMachineOwner owner, IEventStateMachine owningStateMachine);
 
-		void Disable();
-
 		void Enable();
+
+		void Disable();
 
 		void Destroy();
 	}
