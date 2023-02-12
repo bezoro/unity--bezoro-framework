@@ -99,7 +99,7 @@ namespace Bezoro.StateMachines
 		protected abstract void OnEnable();
 
 		/// <summary>
-		/// Called when the <b>SubStateMachine</b> is <i>Entered</i>.
+		/// Called when the <b>State</b> is <i>Entered</i>.
 		/// </summary>
 		protected abstract void OnEnter();
 
@@ -124,7 +124,7 @@ namespace Bezoro.StateMachines
 		protected abstract void OnLateTick();
 
 		/// <summary>
-		/// Called when the <b>SubStateMachine</b> is <i>Exited</i>.
+		/// Called when the <b>State</b> is <i>Exited</i>.
 		/// </summary>
 		protected abstract void OnExit();
 
