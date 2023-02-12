@@ -70,8 +70,11 @@ namespace Bezoro.StateMachines
 			AllTransitionsCeaseRelevant();
 		}
 
-		public void Destroy() =>
+		public void Destroy()
+		{
 			OnDestroy();
+			AllTransitionsCeaseRelevant();
+		}
 
 		public TickTransition TransitionsTo(ITickableState toState)
 		{
@@ -90,7 +93,8 @@ namespace Bezoro.StateMachines
 		protected abstract void OnInit();
 
 		/// <summary>
-		/// Called when the <b>Owner</b> is <i>Enabled</i> while this object is still being executed.
+		/// Called when the <b>Owner</b> gets <i>Enabled</i> and was previously <i>Disabled</i>,
+		/// while this object is still being executed.
 		/// </summary>
 		protected abstract void OnEnable();
 
