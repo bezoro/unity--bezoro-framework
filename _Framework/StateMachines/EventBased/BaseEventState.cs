@@ -45,8 +45,11 @@ namespace Bezoro.StateMachines
 		}
 
 
-		public void Destroy() =>
+		public void Destroy()
+		{
 			OnDestroy();
+			AllTransitionsCeaseRelevant();
+		}
 
 		public EventTransition TransitionsTo(IEventState toState)
 		{
@@ -65,17 +68,18 @@ namespace Bezoro.StateMachines
 		protected abstract void OnInit();
 
 		/// <summary>
-		/// Called when the <b>Owner</b> is <i>Enabled</i> while this object is still being executed.
+		/// Called when the <b>Owner</b> gets <i>Enabled</i> and was previously <i>Disabled</i>,
+		/// while this object is still being executed.
 		/// </summary>
 		protected abstract void OnEnable();
 
 		/// <summary>
-		/// Called once when the <b>State</b> is <i>Entered</i>.
+		/// Called when the <b>State</b> is <i>Entered</i>.
 		/// </summary>
 		protected abstract void OnEnter();
 
 		/// <summary>
-		/// Called once when the <b>State</b> is <i>Exited</i>.
+		/// Called when the <b>State</b> is <i>Exited</i>.
 		/// </summary>
 		protected abstract void OnExit();
 
