@@ -93,7 +93,11 @@ namespace Bezoro.StateMachines
 		protected abstract void OnInit();
 
 		/// <summary>
-		/// Called once in the lifetime of the object, in <b>Start</b>.
+		/// If <b>DisableMethod</b> is <b>Continue</b>:
+		/// <para>Called once in the lifetime of the object, in <b>Start</b>.</para>
+		/// If <b>DisableMethod</b> is <b>Restart</b>:
+		/// <para>Called once in <b>Start</b> and on <b>Enable</b>.</para>
+		/// <para></para>
 		/// Use it to decide which should be the <b>Start</b> <b>State</b>, then return it.
 		/// </summary>
 		protected abstract IEventState ResolveStartState();
@@ -104,22 +108,23 @@ namespace Bezoro.StateMachines
 		protected abstract void OnStart();
 
 		/// <summary>
-		/// Called every time the <b>Owner</b> gets <i>Enabled</i> and this object was previously <i>Disabled</i>, while its being executed.
+		/// Called when the <b>Owner</b> gets <i>Enabled</i> and was previously <i>Disabled</i>,
+		/// while this object is still being executed.
 		/// </summary>
 		protected abstract void OnEnabled();
 
 		/// <summary>
-		/// Called once when the Owner switches State Machines.
+		/// Called when the <b>Owner</b> switches <b>State Machines</b>.
 		/// </summary>
 		protected abstract void OnExit();
 
 		/// <summary>
-		/// Called every time the Owner gets disabled, while its being executed.
+		/// Called when the <b>Owner</b> gets <i>Disabled</i>, while this object is still being executed.
 		/// </summary>
 		protected abstract void OnDisabled();
 
 		/// <summary>
-		/// Called when the Owner gets destroyed, while its being executed.
+		/// Called when the <b>Owner</b> is <i>Destroyed</i>, while this object is still being executed.
 		/// </summary>
 		protected abstract void OnDestroyed();
 

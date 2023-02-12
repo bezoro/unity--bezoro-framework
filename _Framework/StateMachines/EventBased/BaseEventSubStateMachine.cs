@@ -55,8 +55,12 @@ namespace Bezoro.StateMachines
 			AllTransitionsCeaseRelevant();
 		}
 
-		public void Destroy() =>
+		public void Destroy()
+		{
 			OnDestroy();
+			_currentState.Destroy();
+			AllTransitionsCeaseRelevant();
+		}
 
 		public EventTransition TransitionsTo(IEventState toState)
 		{
@@ -78,14 +82,7 @@ namespace Bezoro.StateMachines
 
 		/// <summary>
 		/// Called once in the lifetime of the object, when it is created.
-		/// Use it like <b>Awake</b> in a <b>MonoBehaviour</b>.
-		/// </summary>
-		protected abstract void OnInit();
-
-		/// <summary>
-		/// Called once in the lifetime of the object, when it is created.
 		/// Use it to register all <b>States</b> needed for the <b>SubStateMachine</b> to work.
-		/// /// Use it like 'Awake' in a MonoBehaviour.
 		/// </summary>
 		protected abstract void RegisterStates();
 
@@ -96,13 +93,20 @@ namespace Bezoro.StateMachines
 		protected abstract void SetUpTransitions();
 
 		/// <summary>
+		/// Called once in the lifetime of the object, when it is created.
+		/// Use it like <b>Awake</b> in a <b>MonoBehaviour</b>.
+		/// </summary>
+		protected abstract void OnInit();
+
+		/// <summary>
 		/// Called when the <b>SubStateMachine</b> is <b>Entered</b>.
 		/// Use it to decide which should be the <b>Start</b> <b>State</b>, then return it.
 		/// </summary>
 		protected abstract IEventState ResolveStartState();
 
 		/// <summary>
-		/// Called when the <b>Owner</b> is <i>Enabled</i> while this object is still being executed.
+		/// Called when the <b>Owner</b> gets <i>Enabled</i> and was previously <i>Disabled</i>,
+		/// while this object is still being executed.
 		/// </summary>
 		protected abstract void OnEnable();
 
