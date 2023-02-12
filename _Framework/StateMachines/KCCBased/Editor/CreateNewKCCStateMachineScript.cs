@@ -3,9 +3,11 @@ using Bezoro.Core.Extensions;
 
 namespace Bezoro.StateMachines.Editor
 {
-	public static class CreateNewKCCStateMachineScript
+	internal static class CreateNewKCCStateMachineScript
 	{
-		[MenuItem("Assets/Create/" + StateMachineEditorUtils.KCCMenuName + "/New C# Script")]
+		[MenuItem("Assets/Create/" + StateMachineEditorUtils.KCCMenuName + "/New C# Script",
+				  false,
+				  0)]
 		private static void CreateScript()
 		{
 			var guids = AssetDatabase.FindAssets(StateMachineEditorUtils
@@ -14,8 +16,9 @@ namespace Bezoro.StateMachines.Editor
 			if (guids.IsNullOrEmpty())
 				return;
 
-			var path = AssetDatabase.GUIDToAssetPath(guids[0]);
-			ProjectWindowUtil.CreateScriptAssetFromTemplateFile(path, "newKCCStateMachine.cs");
+			var templatePath = AssetDatabase.GUIDToAssetPath(guids[0]);
+			ProjectWindowUtil.CreateScriptAssetFromTemplateFile(templatePath,
+															    "newKCCStateMachine.cs");
 		}
 	}
 }
