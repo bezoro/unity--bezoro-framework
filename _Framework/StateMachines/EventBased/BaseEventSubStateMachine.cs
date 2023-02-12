@@ -44,22 +44,22 @@ namespace Bezoro.StateMachines
 		public void Exit()
 		{
 			OnExit();
-			_currentState.Exit();
 			AllTransitionsCeaseRelevant();
+			_currentState.Exit();
 		}
 
 		public void Disable()
 		{
 			OnDisable();
-			_currentState.Disable();
 			AllTransitionsCeaseRelevant();
+			_currentState.Disable();
 		}
 
 		public void Destroy()
 		{
 			OnDestroy();
-			_currentState.Destroy();
 			AllTransitionsCeaseRelevant();
+			_currentState.Destroy();
 		}
 
 		public EventTransition TransitionsTo(IEventState toState)
