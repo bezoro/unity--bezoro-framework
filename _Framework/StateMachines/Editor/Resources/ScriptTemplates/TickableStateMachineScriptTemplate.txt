@@ -14,10 +14,22 @@ public sealed class #SCRIPTNAME# : BaseTickableStateMachine
     
     protected override void SetUpTransitions() { }
     
+    protected override void OnInit() { }
+    
     protected override ITickableState ResolveStartState()
     {
         //TODO: Make sure to return a valid ITickableState, otherwise you will get an Exception.
         return null;
     }
+    
+    protected override void OnStart() { }
+        
+    protected override void OnEnabled() { }
+        
+    protected override void OnExit() { }
+        
+    protected override void OnDisabled() { }
+        
+    protected override void OnDestroyed() { }
 }
 #ROOTNAMESPACEEND#
