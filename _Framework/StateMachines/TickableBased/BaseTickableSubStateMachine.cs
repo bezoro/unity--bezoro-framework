@@ -80,19 +80,23 @@ namespace Bezoro.StateMachines
 		public void Exit()
 		{
 			OnExit();
-			_currentState.Exit();
 			AllTransitionsCeaseRelevant();
+			_currentState.Exit();
 		}
 
 		public void Disable()
 		{
 			OnDisable();
-			_currentState.Disable();
 			AllTransitionsCeaseRelevant();
+			_currentState.Disable();
 		}
 
-		public void Destroy() =>
+		public void Destroy()
+		{
 			OnDestroy();
+			AllTransitionsCeaseRelevant();
+			_currentState.Destroy();
+		}
 
 		public TickTransition TransitionsTo(ITickableState toState)
 		{
@@ -115,7 +119,6 @@ namespace Bezoro.StateMachines
 		/// <summary>
 		/// Called once in the lifetime of the object, when it is created.
 		/// Use it to register all <b>States</b> needed for the <b>SubStateMachine</b> to work.
-		/// /// Use it like 'Awake' in a MonoBehaviour.
 		/// </summary>
 		protected abstract void RegisterStates();
 
@@ -137,8 +140,10 @@ namespace Bezoro.StateMachines
 		/// </summary>
 		protected abstract ITickableState ResolveStartState();
 
+		
 		/// <summary>
-		/// Called when the <b>Owner</b> is <i>Enabled</i> while this object is still being executed.
+		/// Called when the <b>Owner</b> gets <i>Enabled</i> and was previously <i>Disabled</i>,
+		/// while this object is still being executed.
 		/// </summary>
 		protected abstract void OnEnable();
 
