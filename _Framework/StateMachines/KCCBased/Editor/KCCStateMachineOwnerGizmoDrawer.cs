@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace Bezoro.StateMachines.Editor
 {
-	public static class KCCStateMachineOwnerGizmoDrawer
+	internal static class KCCStateMachineOwnerGizmoDrawer
 	{
 		[DrawGizmo(GizmoType.Active)]
 		private static void DrawGizmos(KCCStateMachineOwner source, GizmoType gizmoType)

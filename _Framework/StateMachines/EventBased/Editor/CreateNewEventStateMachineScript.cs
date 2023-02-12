@@ -1,11 +1,14 @@
 ﻿using UnityEditor;
+using UnityEngine;
 using Bezoro.Core.Extensions;
 
 namespace Bezoro.StateMachines.Editor
 {
-	public static class CreateNewEventStateMachineScript
+	internal static class CreateNewEventStateMachineScript
 	{
-		[MenuItem("Assets/Create/" + StateMachineEditorUtils.EventMenuName + "/New C# Script")]
+		[MenuItem("Assets/Create/" + StateMachineEditorUtils.EventMenuName + "/New C# Script",
+				  false,
+				  0)]
 		private static void CreateScript()
 		{
 			var guids = AssetDatabase.FindAssets(StateMachineEditorUtils
@@ -14,8 +17,9 @@ namespace Bezoro.StateMachines.Editor
 			if (guids.IsNullOrEmpty())
 				return;
 
-			var path = AssetDatabase.GUIDToAssetPath(guids[0]);
-			ProjectWindowUtil.CreateScriptAssetFromTemplateFile(path, "newEventStateMachine.cs");
+			var templatePath = AssetDatabase.GUIDToAssetPath(guids[0]);
+			ProjectWindowUtil.CreateScriptAssetFromTemplateFile(templatePath,
+															    "newEventStateMachine.cs");
 		}
 	}
 }

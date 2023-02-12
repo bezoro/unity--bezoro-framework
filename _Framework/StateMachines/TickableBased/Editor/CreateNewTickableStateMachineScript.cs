@@ -3,9 +3,11 @@ using Bezoro.Core.Extensions;
 
 namespace Bezoro.StateMachines.Editor
 {
-	public static class CreateNewTickableStateMachineScript
+	internal static class CreateNewTickableStateMachineScript
 	{
-		[MenuItem("Assets/Create/" + StateMachineEditorUtils.TickableMenuName + "/New C# Script")]
+		[MenuItem("Assets/Create/" + StateMachineEditorUtils.TickableMenuName + "/New C# Script",
+				  false,
+				  0)]
 		private static void CreateScript()
 		{
 			var guids = AssetDatabase.FindAssets(StateMachineEditorUtils
@@ -14,8 +16,9 @@ namespace Bezoro.StateMachines.Editor
 			if (guids.IsNullOrEmpty())
 				return;
 
-			var path = AssetDatabase.GUIDToAssetPath(guids[0]);
-			ProjectWindowUtil.CreateScriptAssetFromTemplateFile(path, "newTickableStateMachine.cs");
+			var templatePath = AssetDatabase.GUIDToAssetPath(guids[0]);
+			ProjectWindowUtil.CreateScriptAssetFromTemplateFile(templatePath,
+															    "newTickableStateMachine.cs");
 		}
 	}
 }
