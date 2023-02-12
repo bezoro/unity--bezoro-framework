@@ -31,12 +31,12 @@ namespace Bezoro.StateMachines
 		protected abstract void OnInit();
 
 		/// <summary>
-		/// Called when the <b>State</b> it belongs to is <i>Entered</i>.
+		/// Called when the <b>State</b> it belongs to is <i>Entered</i> or <i>Enabled</i>.
 		/// </summary>
 		protected abstract void OnBecomeRelevant();
 
 		/// <summary>
-		/// Called when the <b>State</b> it belongs to is <i>Exited</i>.
+		/// Called when the <b>State</b> it belongs to is <i>Exited</i>, <i>Disabled</i> or <i>Destroyed</i>.
 		/// </summary>
 		protected abstract void OnCeaseRelevant();
 
