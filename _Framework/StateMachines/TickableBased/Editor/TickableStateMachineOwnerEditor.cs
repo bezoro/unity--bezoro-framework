@@ -7,7 +7,7 @@ using Bezoro.Core.Editor.Extensions;
 namespace Bezoro.StateMachines.Editor
 {
 	[CustomEditor(typeof(TickableStateMachineOwner), true)]
-	public class TickableStateMachineOwnerEditor : OdinEditor
+	internal class TickableStateMachineOwnerEditor : OdinEditor
 	{
 		private TickableStateMachineOwner _obj;
 

@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace Bezoro.StateMachines.Editor
 {
-	public static class TickableStateMachineOwnerGizmoDrawer
+	internal static class TickableStateMachineOwnerGizmoDrawer
 	{
 		[DrawGizmo(GizmoType.Active)]
 		private static void DrawGizmos(TickableStateMachineOwner source, GizmoType gizmoType)
