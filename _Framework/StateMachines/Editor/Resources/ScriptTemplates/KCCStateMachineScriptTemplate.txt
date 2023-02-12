@@ -14,10 +14,22 @@ public sealed class #SCRIPTNAME# : BaseKCCStateMachine
     
     protected override void SetUpTransitions() { }
     
+    protected override void OnInit() { }
+    
     protected override IKCCState ResolveStartState()
     {
         //TODO: Make sure to return a valid IKCCState, otherwise you will get an Exception.
         return null;
     }
+    
+    protected override void OnStart() { }
+            
+    protected override void OnEnabled() { }
+            
+    protected override void OnExit() { }
+            
+    protected override void OnDisabled() { }
+            
+    protected override void OnDestroyed() { }
 }
 #ROOTNAMESPACEEND#
