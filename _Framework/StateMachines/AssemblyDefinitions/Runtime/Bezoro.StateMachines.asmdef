@@ -2,7 +2,7 @@
     "name": "Bezoro.StateMachines",
     "rootNamespace": "Bezoro.StateMachines",
     "references": [
-        "GUID:d4de13d108091124ab7b74b8d95ec9f6",
+        "GUID:b5120e6e7c923514e83c2ac656701190",
         "GUID:3425d614f9c95a249bba44bc0d17f503"
     ],
     "includePlatforms": [],
