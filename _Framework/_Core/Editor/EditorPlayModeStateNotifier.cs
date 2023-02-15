@@ -5,12 +5,20 @@ namespace Bezoro.Core.Editor
 	[InitializeOnLoad]
 	public static class EditorPlayModeStateNotifier
 	{
-		public static PlayModeStateChange PlayModeState { get; private set; }
+		static EditorPlayModeStateNotifier()
+		{
+			if (Initialized)
+				return;
 
-		static EditorPlayModeStateNotifier() =>
 			EditorApplication.playModeStateChanged += OnPlayModeChanged;
+			Initialized = true;
+		}
+
+		public static PlayModeStateChange PlayModeState { get; private set; }
 
 		private static void OnPlayModeChanged(PlayModeStateChange playModeStateChange) =>
 			PlayModeState = playModeStateChange;
+
+		private static readonly bool Initialized;
 	}
 }
