@@ -96,7 +96,7 @@ namespace Bezoro.Core.Editor
 						 "Ok"
 						))
 				{
-					EditorManipulator.ReopenProject();
+					EditorHelpers.ReopenProject();
 				}
 			}
 		}

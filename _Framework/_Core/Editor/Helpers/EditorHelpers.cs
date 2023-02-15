@@ -3,7 +3,7 @@ using UnityEditor;
 
 namespace Bezoro.Core.Editor
 {
-	public static class EditorManipulator
+	public static class EditorHelpers
 	{
 		public static void ReopenProject() =>
 			EditorApplication.OpenProject(Directory.GetCurrentDirectory());
