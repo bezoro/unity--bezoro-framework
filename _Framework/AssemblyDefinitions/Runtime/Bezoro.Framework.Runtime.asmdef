@@ -1,16 +1,16 @@
 {
-    "name": "Bezoro.Framework.Runtime",
-    "rootNamespace": "",
-    "references": [
+  "name": "Bezoro.Framework.Runtime",
+  "rootNamespace": "Bezoro.Core",
+  "references": [
         "GUID:a7397cecbf8cd414c9f5add2cde8c5f9"
-    ],
-    "includePlatforms": [],
-    "excludePlatforms": [],
-    "allowUnsafeCode": false,
-    "overrideReferences": false,
-    "precompiledReferences": [],
-    "autoReferenced": true,
-    "defineConstraints": [],
-    "versionDefines": [],
-    "noEngineReferences": false
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
 }

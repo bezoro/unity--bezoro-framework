@@ -1,6 +1,6 @@
 {
     "name": "Bezoro.Framework.Editor",
-    "rootNamespace": "",
+    "rootNamespace": "Bezoro.Core.Editor",
     "references": [
         "GUID:b5120e6e7c923514e83c2ac656701190",
         "GUID:f51ebe6a0ceec4240a699833d6309b23"
