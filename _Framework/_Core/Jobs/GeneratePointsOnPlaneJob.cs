@@ -62,24 +62,19 @@ namespace Bezoro.Core
 
 		public void Execute(int index)
 		{
-			// If both NumPointsX and NumPointsY are 0, return early
 			if (NumPointsWidth <= 0 && NumPointsHeight <= 0)
 				return;
 
-			// Calculate the index of the point in each dimension
 			var row = index / NumPointsWidth;
 			var column = index % NumPointsWidth;
 
-			// Calculate the step size for each dimension
 			var stepSizeX = Width / (NumPointsWidth - 1);
 			var stepSizeY = Height / (NumPointsHeight - 1);
 
-			// Calculate the coordinates of the point
 			var point = Center +
 						(Width * 0.5f - column * stepSizeX) * RightAxis +
 						(Height * 0.5f - row * stepSizeY) * UpAxis;
 
-			// Store the generated point in the array
 			ResultPoints[index] = point;
 		}
 	}
