@@ -7,14 +7,14 @@ namespace Bezoro
 {
 	public static class PointGenerationHelpers
 	{
-		public static void Generate2DRectanglePointsPersistent
+		public static void GeneratePointsOnPlanePersistent
 		(float3 center,
 		 float width,
 		 float height,
 		 int numPointsWidth,
 		 int numPointsHeight,
-		 float3 transformRight,
-		 float3 transformUp,
+		 float3 rightAxis,
+		 float3 upAxis,
 		 ref NativeArray<float3> resultPoints,
 		 int batchCount = 64)
 		{
@@ -30,8 +30,8 @@ namespace Bezoro
 				resultPoints = new NativeArray<float3>(totalPoints, Allocator.Persistent);
 			}
 
-			transformRight = math.normalize(transformRight);
-			transformUp = math.normalize(transformUp);
+			rightAxis = math.normalize(rightAxis);
+			upAxis = math.normalize(upAxis);
 			var generate2DRectanglePointsJob = new GeneratePointsOnPlaneJob()
 											   {
 												   Center = center,
@@ -39,8 +39,8 @@ namespace Bezoro
 												   Height = height,
 												   NumPointsWidth = numPointsWidth,
 												   NumPointsHeight = numPointsHeight,
-												   RightAxis = transformRight,
-												   UpAxis = transformUp,
+												   RightAxis = rightAxis,
+												   UpAxis = upAxis,
 												   ResultPoints = resultPoints
 											   };
 
