@@ -32,19 +32,19 @@ namespace Bezoro
 
 			rightAxis = math.normalize(rightAxis);
 			upAxis = math.normalize(upAxis);
-			var generate2DRectanglePointsJob = new GeneratePointsOnPlaneJob()
-											   {
-												   Center = center,
-												   Width = width,
-												   Height = height,
-												   NumPointsWidth = numPointsWidth,
-												   NumPointsHeight = numPointsHeight,
-												   RightAxis = rightAxis,
-												   UpAxis = upAxis,
-												   ResultPoints = resultPoints
-											   };
+			var generatePointsOnPlaneJob = new GeneratePointsOnPlaneJob()
+										   {
+											   Center = center,
+											   Width = width,
+											   Height = height,
+											   NumPointsWidth = numPointsWidth,
+											   NumPointsHeight = numPointsHeight,
+											   RightAxis = rightAxis,
+											   UpAxis = upAxis,
+											   ResultPoints = resultPoints
+										   };
 
-			generate2DRectanglePointsJob.Schedule(totalPoints, batchCount).Complete();
+			generatePointsOnPlaneJob.Schedule(totalPoints, batchCount).Complete();
 		}
 	}
 }
