@@ -19,7 +19,7 @@ namespace Bezoro.Core.Helpers
 		 int batchCount = 64)
 		{
 			var totalPoints = numPointsWidth * numPointsHeight;
-			if (totalPoints <= 0 || resultPoints.Length == 0)
+			if (totalPoints <= 0)
 				return;
 
 			if (resultPoints.Length != totalPoints)
@@ -53,7 +53,7 @@ namespace Bezoro.Core.Helpers
 		 ref NativeArray<RaycastCommand> commands,
 		 int batchCount = 64)
 		{
-			if (origins.Length == 0 || commands.Length == 0)
+			if (origins.Length == 0)
 				return;
 
 			if (origins.Length != commands.Length)
@@ -79,7 +79,7 @@ namespace Bezoro.Core.Helpers
 		 ref NativeArray<RaycastHit> hits,
 		 int minCommandsPerJob = 1)
 		{
-			if (commands.Length == 0 || hits.Length == 0)
+			if (commands.Length == 0)
 				return;
 
 			if (commands.Length != hits.Length)
@@ -104,7 +104,7 @@ namespace Bezoro.Core.Helpers
 		 ref NativeArray<RaycastHit> validHits,
 		 int batchCount = 64)
 		{
-			if (hits.Length == 0 || validHits.Length == 0)
+			if (hits.Length == 0)
 				return;
 
 			if (hits.Length != validHits.Length)
