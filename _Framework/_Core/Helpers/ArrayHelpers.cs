@@ -6,15 +6,23 @@ namespace Bezoro.Core.Helpers
 	public static class ArrayHelpers
 	{
 		public static void Add<T>(ref T[] array, T element)
+		where T : class =>
+			Add(ref array, element, out _);
+
+		public static void Add<T>(ref T[] array, T element, out int index)
 		where T : class
 		{
 			if (element == null)
+			{
+				index = -1;
 				return;
+			}
 
 			if (array.IsNullOrEmpty())
 			{
 				Array.Resize(ref array, 1);
 				array[0] = element;
+				index = 0;
 				return;
 			}
 
@@ -24,12 +32,14 @@ namespace Bezoro.Core.Helpers
 					continue;
 
 				array[i] = element;
+				index = i;
 				return;
 			}
 
 			var oldLength = array.Length;
 			Array.Resize(ref array, array.Length * 2);
 			array[oldLength] = element;
+			index = oldLength;
 		}
 
 		public static void Merge<T>(T[] from, ref T[] to)
@@ -70,7 +80,7 @@ namespace Bezoro.Core.Helpers
 			{
 				var index = 0;
 				if (from is UnityEngine.Object[] fromUnityObjects &&
-				    to is UnityEngine.Object[] toUnityObjects)
+					to is UnityEngine.Object[] toUnityObjects)
 				{
 					for (var i = 0; i < toUnityObjects.Length; i++)
 					{
