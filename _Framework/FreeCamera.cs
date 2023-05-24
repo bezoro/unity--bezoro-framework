@@ -4,8 +4,11 @@ namespace Bezoro
 {
 	public class FreeCamera : MonoBehaviour
 	{
-		private void Awake() =>
+		private void Awake()
+		{
 			enabled = enableInputCapture;
+			_cachedTransform = transform;
+		}
 
 		private void OnEnable()
 		{
@@ -32,8 +35,9 @@ namespace Bezoro
 
 			_inputCaptured = true;
 
-			_yaw = transform.eulerAngles.y;
-			_pitch = transform.eulerAngles.x;
+			var eulerAngles = _cachedTransform.eulerAngles;
+			_yaw = eulerAngles.y;
+			_pitch = eulerAngles.x;
 		}
 
 		private void ReleaseInput()
@@ -81,7 +85,6 @@ namespace Bezoro
 
 				if (!holdRightMouseCapture && Input.GetKeyDown(KeyCode.Escape))
 					ReleaseInput();
-
 				else if (holdRightMouseCapture && Input.GetMouseButtonUp(1))
 					ReleaseInput();
 			}
@@ -96,8 +99,9 @@ namespace Bezoro
 			transform.rotation = Quaternion.AngleAxis(_yaw, Vector3.up) *
 								 Quaternion.AngleAxis(_pitch, Vector3.right);
 
-			transform.eulerAngles =
-				new Vector3(transform.eulerAngles.x, transform.eulerAngles.y, cameraRoll);
+			var eulerAngles = _cachedTransform.eulerAngles;
+			_cachedTransform.eulerAngles =
+				new Vector3(eulerAngles.x, eulerAngles.y, cameraRoll);
 
 			var speed = Time.deltaTime *
 						(Input.GetKey(KeyCode.LeftShift) ? sprintSpeed : moveSpeed);
@@ -110,20 +114,23 @@ namespace Bezoro
 					 ((Input.GetKey(KeyCode.E) ? 1f : 0f) - (Input.GetKey(KeyCode.Q) ? 1f : 0f));
 
 			transform.position +=
-				transform.forward * forward + transform.right * right + Vector3.up * up;
+				_cachedTransform.forward * forward +
+				_cachedTransform.right * right +
+				Vector3.up * up;
 		}
 
 		public void RefreshCameraRoll(float roll)
 		{
 			cameraRoll = roll;
+			var eulerAngles = _cachedTransform.eulerAngles;
 			transform.eulerAngles =
-				new Vector3(transform.eulerAngles.x, transform.eulerAngles.y, cameraRoll);
+				new Vector3(eulerAngles.x, eulerAngles.y, cameraRoll);
 		}
 
 		[SerializeField]
 		private bool enableInputCapture = true;
 		[SerializeField]
-		private bool lockAndHideCursor = false;
+		private bool lockAndHideCursor;
 		[SerializeField]
 		private bool holdRightMouseCapture = true;
 
@@ -138,11 +145,12 @@ namespace Bezoro
 		[SerializeField]
 		private float speedIncreaseValue = 100f;
 		[SerializeField]
-		private float cameraRoll = 0f;
+		private float cameraRoll;
 
 		private bool _inputCaptured;
 		private float _yaw;
 		private float _pitch;
+		private Transform _cachedTransform;
 
 		private const string ScrollWheelKey = "Mouse ScrollWheel";
 		private const string MouseXKey = "Mouse X";
