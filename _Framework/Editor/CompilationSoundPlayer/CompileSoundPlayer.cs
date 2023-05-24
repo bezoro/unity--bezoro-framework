@@ -58,7 +58,7 @@ namespace Bezoro.Editor
 		private const string AudioClipType = "t:audioclip ";
 		private const string StartCompilationSFXName = "SFX_StartCompilation";
 		private const string EndCompilationSFXName = "SFX_EndCompilation";
-		private const string Path = "Assets/_Shared-Code/_Framework/Editor/CompilationSoundPlayer";
+		private const string Path = "Assets/_SharedCode/_Framework/Editor/CompilationSoundPlayer";
 
 		private static readonly bool Initialized;
 	}
