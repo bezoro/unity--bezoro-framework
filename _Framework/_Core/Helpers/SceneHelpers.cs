@@ -16,5 +16,41 @@ namespace Bezoro.Core.Helpers
 				ArrayHelpers.Merge(scene.GetRootGameObjects(), ref results);
 			}
 		}
+
+		public static bool IsSceneAlreadyOpenByPath(string path, out Scene scene, out int index)
+		{
+			for (var i = 0; i < SceneManager.sceneCount; i++)
+			{
+				var sc = SceneManager.GetSceneAt(i);
+				if (sc.path != path)
+					continue;
+
+				scene = sc;
+				index = i;
+				return true;
+			}
+
+			scene = default;
+			index = -1;
+			return false;
+		}
+
+		public static bool IsSceneAlreadyOpenByName(string name, out Scene scene, out int index)
+		{
+			for (var i = 0; i < SceneManager.sceneCount; i++)
+			{
+				var sc = SceneManager.GetSceneAt(i);
+				if (sc.name != name)
+					continue;
+
+				scene = sc;
+				index = i;
+				return true;
+			}
+
+			scene = default;
+			index = -1;
+			return false;
+		}
 	}
 }
