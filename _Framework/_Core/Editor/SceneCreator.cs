@@ -38,7 +38,8 @@ namespace Bezoro.Core.Editor
 		}
 
 		[MenuItem(MenuPath, true)]
-		private static bool Validate_Create() { return Selection.activeGameObject is not null; }
+		private static bool Validate_Create() =>
+			Selection.activeGameObject is not null;
 
 		private const string MenuPath = "Bezoro/Scene Creator/Create Scene From Selected Hierarchy";
 		private const string NewSceneName = "NewScene";
