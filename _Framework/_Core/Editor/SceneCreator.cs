@@ -1,5 +1,6 @@
 using UnityEditor;
 using UnityEngine;
+using Bezoro.Core.Extensions;
 using UnityEditor.SceneManagement;
 using UnityEngine.SceneManagement;
 
@@ -16,7 +17,7 @@ namespace Bezoro.Core.Editor
 											NewSceneName,
 											"unity");
 
-			if (string.IsNullOrEmpty(savePath))
+			if (savePath.IsNullOrEmpty())
 				return;
 
 			CreateSceneAssetFromSelection(savePath);
