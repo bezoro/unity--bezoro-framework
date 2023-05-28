@@ -1,6 +1,6 @@
 ﻿using UnityEditor;
 
-namespace Bezoro.Core.Editor
+namespace Bezoro.Framework.Core.Editor
 {
 	[InitializeOnLoad]
 	public static class EditorPlayModeStateNotifier

@@ -1,6 +1,6 @@
 ﻿using UnityEditor;
 
-namespace Bezoro.Core.Editor.Extensions
+namespace Bezoro.Framework.Core.Editor.Extensions
 {
 	public static class SerializedPropertyExtensions
 	{

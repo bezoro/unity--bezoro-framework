@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace Bezoro.StateMachines
+namespace Bezoro.Framework.StateMachines
 {
 	[DisallowMultipleComponent]
 	public sealed class EventStateMachineOwner : MonoBehaviour

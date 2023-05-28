@@ -1,7 +1,7 @@
 ﻿using System;
-using Bezoro.Core.Extensions;
+using Bezoro.Framework.Core.Extensions;
 
-namespace Bezoro.Core.Helpers
+namespace Bezoro.Framework.Core.Helpers
 {
 	public static class ArrayHelpers
 	{

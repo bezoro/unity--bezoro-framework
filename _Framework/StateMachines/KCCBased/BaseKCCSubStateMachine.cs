@@ -1,10 +1,10 @@
 ﻿using System;
 using UnityEngine;
-using Bezoro.Core.Helpers;
 using System.Collections.Generic;
 using KinematicCharacterController;
+using Bezoro.Framework.Core.Helpers;
 
-namespace Bezoro.StateMachines
+namespace Bezoro.Framework.StateMachines
 {
 	public abstract class BaseKCCSubStateMachine :
 		IKCCStateMachine, IKCCState

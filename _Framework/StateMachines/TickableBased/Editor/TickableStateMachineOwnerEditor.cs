@@ -1,10 +1,10 @@
-﻿using Bezoro.Core;
-using UnityEditor;
+﻿using UnityEditor;
 using UnityEngine;
+using Bezoro.Framework.Core;
 using Sirenix.OdinInspector.Editor;
-using Bezoro.Core.Editor.Extensions;
+using Bezoro.Framework.Core.Editor.Extensions;
 
-namespace Bezoro.StateMachines.Editor
+namespace Bezoro.Framework.StateMachines.Editor
 {
 	[CustomEditor(typeof(TickableStateMachineOwner), true)]
 	internal class TickableStateMachineOwnerEditor : OdinEditor

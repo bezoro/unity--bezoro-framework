@@ -1,10 +1,10 @@
-﻿using Bezoro.Core;
-using UnityEngine;
+﻿using UnityEngine;
 using Sirenix.OdinInspector;
+using Bezoro.Framework.Core;
 using System.Collections.Generic;
 using KinematicCharacterController;
 
-namespace Bezoro.StateMachines
+namespace Bezoro.Framework.StateMachines
 {
 	[DisallowMultipleComponent]
 	[RequireComponent(typeof(KinematicCharacterMotor))]

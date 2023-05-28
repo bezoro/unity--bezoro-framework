@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using KinematicCharacterController;
 
-namespace Bezoro.StateMachines
+namespace Bezoro.Framework.StateMachines
 {
 	public abstract class BaseKCCStateMachine : ScriptableObject,
 		IKCCStateMachine

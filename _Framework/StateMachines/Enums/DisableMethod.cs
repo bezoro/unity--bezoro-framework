@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Bezoro.StateMachines
+namespace Bezoro.Framework.StateMachines
 {
 	[Tooltip("What to do when Disabling the State Machine./n" +
 			 "Restart = Restart as if it just started for the first time./n" +

@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace Bezoro.Core.Extensions
+namespace Bezoro.Framework.Core.Extensions
 {
 	public static class ArrayExtensions
 	{

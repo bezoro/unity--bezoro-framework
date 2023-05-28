@@ -1,7 +1,7 @@
-﻿using Bezoro.Core.Singletons;
-using UnityEngine;
+﻿using UnityEngine;
+using Bezoro.Framework.Core.Singletons;
 
-namespace Bezoro.Core
+namespace Bezoro.Framework.Core
 {
 	public abstract class AIAgent : MonoBehaviour
 	{

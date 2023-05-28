@@ -1,7 +1,7 @@
 ﻿using System.IO;
 using UnityEditor;
 
-namespace Bezoro.Core.Editor
+namespace Bezoro.Framework.Core.Editor.Helpers
 {
 	public static class EditorHelpers
 	{

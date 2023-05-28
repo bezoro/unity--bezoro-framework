@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.Assertions;
 
-namespace Bezoro.Core.Helpers
+namespace Bezoro.Framework.Core.Helpers
 {
 	public static class TransformHelpers
 	{

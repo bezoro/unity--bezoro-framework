@@ -1,4 +1,4 @@
-﻿namespace Bezoro.StateMachines
+﻿namespace Bezoro.Framework.StateMachines
 {
 	public interface IState
 	{

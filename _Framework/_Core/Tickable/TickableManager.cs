@@ -3,7 +3,7 @@ using UnityEngine;
 using JetBrains.Annotations;
 using System.Collections.Generic;
 
-namespace Bezoro.Core.Singletons
+namespace Bezoro.Framework.Core.Singletons
 {
 	public sealed class TickableManager : MonoBehaviour
 	{

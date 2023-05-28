@@ -1,4 +1,4 @@
-﻿namespace Bezoro.StateMachines
+﻿namespace Bezoro.Framework.StateMachines
 {
 	public interface IHasTransitions<T0, T1>
 	where T0 : ITransition

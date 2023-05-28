@@ -1,8 +1,8 @@
 ﻿using System;
 using UnityEngine;
-using Bezoro.Core.Singletons;
+using Bezoro.Framework.Core.Singletons;
 
-namespace Bezoro.Core
+namespace Bezoro.Framework.Core
 {
 	[SelectionBase]
 	public abstract class Tickable : MonoBehaviour

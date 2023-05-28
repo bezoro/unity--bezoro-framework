@@ -3,7 +3,7 @@ using Unity.Burst;
 using Unity.Collections;
 using Unity.Mathematics;
 
-namespace Bezoro.Core
+namespace Bezoro.Framework.Core.Jobs
 {
 	[BurstCompile]
 	public struct GeneratePointsOnPlaneJob : IJobParallelFor

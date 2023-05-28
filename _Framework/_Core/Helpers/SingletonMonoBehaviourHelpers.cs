@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace Bezoro.Core.Helpers
+namespace Bezoro.Framework.Core.Helpers
 {
 	public static class SingletonMonoBehaviourHelpers
 	{

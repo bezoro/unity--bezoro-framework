@@ -1,9 +1,9 @@
-﻿using Unity.Burst;
-using Unity.Collections;
-using Unity.Jobs;
+﻿using Unity.Jobs;
 using UnityEngine;
+using Unity.Burst;
+using Unity.Collections;
 
-namespace Bezoro
+namespace Bezoro.Framework.Core.Jobs
 {
 	[BurstCompile]
 	public struct CheckRaycastHitJob : IJobParallelFor
