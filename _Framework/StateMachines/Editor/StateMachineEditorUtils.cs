@@ -1,4 +1,4 @@
-﻿namespace Bezoro.StateMachines.Editor
+﻿namespace Bezoro.Framework.StateMachines.Editor
 {
 	public static class StateMachineEditorUtils
 	{

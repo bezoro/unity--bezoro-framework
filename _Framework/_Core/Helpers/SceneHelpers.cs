@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.SceneManagement;
 
-namespace Bezoro.Core.Helpers
+namespace Bezoro.Framework.Core.Helpers
 {
 	public static class SceneHelpers
 	{

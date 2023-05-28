@@ -3,7 +3,7 @@ using Unity.Jobs;
 using UnityEngine;
 using Unity.Collections;
 
-namespace Bezoro.Core
+namespace Bezoro.Framework.Core.Jobs
 {
 	public class RaycastCommandRaycaster : IDisposable
 	{

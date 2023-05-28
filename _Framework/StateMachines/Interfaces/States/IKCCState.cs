@@ -3,7 +3,7 @@ using UnityEngine;
 using System.Collections.Generic;
 using KinematicCharacterController;
 
-namespace Bezoro.StateMachines
+namespace Bezoro.Framework.StateMachines
 {
 	public interface IKCCState : IState, ITickable, IHasTransitions<KCCTransition, IKCCState>
 	{

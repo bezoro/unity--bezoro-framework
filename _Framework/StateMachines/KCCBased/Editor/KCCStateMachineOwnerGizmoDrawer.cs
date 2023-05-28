@@ -2,7 +2,7 @@
 using UnityEditor;
 using UnityEngine;
 
-namespace Bezoro.StateMachines.Editor
+namespace Bezoro.Framework.StateMachines.Editor
 {
 	internal static class KCCStateMachineOwnerGizmoDrawer
 	{

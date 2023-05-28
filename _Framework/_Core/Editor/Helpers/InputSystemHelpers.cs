@@ -2,7 +2,7 @@
 using UnityEditor;
 using UnityEngine;
 
-namespace Bezoro.Core.Editor.Helpers
+namespace Bezoro.Framework.Core.Editor.Helpers
 {
 	public static class InputSystemHelpers
 	{

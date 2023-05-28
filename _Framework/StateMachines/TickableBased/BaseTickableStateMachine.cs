@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Bezoro.StateMachines
+namespace Bezoro.Framework.StateMachines
 {
 	public abstract class BaseTickableStateMachine : ScriptableObject,
 		ITickableStateMachine

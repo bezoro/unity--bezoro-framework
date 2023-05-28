@@ -1,7 +1,7 @@
-﻿using Bezoro.Core;
-using UnityEngine;
+﻿using UnityEngine;
+using Bezoro.Framework.Core;
 
-namespace Bezoro.StateMachines
+namespace Bezoro.Framework.StateMachines
 {
 	[DisallowMultipleComponent]
 	public sealed class TickableStateMachineOwner : Tickable

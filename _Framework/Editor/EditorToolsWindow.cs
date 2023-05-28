@@ -1,10 +1,10 @@
 ﻿using System;
 using UnityEditor;
-using UnityEditor.SceneManagement;
 using UnityEngine;
+using UnityEditor.SceneManagement;
 using UnityEngine.SceneManagement;
 
-namespace Bezoro.Editor
+namespace Bezoro.Framework.Editor
 {
 	public class EditorToolsWindow : EditorWindow
 	{

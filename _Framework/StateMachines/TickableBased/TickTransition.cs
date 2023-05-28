@@ -1,7 +1,6 @@
-﻿using UnityEngine;
-using Bezoro.Core.Helpers;
+﻿using Bezoro.Framework.Core.Helpers;
 
-namespace Bezoro.StateMachines
+namespace Bezoro.Framework.StateMachines
 {
 	public class TickTransition : ITransition
 	{

@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace Bezoro
+namespace Bezoro.Framework
 {
 	public class FreeCamera : MonoBehaviour
 	{

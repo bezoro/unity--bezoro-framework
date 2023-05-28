@@ -1,7 +1,7 @@
 ﻿using System.Net.Http;
 using System.Threading.Tasks;
 
-namespace Bezoro.Core.Helpers
+namespace Bezoro.Framework.Core.Editor.Helpers
 {
 	public static class UrlHelpers
 	{

@@ -1,7 +1,7 @@
 ﻿using UnityEditor;
-using Bezoro.Core.Extensions;
+using Bezoro.Framework.Core.Extensions;
 
-namespace Bezoro.StateMachines.Editor
+namespace Bezoro.Framework.StateMachines.Editor
 {
 	internal static class CreateNewKCCStateMachineScript
 	{

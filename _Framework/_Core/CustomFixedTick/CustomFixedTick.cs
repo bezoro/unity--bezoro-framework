@@ -1,7 +1,7 @@
 using System;
 using System.Diagnostics;
 
-namespace Bezoro.Core
+namespace Bezoro.Framework.Core
 {
 	public sealed class CustomFixedTick
 	{

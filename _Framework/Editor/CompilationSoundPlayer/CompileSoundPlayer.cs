@@ -3,8 +3,9 @@ using UnityEditor;
 using UnityEngine;
 using System.Reflection;
 using UnityEditor.Compilation;
+using Bezoro.Framework.Core.Editor.Helpers;
 
-namespace Bezoro.Editor
+namespace Bezoro.Framework.Editor
 {
 	[InitializeOnLoad]
 	internal static class CompileIndicator

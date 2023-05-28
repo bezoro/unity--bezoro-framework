@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
-using Bezoro.Core.Helpers;
+using Bezoro.Framework.Core.Helpers;
 
-namespace Bezoro.StateMachines
+namespace Bezoro.Framework.StateMachines
 {
 	public abstract class BaseEventSubStateMachine :
 		IEventStateMachine, IEventState

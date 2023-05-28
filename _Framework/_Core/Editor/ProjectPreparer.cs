@@ -1,11 +1,10 @@
 ﻿using System.IO;
-using Bezoro.Core.Editor.Extensions;
-using Bezoro.Core.Editor.Helpers;
-using Bezoro.Core.Helpers;
 using UnityEditor;
 using UnityEngine;
+using Bezoro.Framework.Core.Editor.Helpers;
+using Bezoro.Framework.Core.Editor.Extensions;
 
-namespace Bezoro.Core.Editor
+namespace Bezoro.Framework.Core.Editor
 {
 	public static class ProjectPreparer
 	{

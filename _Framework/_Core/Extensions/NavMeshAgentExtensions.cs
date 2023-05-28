@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.AI;
 
-namespace Bezoro.Core.Extensions
+namespace Bezoro.Framework.Core.Extensions
 {
 	public static class NavMeshAgentExtensions
 	{

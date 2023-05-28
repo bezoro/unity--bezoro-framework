@@ -1,24 +1,28 @@
 ﻿using UnityEditor;
+using UnityEngine;
 
-public static class AssetHelpers
+namespace Bezoro.Framework.Core.Editor.Helpers
 {
-	public static bool TryFindAsset<T>(string assetName, out T asset)
-	where T : UnityEngine.Object =>
-		TryFindAsset(assetName, new[] { "Assets" }, out asset);
-
-	public static bool TryFindAsset<T>(string assetName, string[] searchInFolders, out T asset)
-	where T : UnityEngine.Object
+	public static class AssetHelpers
 	{
-		var guids = AssetDatabase.FindAssets(assetName, searchInFolders);
-		foreach (var guid in guids)
-		{
-			var assetPath = AssetDatabase.GUIDToAssetPath(guid);
-			asset = AssetDatabase.LoadAssetAtPath<T>(assetPath);
-			if (asset != null)
-				return true;
-		}
+		public static bool TryFindAsset<T>(string assetName, out T asset)
+		where T : Object =>
+			TryFindAsset(assetName, new[] { "Assets" }, out asset);
 
-		asset = null;
-		return false;
+		public static bool TryFindAsset<T>(string assetName, string[] searchInFolders, out T asset)
+		where T : Object
+		{
+			var guids = AssetDatabase.FindAssets(assetName, searchInFolders);
+			foreach (var guid in guids)
+			{
+				var assetPath = AssetDatabase.GUIDToAssetPath(guid);
+				asset = AssetDatabase.LoadAssetAtPath<T>(assetPath);
+				if (asset != null)
+					return true;
+			}
+
+			asset = null;
+			return false;
+		}
 	}
 }

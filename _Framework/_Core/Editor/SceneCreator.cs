@@ -1,10 +1,10 @@
 using UnityEditor;
 using UnityEngine;
-using Bezoro.Core.Extensions;
 using UnityEditor.SceneManagement;
 using UnityEngine.SceneManagement;
+using Bezoro.Framework.Core.Extensions;
 
-namespace Bezoro.Core.Editor
+namespace Bezoro.Framework.Core.Editor
 {
 	public static class SceneCreator
 	{

@@ -1,17 +1,20 @@
 ﻿using UnityEditor;
 using UnityEditor.AddressableAssets;
-using UnityEditor.AddressableAssets.Settings;
 
-public static class AddressableHelpers
+namespace Bezoro.Framework.Core.Editor.Helpers
 {
-	public static void MarkAsAddressable(string assetPath, string groupName)
+	public static class AddressableHelpers
 	{
-		var settings = AddressableAssetSettingsDefaultObject.Settings;
-		var group = settings.FindGroup(groupName);
-		if (group == null)
+		public static void MarkAsAddressable(string assetPath, string groupName)
 		{
-			group = settings.CreateGroup(groupName, false, false, false, null);
+			var settings = AddressableAssetSettingsDefaultObject.Settings;
+			var group = settings.FindGroup(groupName);
+			if (group == null)
+			{
+				group = settings.CreateGroup(groupName, false, false, false, null);
+			}
+
+			settings.CreateOrMoveEntry(AssetDatabase.AssetPathToGUID(assetPath), group);
 		}
-		settings.CreateOrMoveEntry(AssetDatabase.AssetPathToGUID(assetPath), group);
 	}
 }

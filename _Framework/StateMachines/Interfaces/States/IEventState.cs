@@ -1,4 +1,4 @@
-﻿namespace Bezoro.StateMachines
+﻿namespace Bezoro.Framework.StateMachines
 {
 	public interface IEventState : IState, IHasTransitions<EventTransition, IEventState>
 	{
