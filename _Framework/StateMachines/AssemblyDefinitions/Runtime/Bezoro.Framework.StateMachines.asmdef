@@ -1,14 +1,11 @@
 {
-    "name": "Bezoro.Framework.Editor",
-    "rootNamespace": "Bezoro.Core.Editor",
+    "name": "Bezoro.Framework.StateMachines",
+    "rootNamespace": "Bezoro.StateMachines",
     "references": [
         "GUID:b5120e6e7c923514e83c2ac656701190",
-        "GUID:f51ebe6a0ceec4240a699833d6309b23",
-        "GUID:69448af7b92c7f342b298e06a37122aa"
+        "GUID:3425d614f9c95a249bba44bc0d17f503"
     ],
-    "includePlatforms": [
-        "Editor"
-    ],
+    "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": false,
