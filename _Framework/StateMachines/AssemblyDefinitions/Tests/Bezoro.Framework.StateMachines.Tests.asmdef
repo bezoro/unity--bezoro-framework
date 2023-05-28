@@ -1,12 +1,12 @@
 {
-    "name": "Bezoro.StateMachines.Tests",
-    "rootNamespace": "",
+    "name": "Bezoro.Framework.StateMachines.Tests",
+    "rootNamespace": "Bezoro.Framework.StateMachines.Tests",
     "references": [
-        "UnityEngine.TestRunner",
-        "UnityEditor.TestRunner",
-        "Bezoro.StateMachines",
-        "Bezoro.Core",
-        "Bezoro.Core.Editor"
+        "GUID:27619889b8ba8c24980f49ee34dbb44a",
+        "GUID:0acc523941302664db1f4e527237feb3",
+        "GUID:6d67c34254683f542bff65947aabed51",
+        "GUID:b5120e6e7c923514e83c2ac656701190",
+        "GUID:90e5f7a48cc76954a9f687705c8479bc"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

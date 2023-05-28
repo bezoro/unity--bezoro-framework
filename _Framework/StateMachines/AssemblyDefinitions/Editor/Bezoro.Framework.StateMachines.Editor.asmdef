@@ -1,6 +1,6 @@
 {
-    "name": "Bezoro.StateMachines.Editor",
-    "rootNamespace": "",
+    "name": "Bezoro.Framework.StateMachines.Editor",
+    "rootNamespace": "Bezoro.Framework.StateMachines.Editor",
     "references": [
         "GUID:90e5f7a48cc76954a9f687705c8479bc",
         "GUID:b5120e6e7c923514e83c2ac656701190",
