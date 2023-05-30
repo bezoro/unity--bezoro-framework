@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+﻿using System;
 
 namespace Bezoro.Framework.Core.Extensions
 {
@@ -7,9 +7,64 @@ namespace Bezoro.Framework.Core.Extensions
 		public static bool IsNullOrEmpty<T>(this T[] array) =>
 			(array == null || array.Length == 0);
 
+		public static bool Contains<T>(this T[] array, T element, out int index)
+		where T : class
+		{
+			if (array.IsNullOrEmpty())
+			{
+				index = -1;
+				return false;
+			}
+
+			if (array is UnityEngine.Object[] unityArray &&
+				element is UnityEngine.Object unityElement)
+			{
+				for (var i = 0; i < unityArray.Length; i++)
+				{
+					if (unityArray[i] != unityElement)
+						continue;
+
+					index = i;
+					return true;
+				}
+			}
+			else
+			{
+				for (var i = 0; i < array.Length; i++)
+				{
+					if (array[i] != element)
+						continue;
+
+					index = i;
+					return true;
+				}
+			}
+
+			index = -1;
+			return false;
+		}
+
+		public static bool ContainsStruct<T>(this T[] array, T element)
+		where T : struct, IEquatable<T>
+		{
+			if (array.IsNullOrEmpty())
+				return false;
+
+			for (var i = 0; i < array.Length; i++)
+			{
+				if (array[i].Equals(element))
+					return true;
+			}
+
+			return false;
+		}
+
 		public static int CountEmptyIndices<T>(this T[] array)
 		where T : class
 		{
+			if (array.IsNullOrEmpty())
+				return -1;
+
 			var numberOfEmptyIndices = 0;
 			if (array is UnityEngine.Object[] unityObjects)
 			{
@@ -30,8 +85,11 @@ namespace Bezoro.Framework.Core.Extensions
 		public static int CountFilledIndices<T>(this T[] array)
 		where T : class
 		{
+			if (array.IsNullOrEmpty())
+				return -1;
+
 			var numberOfFilledIndices = 0;
-			if (array is Object[] unityObjects)
+			if (array is UnityEngine.Object[] unityObjects)
 			{
 				for (var i = 0; i < unityObjects.Length; i++)
 					if (unityObjects[i] != null)
