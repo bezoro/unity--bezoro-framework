@@ -37,7 +37,7 @@ namespace Bezoro.Framework.Core.Helpers
 			}
 
 			var oldLength = array.Length;
-			Array.Resize(ref array, array.Length * 2);
+			MultiplySize(ref array, 2);
 			array[oldLength] = element;
 			index = oldLength;
 		}
