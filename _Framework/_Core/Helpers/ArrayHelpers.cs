@@ -42,6 +42,43 @@ namespace Bezoro.Framework.Core.Helpers
 			index = oldLength;
 		}
 
+		public static void Add<T>(ref T[] array, T element, ref int validSize, out int index)
+		where T : class
+		{
+			if (validSize < 0)
+			{
+				index = -1;
+				return;
+			}
+
+			if (element == null)
+			{
+				index = -1;
+				return;
+			}
+
+			if (array.IsNullOrEmpty())
+			{
+				Array.Resize(ref array, 1);
+				array[0] = element;
+				index = 0;
+				validSize = 1;
+				return;
+			}
+
+			if (validSize <= array.Length)
+			{
+				array[validSize - 1] = element;
+				index = validSize - 1;
+				return;
+			}
+
+			var oldLength = array.Length;
+			MultiplySize(ref array, 2);
+			array[oldLength] = element;
+			index = oldLength;
+		}
+		
 		public static void MultiplySize<T>(ref T[] array, int factor) =>
 			Array.Resize(ref array, array.Length * factor);
 
