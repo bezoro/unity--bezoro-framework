@@ -42,6 +42,9 @@ namespace Bezoro.Framework.Core.Helpers
 			index = oldLength;
 		}
 
+		public static void MultiplySize<T>(ref T[] array, int factor) =>
+			Array.Resize(ref array, array.Length * factor);
+
 		public static void AddUnique<T>(ref T[] array, T element, out int index)
 		where T : class
 		{
