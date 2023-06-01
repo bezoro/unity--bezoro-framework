@@ -12,7 +12,7 @@ namespace Bezoro.Framework.Core.Helpers
 		public static void Add<T>(ref T[] array, T element, out int index)
 		where T : class
 		{
-			if (element == null)
+			if (element.EqualsNull())
 			{
 				index = -1;
 				return;
@@ -20,15 +20,14 @@ namespace Bezoro.Framework.Core.Helpers
 
 			if (array.IsNullOrEmpty())
 			{
-				Array.Resize(ref array, 1);
-				array[0] = element;
+				CreateArrayAndAddFirstElement(ref array, element, false);
 				index = 0;
 				return;
 			}
 
 			for (var i = 0; i < array.Length; i++)
 			{
-				if (array[i] != null)
+				if (array[i].NotEqualsNull())
 					continue;
 
 				array[i] = element;
@@ -36,10 +35,16 @@ namespace Bezoro.Framework.Core.Helpers
 				return;
 			}
 
-			var oldLength = array.Length;
-			MultiplySize(ref array, 2);
-			array[oldLength] = element;
+			ResizeArrayAndAddElement(ref array, element, 2, out var oldLength);
 			index = oldLength;
+		}
+
+		private static void ResizeArrayAndAddElement<T>
+			(ref T[] array, T element, int factor, out int oldLength)
+		{
+			oldLength = array.Length;
+			MultiplySize(ref array, factor);
+			array[oldLength] = element;
 		}
 
 		public static void Add<T>(ref T[] array, T element, ref int validSize, out int index)
@@ -51,7 +56,7 @@ namespace Bezoro.Framework.Core.Helpers
 				return;
 			}
 
-			if (element == null)
+			if (element.IsNull())
 			{
 				index = -1;
 				return;
@@ -59,33 +64,38 @@ namespace Bezoro.Framework.Core.Helpers
 
 			if (array.IsNullOrEmpty())
 			{
-				Array.Resize(ref array, 1);
-				array[0] = element;
-				index = 0;
+				CreateArrayAndAddFirstElement(ref array, element);
 				validSize = 1;
+				index = 0;
 				return;
 			}
 
-			if (validSize <= array.Length)
+			if (validSize < array.Length)
 			{
-				array[validSize - 1] = element;
-				index = validSize - 1;
+				array[validSize] = element;
+				validSize++;
+				index = validSize;
 				return;
 			}
 
-			var oldLength = array.Length;
-			MultiplySize(ref array, 2);
-			array[oldLength] = element;
+			ResizeArrayAndAddElement(ref array, element, 2, ref validSize, out var oldLength);
 			index = oldLength;
 		}
-		
+
+		private static void ResizeArrayAndAddElement<T>
+			(ref T[] array, T element, int factor, ref int validSize, out int oldLength)
+		{
+			ResizeArrayAndAddElement(ref array, element, factor, out oldLength);
+			validSize++;
+		}
+
 		public static void MultiplySize<T>(ref T[] array, int factor) =>
 			Array.Resize(ref array, array.Length * factor);
 
 		public static void AddUnique<T>(ref T[] array, T element, out int index)
 		where T : class
 		{
-			if (element == null)
+			if (element.EqualsNull())
 			{
 				index = -1;
 				return;
@@ -93,7 +103,8 @@ namespace Bezoro.Framework.Core.Helpers
 
 			if (array.IsNullOrEmpty())
 			{
-				index = -1;
+				CreateArrayAndAddFirstElement(ref array, element);
+				index = 0;
 				return;
 			}
 
@@ -107,16 +118,10 @@ namespace Bezoro.Framework.Core.Helpers
 			index = i;
 		}
 
-		public static void AddUnique<T>(ref T[] array, T element, int validSize, out int index)
+		public static void AddUnique<T>(ref T[] array, T element, ref int validSize, out int index)
 		where T : class
 		{
-			if (validSize < 0)
-			{
-				index = -1;
-				return;
-			}
-
-			if (element == null)
+			if (element.EqualsNull())
 			{
 				index = -1;
 				return;
@@ -124,7 +129,9 @@ namespace Bezoro.Framework.Core.Helpers
 
 			if (array.IsNullOrEmpty())
 			{
-				index = -1;
+				CreateArrayAndAddFirstElement(ref array, element, false);
+				validSize = 1;
+				index = 0;
 				return;
 			}
 
@@ -134,8 +141,24 @@ namespace Bezoro.Framework.Core.Helpers
 				return;
 			}
 
-			Add(ref array, element, out var i);
+			Add(ref array, element, ref validSize, out var i);
 			index = i;
+		}
+
+		public static void CreateArrayAndAddFirstElement<T>
+			(ref T[] array, T element, bool safetyChecks = true)
+		{
+			if (safetyChecks)
+			{
+				if (element.EqualsNull())
+					return;
+
+				if (array.IsNotNullOrEmpty())
+					return;
+			}
+
+			Array.Resize(ref array, 1);
+			array[0] = element;
 		}
 
 		public static void Merge<T>(T[] from, ref T[] to)
@@ -147,9 +170,14 @@ namespace Bezoro.Framework.Core.Helpers
 			if (to.IsNullOrEmpty())
 			{
 				Array.Resize(ref to, from.Length);
-				for (var i = 0; i < to.Length; i++)
-					to[i] = from[i];
+				Copy(from, ref to, false);
+				return;
+			}
 
+			if (to.Length < from.Length)
+			{
+				Array.Resize(ref to, from.Length);
+				Copy(from, ref to, false);
 				return;
 			}
 
@@ -169,21 +197,20 @@ namespace Bezoro.Framework.Core.Helpers
 				newLength *= newLengthMultiplier;
 
 			Array.Resize(ref to, newLength);
-
 			MergeArrays(from, ref to);
 
 			void MergeArrays(T[] from, ref T[] to)
 			{
 				var index = 0;
-				if (from is UnityEngine.Object[] fromUnityObjects &&
-					to is UnityEngine.Object[] toUnityObjects)
+				if (from.IsUnityObject(out var fromUnityArray) &&
+					to.IsUnityObject(out var toUnityArray))
 				{
-					for (var i = 0; i < toUnityObjects.Length; i++)
+					for (var i = 0; i < toUnityArray.Length; i++)
 					{
-						if (toUnityObjects[i] != null)
+						if (toUnityArray[i].NotEqualsNull())
 							continue;
 
-						toUnityObjects[i] = fromUnityObjects[index];
+						toUnityArray[i] = fromUnityArray[index];
 						index++;
 						if (index > from.Length - 1)
 							return;
@@ -193,7 +220,7 @@ namespace Bezoro.Framework.Core.Helpers
 				{
 					for (var i = 0; i < to.Length; i++)
 					{
-						if (to[i] != null)
+						if (to[i].NotEqualsNull())
 							continue;
 
 						to[i] = from[index];
@@ -205,19 +232,41 @@ namespace Bezoro.Framework.Core.Helpers
 			}
 		}
 
-		public static void Remove<T>(ref T[] array, T element, out int index)
-		where T : class
+		public static void Copy<T>(T[] from, ref T[] to, bool safetyChecks = true)
 		{
-			if (element == null)
+			if (safetyChecks)
 			{
-				index = -1;
-				return;
+				if (from.IsNullOrEmpty())
+					return;
+
+				if (to.IsNullOrEmpty())
+					Array.Resize(ref to, from.Length);
+
+				if (to.Length < from.Length)
+					Array.Resize(ref to, from.Length);
 			}
 
-			if (array.IsNullOrEmpty())
+			for (var i = 0; i < to.Length; i++)
+				to[i] = from[i];
+		}
+
+		public static void Remove<T>
+			(ref T[] array, T element, out int index, bool safetyChecks = true)
+		where T : class
+		{
+			if (safetyChecks)
 			{
-				index = -1;
-				return;
+				if (element == null)
+				{
+					index = -1;
+					return;
+				}
+
+				if (array.IsNullOrEmpty())
+				{
+					index = -1;
+					return;
+				}
 			}
 
 			if (array.Contains(element, out var i))
@@ -230,38 +279,45 @@ namespace Bezoro.Framework.Core.Helpers
 			index = -1;
 		}
 
-		public static void Remove<T>(ref T[] array, T element, int validSize, out int index)
+		public static void Remove<T>
+			(ref T[] array, T element, ref int validSize, out int index, bool safetyChecks = true)
 		where T : class
 		{
-			if (validSize <= 0)
+			if (safetyChecks)
 			{
-				index = -1;
-				return;
+				if (validSize <= 0)
+				{
+					index = -1;
+					return;
+				}
+
+				if (element.EqualsNull())
+				{
+					index = -1;
+					return;
+				}
+
+				if (array.IsNullOrEmpty())
+				{
+					index = -1;
+					return;
+				}
 			}
 
-			if (element == null)
-			{
-				index = -1;
-				return;
-			}
-
-			if (array.IsNullOrEmpty())
-			{
-				index = -1;
-				return;
-			}
-
-			if (array.Contains(element, validSize, out var i))
+			if (array.Contains(element, validSize, out var i, false))
 			{
 				if (i == validSize - 1)
 				{
 					array[i] = default;
+					validSize = i;
 					index = i;
 					return;
 				}
 
-				array[i] = array[validSize - 1];
-				array[validSize - 1] = default;
+				array[i] = array[validSize];
+				array[validSize] = default;
+				validSize--;
+
 				index = i;
 				return;
 			}
@@ -276,6 +332,19 @@ namespace Bezoro.Framework.Core.Helpers
 				return;
 
 			for (var i = 0; i < array.Length; i++)
+				array[i] = default;
+		}
+
+		public static void Clear<T>(ref T[] array, int validSize)
+		where T : class
+		{
+			if (validSize <= 0)
+				return;
+
+			if (array.IsNullOrEmpty())
+				return;
+
+			for (var i = 0; i < validSize; i++)
 				array[i] = default;
 		}
 	}
