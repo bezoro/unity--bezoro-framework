@@ -10,6 +10,12 @@ namespace Bezoro.Framework.Core.Extensions
 		public static bool Contains<T>(this T[] array, T element, out int index)
 		where T : class
 		{
+			if (element == null)
+			{
+				index = -1;
+				return false;
+			}
+
 			if (array.IsNullOrEmpty())
 			{
 				index = -1;
