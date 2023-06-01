@@ -85,6 +85,18 @@ namespace Bezoro.Framework.Core.Helpers
 		public static void AddUnique<T>(ref T[] array, T element, out int index)
 		where T : class
 		{
+			if (element == null)
+			{
+				index = -1;
+				return;
+			}
+
+			if (array.IsNullOrEmpty())
+			{
+				index = -1;
+				return;
+			}
+
 			if (array.Contains(element, out _))
 			{
 				index = -1;
