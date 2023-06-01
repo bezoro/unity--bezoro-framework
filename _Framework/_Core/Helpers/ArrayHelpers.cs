@@ -146,6 +146,45 @@ namespace Bezoro.Framework.Core.Helpers
 			index = -1;
 		}
 
+		public static void Remove<T>(ref T[] array, T element, int validSize, out int index)
+		where T : class
+		{
+			if (validSize <= 0)
+			{
+				index = -1;
+				return;
+			}
+
+			if (element == null)
+			{
+				index = -1;
+				return;
+			}
+
+			if (array.IsNullOrEmpty())
+			{
+				index = -1;
+				return;
+			}
+
+			if (array.Contains(element, validSize, out var i))
+			{
+				if (i == validSize - 1)
+				{
+					array[i] = default;
+					index = i;
+					return;
+				}
+
+				array[i] = array[validSize - 1];
+				array[validSize - 1] = default;
+				index = i;
+				return;
+			}
+
+			index = -1;
+		}
+
 		public static void Clear<T>(ref T[] array)
 		where T : class
 		{
