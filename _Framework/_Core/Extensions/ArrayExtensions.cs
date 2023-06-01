@@ -50,6 +50,55 @@ namespace Bezoro.Framework.Core.Extensions
 			return false;
 		}
 
+		public static bool Contains<T>(this T[] array, T element, int validSize, out int index)
+		where T : class
+		{
+			if (validSize <= 0)
+			{
+				index = -1;
+				return false;
+			}
+
+			if (element == null)
+			{
+				index = -1;
+				return false;
+			}
+
+			if (array.IsNullOrEmpty())
+			{
+				index = -1;
+				return false;
+			}
+
+			if (array is UnityEngine.Object[] unityArray &&
+				element is UnityEngine.Object unityElement)
+			{
+				for (var i = 0; i < validSize; i++)
+				{
+					if (unityArray[i] != unityElement)
+						continue;
+
+					index = i;
+					return true;
+				}
+			}
+			else
+			{
+				for (var i = 0; i < array.Length; i++)
+				{
+					if (array[i] != element)
+						continue;
+
+					index = i;
+					return true;
+				}
+			}
+
+			index = -1;
+			return false;
+		}
+
 		public static bool ContainsStruct<T>(this T[] array, T element, out int index)
 		where T : struct, IEquatable<T>
 		{
