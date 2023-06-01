@@ -141,6 +141,7 @@ namespace Bezoro.Framework.Core.Helpers
 			{
 				array[i] = default;
 				index = i;
+				return;
 			}
 
 			index = -1;
