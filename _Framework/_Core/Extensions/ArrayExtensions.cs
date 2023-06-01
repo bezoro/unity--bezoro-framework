@@ -44,18 +44,25 @@ namespace Bezoro.Framework.Core.Extensions
 			return false;
 		}
 
-		public static bool ContainsStruct<T>(this T[] array, T element)
+		public static bool ContainsStruct<T>(this T[] array, T element, out int index)
 		where T : struct, IEquatable<T>
 		{
 			if (array.IsNullOrEmpty())
+			{
+				index = -1;
 				return false;
+			}
 
 			for (var i = 0; i < array.Length; i++)
 			{
-				if (array[i].Equals(element))
-					return true;
+				if (!array[i].Equals(element))
+					continue;
+
+				index = i;
+				return true;
 			}
 
+			index = -1;
 			return false;
 		}
 
