@@ -95,6 +95,37 @@ namespace Bezoro.Framework.Core.Helpers
 			index = i;
 		}
 
+		public static void AddUnique<T>(ref T[] array, T element, int validSize, out int index)
+		where T : class
+		{
+			if (validSize < 0)
+			{
+				index = -1;
+				return;
+			}
+
+			if (element == null)
+			{
+				index = -1;
+				return;
+			}
+
+			if (array.IsNullOrEmpty())
+			{
+				index = -1;
+				return;
+			}
+
+			if (array.Contains(element, validSize, out _))
+			{
+				index = -1;
+				return;
+			}
+
+			Add(ref array, element, out var i);
+			index = i;
+		}
+
 		public static void Merge<T>(T[] from, ref T[] to)
 		where T : class
 		{
