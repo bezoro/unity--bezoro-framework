@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
-using Bezoro.StateMachines;
-using Bezoro.StateMachines.Editor;
+using Bezoro.Framework.StateMachines;
+using Bezoro.Framework.StateMachines.Editor;
 
     #ROOTNAMESPACEBEGIN#
 [CreateAssetMenu(fileName = nameof(#SCRIPTNAME#),
