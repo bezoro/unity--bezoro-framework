@@ -106,6 +106,7 @@ namespace Bezoro.Framework.Core
 	}
 
 	[Flags]
+	[Tooltip("Which <b>Tick</b> to receive.")]
 	public enum TickType
 	{
 		Early = 1,
