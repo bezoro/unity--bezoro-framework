@@ -34,7 +34,7 @@ namespace Bezoro.Framework.StateMachines.Editor
 					var tickTypeProperty =
 						serializedObject.FindPropertyByAutoPropertyName("TickType");
 
-					tickTypeProperty.enumValueFlag += 8;
+					tickTypeProperty.enumValueFlag += (int)TickType.Late;
 					serializedObject.ApplyModifiedProperties();
 				}
 			}
