@@ -14,7 +14,8 @@ namespace Bezoro.Framework.Core.Jobs
 		}
 
 		public void AddRaycastCommand(Ray ray, float distance, int index) =>
-			_commands[index] = new RaycastCommand(ray.origin, ray.direction, distance);
+			_commands[index] =
+				new RaycastCommand(ray.origin, ray.direction, QueryParameters.Default);
 
 		public JobHandle ScheduleRaycastCommands() =>
 			RaycastCommand.ScheduleBatch(_commands, _results, 1);
