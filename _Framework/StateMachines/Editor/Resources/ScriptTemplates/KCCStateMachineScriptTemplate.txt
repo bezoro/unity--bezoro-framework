@@ -2,34 +2,32 @@
 using Bezoro.Framework.StateMachines;
 using Bezoro.Framework.StateMachines.Editor;
 
-    #ROOTNAMESPACEBEGIN#
-[CreateAssetMenu(fileName = nameof(#SCRIPTNAME#),
-			     menuName =
-			         StateMachineEditorUtils.KCCMenuName +
-                     "/" +
-                     nameof(#SCRIPTNAME#))]
-public sealed class #SCRIPTNAME# : BaseKCCStateMachine
-{
-    protected override void RegisterStates() { }
-    
-    protected override void SetUpTransitions() { }
-    
-    protected override void OnInit() { }
-    
-    protected override IKCCState ResolveStartState()
+#ROOTNAMESPACEBEGIN#
+    [CreateAssetMenu(fileName = nameof(#SCRIPTNAME#),
+                     menuName = StateMachineEditorUtils.KCCMenuName + "/" +
+								nameof(#SCRIPTNAME#))]
+    public sealed class #SCRIPTNAME# : BaseKCCStateMachine
     {
-        //TODO: Make sure to return a valid IKCCState, otherwise you will get an Exception.
-        return null;
+        protected override void RegisterStates() { }
+        
+        protected override void SetUpTransitions() { }
+        
+        protected override void OnInit() { }
+        
+        protected override IKCCState ResolveStartState()
+        {
+            //TODO: Make sure to return a valid IKCCState, otherwise you will get an Exception.
+            return null;
+        }
+        
+        protected override void OnStart() { }
+                
+        protected override void OnEnabled() { }
+                
+        protected override void OnExit() { }
+                
+        protected override void OnDisabled() { }
+                
+        protected override void OnDestroyed() { }
     }
-    
-    protected override void OnStart() { }
-            
-    protected override void OnEnabled() { }
-            
-    protected override void OnExit() { }
-            
-    protected override void OnDisabled() { }
-            
-    protected override void OnDestroyed() { }
-}
 #ROOTNAMESPACEEND#

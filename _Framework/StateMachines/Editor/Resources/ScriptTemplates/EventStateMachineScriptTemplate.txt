@@ -2,34 +2,32 @@
 using Bezoro.Framework.StateMachines;
 using Bezoro.Framework.StateMachines.Editor;
 
-    #ROOTNAMESPACEBEGIN#
-[CreateAssetMenu(fileName = nameof(#SCRIPTNAME#),
-			     menuName =
-			         StateMachineEditorUtils.EventMenuName +
-                     "/" +
-                     nameof(#SCRIPTNAME#))]
-public sealed class #SCRIPTNAME# : BaseEventStateMachine
-{
-    protected override void RegisterStates() { }
-    
-    protected override void SetUpTransitions() { }
-    
-    protected override void OnInit() { }
-    
-    protected override IEventState ResolveStartState()
+#ROOTNAMESPACEBEGIN#
+    [CreateAssetMenu(fileName = nameof(#SCRIPTNAME#),
+                     menuName = StateMachineEditorUtils.EventMenuName + "/" +
+                                nameof(#SCRIPTNAME#))]
+    public sealed class #SCRIPTNAME# : BaseEventStateMachine
     {
-    	//TODO: Make sure to return a valid IEventState, otherwise you will get an Exception.
-    	return null;
+        protected override void RegisterStates() { }
+        
+        protected override void SetUpTransitions() { }
+        
+        protected override void OnInit() { }
+        
+        protected override IEventState ResolveStartState()
+        {
+            //TODO: Make sure to return a valid IEventState, otherwise you will get an Exception.
+            return null;
+        }
+        
+        protected override void OnStart() { }
+        
+        protected override void OnEnabled() { }
+        
+        protected override void OnExit() { }
+        
+        protected override void OnDisabled() { }
+        
+        protected override void OnDestroyed() { }
     }
-    
-    protected override void OnStart() { }
-    
-    protected override void OnEnabled() { }
-    
-    protected override void OnExit() { }
-    
-    protected override void OnDisabled() { }
-    
-    protected override void OnDestroyed() { }
-}
 #ROOTNAMESPACEEND#
