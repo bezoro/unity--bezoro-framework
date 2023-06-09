@@ -18,6 +18,7 @@ namespace Bezoro.Framework.Core.Jobs
 		public NativeArray<RaycastCommand> Commands;
 
 		public void Execute(int index) =>
-			Commands[index] = new RaycastCommand(Origins[index], Direction);
+			Commands[index] =
+				new RaycastCommand(Origins[index], Direction, QueryParameters.Default);
 	}
 }
