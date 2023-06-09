@@ -21,8 +21,10 @@ namespace Bezoro.Framework.Core.Helpers
 			var unitVectorToPosition = math.normalize(vectorToPosition);
 			var dot = math.dot(visionForwardVector, unitVectorToPosition);
 			var angleRadians = math.radians(visionAngleDegrees);
+			var visionDistanceSquared = visionDistance * visionDistance;
+
 			return dot > 0.0f && math.abs(math.acos(dot)) < angleRadians &&
-				   math.lengthsq(vectorToPosition) < visionDistance;
+				   math.lengthsq(vectorToPosition) < visionDistanceSquared;
 		}
 	}
 }
