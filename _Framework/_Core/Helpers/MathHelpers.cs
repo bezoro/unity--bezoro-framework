@@ -26,5 +26,15 @@ namespace Bezoro.Framework.Core.Helpers
 			return dot > 0.0f && math.abs(math.acos(dot)) < angleRadians &&
 				   math.lengthsq(vectorToPosition) < visionDistanceSquared;
 		}
+		
+		public static float3 RandomPointOnCircle(float3 origin, float radius, uint randomSeed)
+		{
+			var angle = Random.CreateFromIndex(randomSeed).NextFloat() * math.PI * 2;
+			var x = math.cos(angle) * radius + origin.x;
+			var y = origin.y;
+			var z = math.sin(angle) * radius + origin.z;
+
+			return new float3(x, y, z);
+		}
 	}
 }
