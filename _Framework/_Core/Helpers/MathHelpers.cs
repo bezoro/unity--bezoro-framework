@@ -29,7 +29,8 @@ namespace Bezoro.Framework.Core.Helpers
 		
 		public static float3 RandomPointOnCircle(float3 origin, float radius, uint randomSeed)
 		{
-			var angle = Random.CreateFromIndex(randomSeed).NextFloat() * math.PI * 2;
+			var random = new Random(randomSeed);
+			var angle = random.NextFloat() * math.PI * 2;
 			var x = math.cos(angle) * radius + origin.x;
 			var y = origin.y;
 			var z = math.sin(angle) * radius + origin.z;
