@@ -2,6 +2,8 @@
     "name": "Bezoro.Framework.Unity",
     "rootNamespace": "Bezoro.Framework.Unity",
     "references": [
+        "GUID:3818b356cb5a2954f883526453e5f59d",
+        "GUID:3425d614f9c95a249bba44bc0d17f503",
         "GUID:2665a8d13d1b3f18800f46e256720795",
         "GUID:d8b63aba1907145bea998dd612889d6b",
         "GUID:75469ad4d38634e559750d17036d5f7c",
@@ -9,8 +11,7 @@
         "GUID:84651a3751eca9349aac36a66bba901b",
         "GUID:6055be8ebefd69e48b49212b09b47b2f",
         "GUID:caca889fed6088d40b22c2d7e2909c31",
-        "GUID:f51ebe6a0ceec4240a699833d6309b23",
-        "GUID:3425d614f9c95a249bba44bc0d17f503"
+        "GUID:f51ebe6a0ceec4240a699833d6309b23"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
