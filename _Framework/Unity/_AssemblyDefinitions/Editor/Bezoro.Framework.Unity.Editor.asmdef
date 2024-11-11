@@ -1,0 +1,27 @@
+{
+    "name": "Bezoro.Framework.Unity.Editor",
+    "rootNamespace": "Bezoro.Framework.Unity.Editor",
+    "references": [
+        "GUID:b5120e6e7c923514e83c2ac656701190",
+        "GUID:478a2357cc57436488a56e564b08d223",
+        "GUID:d8b63aba1907145bea998dd612889d6b",
+        "GUID:69448af7b92c7f342b298e06a37122aa",
+        "GUID:84651a3751eca9349aac36a66bba901b",
+        "GUID:e0cd26848372d4e5c891c569017e11f1",
+        "GUID:0acc523941302664db1f4e527237feb3",
+        "GUID:27619889b8ba8c24980f49ee34dbb44a",
+        "GUID:f51ebe6a0ceec4240a699833d6309b23",
+        "GUID:de4e6084e6d474788bb8c799d6b461ec"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
