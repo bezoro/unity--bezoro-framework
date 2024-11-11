@@ -15,11 +15,11 @@ namespace Bezoro.Framework.Unity.DI
 
 		public ServiceLocator()
 		{
-			_singletonServices = new ConcurrentDictionary<Type, IService>();
-			_lazySingletonServices = new ConcurrentDictionary<Type, Lazy<IService>>();
-			_transientServices = new ConcurrentDictionary<Type, Func<IService>>();
-			_scopedServices = new ConcurrentDictionary<Type, object>();
-			_disposableServices = new HashSet<IDisposable>();
+			_singletonServices     = new();
+			_lazySingletonServices = new();
+			_transientServices     = new();
+			_scopedServices        = new();
+			_disposableServices    = new();
 		}
 
 		public IServiceLocator RegisterService<TInterface, TImplementation>
@@ -31,33 +31,28 @@ namespace Bezoro.Framework.Unity.DI
 		where TInterface : IService
 		where TImplementation : class, TInterface
 		{
-			ValidationHelpers.ValidateObjectNotNull(factory);
-			ValidateLifespan(lifespan);
+			ValidationHelpers.ValidateObjectNotNull( factory );
+			ValidateLifespan( lifespan );
 
 			var interfaceType = typeof(TInterface);
 
-			if (IsServiceRegistered(interfaceType) && !replace)
+			if ( IsServiceRegistered( interfaceType ) && !replace )
 			{
-				throw new ServiceAlreadyRegisteredException(interfaceType);
+				throw new ServiceAlreadyRegisteredException( interfaceType );
 			}
 
 			switch ( lifespan )
 			{
-				case ServiceLifespan.Singleton:
-					RegisterSingletonService<TInterface, TImplementation>(factory);
-					break;
+				case ServiceLifespan.Singleton: RegisterSingletonService<TInterface, TImplementation>( factory ); break;
 
 				case ServiceLifespan.LazySingleton:
-					RegisterLazySingletonService<TInterface, TImplementation>(factory);
+					RegisterLazySingletonService<TInterface, TImplementation>( factory );
+
 					break;
 
-				case ServiceLifespan.Transient:
-					RegisterTransientService<TInterface, TImplementation>(factory);
-					break;
+				case ServiceLifespan.Transient: RegisterTransientService<TInterface, TImplementation>( factory ); break;
 
-				case ServiceLifespan.Scoped:
-					RegisterScopedService<TInterface, TImplementation>(factory);
-					break;
+				case ServiceLifespan.Scoped: RegisterScopedService<TInterface, TImplementation>( factory ); break;
 			}
 
 			return this;
@@ -67,61 +62,68 @@ namespace Bezoro.Framework.Unity.DI
 		{
 			var serviceType = typeof(T);
 
-			if (_singletonServices.TryGetValue(serviceType, out var singleton))
+			if ( _singletonServices.TryGetValue( serviceType, out var singleton ) )
 			{
 				return (T)singleton;
 			}
 
-			if (_lazySingletonServices.TryGetValue(serviceType, out var lazy))
+			if ( _lazySingletonServices.TryGetValue( serviceType, out var lazy ) )
 			{
 				return (T)lazy.Value;
 			}
 
-			if (_transientServices.TryGetValue(serviceType, out var transient))
+			if ( _transientServices.TryGetValue( serviceType, out var transient ) )
 			{
 				return (T)transient();
 			}
 
-			if (_scopedServices.TryGetValue(serviceType, out var scoped))
+			if ( _scopedServices.TryGetValue( serviceType, out var scoped ) )
 			{
 				return (T)scoped;
 			}
 
-			throw new ServiceNotFoundException(serviceType);
+			throw new ServiceNotFoundException( serviceType );
 		}
 
-		public bool IsServiceRegistered<T>() where T : IService
-		{
-			return IsServiceRegistered(typeof(T));
-		}
+		public bool IsServiceRegistered<T>() where T : IService => IsServiceRegistered( typeof(T) );
 
 		public void UnregisterService<T>() where T : IService
 		{
 			var serviceType = typeof(T);
 
-			if (_singletonServices.TryRemove(serviceType, out var singleton))
+			if ( _singletonServices.TryRemove( serviceType, out var singleton ) )
 			{
-				RemoveDisposableService(singleton);
+				RemoveDisposableService( singleton );
 			}
 
-			if (_lazySingletonServices.TryRemove(serviceType, out var lazy))
+			if ( _lazySingletonServices.TryRemove( serviceType, out var lazy ) )
 			{
-				RemoveDisposableService(lazy.Value);
+				RemoveDisposableService( lazy.Value );
 			}
 
-			_transientServices.TryRemove(serviceType, out _);
+			_transientServices.TryRemove( serviceType, out _ );
 
-			if (_scopedServices.TryRemove(serviceType, out var scoped))
+			if ( _scopedServices.TryRemove( serviceType, out var scoped ) )
 			{
-				RemoveDisposableService(scoped);
+				RemoveDisposableService( scoped );
 			}
 		}
 
 		public void Dispose()
 		{
-			foreach ( var disposable in _disposableServices )
+			foreach ( var service in _singletonServices.Values )
 			{
-				disposable.Dispose();
+				RemoveDisposableService( service );
+			}
+
+			foreach ( var lazy in _lazySingletonServices.Values )
+			{
+				RemoveDisposableService( lazy.Value );
+			}
+
+			foreach ( var service in _scopedServices.Values )
+			{
+				RemoveDisposableService( service );
 			}
 
 			_disposableServices.Clear();
@@ -131,16 +133,16 @@ namespace Bezoro.Framework.Unity.DI
 			_scopedServices.Clear();
 		}
 
-		private void RegisterSingletonService<TInterface, TImplementation>(Func<TImplementation> factory)
+		private void RegisterSingletonService<TInterface, TImplementation>( Func<TImplementation> factory )
 		where TInterface : IService
 		where TImplementation : class, TInterface
 		{
 			var instance = factory();
 			_singletonServices[typeof(TInterface)] = instance;
-			AddDisposableService(instance);
+			AddDisposableService( instance );
 		}
 
-		private void RegisterLazySingletonService<TInterface, TImplementation>(Func<TImplementation> factory)
+		private void RegisterLazySingletonService<TInterface, TImplementation>( Func<TImplementation> factory )
 		where TInterface : IService
 		where TImplementation : class, TInterface
 		{
@@ -149,7 +151,8 @@ namespace Bezoro.Framework.Unity.DI
 				() =>
 				{
 					var instance = factory();
-					AddDisposableService(instance);
+					AddDisposableService( instance );
+
 					return instance;
 				}
 			);
@@ -157,63 +160,62 @@ namespace Bezoro.Framework.Unity.DI
 			_lazySingletonServices[typeof(TInterface)] = lazy;
 		}
 
-		private void RegisterTransientService<TInterface, TImplementation>(Func<TImplementation> factory)
+		private void RegisterTransientService<TInterface, TImplementation>( Func<TImplementation> factory )
 		where TInterface : IService
 		where TImplementation : class, TInterface
 		{
 			_transientServices[typeof(TInterface)] = () =>
 			{
 				var instance = factory();
-				AddDisposableService(instance);
+				AddDisposableService( instance );
+
 				return instance;
 			};
 		}
 
-		private void RegisterScopedService<TInterface, TImplementation>(Func<TImplementation> factory)
+		private void RegisterScopedService<TInterface, TImplementation>( Func<TImplementation> factory )
 		where TInterface : IService
 		where TImplementation : class, TInterface
 		{
 			var instance = factory();
 			_scopedServices[typeof(TInterface)] = instance;
-			AddDisposableService(instance);
+			AddDisposableService( instance );
 		}
 
-		private bool IsServiceRegistered(Type serviceType)
-		{
-			return _singletonServices.ContainsKey
-					   (serviceType)
-				|| _lazySingletonServices.ContainsKey(serviceType)
-				|| _transientServices.ContainsKey(serviceType)
-				|| _scopedServices.ContainsKey(serviceType);
-		}
+		private bool IsServiceRegistered( Type serviceType ) =>
+			_singletonServices.ContainsKey
+				( serviceType )
+		 || _lazySingletonServices.ContainsKey( serviceType )
+		 || _transientServices.ContainsKey( serviceType )
+		 || _scopedServices.ContainsKey( serviceType );
 
-		private void AddDisposableService(object service)
+		private void AddDisposableService( object service )
 		{
-			if (service is IDisposable disposable)
+			if ( service is IDisposable disposable )
 			{
 				lock (_disposableServices)
 				{
-					_disposableServices.Add(disposable);
+					_disposableServices.Add( disposable );
 				}
 			}
 		}
 
-		private void RemoveDisposableService(object service)
+		private void RemoveDisposableService( object service )
 		{
-			if (service is IDisposable disposable)
+			if ( service is IDisposable disposable )
 			{
 				lock (_disposableServices)
 				{
-					_disposableServices.Remove(disposable);
+					_disposableServices.Remove( disposable );
 				}
 			}
 		}
 
-		private static void ValidateLifespan(ServiceLifespan lifespan)
+		private static void ValidateLifespan( ServiceLifespan lifespan )
 		{
-			if (lifespan == ServiceLifespan.None)
+			if ( lifespan == ServiceLifespan.None )
 			{
-				throw new ArgumentException("ServiceLifespan cannot be None", nameof(lifespan));
+				throw new ArgumentException( "ServiceLifespan cannot be None", nameof(lifespan) );
 			}
 		}
 	}

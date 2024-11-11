@@ -12,15 +12,15 @@ namespace Bezoro.Framework.Unity
 		{
 			get
 			{
-				if ( !_instance.EqualsNull() ) { return _instance; }
+				if (!_instance.EqualsNull()) { return _instance; }
 
-				var instances = Resources.LoadAll<T>( "" );
-				if ( instances.Length > 1 )
+				var instances = Resources.LoadAll<T>("");
+				if (instances.Length > 1)
 				{
-					Debug.LogError( $"Found multiple instances of {typeof(T)}. There should only be one." );
+					Debug.LogError($"Found multiple instances of {typeof(T)}. There should only be one.");
 					_instance = instances[0];
 				}
-				else if ( instances.Length == 1 )
+				else if (instances.Length == 1)
 				{
 					_instance = instances[0];
 				}
@@ -31,10 +31,10 @@ namespace Bezoro.Framework.Unity
 
 		protected virtual void OnEnable()
 		{
-			if ( _instance != null && _instance != this )
+			if (_instance != null && _instance != this)
 			{
-				Debug.LogError( $"Multiple instances of {typeof(T)} detected. Destroying duplicate at {name}" );
-				DestroyImmediate( this );
+				Debug.LogError($"Multiple instances of {typeof(T)} detected. Destroying duplicate at {name}");
+				DestroyImmediate(this);
 
 				return;
 			}

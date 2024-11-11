@@ -19,36 +19,36 @@ public sealed class LogBuilder
 	private readonly StringBuilder _formatBuilder = new();
 	private bool _hasBeenSent;
 
-	public LogBuilder(object message)
+	public LogBuilder( object message )
 	{
 		_message = message;
 	}
 
 	~LogBuilder()
 	{
-		if (!_hasBeenSent)
+		if ( !_hasBeenSent )
 		{
-			Debug.LogWarning($"LogBuilder was not sent. Did you forget to call Send()?: {_message}", _context);
+			Debug.LogWarning( $"LogBuilder was not sent. Did you forget to call Send()?: {_message}", _context );
 		}
 	}
 
-	public LogBuilder ContextObject(Object contextObject)
+	public LogBuilder ContextObject( Object contextObject )
 	{
 		_context = contextObject;
 
 		return this;
 	}
 
-	public LogBuilder Type(LogType type)
+	public LogBuilder Type( LogType type )
 	{
 		_logType = type;
 
 		return this;
 	}
 
-	public LogBuilder Category(string category)
+	public LogBuilder Category( string category )
 	{
-		if (category.IsNullOrEmpty())
+		if ( category.IsNullOrEmpty() )
 		{
 			category = DebugSettings.DEFAULT_CATEGORY;
 		}
@@ -58,112 +58,105 @@ public sealed class LogBuilder
 		return this;
 	}
 
-	public LogBuilder Colour(Color color)
+	public LogBuilder Colour( Color color )
 	{
-		_colorTag = $"<color=#{ColorUtility.ToHtmlStringRGB(color)}>";
+		_colorTag = $"<color=#{ColorUtility.ToHtmlStringRGB( color )}>";
 
 		return this;
 	}
 
 	public LogBuilder Bold()
 	{
-		return ApplyTextFormat(str => str.Bold());
+		return ApplyTextFormat( str => str.Bold() );
 	}
 
 	public LogBuilder Italic()
 	{
-		return ApplyTextFormat(str => str.Italic());
+		return ApplyTextFormat( str => str.Italic() );
 	}
 
 	public LogBuilder Underline()
 	{
-		return ApplyTextFormat(str => str.Underline());
+		return ApplyTextFormat( str => str.Underline() );
 	}
 
 	public LogBuilder Strikethrough()
 	{
-		return ApplyTextFormat(str => str.Strikethrough());
+		return ApplyTextFormat( str => str.Strikethrough() );
 	}
 
-	public LogBuilder Size(int size)
+	public LogBuilder Size( int size )
 	{
-		return ApplyTextFormat(str => str.Size(size));
+		return ApplyTextFormat( str => str.Size( size ) );
 	}
 
-	private LogBuilder ApplyTextFormat(Func<string, string> formatFunc)
+	private LogBuilder ApplyTextFormat( Func<string, string> formatFunc )
 	{
 		_formatBuilder.Clear();
-		_formatBuilder.Append(formatFunc(_message.ToString()));
+		_formatBuilder.Append( formatFunc( _message.ToString() ) );
 
 		return this;
 	}
 
-	[Conditional("UNITY_EDITOR")] [Conditional("DEVELOPMENT_BUILD")]
+	[Conditional( "UNITY_EDITOR" )] [Conditional( "DEVELOPMENT_BUILD" )]
 	public void Send()
 	{
-		_hasBeenSent = true;
-		var categorySettings = BDebug.GetCategorySettings(_category);
-		if (categorySettings is not { isEnabled: true })
+		if ( DebugSettings.Instance.enableLogging == false )
 		{
 			return;
 		}
 
-		var finalMessage = BuildMessage(categorySettings, _callerName, _methodName);
-		SendToUnityConsole(finalMessage);
+		_hasBeenSent = true;
+		var categorySettings = BDebug.GetCategorySettings( _category );
+		if ( categorySettings is not { isEnabled: true } )
+		{
+			return;
+		}
+
+		var finalMessage = BuildMessage( categorySettings, _callerName, _methodName );
+		SendToUnityConsole( finalMessage );
 	}
 
-	private string BuildMessage(DebugSettings.DebugCategory category, string callerName, string methodName)
+	private string BuildMessage( DebugSettings.DebugCategory category, string callerName, string methodName )
 	{
-		var prefix = $"[{category.name}]: ".Color(category.categoryColor);
+		var prefix = $"[{category.name}]: ".Color( category.categoryColor );
 		var content = _formatBuilder.Length > 0
 			? _formatBuilder.ToString()
 			: $"{_colorTag}{_message}{( _colorTag == string.Empty ? string.Empty : "</color>" )}";
 
-		var methodInfo = string.IsNullOrEmpty(callerName) || string.IsNullOrEmpty(methodName)
+		var methodInfo = string.IsNullOrEmpty( callerName ) || string.IsNullOrEmpty( methodName )
 			? string.Empty
 			: $"{callerName}.{methodName}() => ";
 
 		return $"{prefix}{methodInfo}{content}";
 	}
 
-	[Conditional("UNITY_EDITOR")] [Conditional("DEVELOPMENT_BUILD")]
-	private void SendToUnityConsole(string finalMessage)
+	[Conditional( "UNITY_EDITOR" )] [Conditional( "DEVELOPMENT_BUILD" )]
+	private void SendToUnityConsole( string finalMessage )
 	{
 		switch ( _logType )
 		{
-			case LogType.Log:
-				Debug.Log(finalMessage, _context);
-
-				break;
-			case LogType.Warning:
-				Debug.LogWarning(finalMessage, _context);
-
-				break;
-			case LogType.Error:
-				Debug.LogError(finalMessage, _context);
-
-				break;
+			case LogType.Log:     Debug.Log( finalMessage, _context ); break;
+			case LogType.Warning: Debug.LogWarning( finalMessage, _context ); break;
+			case LogType.Error:   Debug.LogError( finalMessage, _context ); break;
 			case LogType.Exception:
-				Debug.LogException(_message as Exception ?? new Exception(finalMessage), _context);
+				Debug.LogException( _message as Exception ?? new Exception( finalMessage ), _context );
 
 				break;
-			default:
-				Debug.LogError($"Unknown log type: {_logType}", _context);
-
-				break;
+			default: Debug.LogError( $"Unknown log type: {_logType}", _context ); break;
 		}
 	}
 
-	public LogBuilder Caller(object caller)
+	public LogBuilder Caller( object caller )
 	{
-		_callerName = caller.GetType().Name.Bold().Color(new Color(0.2f, 0.4f, 1f));
+		_callerName = caller.GetType().Name.Bold().Color( new Color( 0.2f, 0.4f, 1f ) );
 
 		return this;
 	}
 
-	public LogBuilder Method(string methodName)
+	public LogBuilder Method( string methodName )
 	{
-		_methodName = methodName.Bold().Color(new Color(0.2f, 0.4f, 1f));
+		_methodName = methodName.Bold().Color( new Color( 0.2f, 0.4f, 1f ) );
 
 		return this;
 	}

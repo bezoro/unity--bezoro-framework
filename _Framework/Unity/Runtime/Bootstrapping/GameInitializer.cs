@@ -28,7 +28,7 @@ namespace Bezoro.Framework.Unity.Bootstrapping
 		{
 			BDebug.LogStarted();
 
-			_gameInitConfigAsset = Resources.FindObjectsOfTypeAll<GameInitializationConfig>().FirstOrDefault();
+			_gameInitConfigAsset = Resources.LoadAll<GameInitializationConfig>( "" ).FirstOrDefault();
 			_initializables      = new();
 			_currentState        = InitializationState.NotStarted;
 
