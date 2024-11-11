@@ -23,6 +23,10 @@ namespace Bezoro.Framework.Unity
 			{
 				ScanForObjectUIDs();
 			}
+			else if ( state == PlayModeStateChange.ExitingPlayMode )
+			{
+				EditorApplication.playModeStateChanged -= OnPlayModeStateChanged;
+			}
 		}
 
 		private static void ScanForObjectUIDs()
