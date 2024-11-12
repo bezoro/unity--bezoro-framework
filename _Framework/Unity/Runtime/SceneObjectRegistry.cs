@@ -19,13 +19,16 @@ namespace Bezoro.Framework.Unity
 
 		private static void OnPlayModeStateChanged( PlayModeStateChange state )
 		{
-			if ( state == PlayModeStateChange.EnteredPlayMode || state == PlayModeStateChange.ExitingEditMode )
+			switch ( state )
 			{
-				ScanForObjectUIDs();
-			}
-			else if ( state == PlayModeStateChange.ExitingPlayMode )
-			{
-				EditorApplication.playModeStateChanged -= OnPlayModeStateChanged;
+				case PlayModeStateChange.EnteredPlayMode or PlayModeStateChange.ExitingEditMode:
+					ScanForObjectUIDs();
+
+					break;
+				case PlayModeStateChange.ExitingPlayMode:
+					EditorApplication.playModeStateChanged -= OnPlayModeStateChanged;
+
+					break;
 			}
 		}
 
