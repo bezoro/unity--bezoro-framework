@@ -2,8 +2,8 @@
 
 namespace Bezoro.Framework.Unity.Bootstrapping
 {
-	[CreateAssetMenu(fileName = "GIC_NewGameInitConfig", menuName = "Bezoro/Game Init Config", order = 0)]
-	public sealed class GameInitializationConfig : ScriptableObject
+	[CreateAssetMenu( fileName = "GIC_NewGameInitConfig", menuName = "Bezoro/Game Init Config", order = 0 )]
+	public sealed class GameInitializationConfig : ScriptableSingleton<GameInitializationConfig>
 	{
 		[SerializeReference] private IInitializationObject[] subsystemRegistrationEntries;
 		[SerializeReference] private IInitializationObject[] afterAssemblyLoadEntries;
@@ -11,7 +11,7 @@ namespace Bezoro.Framework.Unity.Bootstrapping
 		[SerializeReference] private IInitializationObject[] beforeSceneLoadEntries;
 		[SerializeReference] private IInitializationObject[] afterSceneLoadEntries;
 
-		private void ExecuteEntries(IInitializationObject[] entries)
+		private void ExecuteEntries( IInitializationObject[] entries )
 		{
 			foreach ( var entry in entries )
 			{
@@ -21,27 +21,27 @@ namespace Bezoro.Framework.Unity.Bootstrapping
 
 		public void SubsystemRegistrationPhase()
 		{
-			ExecuteEntries(subsystemRegistrationEntries);
+			ExecuteEntries( subsystemRegistrationEntries );
 		}
 
 		public void AfterAssemblyLoadPhase()
 		{
-			ExecuteEntries(afterAssemblyLoadEntries);
+			ExecuteEntries( afterAssemblyLoadEntries );
 		}
 
 		public void BeforeSplashScreenPhase()
 		{
-			ExecuteEntries(beforeSplashScreenEntries);
+			ExecuteEntries( beforeSplashScreenEntries );
 		}
 
 		public void BeforeSceneLoadPhase()
 		{
-			ExecuteEntries(beforeSceneLoadEntries);
+			ExecuteEntries( beforeSceneLoadEntries );
 		}
 
 		public void AfterSceneLoadPhase()
 		{
-			ExecuteEntries(afterSceneLoadEntries);
+			ExecuteEntries( afterSceneLoadEntries );
 		}
 	}
 
