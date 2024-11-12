@@ -15,74 +15,69 @@ namespace Bezoro.Framework.Unity.Utilities
 		public static event Action<string> SceneLoadCompleted;
 
 		public static async UniTask LoadScene
-			(SceneReference sceneReference, LoadSceneMode mode = LoadSceneMode.Single)
+		(
+			SceneReference sceneReference,
+			LoadSceneMode mode = LoadSceneMode.Single
+		)
 		{
-			SceneLoadStarted?.Invoke(sceneReference.Path);
+			SceneLoadStarted?.Invoke( sceneReference.Path );
 
-			var operation = SceneManager.LoadSceneAsync(sceneReference.Path, mode);
+			var operation = SceneManager.LoadSceneAsync( sceneReference.Path, mode );
 
-			if (operation == null) { return; }
+			if ( operation == null ) { return; }
 
 			operation.allowSceneActivation = true;
 
 			while (!operation.isDone)
 			{
-				LoadingProgressChanged?.Invoke(operation.progress);
+				LoadingProgressChanged?.Invoke( operation.progress );
 				await UniTask.Yield();
 			}
 
-			SceneLoadCompleted?.Invoke(sceneReference.Path);
+			SceneLoadCompleted?.Invoke( sceneReference.Path );
 		}
 
-		public static async UniTask UnloadScene(string path)
+		public static async UniTask UnloadScene( string path )
 		{
-			if (!IsSceneLoaded(path))
+			if ( !IsSceneLoaded( path ) )
 			{
-				BDebug.LogWarning($"Cannot unload scene: {path} is not loaded");
+				BDebug.LogWarning( $"Cannot unload scene: {path} is not loaded" );
 
 				return;
 			}
 
-			var operation = SceneManager.UnloadSceneAsync(path);
+			var operation = SceneManager.UnloadSceneAsync( path );
 
-			if (operation == null) { return; }
+			if ( operation == null ) { return; }
 
 			while (!operation.isDone) { await UniTask.Yield(); }
 		}
 
-		public static async UniTask UnloadScene(SceneReference sceneReference)
+		public static async UniTask UnloadScene( SceneReference sceneReference )
 		{
-			await UnloadScene(sceneReference.Path);
+			await UnloadScene( sceneReference.Path );
 		}
 
-		public static bool IsSceneLoaded(string path)
-		{
-			return SceneManager.GetSceneByPath(path).isLoaded;
-		}
+		public static bool IsSceneLoaded( string path ) => SceneManager.GetSceneByPath( path ).isLoaded;
 
-		public static bool IsSceneLoaded(SceneReference sceneReference)
-		{
-			return SceneManager.GetSceneByPath(sceneReference.Path).isLoaded;
-		}
+		public static bool IsSceneLoaded( SceneReference sceneReference ) =>
+			SceneManager.GetSceneByPath( sceneReference.Path ).isLoaded;
 
-		public static void SetActiveScene(SceneReference sceneReference)
+		public static void SetActiveScene( SceneReference sceneReference )
 		{
-			var scene = SceneManager.GetSceneByPath(sceneReference.Path);
+			var scene = SceneManager.GetSceneByPath( sceneReference.Path );
 
-			if (scene.isLoaded)
+			if ( scene.isLoaded )
 			{
-				SceneManager.SetActiveScene(scene);
+				SceneManager.SetActiveScene( scene );
 			}
 			else
 			{
-				Debug.LogWarning($"Cannot set active scene: {sceneReference.Path} is not loaded");
+				Debug.LogWarning( $"Cannot set active scene: {sceneReference.Path} is not loaded" );
 			}
 		}
 
-		public static int GetLoadedSceneCount()
-		{
-			return SceneManager.sceneCount;
-		}
+		public static int GetLoadedSceneCount() => SceneManager.sceneCount;
 
 		public static Scene[] GetAllLoadedScenes()
 		{
@@ -91,38 +86,48 @@ namespace Bezoro.Framework.Unity.Utilities
 
 			for ( var i = 0 ; i < countLoaded ; i++ )
 			{
-				loadedScenes[i] = SceneManager.GetSceneAt(i);
+				loadedScenes[i] = SceneManager.GetSceneAt( i );
 			}
 
 			return loadedScenes;
 		}
 
-		public static bool IsSceneReferenceLoaded(SceneReference sceneReference)
+		public static bool IsSceneReferenceLoaded( SceneReference sceneReference )
 		{
-			return AreScenesLoaded(new[] { sceneReference });
+			return AreScenesLoaded( new[] { sceneReference } );
 		}
 
 		public static bool AreScenesLoaded
-			(IEnumerable<SceneReference> sceneReferences, LoadCheckMode mode = LoadCheckMode.Any)
+		(
+			IEnumerable<SceneReference> sceneReferences,
+			LoadCheckMode mode = LoadCheckMode.Any
+		)
 		{
 			var loadedScenes = GetAllLoadedScenes();
 
 			switch ( mode )
 			{
 				case LoadCheckMode.Any:
-					return sceneReferences.Any(reference => loadedScenes.Any(scene => scene.path == reference.Path));
+					return sceneReferences.Any(
+						reference => loadedScenes.Any( scene => scene.path == reference.Path )
+					);
 
 				case LoadCheckMode.All:
-					return sceneReferences.All(reference => loadedScenes.Any(scene => scene.path == reference.Path));
+					return sceneReferences.All(
+						reference => loadedScenes.Any( scene => scene.path == reference.Path )
+					);
 
 				case LoadCheckMode.ExceptAny:
-					return loadedScenes.Any(scene => sceneReferences.All(reference => scene.path != reference.Path));
+					return loadedScenes.Any(
+						scene => sceneReferences.All( reference => scene.path != reference.Path )
+					);
 
 				case LoadCheckMode.ExceptAll:
-					return loadedScenes.All(scene => sceneReferences.All(reference => scene.path != reference.Path));
+					return loadedScenes.All(
+						scene => sceneReferences.All( reference => scene.path != reference.Path )
+					);
 
-				default:
-					return false;
+				default: return false;
 			}
 		}
 
@@ -135,19 +140,19 @@ namespace Bezoro.Framework.Unity.Utilities
 		}
 
 		public static async UniTask LoadSceneWithLoadingScreen
-			(Scene currentScene, SceneReference targetScene, SceneReference loadingScene)
+			( Scene currentScene, SceneReference targetScene, SceneReference loadingScene )
 		{
 			// Load loading screen additively
-			await LoadScene(loadingScene, LoadSceneMode.Additive);
+			await LoadScene( loadingScene, LoadSceneMode.Additive );
 
 			// Unload previous scene
-			await UnloadScene(currentScene.path);
+			await UnloadScene( currentScene.path );
 
 			// Load target scene additively
-			await LoadScene(targetScene, LoadSceneMode.Additive);
+			await LoadScene( targetScene, LoadSceneMode.Additive );
 
 			// Unload loading screen
-			await UnloadScene(loadingScene);
+			await UnloadScene( loadingScene );
 		}
 	}
 }
