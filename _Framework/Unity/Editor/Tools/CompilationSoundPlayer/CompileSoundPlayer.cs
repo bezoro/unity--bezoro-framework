@@ -10,19 +10,9 @@ using UnityEngine;
 
 namespace Bezoro.Framework.Unity.Editor.Tools
 {
-	[InitializeOnLoad]
-	internal class CompilationSoundPlayer :
-		IPostprocessBuildWithReport, ICallbacks
+	internal class CompilationSoundPlayer : IPostprocessBuildWithReport, ICallbacks
 	{
-		private static readonly CompilationSoundSettings Settings = CompilationSoundSettings.instance;
-
-		// private static readonly AudioClip UnityFullyInitializedClip;
-		// private static readonly AudioClip BuildCompletedClip;
-		// private static readonly AudioClip CompilationEndClip;
-		// private static readonly AudioClip CompilationStartClip;
-		// private static readonly AudioClip TestStartClip;
-		// private static readonly AudioClip TestEndClip;
-		// private static readonly bool Initialized;
+		private static CompilationSoundSettings _settings;
 
 		private static bool _isCompiling;
 		private static bool _isBuildInProgress;
@@ -30,9 +20,13 @@ namespace Bezoro.Framework.Unity.Editor.Tools
 
 		public int callbackOrder => 0;
 
-		static CompilationSoundPlayer()
+		[InitializeOnLoadMethod]
+		private static void Initialize()
 		{
-			if ( Settings == null )
+			if ( !CompilationSoundSettings.IsAssetInstance() ) { return; }
+
+			_settings = CompilationSoundSettings.instance;
+			if ( _settings == null )
 			{
 				CompilationSoundSettingsWindow.ShowWindow();
 				Debug.LogError( "CompilationSoundSettings not found. Please create the asset in Resources folder." );
@@ -40,26 +34,19 @@ namespace Bezoro.Framework.Unity.Editor.Tools
 				return;
 			}
 
-			// CompilationStartClip      = Resources.Load<AudioClip>( "SFX_StartCompilation" );
-			// CompilationEndClip        = Resources.Load<AudioClip>( "SFX_EndCompilation" );
-			// UnityFullyInitializedClip = Resources.Load<AudioClip>( "SFX_IdleReady" );
-			// BuildCompletedClip        = Resources.Load<AudioClip>( "SFX_BuildCompleted" );
-			// TestStartClip             = Resources.Load<AudioClip>( "SFX_TestStart" );
-			// TestEndClip               = Resources.Load<AudioClip>( "SFX_TestEnd" );
-
 			var testRunnerApi = ScriptableObject.CreateInstance<TestRunnerApi>();
 			testRunnerApi.RegisterCallbacks( new CompilationSoundPlayer() );
 
 			CompilationPipeline.compilationStarted += _ =>
 			{
 				_isCompiling = true;
-				if ( !_isBuildInProgress && !_isTestRunning ) { PlayClip( Settings.compilationStartClip ); }
+				if ( !_isBuildInProgress && !_isTestRunning ) { PlayClip( _settings.compilationStartClip ); }
 			};
 
 			CompilationPipeline.compilationFinished += _ =>
 			{
 				_isCompiling = false;
-				if ( !_isBuildInProgress && !_isTestRunning ) { PlayClip( Settings.compilationEndClip ); }
+				if ( !_isBuildInProgress && !_isTestRunning ) { PlayClip( _settings.compilationEndClip ); }
 			};
 
 			AssemblyReloadEvents.afterAssemblyReload += () =>
@@ -68,7 +55,7 @@ namespace Bezoro.Framework.Unity.Editor.Tools
 				{
 					EditorApplication.delayCall += () =>
 					{
-						if ( !EditorUtils.IsEditorBusy() ) { PlayClip( Settings.unityFullyInitializedClip ); }
+						if ( !EditorUtils.IsEditorBusy() ) { PlayClip( _settings.unityFullyInitializedClip ); }
 					};
 				}
 			};
@@ -81,20 +68,18 @@ namespace Bezoro.Framework.Unity.Editor.Tools
 					BuildPipeline.BuildPlayer( buildPlayerOptions );
 				}
 			);
-
-			// Initialized = true;
 		}
 
 		public void RunStarted( ITestAdaptor testsToRun )
 		{
 			_isTestRunning = true;
-			PlayClip( Settings.testStartClip );
+			PlayClip( _settings.testStartClip );
 		}
 
 		public void RunFinished( ITestResultAdaptor result )
 		{
 			_isTestRunning = false;
-			PlayClip( Settings.testEndClip );
+			PlayClip( _settings.testEndClip );
 		}
 
 		// Implement other ICallbacks methods
@@ -128,7 +113,7 @@ namespace Bezoro.Framework.Unity.Editor.Tools
 		public void OnPostprocessBuild( BuildReport report )
 		{
 			_isBuildInProgress          =  false;
-			EditorApplication.delayCall += () => PlayClip( Settings.buildCompletedClip );
+			EditorApplication.delayCall += () => PlayClip( _settings.buildCompletedClip );
 		}
 	}
 }
