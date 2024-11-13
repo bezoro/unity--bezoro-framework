@@ -46,7 +46,7 @@ namespace Bezoro.Framework.Unity
 		{
 			lock (Lock)
 			{
-				if ( IsValidObject( objectUID ) )
+				if ( IsValidObject( objectUID ) && !GUIDToObjectMap.ContainsKey( objectUID.UID ) )
 				{
 					GUIDToObjectMap[objectUID.UID] = objectUID.gameObject;
 				}
