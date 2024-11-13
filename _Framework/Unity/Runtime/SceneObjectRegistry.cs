@@ -34,10 +34,13 @@ namespace Bezoro.Framework.Unity
 
 		private static void ScanForObjectUIDs()
 		{
-			GUIDToObjectMap.Clear();
-			foreach ( var objectUID in Resources.FindObjectsOfTypeAll<ObjectUID>() )
+			lock (Lock)
 			{
-				RegisterObject( objectUID );
+				GUIDToObjectMap.Clear();
+				foreach ( var objectUID in Resources.FindObjectsOfTypeAll<ObjectUID>() )
+				{
+					RegisterObject( objectUID );
+				}
 			}
 		}
 #endif
@@ -46,10 +49,26 @@ namespace Bezoro.Framework.Unity
 		{
 			lock (Lock)
 			{
-				if ( IsValidObject( objectUID ) && !GUIDToObjectMap.ContainsKey( objectUID.UID ) )
+				if ( IsValidUID( objectUID ) && !IsRegistered( objectUID ) )
 				{
 					GUIDToObjectMap[objectUID.UID] = objectUID.gameObject;
 				}
+			}
+		}
+
+		public static bool IsGUIDUnique( string guid )
+		{
+			lock (Lock)
+			{
+				return !GUIDToObjectMap.ContainsKey( guid );
+			}
+		}
+
+		public static bool IsRegistered( ObjectUID objectUID )
+		{
+			lock (Lock)
+			{
+				return GUIDToObjectMap.ContainsKey( objectUID.UID );
 			}
 		}
 
@@ -72,16 +91,15 @@ namespace Bezoro.Framework.Unity
 		{
 			lock (Lock)
 			{
-				if ( IsValidObject( objectUID ) )
+				if ( IsValidUID( objectUID ) && IsRegistered( objectUID ) )
 				{
 					GUIDToObjectMap.Remove( objectUID.UID );
 				}
 			}
 		}
 
-		private static bool IsValidObject( ObjectUID objectUID ) =>
+		private static bool IsValidUID( ObjectUID objectUID ) =>
 			objectUID != null
-		 && !string.IsNullOrEmpty( objectUID.UID )
-		 && !GUIDToObjectMap.ContainsKey( objectUID.UID );
+		 && !string.IsNullOrEmpty( objectUID.UID );
 	}
 }
