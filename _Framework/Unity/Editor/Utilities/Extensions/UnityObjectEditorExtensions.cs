@@ -14,36 +14,36 @@ namespace Bezoro.Framework.Unity.Editor.Utilities.Extensions
 		/// <param name="logWarning">If true, logs a warning message. Otherwise, only returns true or false.</param>
 		/// <typeparam name="T">The type of the asset to check.</typeparam>
 		/// <returns>true if the asset is unique, false otherwise.</returns>
-		public static bool WarnIfNotUniqueInAssets<T>(this T asset, bool logWarning = true)
+		public static bool WarnIfNotUniqueInAssets<T>( this T asset, bool logWarning = true )
 		where T : Object
 		{
 			var typeName = typeof(T).Name;
-			var guids = AssetDatabase.FindAssets($"t:{typeName}");
+			var guids = AssetDatabase.FindAssets( $"t:{typeName}" );
 
-			if (guids.Length <= 1)
+			if ( guids.Length <= 1 )
 			{
 				return true;
 			}
 
-			var assetPath = AssetDatabase.GetAssetPath(asset);
+			var assetPath = AssetDatabase.GetAssetPath( asset );
 
 			var otherAssetPaths = guids
-								  .Select(guid => AssetDatabase.GUIDToAssetPath(guid))
-								  .Where(path => path != assetPath);
+								  .Select( guid => AssetDatabase.GUIDToAssetPath( guid ) )
+								  .Where( path => path != assetPath );
 
 			var assetPaths = otherAssetPaths.ToList();
 
-			if (!assetPaths.Any())
+			if ( !assetPaths.Any() )
 			{
 				return true;
 			}
 
-			if (!logWarning)
+			if ( !logWarning )
 			{
 				return false;
 			}
 
-			var assetPathsString = string.Join("\n", assetPaths);
+			var assetPathsString = string.Join( "\n", assetPaths );
 
 			Debug.LogWarning
 			(

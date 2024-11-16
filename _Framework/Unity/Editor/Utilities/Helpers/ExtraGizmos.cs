@@ -13,8 +13,8 @@ namespace Bezoro.Framework.Unity.Editor.Utilities.Helpers
 		)
 		{
 			var originalMatrix = Gizmos.matrix;
-			Gizmos.matrix = Matrix4x4.TRS(localPosition, localRotation, localScale);
-			Gizmos.color = color;
+			Gizmos.matrix = Matrix4x4.TRS( localPosition, localRotation, localScale );
+			Gizmos.color  = color;
 			DrawWireSquareInternal();
 			Gizmos.matrix = originalMatrix;
 		}
@@ -44,10 +44,10 @@ namespace Bezoro.Framework.Unity.Editor.Utilities.Helpers
 		private static void DrawWireSquareInternal()
 		{
 			// Draw a wire square instead of a cube
-			Gizmos.DrawLine(new Vector3(-0.5f, 0, -0.5f), new Vector3(0.5f, 0, -0.5f)); // Bottom
-			Gizmos.DrawLine(new Vector3(0.5f, 0, -0.5f), new Vector3(0.5f, 0, 0.5f));   // Right
-			Gizmos.DrawLine(new Vector3(0.5f, 0, 0.5f), new Vector3(-0.5f, 0, 0.5f));   // Top
-			Gizmos.DrawLine(new Vector3(-0.5f, 0, 0.5f), new Vector3(-0.5f, 0, -0.5f)); // Left
+			Gizmos.DrawLine( new(-0.5f, 0, -0.5f), new(0.5f, 0, -0.5f) ); // Bottom
+			Gizmos.DrawLine( new(0.5f, 0, -0.5f), new(0.5f, 0, 0.5f) );   // Right
+			Gizmos.DrawLine( new(0.5f, 0, 0.5f), new(-0.5f, 0, 0.5f) );   // Top
+			Gizmos.DrawLine( new(-0.5f, 0, 0.5f), new(-0.5f, 0, -0.5f) ); // Left
 		}
 	}
 }

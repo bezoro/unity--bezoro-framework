@@ -22,17 +22,17 @@ namespace Bezoro.Framework.Unity.Editor.Tools
 		public bool IsAutoRunEnabled
 		{
 			get => _logic.AutoRun;
-			set => _logic.SetAutoRun(value);
+			set => _logic.SetAutoRun( value );
 		}
 
 	#endregion
 
 	#region Public Methods
 
-		[MenuItem("Window/Bezoro/Auto Test Runner")]
+		[MenuItem( "Window/Bezoro/Auto Test Runner" )]
 		public static void ShowWindow()
 		{
-			GetWindow<AutoUnityTestRunnerEditorWindow>("Auto Test Runner");
+			GetWindow<AutoUnityTestRunnerEditorWindow>( "Auto Test Runner" );
 		}
 
 	#endregion
@@ -63,7 +63,7 @@ namespace Bezoro.Framework.Unity.Editor.Tools
 
 		private async void RunAllTests()
 		{
-			Debug.Log("Running all tests manually...");
+			Debug.Log( "Running all tests manually..." );
 			await AutoUnityTestRunner.RunAllTestsAsync();
 		}
 
@@ -73,29 +73,29 @@ namespace Bezoro.Framework.Unity.Editor.Tools
 
 		private void OnEnable()
 		{
-			_logic = new AutoTestRunnerEditorWindowLogic(new EditorPrefsSettingsStorage());
+			_logic                                    =  new(new EditorPrefsSettingsStorage());
 			AssemblyReloadEvents.beforeAssemblyReload += OnBeforeAssemblyReload;
-			AssemblyReloadEvents.afterAssemblyReload += OnAfterAssemblyReload;
+			AssemblyReloadEvents.afterAssemblyReload  += OnAfterAssemblyReload;
 
-			AutoUnityTestRunner.Callbacks.TestsRunStarted += OnTestsRunStarted;
+			AutoUnityTestRunner.Callbacks.TestsRunStarted  += OnTestsRunStarted;
 			AutoUnityTestRunner.Callbacks.TestsRunFinished += OnTestsRunFinished;
 		}
 
 		private void OnDisable()
 		{
 			AssemblyReloadEvents.beforeAssemblyReload -= OnBeforeAssemblyReload;
-			AssemblyReloadEvents.afterAssemblyReload -= OnAfterAssemblyReload;
+			AssemblyReloadEvents.afterAssemblyReload  -= OnAfterAssemblyReload;
 
-			AutoUnityTestRunner.Callbacks.TestsRunStarted -= OnTestsRunStarted;
+			AutoUnityTestRunner.Callbacks.TestsRunStarted  -= OnTestsRunStarted;
 			AutoUnityTestRunner.Callbacks.TestsRunFinished -= OnTestsRunFinished;
 		}
 
 		private void OnGUI()
 		{
 			EditorGUI.BeginChangeCheck();
-			var newState = EditorGUILayout.Toggle("Auto Run Tests", IsAutoRunEnabled);
+			var newState = EditorGUILayout.Toggle( "Auto Run Tests", IsAutoRunEnabled );
 
-			if (EditorGUI.EndChangeCheck())
+			if ( EditorGUI.EndChangeCheck() )
 			{
 				IsAutoRunEnabled = newState;
 			}
@@ -105,7 +105,7 @@ namespace Bezoro.Framework.Unity.Editor.Tools
 				_isRunningTests || _reloadingAssembly || !EditorHelpers.IsEditorIdle()
 			);
 
-			if (GUILayout.Button("Run All Tests"))
+			if ( GUILayout.Button( "Run All Tests" ) )
 			{
 				RunAllTests();
 				_isRunningTests = true; // Disable the button immediately
@@ -122,7 +122,7 @@ namespace Bezoro.Framework.Unity.Editor.Tools
 		private const string AutoRunKey = "AutoRunTests_Enabled";
 		private readonly ISettingsStorage _settingsStorage;
 
-		public AutoTestRunnerEditorWindowLogic(ISettingsStorage settingsStorage)
+		public AutoTestRunnerEditorWindowLogic( ISettingsStorage settingsStorage )
 		{
 			_settingsStorage = settingsStorage ?? throw new ArgumentNullException();
 			LoadSettings();
@@ -130,22 +130,19 @@ namespace Bezoro.Framework.Unity.Editor.Tools
 
 		public bool AutoRun { get; private set; }
 
-		public void SetAutoRun(bool value)
+		public void SetAutoRun( bool value )
 		{
 			AutoRun = value;
-			_settingsStorage.SetBool(AutoRunKey, value);
+			_settingsStorage.SetBool( AutoRunKey, value );
 		}
 
-		public bool ShouldRunTests()
-		{
-			return AutoRun;
-		}
+		public bool ShouldRunTests() => AutoRun;
 
 		private void LoadSettings()
 		{
 			try
 			{
-				AutoRun = _settingsStorage.GetBool(AutoRunKey);
+				AutoRun = _settingsStorage.GetBool( AutoRunKey );
 			}
 			catch ( Exception )
 			{

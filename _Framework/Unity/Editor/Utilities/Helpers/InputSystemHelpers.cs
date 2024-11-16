@@ -6,15 +6,13 @@ namespace Bezoro.Framework.Unity.Editor.Utilities.Helpers
 {
 	public static class InputSystemHelpers
 	{
-		public static SerializedProperty GetActiveInputSystemProperty()
-		{
-			return GetPlayerSettingsSerializedObject().FindProperty("activeInputHandler");
-		}
+		public static SerializedProperty GetActiveInputSystemProperty() =>
+			GetPlayerSettingsSerializedObject().FindProperty( "activeInputHandler" );
 
-		public static void SetActiveInputSystem(InputSystem inputSystem)
+		public static void SetActiveInputSystem( InputSystem inputSystem )
 		{
 			var playerSettingsSerializedObject = GetPlayerSettingsSerializedObject();
-			var property = playerSettingsSerializedObject.FindProperty("activeInputHandler");
+			var property = playerSettingsSerializedObject.FindProperty( "activeInputHandler" );
 			property.intValue = (int)inputSystem;
 			playerSettingsSerializedObject.ApplyModifiedProperties();
 		}
@@ -23,7 +21,7 @@ namespace Bezoro.Framework.Unity.Editor.Utilities.Helpers
 		{
 			var playerSettings = Resources.FindObjectsOfTypeAll<PlayerSettings>().FirstOrDefault();
 
-			return new SerializedObject(playerSettings);
+			return new(playerSettings);
 		}
 
 		public enum InputSystem

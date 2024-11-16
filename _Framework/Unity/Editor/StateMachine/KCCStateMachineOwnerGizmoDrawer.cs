@@ -6,14 +6,14 @@ namespace Bezoro.Framework.Unity.Editor.StateMachine
 {
 	internal static class KCCStateMachineOwnerGizmoDrawer
 	{
-		[DrawGizmo(GizmoType.Active)]
-		private static void DrawGizmos(KCCStateMachineOwner source, GizmoType gizmoType)
+		[DrawGizmo( GizmoType.Active )]
+		private static void DrawGizmos( KCCStateMachineOwner source, GizmoType gizmoType )
 		{
 			DrawStateLabels();
 
 			void DrawStateLabels()
 			{
-				if (!Application.isPlaying)
+				if ( !Application.isPlaying )
 				{
 					return;
 				}
@@ -23,7 +23,7 @@ namespace Bezoro.Framework.Unity.Editor.StateMachine
 				for ( var i = states.Count - 1 ; i >= 0 ; i-- )
 				{
 					var childRenderer = source.GetComponentInChildren<Renderer>();
-					if (childRenderer is null)
+					if ( childRenderer is null )
 					{
 						return;
 					}
@@ -38,7 +38,7 @@ namespace Bezoro.Framework.Unity.Editor.StateMachine
 
 					states.Reverse();
 
-					using ( Draw.InLocalSpace(source.transform) )
+					using ( Draw.InLocalSpace( source.transform ) )
 					{
 						Draw.Label2D(
 							positionToDrawLabel,

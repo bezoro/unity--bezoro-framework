@@ -7,16 +7,14 @@ namespace Bezoro.Framework.Unity.Editor.Utilities.Helpers
 	{
 		public static void ReopenProject()
 		{
-			EditorApplication.OpenProject(Directory.GetCurrentDirectory());
+			EditorApplication.OpenProject( Directory.GetCurrentDirectory() );
 		}
 
-		public static bool IsEditorIdle()
-		{
-			return !EditorApplication.isCompiling
-				&& !EditorApplication.isUpdating
-				&& !EditorApplication.isPlayingOrWillChangePlaymode
-				&& !EditorApplication.isPlaying
-				&& !EditorApplication.isPaused;
-		}
+		public static bool IsEditorIdle() =>
+			!EditorApplication.isCompiling
+		 && !EditorApplication.isUpdating
+		 && !EditorApplication.isPlayingOrWillChangePlaymode
+		 && !EditorApplication.isPlaying
+		 && !EditorApplication.isPaused;
 	}
 }

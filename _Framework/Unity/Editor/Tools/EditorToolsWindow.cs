@@ -8,30 +8,30 @@ namespace Bezoro.Framework.Unity.Editor.Tools
 {
 	public class EditorToolsWindow : EditorWindow
 	{
-		[MenuItem("Bezoro/Editor Tools Window")]
+		[MenuItem( "Bezoro/Editor Tools Window" )]
 		public static void ShowWindow()
 		{
 			var window = GetWindow<EditorToolsWindow>();
-			window.titleContent = new GUIContent("Scene Tools");
+			window.titleContent = new("Scene Tools");
 			window.Show();
 		}
 
 		private void OnGUI()
 		{
-			Disableable(DomainReloadButton, isDomainReloadDisabled);
-			Disableable(SceneReloadButton, isSceneReloadDisabled);
+			Disableable( DomainReloadButton, isDomainReloadDisabled );
+			Disableable( SceneReloadButton, isSceneReloadDisabled );
 		}
 
-		private static void Disableable(Action renderer, bool disabled)
+		private static void Disableable( Action renderer, bool disabled )
 		{
-			EditorGUI.BeginDisabledGroup(disabled);
+			EditorGUI.BeginDisabledGroup( disabled );
 			renderer();
 			EditorGUI.EndDisabledGroup();
 		}
 
 		private static void DomainReloadButton()
 		{
-			if (!GUILayout.Button("Reload Domain"))
+			if ( !GUILayout.Button( "Reload Domain" ) )
 			{
 				return;
 			}
@@ -41,14 +41,14 @@ namespace Bezoro.Framework.Unity.Editor.Tools
 
 		private static void SceneReloadButton()
 		{
-			if (!GUILayout.Button("Reload Scene"))
+			if ( !GUILayout.Button( "Reload Scene" ) )
 			{
 				return;
 			}
 
 			var scene = SceneManager.GetActiveScene();
 			var opts = new LoadSceneParameters();
-			EditorSceneManager.LoadSceneInPlayMode(scene.path, opts);
+			EditorSceneManager.LoadSceneInPlayMode( scene.path, opts );
 		}
 
 		private static bool isDomainReloadDisabled => EditorApplication.isCompiling;

@@ -16,22 +16,22 @@ namespace Bezoro.Framework.Unity.Editor
 
 		static EditorPlayModeStateNotifier()
 		{
-			if (_initialized) { return; }
+			if ( _initialized ) { return; }
 
 			EditorApplication.playModeStateChanged += OnPlayModeChanged;
-			_initialized = true;
+			_initialized                           =  true;
 		}
 
-		private static void OnPlayModeChanged(PlayModeStateChange playModeStateChange)
+		private static void OnPlayModeChanged( PlayModeStateChange playModeStateChange )
 		{
 			PlayModeState = playModeStateChange;
-			PlayModeStateChanged?.Invoke(playModeStateChange);
+			PlayModeStateChanged?.Invoke( playModeStateChange );
 		}
 
 		public static void Cleanup()
 		{
 			EditorApplication.playModeStateChanged -= OnPlayModeChanged;
-			_initialized = false;
+			_initialized                           =  false;
 		}
 	}
 }

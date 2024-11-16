@@ -20,7 +20,7 @@ namespace Bezoro.Framework.Unity.Editor.Tools
 
 		private static async void OnAfterAssemblyReload()
 		{
-			if (!EditorPrefs.GetBool("AutoRunTests_Enabled"))
+			if ( !EditorPrefs.GetBool( "AutoRunTests_Enabled" ) )
 			{
 				return;
 			}
@@ -30,30 +30,30 @@ namespace Bezoro.Framework.Unity.Editor.Tools
 
 		public static async Task RunAllTestsAsync()
 		{
-			await RunTestsByModeAsync(TestMode.EditMode);
+			await RunTestsByModeAsync( TestMode.EditMode );
 
-			await Task.Delay(2000);
+			await Task.Delay( 2000 );
 
-			await RunTestsByModeAsync(TestMode.PlayMode);
+			await RunTestsByModeAsync( TestMode.PlayMode );
 		}
 
-		private static Task<bool> RunTestsByModeAsync(TestMode testMode)
+		private static Task<bool> RunTestsByModeAsync( TestMode testMode )
 		{
 			var testRunnerApi = ScriptableObject.CreateInstance<TestRunnerApi>();
 			var tcs = new TaskCompletionSource<bool>();
-			Callbacks = new TestCallbacks();
+			Callbacks = new();
 
-			Callbacks.TestsRunFinished += () => tcs.SetResult(true);
-			Callbacks.TestsRunFinished += () => testRunnerApi.UnregisterCallbacks(Callbacks);
-			Callbacks.TestsRunFinished += () => Object.DestroyImmediate(testRunnerApi);
+			Callbacks.TestsRunFinished += () => tcs.SetResult( true );
+			Callbacks.TestsRunFinished += () => testRunnerApi.UnregisterCallbacks( Callbacks );
+			Callbacks.TestsRunFinished += () => Object.DestroyImmediate( testRunnerApi );
 
 			var filter = new Filter
 			{
 				testMode = testMode
 			};
 
-			testRunnerApi.RegisterCallbacks(Callbacks);
-			testRunnerApi.Execute(new ExecutionSettings(filter));
+			testRunnerApi.RegisterCallbacks( Callbacks );
+			testRunnerApi.Execute( new(filter) );
 
 			return tcs.Task;
 		}
@@ -62,19 +62,19 @@ namespace Bezoro.Framework.Unity.Editor.Tools
 		{
 			private readonly TaskCompletionSource<bool> _tcs;
 
-			public void RunStarted(ITestAdaptor testsToRun)
+			public void RunStarted( ITestAdaptor testsToRun )
 			{
 				TestsRunStarted?.Invoke();
-				Debug.Log($"{testsToRun.TestMode} tests started.");
+				Debug.Log( $"{testsToRun.TestMode} tests started." );
 			}
 
-			public void RunFinished(ITestResultAdaptor result)
+			public void RunFinished( ITestResultAdaptor result )
 			{
-				Debug.Log($"{result.Test.TestMode} tests finished.");
+				Debug.Log( $"{result.Test.TestMode} tests finished." );
 
-				if (result.HasChildren && result.TestStatus == TestStatus.Passed)
+				if ( result.HasChildren && result.TestStatus == TestStatus.Passed )
 				{
-					Debug.Log($"All {result.Test.TestMode} tests passed successfully.");
+					Debug.Log( $"All {result.Test.TestMode} tests passed successfully." );
 				}
 				else
 				{
@@ -87,21 +87,21 @@ namespace Bezoro.Framework.Unity.Editor.Tools
 				TestsRunFinished?.Invoke();
 			}
 
-			public void TestStarted(ITestAdaptor test)
+			public void TestStarted( ITestAdaptor test )
 			{
 				TestStartedEvent?.Invoke();
 			}
 
-			public void TestFinished(ITestResultAdaptor result)
+			public void TestFinished( ITestResultAdaptor result )
 			{
 				TestFinishedEvent?.Invoke();
 			}
 
 			public void Dispose()
 			{
-				TestsRunStarted = null;
-				TestsRunFinished = null;
-				TestStartedEvent = null;
+				TestsRunStarted   = null;
+				TestsRunFinished  = null;
+				TestStartedEvent  = null;
 				TestFinishedEvent = null;
 			}
 

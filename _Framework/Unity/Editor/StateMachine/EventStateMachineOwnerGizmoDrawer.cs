@@ -6,14 +6,14 @@ namespace Bezoro.Framework.Unity.Editor.StateMachine
 {
 	internal static class EventStateMachineOwnerGizmoDrawer
 	{
-		[DrawGizmo(GizmoType.Active)]
-		private static void DrawGizmos(EventStateMachineOwner source, GizmoType gizmoType)
+		[DrawGizmo( GizmoType.Active )]
+		private static void DrawGizmos( EventStateMachineOwner source, GizmoType gizmoType )
 		{
-			DrawStateLabels(source.StateMachine);
+			DrawStateLabels( source.StateMachine );
 
-			void DrawStateLabels(IEventStateMachine stateMachine, int index = 0)
+			void DrawStateLabels( IEventStateMachine stateMachine, int index = 0 )
 			{
-				if (!Application.isPlaying)
+				if ( !Application.isPlaying )
 				{
 					return;
 				}
@@ -29,10 +29,11 @@ namespace Bezoro.Framework.Unity.Editor.StateMachine
 						stateMachine.CurrentState.GetType().Name
 					);
 
-					if (stateMachine.CurrentState is IEventStateMachine fsm)
+					if ( stateMachine.CurrentState is IEventStateMachine fsm )
 					{
 						index++;
 						stateMachine = fsm;
+
 						continue;
 					}
 

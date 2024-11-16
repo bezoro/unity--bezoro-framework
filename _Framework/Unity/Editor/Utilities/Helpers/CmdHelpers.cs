@@ -5,18 +5,18 @@ namespace Bezoro.Framework.Unity.Editor.Utilities.Helpers
 {
 	public static class CmdHelpers
 	{
-		public static void ExecuteCmdCommand(string command, bool asAdmin)
+		public static void ExecuteCmdCommand( string command, bool asAdmin )
 		{
 			var startInfo = new ProcessStartInfo
 			{
-				FileName = "CMD.exe",
-				Arguments = "/C " + command,
-				UseShellExecute = asAdmin,
+				FileName              = "CMD.exe",
+				Arguments             = "/C " + command,
+				UseShellExecute       = asAdmin,
 				RedirectStandardError = !asAdmin,
-				CreateNoWindow = true
+				CreateNoWindow        = true
 			};
 
-			if (asAdmin)
+			if ( asAdmin )
 			{
 				startInfo.Verb = "runas";
 			}
@@ -28,9 +28,9 @@ namespace Bezoro.Framework.Unity.Editor.Utilities.Helpers
 				proc.Start();
 				proc.WaitForExit();
 
-				if (!asAdmin && !proc.StandardError.EndOfStream)
+				if ( !asAdmin && !proc.StandardError.EndOfStream )
 				{
-					Debug.LogError(proc.StandardError.ReadToEnd());
+					Debug.LogError( proc.StandardError.ReadToEnd() );
 				}
 			}
 		}
