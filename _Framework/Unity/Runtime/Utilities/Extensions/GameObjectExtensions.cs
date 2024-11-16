@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Reflection;
 using Bezoro.Framework.Unity.DI;
 using Bezoro.Framework.Unity.Utilities.Helpers;
 using Cysharp.Threading.Tasks;
@@ -11,67 +12,157 @@ namespace Bezoro.Framework.Unity.Utilities.Extensions
 {
 	public static class GameObjectExtensions
 	{
-		public static Component[] AddComponents(this GameObject go, Type[] componentTypes)
+		public static void SetLayerRecursively( this GameObject gameObject, int layer )
 		{
-			return go.AddComponentsInternal(componentTypes).GetAwaiter().GetResult();
+			gameObject.layer = layer;
+			foreach ( Transform child in gameObject.transform )
+			{
+				child.gameObject.SetLayerRecursively( layer );
+			}
 		}
 
-		public static async UniTask<Component[]> AddComponentsAsync(this GameObject go, Type[] componentTypes)
+		public static void SetActiveChildren( this GameObject gameObject, bool isActive )
 		{
-			return await go.AddComponentsInternal(componentTypes, true);
+			foreach ( Transform child in gameObject.transform )
+			{
+				child.gameObject.SetActive( isActive );
+			}
 		}
+
+		public static T GetComponentInChildrenIncludingInactive<T>( this GameObject gameObject ) where T : Component
+		{
+			foreach ( var childTransform in gameObject.GetComponentsInChildren<Transform>( true ) )
+			{
+				var component = childTransform.GetComponent<T>();
+				if ( component != null )
+				{
+					return component;
+				}
+			}
+
+			return null;
+		}
+
+		public static void DestroyChildren( this GameObject gameObject )
+		{
+			foreach ( Transform child in gameObject.transform )
+			{
+				Object.Destroy( child.gameObject );
+			}
+		}
+
+		public static void ResetTransform( this GameObject gameObject )
+		{
+			var transform = gameObject.transform;
+			transform.position   = Vector3.zero;
+			transform.rotation   = Quaternion.identity;
+			transform.localScale = Vector3.one;
+		}
+
+		public static bool HasComponent<T>( this GameObject gameObject ) where T : Component =>
+			gameObject.GetComponent<T>() != null;
+
+		public static void CopyComponentsFrom( this GameObject destination, GameObject source )
+		{
+			foreach ( var sourceComponent in source.GetComponents<Component>() )
+			{
+				if ( sourceComponent is Transform )
+				{
+					continue;
+				}
+
+				var destinationComponent = destination.GetComponent( sourceComponent.GetType() );
+				if ( !destinationComponent )
+				{
+					destinationComponent = destination.AddComponent( sourceComponent.GetType() );
+				}
+
+				foreach ( var field in sourceComponent.GetType().GetFields(
+							 BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance
+						 ) )
+				{
+					field.SetValue( destinationComponent, field.GetValue( sourceComponent ) );
+				}
+
+				foreach ( var prop in sourceComponent.GetType().GetProperties(
+							 BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance
+						 ) )
+				{
+					if ( prop.CanWrite )
+					{
+						prop.SetValue( destinationComponent, prop.GetValue( sourceComponent, null ), null );
+					}
+				}
+			}
+		}
+
+		public static void SetParentAndReset( this GameObject child, GameObject parent )
+		{
+			child.transform.SetParent( parent.transform );
+			child.transform.localPosition = Vector3.zero;
+			child.transform.localRotation = Quaternion.identity;
+			child.transform.localScale    = Vector3.one;
+		}
+
+		public static Component[] AddComponents
+			( this GameObject go, Type[] componentTypes ) =>
+			go.AddComponentsInternal( componentTypes ).GetAwaiter().GetResult();
+
+		public static async UniTask<Component[]> AddComponentsAsync
+			( this GameObject go, Type[] componentTypes ) =>
+			await go.AddComponentsInternal( componentTypes, true );
 
 		private static async UniTask<Component[]> AddComponentsInternal
-			(this GameObject go, Type[] componentTypes, bool useAsync = false)
+			( this GameObject go, Type[] componentTypes, bool useAsync = false )
 		{
-			if (!PlayerLoopHelper.IsMainThread)
+			if ( !PlayerLoopHelper.IsMainThread )
 			{
 				UniTask.ReturnToMainThread();
 			}
 
-			ValidationHelpers.ValidateObjectNotNull(go);
-			ValidationHelpers.ValidateObjectNotNull(componentTypes);
+			ValidationHelpers.ValidateObjectNotNull( go );
+			ValidationHelpers.ValidateObjectNotNull( componentTypes );
 
 			var addedComponents = new Component[componentTypes.Length];
 			var behaviours = new Behaviour[componentTypes.Length];
 
 			foreach ( var componentType in componentTypes )
 			{
-				if (componentType.IsNull())
+				if ( componentType.IsNull() )
 				{
-					BDebug.LogWarning("Component type is null. Skipping...", go);
+					BDebug.LogWarning( "Component type is null. Skipping...", go );
 
 					continue;
 				}
 
-				ValidationHelpers.ValidateIsSubclassOf<Component>(go, nameof(AddComponentsAsync), componentType);
+				ValidationHelpers.ValidateIsSubclassOf<Component>( go, nameof(AddComponentsAsync), componentType );
 
-				BDebug.Log(go, $"Added component: {componentType.Name}", go);
+				BDebug.Log( go, $"Added component: {componentType.Name}", go );
 
-				var component = go.AddComponent(componentType);
+				var component = go.AddComponent( componentType );
 
-				addedComponents.Add(component);
+				addedComponents.Add( component );
 
-				if (component is not Behaviour behaviour)
+				if ( component is not Behaviour behaviour )
 				{
 					continue;
 				}
 
-				behaviours.Add(behaviour);
+				behaviours.Add( behaviour );
 				behaviour.enabled = false;
 
-				if (useAsync)
+				if ( useAsync )
 				{
 					await UniTask.WaitForEndOfFrame();
 				}
 			}
 
-			BDebug.Log($"Finished Adding components to GameObject: {go.name}", go);
+			BDebug.Log( $"Finished Adding components to GameObject: {go.name}", go );
 
 			return addedComponents;
 		}
 
-		public static Behaviour[] EnableBehaviours(this GameObject go)
+		public static Behaviour[] EnableBehaviours( this GameObject go )
 		{
 			var behaviours = go.GetComponents<Behaviour>();
 			behaviours.EnableBehavioursInternal().GetAwaiter().GetResult();
@@ -79,27 +170,27 @@ namespace Bezoro.Framework.Unity.Utilities.Extensions
 			return behaviours;
 		}
 
-		public static async UniTask<Behaviour[]> EnableBehavioursAsync(this GameObject go)
+		public static async UniTask<Behaviour[]> EnableBehavioursAsync( this GameObject go )
 		{
 			var behaviours = go.GetComponents<Behaviour>();
-			await behaviours.EnableBehavioursInternal(true);
+			await behaviours.EnableBehavioursInternal( true );
 
 			return behaviours;
 		}
 
-		private static async UniTask EnableBehavioursInternal(this Behaviour[] behaviours, bool useAsync = false)
+		private static async UniTask EnableBehavioursInternal( this Behaviour[] behaviours, bool useAsync = false )
 		{
-			ValidationHelpers.ValidateObjectNotNull(behaviours);
+			ValidationHelpers.ValidateObjectNotNull( behaviours );
 
 			foreach ( var behaviour in behaviours )
 			{
-				BDebug.Log($"Enabled behaviour: {behaviour.GetType().Name}", behaviour.gameObject);
+				BDebug.Log( $"Enabled behaviour: {behaviour.GetType().Name}", behaviour.gameObject );
 
 				behaviour.enabled = true;
 
-				if (useAsync)
+				if ( useAsync )
 				{
-					await UniTask.Yield(PlayerLoopTiming.Update);
+					await UniTask.Yield( PlayerLoopTiming.Update );
 				}
 			}
 		}
@@ -112,15 +203,13 @@ namespace Bezoro.Framework.Unity.Utilities.Extensions
 		/// <param name="gameObject">The GameObject of which to retrieve the component.</param>
 		/// <param name="component">The component of type <typeparamref name="T" /> if found, otherwise null.</param>
 		/// <returns>true if the component was found, false otherwise.</returns>
-		public static bool TryGetComponentInGameObjectHierarchy<T>(this GameObject gameObject, out T component)
-		where T : Component
-		{
-			return gameObject.TryGetComponent(out component)
-				|| gameObject.TryGetComponentInChildren(out component)
-				|| TryGetComponentInParents(gameObject, out component);
-		}
+		public static bool TryGetComponentInGameObjectHierarchy<T>( this GameObject gameObject, out T component )
+		where T : Component =>
+			gameObject.TryGetComponent( out component )
+		 || gameObject.TryGetComponentInChildren( out component )
+		 || TryGetComponentInParents( gameObject, out component );
 
-		public static bool TryGetComponentInChildren<T>(this GameObject gameObject, out T component)
+		public static bool TryGetComponentInChildren<T>( this GameObject gameObject, out T component )
 		where T : Component
 		{
 			component = gameObject.GetComponentInChildren<T>();
@@ -136,18 +225,19 @@ namespace Bezoro.Framework.Unity.Utilities.Extensions
 		/// <param name="gameObject">The GameObject of which to retrieve the component.</param>
 		/// <param name="component">The component of type <typeparamref name="T" /> if found, otherwise null.</param>
 		/// <returns>true if the component was found, false otherwise.</returns>
-		public static bool TryGetComponentInParents<T>(this GameObject gameObject, out T component) where T : Component
+		public static bool TryGetComponentInParents<T>
+			( this GameObject gameObject, out T component ) where T : Component
 		{
-			component = gameObject.GetComponentInParents(typeof(T)) as T;
+			component = gameObject.GetComponentInParents( typeof(T) ) as T;
 
 			return component != null;
 		}
 
-		public static T GetOrAddComponent<T>(this GameObject gameObject) where T : Component
+		public static T GetOrAddComponent<T>( this GameObject gameObject ) where T : Component
 		{
 			var component = gameObject.GetComponent<T>();
 
-			if (component == null)
+			if ( component == null )
 			{
 				component = gameObject.AddComponent<T>();
 			}
@@ -155,15 +245,15 @@ namespace Bezoro.Framework.Unity.Utilities.Extensions
 			return component;
 		}
 
-		public static Component GetComponentInParents(this GameObject gameObject, Type component)
+		public static Component GetComponentInParents( this GameObject gameObject, Type component )
 		{
 			var parent = gameObject.transform.parent;
 
 			while (parent != null)
 			{
-				var result = parent.GetComponent(component);
+				var result = parent.GetComponent( component );
 
-				if (result != null)
+				if ( result != null )
 				{
 					return result;
 				}
@@ -174,7 +264,7 @@ namespace Bezoro.Framework.Unity.Utilities.Extensions
 			return null;
 		}
 
-		public static bool TryGetComponentInParents(this GameObject gameObject, out Type component)
+		public static bool TryGetComponentInParents( this GameObject gameObject, out Type component )
 		{
 			component = null;
 
@@ -184,7 +274,7 @@ namespace Bezoro.Framework.Unity.Utilities.Extensions
 			{
 				component = parent.GetComponent<Type>();
 
-				if (component != null)
+				if ( component != null )
 				{
 					return true;
 				}
@@ -218,7 +308,7 @@ namespace Bezoro.Framework.Unity.Utilities.Extensions
 			return AddComponentWithDependenciesInternal(
 				gameObject,
 				dependencies,
-				(go, deps) => ( go.AddComponent<T>(), deps )
+				( go, deps ) => ( go.AddComponent<T>(), deps )
 			);
 		}
 
@@ -245,11 +335,11 @@ namespace Bezoro.Framework.Unity.Utilities.Extensions
 			return AddComponentWithDependenciesInternal(
 				gameObject,
 				dependenciesFactory,
-				(go, factory) =>
+				( go, factory ) =>
 				{
 					var component = go.AddComponent<T>();
 
-					return ( component, factory(component) );
+					return ( component, factory( component ) );
 				}
 			);
 		}
@@ -274,51 +364,51 @@ namespace Bezoro.Framework.Unity.Utilities.Extensions
 		)
 		where T : MonoBehaviour, IInjectable<TDependencies>
 		{
-			if (gameObject == null)
+			if ( gameObject == null )
 			{
-				throw new ArgumentNullException(nameof(gameObject));
+				throw new ArgumentNullException( nameof(gameObject) );
 			}
 
-			if (arg == null)
+			if ( arg == null )
 			{
-				throw new ArgumentNullException(nameof(arg));
+				throw new ArgumentNullException( nameof(arg) );
 			}
 
 			T component = null;
 
 			try
 			{
-				using var _ = new ProfilerMarker($"AddComponentWithDependencies<{typeof(T).Name}>").Auto();
+				using var _ = new ProfilerMarker( $"AddComponentWithDependencies<{typeof(T).Name}>" ).Auto();
 
 				TDependencies dependencies;
-				( component, dependencies ) = factory(gameObject, arg);
+				( component, dependencies ) = factory( gameObject, arg );
 
-				if (!component.ValidateDependencies(dependencies))
+				if ( !component.ValidateDependencies( dependencies ) )
 				{
-					throw new ArgumentException($"Invalid dependencies for {typeof(T).Name}");
+					throw new ArgumentException( $"Invalid dependencies for {typeof(T).Name}" );
 				}
 
-				component.Inject(dependencies);
+				component.Inject( dependencies );
 
 				return component;
 			}
 			catch ( Exception ex )
 			{
-				BDebug.Log(ex.ToString().Bold(), gameObject);
+				BDebug.Log( ex.ToString().Bold(), gameObject );
 
-				if (component != null)
+				if ( component != null )
 				{
-					Object.DestroyImmediate(component);
+					Object.DestroyImmediate( component );
 				}
 
 				throw;
 			}
 		}
 
-		public static async UniTask EnableHierarchySequentially(this GameObject root)
+		public static async UniTask EnableHierarchySequentially( this GameObject root )
 		{
-			var components = root.GetComponentsInChildren<MonoBehaviour>(true);
-			root.SetActive(true);
+			var components = root.GetComponentsInChildren<MonoBehaviour>( true );
+			root.SetActive( true );
 			await UniTask.NextFrame();
 
 			foreach ( var component in components )
@@ -328,16 +418,16 @@ namespace Bezoro.Framework.Unity.Utilities.Extensions
 			}
 		}
 
-		public static void DisableHierarchyImmediately(this GameObject root)
+		public static void DisableHierarchyImmediately( this GameObject root )
 		{
-			var components = root.GetComponentsInChildren<MonoBehaviour>(true);
+			var components = root.GetComponentsInChildren<MonoBehaviour>( true );
 
 			foreach ( var component in components )
 			{
 				component.enabled = false;
 			}
 
-			root.SetActive(false);
+			root.SetActive( false );
 		}
 
 		public static IEnumerable<(Transform transform, Component[] components)> GetHierarchyComponents
@@ -347,40 +437,40 @@ namespace Bezoro.Framework.Unity.Utilities.Extensions
 			bool trim = false
 		)
 		{
-			var transforms = root.GetComponentsInChildren<Transform>(true);
+			var transforms = root.GetComponentsInChildren<Transform>( true );
 			var length = transforms.Length;
 			var result = new (Transform transform, Component[] components)[length];
 
-			var componentList = new List<Component>(initialCapacity);
+			var componentList = new List<Component>( initialCapacity );
 			var filteredArray = new Component[initialCapacity];
-			var enabledPropertyCache = new Dictionary<Type, bool>(initialCapacity);
+			var enabledPropertyCache = new Dictionary<Type, bool>( initialCapacity );
 
 			for ( var i = 0 ; i < length ; i++ )
 			{
 				var transform = transforms[i];
 				componentList.Clear();
 				filteredArray.Clear();
-				transform.GetComponents(componentList);
+				transform.GetComponents( componentList );
 
 				foreach ( var component in componentList )
 				{
-					if (component is Behaviour)
+					if ( component is Behaviour )
 					{
-						filteredArray.Add(component);
+						filteredArray.Add( component );
 
 						continue;
 					}
 
 					var componentType = component.GetType();
-					if (!enabledPropertyCache.TryGetValue(componentType, out var hasEnabled))
+					if ( !enabledPropertyCache.TryGetValue( componentType, out var hasEnabled ) )
 					{
-						hasEnabled = componentType.GetProperty("enabled") != null;
+						hasEnabled                          = componentType.GetProperty( "enabled" ) != null;
 						enabledPropertyCache[componentType] = hasEnabled;
 					}
 
-					if (hasEnabled)
+					if ( hasEnabled )
 					{
-						filteredArray.Add(component);
+						filteredArray.Add( component );
 					}
 				}
 
