@@ -1,5 +1,5 @@
 ﻿using System;
-using Bezoro.Framework.Unity.Utilities.Helpers;
+using Bezoro.Framework.Unity.Utilities;
 using NUnit.Framework;
 
 namespace Bezoro.Framework.Unity.Tests.EditMode
@@ -9,13 +9,13 @@ namespace Bezoro.Framework.Unity.Tests.EditMode
 	{
 		// Positive tests
 
-		[TestCase(0, "A")]
-		[TestCase(7, "H")]
-		[TestCase(25, "Z")]
-		public void ValidInput_ReturnsCorrectNotation(int y, string expectedNotation)
+		[TestCase( 0, "A" )]
+		[TestCase( 7, "H" )]
+		[TestCase( 25, "Z" )]
+		public void ValidInput_ReturnsCorrectNotation( int y, string expectedNotation )
 		{
 			// Act
-			var actualNotation = IntHelpers.IntToChessNotationFile(y);
+			var actualNotation = IntHelpers.IntToChessNotationFile( y );
 
 			// Assert
 			Assert.AreEqual(
@@ -33,11 +33,11 @@ namespace Bezoro.Framework.Unity.Tests.EditMode
 
 			for ( var i = 0 ; i < 10 ; i++ )
 			{
-				var y = random.Next(0, 26);
+				var y = random.Next( 0, 26 );
 				var expectedNotation = $"{(char)( 'A' + y )}";
 
 				// Act
-				var actualNotation = IntHelpers.IntToChessNotationFile(y);
+				var actualNotation = IntHelpers.IntToChessNotationFile( y );
 
 				// Assert
 				Assert.AreEqual(
@@ -50,26 +50,26 @@ namespace Bezoro.Framework.Unity.Tests.EditMode
 
 		// Negative tests
 
-		[TestCase(-1)]
-		[TestCase(-10)]
-		[TestCase(-50)]
-		public void NegativeInput_ThrowsArgumentOutOfRangeException(int negativeValue)
+		[TestCase( -1 )]
+		[TestCase( -10 )]
+		[TestCase( -50 )]
+		public void NegativeInput_ThrowsArgumentOutOfRangeException( int negativeValue )
 		{
 			// Act & Assert
 			Assert.Throws<ArgumentOutOfRangeException>(
-				() => IntHelpers.IntToChessNotationRank(negativeValue),
+				() => IntHelpers.IntToChessNotationRank( negativeValue ),
 				$"Expected ArgumentOutOfRangeException for x = {negativeValue}"
 			);
 		}
 
-		[TestCase(26)]
-		[TestCase(50)]
-		[TestCase(100)]
-		public void TooLargeInput_ThrowsArgumentOutOfRangeException(int largeValue)
+		[TestCase( 26 )]
+		[TestCase( 50 )]
+		[TestCase( 100 )]
+		public void TooLargeInput_ThrowsArgumentOutOfRangeException( int largeValue )
 		{
 			// Act & Assert
 			Assert.Throws<ArgumentOutOfRangeException>(
-				() => IntHelpers.IntToChessNotationRank(largeValue),
+				() => IntHelpers.IntToChessNotationRank( largeValue ),
 				$"Expected ArgumentOutOfRangeException for x = {largeValue}"
 			);
 		}
