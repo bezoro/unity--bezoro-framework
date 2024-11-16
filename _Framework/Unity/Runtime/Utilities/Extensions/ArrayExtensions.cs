@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using Bezoro.Framework.Unity.Utilities.Helpers;
 using Cysharp.Threading.Tasks;
+using Object = UnityEngine.Object;
 
 namespace Bezoro.Framework.Unity.Utilities
 {
@@ -35,7 +36,7 @@ namespace Bezoro.Framework.Unity.Utilities
 			return false;
 		}
 
-		public static bool IsNotUnityObject<T>( this T[] array ) => array is not object[];
+		public static bool IsNotUnityObject<T>( this T[] array ) => array is not Object[];
 
 		public static bool Contains<T>
 			( this T[] array, T element, out int index, bool safetyChecks = true )
