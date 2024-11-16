@@ -1,6 +1,6 @@
 ﻿using System.IO;
 using Bezoro.Framework.Unity.Editor.Utilities.Helpers;
-using Bezoro.Framework.Unity.Utilities.Extensions;
+using Bezoro.Framework.Unity.Utilities;
 using Bezoro.Framework.Unity.Utilities.Helpers;
 using UnityEditor;
 using UnityEditor.PackageManager;
@@ -12,7 +12,7 @@ namespace Bezoro.Framework.Unity.Editor.Tools
 	{
 		private static class DirectoryCreator
 		{
-			[MenuItem("Bezoro/Project Preparer/Create Default Directories", false, 20)]
+			[MenuItem( "Bezoro/Project Preparer/Create Default Directories", false, 20 )]
 			public static void CreateDefaultDirectories_MenuItem()
 			{
 				var root = Application.dataPath;
@@ -20,16 +20,16 @@ namespace Bezoro.Framework.Unity.Editor.Tools
 
 				foreach ( var folder in foldersToCreate )
 				{
-					if (Directory.Exists(Path.Combine(root, folder)))
+					if ( Directory.Exists( Path.Combine( root, folder ) ) )
 					{
 						Debug.LogWarning
-							($"Directory {folder.Bold()} already exists at {root.Italic()}.");
+							( $"Directory {folder.Bold()} already exists at {root.Italic()}." );
 
 						continue;
 					}
 
-					Directory.CreateDirectory(Path.Combine(root, folder));
-					Debug.Log($"Directory {folder.Bold()} created at {root.Italic()}.");
+					Directory.CreateDirectory( Path.Combine( root, folder ) );
+					Debug.Log( $"Directory {folder.Bold()} created at {root.Italic()}." );
 				}
 
 				AssetDatabase.Refresh();
@@ -64,27 +64,28 @@ namespace Bezoro.Framework.Unity.Editor.Tools
 			// 		  60)]
 			public static async void OverwriteManifest_MenuItem()
 			{
-				var gistUrl = GistHelpers.GetUrl("ebccb4c31b1bb9fc9379652f8acd15bc");
-				var contentsFromUrl = await UrlHelpers.GetContents(gistUrl);
-				ReplaceManifestText(contentsFromUrl);
+				var gistUrl = GistHelpers.GetUrl( "ebccb4c31b1bb9fc9379652f8acd15bc" );
+				var contentsFromUrl = await UrlHelpers.GetContents( gistUrl );
+				ReplaceManifestText( contentsFromUrl );
 			}
 
-			private static void ReplaceManifestText(string contents)
+			private static void ReplaceManifestText( string contents )
 			{
 				var existingManifest =
-					Path.Combine(Application.dataPath, "../Packages/manifest.json");
+					Path.Combine( Application.dataPath, "../Packages/manifest.json" );
 
-				File.WriteAllText(existingManifest, contents);
+				File.WriteAllText( existingManifest, contents );
 				Client.Resolve();
 			}
 		}
 
 		private static class InputSystemSettingsSetter
 		{
-			[MenuItem("Bezoro/Project Preparer/Set Input System (Both)", false, 80)]
+			[MenuItem( "Bezoro/Project Preparer/Set Input System (Both)", false, 80 )]
 			private static void SetInputSystemBoth_MenuItem()
 			{
-				if (InputSystemHelpers.GetActiveInputSystemProperty().intValue == (int)InputSystemHelpers.InputSystem.Both)
+				if ( InputSystemHelpers.GetActiveInputSystemProperty().intValue
+				  == (int)InputSystemHelpers.InputSystem.Both )
 				{
 					EditorUtility.DisplayDialog(
 						"",
@@ -95,13 +96,13 @@ namespace Bezoro.Framework.Unity.Editor.Tools
 					return;
 				}
 
-				InputSystemHelpers.SetActiveInputSystem(InputSystemHelpers.InputSystem.Both);
+				InputSystemHelpers.SetActiveInputSystem( InputSystemHelpers.InputSystem.Both );
 
-				if (EditorUtility.DisplayDialog(
+				if ( EditorUtility.DisplayDialog(
 						"",
 						"Changing the Input System needs to restart the editor",
 						"Ok"
-					))
+					) )
 				{
 					EditorHelpers.ReopenProject();
 				}

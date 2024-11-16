@@ -1,5 +1,4 @@
 ﻿using Bezoro.Framework.Unity.Jobs;
-using Bezoro.Framework.Unity.Utilities.Extensions;
 using Unity.Collections;
 using Unity.Jobs;
 using Unity.Mathematics;
@@ -23,33 +22,33 @@ namespace Bezoro.Framework.Unity.Utilities.Helpers
 		)
 		{
 			var totalPoints = numPointsWidth * numPointsHeight;
-			if (totalPoints <= 0)
+			if ( totalPoints <= 0 )
 			{
 				return;
 			}
 
-			if (resultPoints.Length != totalPoints)
+			if ( resultPoints.Length != totalPoints )
 			{
 				resultPoints.SafeDispose();
 
-				resultPoints = new NativeArray<float3>(totalPoints, Allocator.Persistent);
+				resultPoints = new(totalPoints, Allocator.Persistent);
 			}
 
-			rightAxis = math.normalize(rightAxis);
-			upAxis = math.normalize(upAxis);
+			rightAxis = math.normalize( rightAxis );
+			upAxis    = math.normalize( upAxis );
 			var generatePointsOnPlaneJob = new GeneratePointsOnPlaneJob
 			{
-				Center = center,
-				Width = width,
-				Height = height,
-				NumPointsWidth = numPointsWidth,
+				Center          = center,
+				Width           = width,
+				Height          = height,
+				NumPointsWidth  = numPointsWidth,
 				NumPointsHeight = numPointsHeight,
-				RightAxis = rightAxis,
-				UpAxis = upAxis,
-				ResultPoints = resultPoints
+				RightAxis       = rightAxis,
+				UpAxis          = upAxis,
+				ResultPoints    = resultPoints
 			};
 
-			generatePointsOnPlaneJob.Schedule(totalPoints, batchCount).Complete();
+			generatePointsOnPlaneJob.Schedule( totalPoints, batchCount ).Complete();
 		}
 
 		public static void GeneratePointsOnPlaneTempJob
@@ -66,30 +65,30 @@ namespace Bezoro.Framework.Unity.Utilities.Helpers
 		)
 		{
 			var totalPoints = numPointsWidth * numPointsHeight;
-			if (totalPoints <= 0)
+			if ( totalPoints <= 0 )
 			{
 				return;
 			}
 
 			resultPoints.SafeDispose();
 
-			resultPoints = new NativeArray<float3>(totalPoints, Allocator.TempJob);
+			resultPoints = new(totalPoints, Allocator.TempJob);
 
-			rightAxis = math.normalize(rightAxis);
-			upAxis = math.normalize(upAxis);
+			rightAxis = math.normalize( rightAxis );
+			upAxis    = math.normalize( upAxis );
 			var generatePointsOnPlaneJob = new GeneratePointsOnPlaneJob
 			{
-				Center = center,
-				Width = width,
-				Height = height,
-				NumPointsWidth = numPointsWidth,
+				Center          = center,
+				Width           = width,
+				Height          = height,
+				NumPointsWidth  = numPointsWidth,
 				NumPointsHeight = numPointsHeight,
-				RightAxis = rightAxis,
-				UpAxis = upAxis,
-				ResultPoints = resultPoints
+				RightAxis       = rightAxis,
+				UpAxis          = upAxis,
+				ResultPoints    = resultPoints
 			};
 
-			generatePointsOnPlaneJob.Schedule(totalPoints, batchCount).Complete();
+			generatePointsOnPlaneJob.Schedule( totalPoints, batchCount ).Complete();
 		}
 
 		public static void CreateRaycastCommandsPersistent
@@ -100,26 +99,26 @@ namespace Bezoro.Framework.Unity.Utilities.Helpers
 			int batchCount = 64
 		)
 		{
-			if (origins.Length == 0)
+			if ( origins.Length == 0 )
 			{
 				return;
 			}
 
-			if (origins.Length != commands.Length)
+			if ( origins.Length != commands.Length )
 			{
 				commands.SafeDispose();
 
-				commands = new NativeArray<RaycastCommand>(origins.Length, Allocator.Persistent);
+				commands = new(origins.Length, Allocator.Persistent);
 			}
 
 			var createRaycastCommandsJob = new CreateRaycastCommandsJob
 			{
-				Origins = origins,
+				Origins   = origins,
 				Direction = direction,
-				Commands = commands
+				Commands  = commands
 			};
 
-			createRaycastCommandsJob.Schedule(origins.Length, batchCount).Complete();
+			createRaycastCommandsJob.Schedule( origins.Length, batchCount ).Complete();
 		}
 
 		public static void CreateRaycastCommandsTempJob
@@ -130,23 +129,23 @@ namespace Bezoro.Framework.Unity.Utilities.Helpers
 			int batchCount = 64
 		)
 		{
-			if (origins.Length == 0)
+			if ( origins.Length == 0 )
 			{
 				return;
 			}
 
 			commands.SafeDispose();
 
-			commands = new NativeArray<RaycastCommand>(origins.Length, Allocator.TempJob);
+			commands = new(origins.Length, Allocator.TempJob);
 
 			var createRaycastCommandsJob = new CreateRaycastCommandsJob
 			{
-				Origins = origins,
+				Origins   = origins,
 				Direction = direction,
-				Commands = commands
+				Commands  = commands
 			};
 
-			createRaycastCommandsJob.Schedule(origins.Length, batchCount).Complete();
+			createRaycastCommandsJob.Schedule( origins.Length, batchCount ).Complete();
 		}
 
 		public static void ExecuteRaycastCommandsPersistent
@@ -156,19 +155,19 @@ namespace Bezoro.Framework.Unity.Utilities.Helpers
 			int minCommandsPerJob = 1
 		)
 		{
-			if (commands.Length == 0)
+			if ( commands.Length == 0 )
 			{
 				return;
 			}
 
-			if (commands.Length != hits.Length)
+			if ( commands.Length != hits.Length )
 			{
 				hits.SafeDispose();
 
-				hits = new NativeArray<RaycastHit>(commands.Length, Allocator.Persistent);
+				hits = new(commands.Length, Allocator.Persistent);
 			}
 
-			RaycastCommand.ScheduleBatch(commands, hits, minCommandsPerJob).Complete();
+			RaycastCommand.ScheduleBatch( commands, hits, minCommandsPerJob ).Complete();
 		}
 
 		public static void ExecuteRaycastCommandsTempJob
@@ -178,16 +177,16 @@ namespace Bezoro.Framework.Unity.Utilities.Helpers
 			int minCommandsPerJob = 1
 		)
 		{
-			if (commands.Length == 0)
+			if ( commands.Length == 0 )
 			{
 				return;
 			}
 
 			hits.SafeDispose();
 
-			hits = new NativeArray<RaycastHit>(commands.Length, Allocator.TempJob);
+			hits = new(commands.Length, Allocator.TempJob);
 
-			RaycastCommand.ScheduleBatch(commands, hits, minCommandsPerJob).Complete();
+			RaycastCommand.ScheduleBatch( commands, hits, minCommandsPerJob ).Complete();
 		}
 
 		public static void CheckRaycastHitsPersistent
@@ -197,25 +196,25 @@ namespace Bezoro.Framework.Unity.Utilities.Helpers
 			int batchCount = 64
 		)
 		{
-			if (hits.Length == 0)
+			if ( hits.Length == 0 )
 			{
 				return;
 			}
 
-			if (hits.Length != validHits.Length)
+			if ( hits.Length != validHits.Length )
 			{
 				validHits.SafeDispose();
 
-				validHits = new NativeArray<RaycastHit>(hits.Length, Allocator.Persistent);
+				validHits = new(hits.Length, Allocator.Persistent);
 			}
 
 			var checkRaycastHitJob = new CheckRaycastHitJob
 			{
-				Hits = hits,
+				Hits      = hits,
 				ValidHits = validHits
 			};
 
-			checkRaycastHitJob.Schedule(hits.Length, batchCount).Complete();
+			checkRaycastHitJob.Schedule( hits.Length, batchCount ).Complete();
 		}
 
 		public static void CheckRaycastHitsTempJob
@@ -225,22 +224,22 @@ namespace Bezoro.Framework.Unity.Utilities.Helpers
 			int batchCount = 64
 		)
 		{
-			if (hits.Length == 0)
+			if ( hits.Length == 0 )
 			{
 				return;
 			}
 
 			validHits.SafeDispose();
 
-			validHits = new NativeArray<RaycastHit>(hits.Length, Allocator.TempJob);
+			validHits = new(hits.Length, Allocator.TempJob);
 
 			var checkRaycastHitJob = new CheckRaycastHitJob
 			{
-				Hits = hits,
+				Hits      = hits,
 				ValidHits = validHits
 			};
 
-			checkRaycastHitJob.Schedule(hits.Length, batchCount).Complete();
+			checkRaycastHitJob.Schedule( hits.Length, batchCount ).Complete();
 		}
 	}
 }

@@ -1,5 +1,4 @@
 ﻿using System;
-using Bezoro.Framework.Unity.Utilities.Extensions;
 using UnityEngine;
 
 namespace Bezoro.Framework.Unity.Utilities.Helpers
@@ -12,21 +11,21 @@ namespace Bezoro.Framework.Unity.Utilities.Helpers
 		/// <param name="a">The first array to compare.</param>
 		/// <param name="b">The second array to compare.</param>
 		/// <returns>true if the arrays are equal, false otherwise.</returns>
-		public static bool ArraysAreEqual<T>(T[] a, T[] b) where T : class
+		public static bool ArraysAreEqual<T>( T[] a, T[] b ) where T : class
 		{
-			if (a == null || b == null)
+			if ( a == null || b == null )
 			{
 				return false;
 			}
 
-			if (a.Length != b.Length)
+			if ( a.Length != b.Length )
 			{
 				return false;
 			}
 
 			for ( var i = 0 ; i < a.Length ; i++ )
 			{
-				if (a[i] != b[i])
+				if ( a[i] != b[i] )
 				{
 					return false;
 				}
@@ -49,7 +48,7 @@ namespace Bezoro.Framework.Unity.Utilities.Helpers
 		///         <item>otherwise, the item is represented by its result of calling <see cref="object.ToString()" />.</item>
 		///     </list>
 		/// </remarks>
-		public static string GetElementName<T>(T item)
+		public static string GetElementName<T>( T item )
 		{
 			return item switch
 			{
@@ -60,198 +59,214 @@ namespace Bezoro.Framework.Unity.Utilities.Helpers
 			};
 		}
 
-		public static void Add<T>(ref T[] array, T element)
+		public static void Add<T>( ref T[] array, T element )
 		where T : class
 		{
-			Add(ref array, element, out _);
+			Add( ref array, element, out _ );
 		}
 
-		public static void Add<T>(ref T[] array, T element, out int index)
+		public static void Add<T>( ref T[] array, T element, out int index )
 		where T : class
 		{
-			if (element.EqualsNull())
+			if ( element.EqualsNull() )
 			{
 				index = -1;
+
 				return;
 			}
 
-			if (array.IsNullOrEmpty())
+			if ( array.IsNullOrEmpty() )
 			{
-				CreateArrayAndAddFirstElement(ref array, element, false);
+				CreateArrayAndAddFirstElement( ref array, element, false );
 				index = 0;
+
 				return;
 			}
 
 			for ( var i = 0 ; i < array.Length ; i++ )
 			{
-				if (array[i].NotEqualsNull())
+				if ( array[i].NotEqualsNull() )
 				{
 					continue;
 				}
 
 				array[i] = element;
-				index = i;
+				index    = i;
+
 				return;
 			}
 
-			ResizeArrayAndAddElement(ref array, element, 2, out var oldLength);
+			ResizeArrayAndAddElement( ref array, element, 2, out var oldLength );
 			index = oldLength;
 		}
 
 		private static void ResizeArrayAndAddElement<T>
-			(ref T[] array, T element, int factor, out int oldLength)
+			( ref T[] array, T element, int factor, out int oldLength )
 		{
 			oldLength = array.Length;
-			MultiplySize(ref array, factor);
+			MultiplySize( ref array, factor );
 			array[oldLength] = element;
 		}
 
-		public static void Add<T>(ref T[] array, T element, ref int validSize, out int index)
+		public static void Add<T>( ref T[] array, T element, ref int validSize, out int index )
 		where T : class
 		{
-			if (validSize < 0)
+			if ( validSize < 0 )
 			{
 				index = -1;
+
 				return;
 			}
 
-			if (element.IsNull())
+			if ( element.IsNull() )
 			{
 				index = -1;
+
 				return;
 			}
 
-			if (array.IsNullOrEmpty())
+			if ( array.IsNullOrEmpty() )
 			{
-				CreateArrayAndAddFirstElement(ref array, element);
+				CreateArrayAndAddFirstElement( ref array, element );
 				validSize = 1;
-				index = 0;
+				index     = 0;
+
 				return;
 			}
 
-			if (validSize < array.Length)
+			if ( validSize < array.Length )
 			{
 				array[validSize] = element;
 				validSize++;
 				index = validSize;
+
 				return;
 			}
 
-			ResizeArrayAndAddElement(ref array, element, 2, ref validSize, out var oldLength);
+			ResizeArrayAndAddElement( ref array, element, 2, ref validSize, out var oldLength );
 			index = oldLength;
 		}
 
 		private static void ResizeArrayAndAddElement<T>
-			(ref T[] array, T element, int factor, ref int validSize, out int oldLength)
+			( ref T[] array, T element, int factor, ref int validSize, out int oldLength )
 		{
-			ResizeArrayAndAddElement(ref array, element, factor, out oldLength);
+			ResizeArrayAndAddElement( ref array, element, factor, out oldLength );
 			validSize++;
 		}
 
-		public static void MultiplySize<T>(ref T[] array, int factor)
+		public static void MultiplySize<T>( ref T[] array, int factor )
 		{
-			Array.Resize(ref array, array.Length * factor);
+			Array.Resize( ref array, array.Length * factor );
 		}
 
-		public static void AddUnique<T>(ref T[] array, T element, out int index)
+		public static void AddUnique<T>( ref T[] array, T element, out int index )
 		where T : class
 		{
-			if (element.EqualsNull())
+			if ( element.EqualsNull() )
 			{
 				index = -1;
+
 				return;
 			}
 
-			if (array.IsNullOrEmpty())
+			if ( array.IsNullOrEmpty() )
 			{
-				CreateArrayAndAddFirstElement(ref array, element);
+				CreateArrayAndAddFirstElement( ref array, element );
 				index = 0;
+
 				return;
 			}
 
-			if (array.Contains(element, out _))
+			if ( array.Contains( element, out _ ) )
 			{
 				index = -1;
+
 				return;
 			}
 
-			Add(ref array, element, out var i);
+			Add( ref array, element, out var i );
 			index = i;
 		}
 
-		public static void AddUnique<T>(ref T[] array, T element, ref int validSize, out int index)
+		public static void AddUnique<T>( ref T[] array, T element, ref int validSize, out int index )
 		where T : class
 		{
-			if (element.EqualsNull())
+			if ( element.EqualsNull() )
 			{
 				index = -1;
+
 				return;
 			}
 
-			if (array.IsNullOrEmpty())
+			if ( array.IsNullOrEmpty() )
 			{
-				CreateArrayAndAddFirstElement(ref array, element, false);
+				CreateArrayAndAddFirstElement( ref array, element, false );
 				validSize = 1;
-				index = 0;
+				index     = 0;
+
 				return;
 			}
 
-			if (array.Contains(element, validSize, out _))
+			if ( array.Contains( element, validSize, out _ ) )
 			{
 				index = -1;
+
 				return;
 			}
 
-			Add(ref array, element, ref validSize, out var i);
+			Add( ref array, element, ref validSize, out var i );
 			index = i;
 		}
 
 		public static void CreateArrayAndAddFirstElement<T>
-			(ref T[] array, T element, bool safetyChecks = true)
+			( ref T[] array, T element, bool safetyChecks = true )
 		{
-			if (safetyChecks)
+			if ( safetyChecks )
 			{
-				if (element.EqualsNull())
+				if ( element.EqualsNull() )
 				{
 					return;
 				}
 
-				if (array.IsNotNullOrEmpty())
+				if ( array.IsNotNullOrEmpty() )
 				{
 					return;
 				}
 			}
 
-			Array.Resize(ref array, 1);
+			Array.Resize( ref array, 1 );
 			array[0] = element;
 		}
 
-		public static void Merge<T>(T[] from, ref T[] to)
+		public static void Merge<T>( T[] from, ref T[] to )
 		where T : class
 		{
-			if (from.IsNullOrEmpty())
+			if ( from.IsNullOrEmpty() )
 			{
 				return;
 			}
 
-			if (to.IsNullOrEmpty())
+			if ( to.IsNullOrEmpty() )
 			{
-				Array.Resize(ref to, from.Length);
-				Copy(from, ref to, false);
+				Array.Resize( ref to, from.Length );
+				Copy( from, ref to, false );
+
 				return;
 			}
 
-			if (to.Length < from.Length)
+			if ( to.Length < from.Length )
 			{
-				Array.Resize(ref to, from.Length);
-				Copy(from, ref to, false);
+				Array.Resize( ref to, from.Length );
+				Copy( from, ref to, false );
+
 				return;
 			}
 
 			var availableIndices = to.CountEmptyIndices();
-			if (availableIndices >= from.Length)
+			if ( availableIndices >= from.Length )
 			{
-				MergeArrays(from, ref to);
+				MergeArrays( from, ref to );
+
 				return;
 			}
 
@@ -265,24 +280,24 @@ namespace Bezoro.Framework.Unity.Utilities.Helpers
 				newLength *= newLengthMultiplier;
 			}
 
-			Array.Resize(ref to, newLength);
-			MergeArrays(from, ref to);
+			Array.Resize( ref to, newLength );
+			MergeArrays( from, ref to );
 
-			void MergeArrays(T[] from, ref T[] to)
+			void MergeArrays( T[] from, ref T[] to )
 			{
 				var index = 0;
-				if (from.IsUnityObject(out var fromUnityArray) && to.IsUnityObject(out var toUnityArray))
+				if ( from.IsUnityObject( out var fromUnityArray ) && to.IsUnityObject( out var toUnityArray ) )
 				{
 					for ( var i = 0 ; i < toUnityArray.Length ; i++ )
 					{
-						if (toUnityArray[i].NotEqualsNull())
+						if ( toUnityArray[i].NotEqualsNull() )
 						{
 							continue;
 						}
 
 						toUnityArray[i] = fromUnityArray[index];
 						index++;
-						if (index > from.Length - 1)
+						if ( index > from.Length - 1 )
 						{
 							return;
 						}
@@ -292,14 +307,14 @@ namespace Bezoro.Framework.Unity.Utilities.Helpers
 				{
 					for ( var i = 0 ; i < to.Length ; i++ )
 					{
-						if (to[i].NotEqualsNull())
+						if ( to[i].NotEqualsNull() )
 						{
 							continue;
 						}
 
 						to[i] = from[index];
 						index++;
-						if (index > from.Length - 1)
+						if ( index > from.Length - 1 )
 						{
 							return;
 						}
@@ -308,23 +323,23 @@ namespace Bezoro.Framework.Unity.Utilities.Helpers
 			}
 		}
 
-		public static void Copy<T>(T[] from, ref T[] to, bool safetyChecks = true)
+		public static void Copy<T>( T[] from, ref T[] to, bool safetyChecks = true )
 		{
-			if (safetyChecks)
+			if ( safetyChecks )
 			{
-				if (from.IsNullOrEmpty())
+				if ( from.IsNullOrEmpty() )
 				{
 					return;
 				}
 
-				if (to.IsNullOrEmpty())
+				if ( to.IsNullOrEmpty() )
 				{
-					Array.Resize(ref to, from.Length);
+					Array.Resize( ref to, from.Length );
 				}
 
-				if (to.Length < from.Length)
+				if ( to.Length < from.Length )
 				{
-					Array.Resize(ref to, from.Length);
+					Array.Resize( ref to, from.Length );
 				}
 			}
 
@@ -335,28 +350,31 @@ namespace Bezoro.Framework.Unity.Utilities.Helpers
 		}
 
 		public static void Remove<T>
-			(ref T[] array, T element, out int index, bool safetyChecks = true)
+			( ref T[] array, T element, out int index, bool safetyChecks = true )
 		where T : class
 		{
-			if (safetyChecks)
+			if ( safetyChecks )
 			{
-				if (element == null)
+				if ( element == null )
 				{
 					index = -1;
+
 					return;
 				}
 
-				if (array.IsNullOrEmpty())
+				if ( array.IsNullOrEmpty() )
 				{
 					index = -1;
+
 					return;
 				}
 			}
 
-			if (array.Contains(element, out var i))
+			if ( array.Contains( element, out var i ) )
 			{
 				array[i] = default( T );
-				index = i;
+				index    = i;
+
 				return;
 			}
 
@@ -364,55 +382,60 @@ namespace Bezoro.Framework.Unity.Utilities.Helpers
 		}
 
 		public static void Remove<T>
-			(ref T[] array, T element, ref int validSize, out int index, bool safetyChecks = true)
+			( ref T[] array, T element, ref int validSize, out int index, bool safetyChecks = true )
 		where T : class
 		{
-			if (safetyChecks)
+			if ( safetyChecks )
 			{
-				if (validSize <= 0)
+				if ( validSize <= 0 )
 				{
 					index = -1;
+
 					return;
 				}
 
-				if (element.EqualsNull())
+				if ( element.EqualsNull() )
 				{
 					index = -1;
+
 					return;
 				}
 
-				if (array.IsNullOrEmpty())
+				if ( array.IsNullOrEmpty() )
 				{
 					index = -1;
+
 					return;
 				}
 			}
 
-			if (array.Contains(element, validSize, out var i, false))
+			if ( array.Contains( element, validSize, out var i, false ) )
 			{
-				if (i == validSize - 1)
+				if ( i == validSize - 1 )
 				{
-					array[i] = default( T );
+					array[i]  = default( T );
 					validSize = i;
-					index = i;
+					index     = i;
+
 					return;
 				}
 
-				array[i] = array[validSize];
+				array[i]         = array[validSize];
 				array[validSize] = default( T );
 				validSize--;
 
 				index = i;
+
 				return;
 			}
 
 			index = -1;
 		}
 
-		public static void Clear<T>(ref T[] array)
+		public static void Clear<T>( ref T[] array )
 		where T : class
 		{
-			if (array.IsNullOrEmpty())
+			if ( array.IsNullOrEmpty() )
 			{
 				return;
 			}
@@ -423,15 +446,15 @@ namespace Bezoro.Framework.Unity.Utilities.Helpers
 			}
 		}
 
-		public static void Clear<T>(ref T[] array, int validSize)
+		public static void Clear<T>( ref T[] array, int validSize )
 		where T : class
 		{
-			if (validSize <= 0)
+			if ( validSize <= 0 )
 			{
 				return;
 			}
 
-			if (array.IsNullOrEmpty())
+			if ( array.IsNullOrEmpty() )
 			{
 				return;
 			}

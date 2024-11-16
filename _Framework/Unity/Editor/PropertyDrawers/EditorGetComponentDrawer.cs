@@ -1,68 +1,70 @@
 ﻿using System.Reflection;
 using Bezoro.Framework.Unity.Attributes;
-using Bezoro.Framework.Unity.Utilities.Extensions;
+using Bezoro.Framework.Unity.Utilities;
 using UnityEditor;
 using UnityEngine;
 
 namespace Bezoro.Framework.Unity.Editor.PropertyDrawers
 {
-	[CustomPropertyDrawer(typeof(EditorGetComponentAttribute))]
+	[CustomPropertyDrawer( typeof(EditorGetComponentAttribute) )]
 	public class EditorGetComponentDrawer : PropertyDrawer
 	{
-		public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
+		public override void OnGUI( Rect position, SerializedProperty property, GUIContent label )
 		{
-			EditorGUI.BeginProperty(position, label, property);
+			EditorGUI.BeginProperty( position, label, property );
 
 			var target = property.serializedObject.targetObject as MonoBehaviour;
 
-			if (target != null && attribute is EditorGetComponentAttribute attr)
+			if ( target != null && attribute is EditorGetComponentAttribute attr )
 			{
 				var field = target.GetType().GetField(
 					property.name,
 					BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic
 				);
 
-				if (AssignComponent(target, field, attr))
+				if ( AssignComponent( target, field, attr ) )
 				{
 					property.serializedObject.ApplyModifiedProperties();
 				}
 			}
 
-			EditorGUI.PropertyField(position, property, label);
+			EditorGUI.PropertyField( position, property, label );
 			EditorGUI.EndProperty();
 		}
 
-		private bool AssignComponent(MonoBehaviour mb, FieldInfo field, EditorGetComponentAttribute attr)
+		private bool AssignComponent( MonoBehaviour mb, FieldInfo field, EditorGetComponentAttribute attr )
 		{
-			if (!typeof(Component).IsAssignableFrom(field.FieldType))
+			if ( !typeof(Component).IsAssignableFrom( field.FieldType ) )
 			{
 				EditorGUILayout.HelpBox(
 					$"Field {field.Name} in {mb.GetType().Name} must inherit from UnityEngine.Component",
 					MessageType.Warning
 				);
+
 				return false;
 			}
 
-			var currentComponent = field.GetValue(mb) as Component;
-			var newComponent = mb.gameObject.GetComponent(attr.ComponentType);
+			var currentComponent = field.GetValue( mb ) as Component;
+			var newComponent = mb.gameObject.GetComponent( attr.ComponentType );
 
-			if (newComponent == null && attr.IncludeChildren)
+			if ( newComponent == null && attr.IncludeChildren )
 			{
-				newComponent = mb.gameObject.GetComponentInChildren(attr.ComponentType);
+				newComponent = mb.gameObject.GetComponentInChildren( attr.ComponentType );
 			}
 
-			if (newComponent == null && attr.IncludeParents)
+			if ( newComponent == null && attr.IncludeParents )
 			{
-				newComponent = mb.gameObject.GetComponentInParents(attr.ComponentType);
+				newComponent = mb.gameObject.GetComponentInParents( attr.ComponentType );
 			}
 
-			if (currentComponent != newComponent)
+			if ( currentComponent != newComponent )
 			{
-				field.SetValue(mb, newComponent);
+				field.SetValue( mb, newComponent );
+
 				return true;
 			}
 
-			if (newComponent == null)
+			if ( newComponent == null )
 			{
 				EditorGUILayout.HelpBox(
 					$"No component of type {attr.ComponentType.Name} found on {mb.gameObject.name}",

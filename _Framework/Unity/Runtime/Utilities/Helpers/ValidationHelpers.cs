@@ -1,14 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
-using Bezoro.Framework.Unity.Utilities.Extensions;
 
 namespace Bezoro.Framework.Unity.Utilities.Helpers
 {
 	public static class ValidationHelpers
 	{
-		public static void ValidateIsSubclassOf<T>(object caller, string methodName, Type type)
+		public static void ValidateIsSubclassOf<T>( object caller, string methodName, Type type )
 		{
-			if (!type.IsSubclassOf(typeof(T)))
+			if ( !type.IsSubclassOf( typeof(T) ) )
 			{
 				ExceptionHelpers.ThrowExceptionEditorOnly<ArgumentNullException>(
 					caller,
@@ -18,9 +17,9 @@ namespace Bezoro.Framework.Unity.Utilities.Helpers
 			}
 		}
 
-		public static void ValidatePositiveValue(float value)
+		public static void ValidatePositiveValue( float value )
 		{
-			ValidatePositiveValue(null, "", value);
+			ValidatePositiveValue( null, "", value );
 		}
 
 		public static void ValidatePositiveValue
@@ -30,7 +29,7 @@ namespace Bezoro.Framework.Unity.Utilities.Helpers
 			float value
 		)
 		{
-			if (value <= 0)
+			if ( value <= 0 )
 			{
 				ExceptionHelpers.ThrowExceptionEditorOnly<ArgumentException>(
 					caller,
@@ -48,7 +47,7 @@ namespace Bezoro.Framework.Unity.Utilities.Helpers
 			int max
 		)
 		{
-			if (value > max)
+			if ( value > max )
 			{
 				ExceptionHelpers.ThrowExceptionEditorOnly<ArgumentException>(
 					caller,
@@ -65,7 +64,7 @@ namespace Bezoro.Framework.Unity.Utilities.Helpers
 			List<T> list
 		)
 		{
-			if (list.IsNullOrEmpty())
+			if ( list.IsNullOrEmpty() )
 			{
 				ExceptionHelpers.ThrowExceptionEditorOnly<ArgumentException>(
 					caller,
@@ -75,28 +74,28 @@ namespace Bezoro.Framework.Unity.Utilities.Helpers
 			}
 		}
 
-		public static void ValidateConditionIsFalse(bool condition, string errorMessage = "")
+		public static void ValidateConditionIsFalse( bool condition, string errorMessage = "" )
 		{
-			ValidateConditionIsFalse<IncorrectConditionException>(condition, errorMessage);
+			ValidateConditionIsFalse<IncorrectConditionException>( condition, errorMessage );
 		}
 
-		public static void ValidateConditionIsFalse<TException>(bool condition, string errorMessage = "")
+		public static void ValidateConditionIsFalse<TException>( bool condition, string errorMessage = "" )
 		where TException : Exception
 		{
-			if (condition)
+			if ( condition )
 			{
-				ExceptionHelpers.ThrowExceptionEditorOnly<TException>(errorMessage);
+				ExceptionHelpers.ThrowExceptionEditorOnly<TException>( errorMessage );
 			}
 		}
 
-		public static void ValidateObjectNotNull(object objectToValidate)
+		public static void ValidateObjectNotNull( object objectToValidate )
 		{
-			ValidateObjectNotNull(objectToValidate, "", "", null);
+			ValidateObjectNotNull( objectToValidate, "", "", null );
 		}
 
-		public static void ValidateObjectNotNull(object objectToValidate, string errorMessage)
+		public static void ValidateObjectNotNull( object objectToValidate, string errorMessage )
 		{
-			ValidateObjectNotNull(objectToValidate, errorMessage, "", null);
+			ValidateObjectNotNull( objectToValidate, errorMessage, "", null );
 		}
 
 		public static void ValidateObjectNotNull
@@ -107,7 +106,7 @@ namespace Bezoro.Framework.Unity.Utilities.Helpers
 			object callingObject
 		)
 		{
-			if (objectToValidate != null)
+			if ( objectToValidate != null )
 			{
 				return;
 			}
@@ -121,14 +120,14 @@ namespace Bezoro.Framework.Unity.Utilities.Helpers
 			);
 		}
 
-		public static void ValidateString(string value)
+		public static void ValidateString( string value )
 		{
-			ValidateString(null, "", value);
+			ValidateString( null, "", value );
 		}
 
-		public static void ValidateString(object caller, string methodName, string value)
+		public static void ValidateString( object caller, string methodName, string value )
 		{
-			if (string.IsNullOrWhiteSpace(value))
+			if ( string.IsNullOrWhiteSpace( value ) )
 			{
 				ExceptionHelpers.ThrowExceptionEditorOnly<ArgumentException>(
 					caller,
@@ -138,9 +137,9 @@ namespace Bezoro.Framework.Unity.Utilities.Helpers
 			}
 		}
 
-		public static void ValidateCondition(bool condition, string errorMessage)
+		public static void ValidateCondition( bool condition, string errorMessage )
 		{
-			if (!condition)
+			if ( !condition )
 			{
 				ExceptionHelpers.ThrowExceptionEditorOnly<InvalidOperationException>(
 					null,

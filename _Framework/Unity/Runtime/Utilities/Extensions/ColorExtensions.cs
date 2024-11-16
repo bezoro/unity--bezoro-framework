@@ -1,22 +1,13 @@
 ﻿using UnityEngine;
 
-namespace Bezoro.Framework.Unity.Utilities.Extensions
+namespace Bezoro.Framework.Unity.Utilities
 {
 	public static class ColorExtensions
 	{
-		public static Color ClassColor()
-		{
-			return new Color(1f, 0.82f, 0.23f);
-		}
+		public static Color ClassColor() => new(1f, 0.82f, 0.23f);
 
-		public static Color StructColor()
-		{
-			return new Color(209, 154, 102);
-		}
+		public static Color StructColor() => new(209, 154, 102);
 
-		public static Color MethodColor()
-		{
-			return new Color(0.28f, 0.71f, 1f);
-		}
+		public static Color MethodColor() => new(0.28f, 0.71f, 1f);
 	}
 }

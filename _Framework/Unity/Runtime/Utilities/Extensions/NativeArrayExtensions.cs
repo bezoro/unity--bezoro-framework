@@ -1,13 +1,13 @@
 ﻿using Unity.Collections;
 
-namespace Bezoro.Framework.Unity.Utilities.Extensions
+namespace Bezoro.Framework.Unity.Utilities
 {
 	public static class NativeArrayExtensions
 	{
-		public static void SafeDispose<T>(this NativeArray<T> array)
+		public static void SafeDispose<T>( this NativeArray<T> array )
 		where T : struct
 		{
-			if (array.IsCreated)
+			if ( array.IsCreated )
 			{
 				array.Dispose();
 			}

@@ -8,7 +8,7 @@ using Unity.Profiling;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
-namespace Bezoro.Framework.Unity.Utilities.Extensions
+namespace Bezoro.Framework.Unity.Utilities
 {
 	public static class GameObjectExtensions
 	{

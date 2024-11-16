@@ -1,15 +1,15 @@
 ﻿using System;
 using UnityEngine;
 
-namespace Bezoro.Framework.Unity.Utilities.Extensions
+namespace Bezoro.Framework.Unity.Utilities
 {
 	public static class RaycastExtensions
 	{
-		public static bool Raycast3D(this Ray ray, RaycastHit[] raycastHits3D, out GameObject[] hitObjects)
+		public static bool Raycast3D( this Ray ray, RaycastHit[] raycastHits3D, out GameObject[] hitObjects )
 		{
-			var hitCount = Physics.RaycastNonAlloc(ray, raycastHits3D, Mathf.Infinity);
+			var hitCount = Physics.RaycastNonAlloc( ray, raycastHits3D, Mathf.Infinity );
 
-			if (hitCount > 0)
+			if ( hitCount > 0 )
 			{
 				var hitObjectsArray = new GameObject[hitCount];
 
@@ -19,10 +19,12 @@ namespace Bezoro.Framework.Unity.Utilities.Extensions
 				}
 
 				hitObjects = hitObjectsArray;
+
 				return true;
 			}
 
 			hitObjects = Array.Empty<GameObject>();
+
 			return false;
 		}
 
@@ -34,11 +36,11 @@ namespace Bezoro.Framework.Unity.Utilities.Extensions
 			out GameObject[] hitObjects
 		)
 		{
-			var worldPoint = mainCamera.ScreenToWorldPoint(mousePosition);
+			var worldPoint = mainCamera.ScreenToWorldPoint( mousePosition );
 			var contactFilter = new ContactFilter2D();
-			var hitCount = Physics2D.Raycast(worldPoint, Vector2.zero, contactFilter, raycastHits2D, 200f);
+			var hitCount = Physics2D.Raycast( worldPoint, Vector2.zero, contactFilter, raycastHits2D, 200f );
 
-			if (hitCount > 0)
+			if ( hitCount > 0 )
 			{
 				var hitObjectsArray = new GameObject[hitCount];
 
@@ -48,10 +50,12 @@ namespace Bezoro.Framework.Unity.Utilities.Extensions
 				}
 
 				hitObjects = hitObjectsArray;
+
 				return true;
 			}
 
 			hitObjects = Array.Empty<GameObject>();
+
 			return false;
 		}
 	}

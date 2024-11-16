@@ -5,7 +5,7 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Bezoro.Framework.Unity.Bootstrapping.Abstractions;
-using Bezoro.Framework.Unity.Utilities.Extensions;
+using Bezoro.Framework.Unity.Utilities;
 using Cysharp.Threading.Tasks;
 using JetBrains.Annotations;
 using UnityEngine;

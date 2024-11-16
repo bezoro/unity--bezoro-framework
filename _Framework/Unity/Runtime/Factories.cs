@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading;
-using Bezoro.Framework.Unity.Utilities.Extensions;
+using Bezoro.Framework.Unity.Utilities;
 using Bezoro.Framework.Unity.Utilities.Helpers;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
@@ -25,8 +25,8 @@ namespace Bezoro.Framework.Unity
 		{
 			Position = position == default( Vector3 ) ? Vector3.zero : position;
 			Rotation = rotation == default( Quaternion ) ? Quaternion.identity : rotation;
-			Scale = scale       == default( Vector3 ) ? Vector3.one : scale;
-			Parent = parent;
+			Scale    = scale    == default( Vector3 ) ? Vector3.one : scale;
+			Parent   = parent;
 		}
 	}
 
@@ -45,24 +45,24 @@ namespace Bezoro.Framework.Unity
 				params Type[] componentTypes
 			)
 			{
-				ValidationHelpers.ValidateString(objectName);
+				ValidationHelpers.ValidateString( objectName );
 
-				ValidationHelpers.ValidatePositiveValue(timeoutDuration);
+				ValidationHelpers.ValidatePositiveValue( timeoutDuration );
 
-				var gameObject = CreateInternal(objectName, transformData);
+				var gameObject = CreateInternal( objectName, transformData );
 
-				if (enableCondition == null)
+				if ( enableCondition == null )
 				{
-					gameObject.AddComponents(componentTypes);
+					gameObject.AddComponents( componentTypes );
 					gameObject.EnableBehaviours();
 
 					return gameObject;
 				}
 
-				gameObject.SetActive(false);
-				await gameObject.AddComponentsAsync(componentTypes);
+				gameObject.SetActive( false );
+				await gameObject.AddComponentsAsync( componentTypes );
 
-				using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(timeoutDuration));
+				using var cts = new CancellationTokenSource( TimeSpan.FromSeconds( timeoutDuration ) );
 
 				await MonitorEnableCondition(
 					gameObject,
@@ -81,23 +81,23 @@ namespace Bezoro.Framework.Unity
 				TransformData transformData = default
 			)
 			{
-				if (!PlayerLoopHelper.IsMainThread) { UniTask.ReturnToMainThread(); }
+				if ( !PlayerLoopHelper.IsMainThread ) { UniTask.ReturnToMainThread(); }
 
-				var go = new GameObject(name)
+				var go = new GameObject( name )
 				{
 					transform =
 					{
-						position = transformData.Position,
-						rotation = transformData.Rotation,
+						position   = transformData.Position,
+						rotation   = transformData.Rotation,
 						localScale = transformData.Scale
 					}
 				};
 
-				BDebug.Log($"Created GameObject: {name}", go);
+				BDebug.Log( $"Created GameObject: {name}", go );
 
-				if (transformData.Parent != null)
+				if ( transformData.Parent != null )
 				{
-					go.transform.SetParent(transformData.Parent);
+					go.transform.SetParent( transformData.Parent );
 				}
 
 				return go;
@@ -148,19 +148,19 @@ namespace Bezoro.Framework.Unity
 				{
 					while (!enableCondition() && gameObject != null && !cancellationToken.IsCancellationRequested)
 					{
-						await UniTask.WaitForEndOfFrame(cancellationToken);
+						await UniTask.WaitForEndOfFrame( cancellationToken );
 					}
 
-					if (gameObject != null && !cancellationToken.IsCancellationRequested)
+					if ( gameObject != null && !cancellationToken.IsCancellationRequested )
 					{
-						BDebug.Log($"Enabled GameObject: {gameObject.name}");
+						BDebug.Log( $"Enabled GameObject: {gameObject.name}" );
 
-						gameObject.SetActive(true);
+						gameObject.SetActive( true );
 					}
 				}
 				catch ( Exception exception )
 				{
-					BDebug.LogException(exception.Message);
+					BDebug.LogException( exception.Message );
 
 					throw;
 				}
