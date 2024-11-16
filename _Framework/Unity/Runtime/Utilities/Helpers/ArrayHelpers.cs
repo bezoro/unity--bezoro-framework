@@ -1,7 +1,7 @@
 ﻿using System;
 using UnityEngine;
 
-namespace Bezoro.Framework.Unity.Utilities.Helpers
+namespace Bezoro.Framework.Unity.Utilities
 {
 	public static class ArrayHelpers
 	{

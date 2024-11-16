@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.Assertions;
 
-namespace Bezoro.Framework.Unity.Utilities.Helpers
+namespace Bezoro.Framework.Unity.Utilities
 {
 	public static class TransformHelpers
 	{
@@ -14,15 +14,15 @@ namespace Bezoro.Framework.Unity.Utilities.Helpers
 			Vector2 offset
 		)
 		{
-			if (camera == null)
+			if ( camera == null )
 			{
 				camera = Camera.main;
 			}
 
-			Assert.IsNotNull(camera);
+			Assert.IsNotNull( camera );
 
 			var viewportPosition = camera.WorldToViewportPoint
-				(worldTransform.position + Vector3.up * offset.y + Vector3.right * offset.x);
+				( worldTransform.position + Vector3.up * offset.y + Vector3.right * offset.x );
 
 			var sizeDelta = canvasTransform.sizeDelta;
 

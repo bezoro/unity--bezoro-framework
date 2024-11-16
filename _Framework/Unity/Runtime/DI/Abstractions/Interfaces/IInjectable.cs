@@ -4,18 +4,19 @@ namespace Bezoro.Framework.Unity.DI
 {
 	public interface IInjectable<in T>
 	{
-		void Inject(T dependencies);
+		void Inject( T dependencies );
 
-		bool ValidateDependencies(T dependencies, object context = null);
+		bool ValidateDependencies( T dependencies, object context = null );
 	}
 
 	public static class InjectableExtensions
 	{
-		public static bool ValidateDependencies<T>(this IInjectable<T> injectable, T dependencies, object context = null)
+		public static bool ValidateDependencies<T>
+			( this IInjectable<T> injectable, T dependencies, object context = null )
 		{
-			if (dependencies == null)
+			if ( dependencies == null )
 			{
-				throw new ArgumentNullException(nameof(dependencies), "Dependencies cannot be null.");
+				throw new ArgumentNullException( nameof(dependencies), "Dependencies cannot be null." );
 			}
 
 			return true;
@@ -24,6 +25,6 @@ namespace Bezoro.Framework.Unity.DI
 
 	public class DependencyValidationException : Exception
 	{
-		public DependencyValidationException(string message) : base(message) {}
+		public DependencyValidationException( string message ) : base( message ) {}
 	}
 }

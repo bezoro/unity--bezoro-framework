@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using Bezoro.Framework.Unity.Utilities.Helpers;
+using Bezoro.Framework.Unity.Utilities;
 
 namespace Bezoro.Framework.Unity.DI
 {

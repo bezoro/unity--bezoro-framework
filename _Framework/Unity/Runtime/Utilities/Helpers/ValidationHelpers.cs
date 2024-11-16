@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Bezoro.Framework.Unity.Utilities.Helpers
+namespace Bezoro.Framework.Unity.Utilities
 {
 	public static class ValidationHelpers
 	{

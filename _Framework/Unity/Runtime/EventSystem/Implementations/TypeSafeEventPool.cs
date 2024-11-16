@@ -9,22 +9,19 @@ namespace Bezoro.Framework.Unity
 		private readonly int _maxPoolSize;
 		private readonly Func<T> _factory;
 
-		public TypeSafeEventPool(int maxPoolSize, Func<T> factory)
+		public TypeSafeEventPool( int maxPoolSize, Func<T> factory )
 		{
 			_maxPoolSize = maxPoolSize;
-			_factory = factory;
+			_factory     = factory;
 		}
 
-		public T Get()
-		{
-			return _pool.TryTake(out var item) ? item : _factory();
-		}
+		public T Get() => _pool.TryTake( out var item ) ? item : _factory();
 
-		public void Return(T item)
+		public void Return( T item )
 		{
-			if (_pool.Count < _maxPoolSize)
+			if ( _pool.Count < _maxPoolSize )
 			{
-				_pool.Add(item);
+				_pool.Add( item );
 			}
 		}
 	}

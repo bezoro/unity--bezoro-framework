@@ -7,21 +7,21 @@ namespace Bezoro.Framework.Unity
 	{
 		private readonly Dictionary<Type, object> _queues = new();
 
-		public void Enqueue<T>(T eventData) where T : IEvent
+		public void Enqueue<T>( T eventData ) where T : IEvent
 		{
 			lock (_queues)
 			{
-				if (!_queues.TryGetValue(typeof(T), out var queue))
+				if ( !_queues.TryGetValue( typeof(T), out var queue ) )
 				{
-					queue = new Queue<T>();
+					queue              = new Queue<T>();
 					_queues[typeof(T)] = queue;
 				}
 
-				( (Queue<T>)queue ).Enqueue(eventData);
+				( (Queue<T>)queue ).Enqueue( eventData );
 			}
 		}
 
-		public bool TryDequeueAny(out Type eventType, out IEvent eventData)
+		public bool TryDequeueAny( out Type eventType, out IEvent eventData )
 		{
 			lock (_queues)
 			{
@@ -29,10 +29,11 @@ namespace Bezoro.Framework.Unity
 				{
 					var queue = (Queue<IEvent>)kvp.Value;
 
-					if (queue.Count > 0)
+					if ( queue.Count > 0 )
 					{
 						eventType = kvp.Key;
 						eventData = queue.Dequeue();
+
 						return true;
 					}
 				}
@@ -40,6 +41,7 @@ namespace Bezoro.Framework.Unity
 
 			eventType = null;
 			eventData = null;
+
 			return false;
 		}
 

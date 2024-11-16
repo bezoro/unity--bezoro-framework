@@ -10,7 +10,7 @@ namespace Bezoro.Framework.Unity.AI
 		public double Time => _customFixedTick.FixedTime;
 		public float DeltaTime => _customFixedTick.CustomFixedDeltaTime;
 
-		[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+		[RuntimeInitializeOnLoadMethod( RuntimeInitializeLoadType.SubsystemRegistration )]
 		private static void Init()
 		{
 			Instance = null;
@@ -18,13 +18,13 @@ namespace Bezoro.Framework.Unity.AI
 
 		private void Awake()
 		{
-			Instance = this;
-			_customFixedTick = new CustomFixedTick(TickFrequency, Tick);
+			Instance         = this;
+			_customFixedTick = new(TickFrequency, Tick);
 		}
 
 		private void Update()
 		{
-			_customFixedTick.Tick(UnityEngine.Time.deltaTime);
+			_customFixedTick.Tick( UnityEngine.Time.deltaTime );
 		}
 
 		private void Tick()
@@ -35,19 +35,19 @@ namespace Bezoro.Framework.Unity.AI
 			}
 		}
 
-		public void AddUnique(AIAgentBehaviour aiAgentBehaviour)
+		public void AddUnique( AIAgentBehaviour aiAgentBehaviour )
 		{
-			if (_aiAgents.Contains(aiAgentBehaviour))
+			if ( _aiAgents.Contains( aiAgentBehaviour ) )
 			{
 				return;
 			}
 
-			_aiAgents.Add(aiAgentBehaviour);
+			_aiAgents.Add( aiAgentBehaviour );
 		}
 
-		public void Remove(AIAgentBehaviour aiAgentBehaviour)
+		public void Remove( AIAgentBehaviour aiAgentBehaviour )
 		{
-			_aiAgents.Remove(aiAgentBehaviour);
+			_aiAgents.Remove( aiAgentBehaviour );
 		}
 
 		private static AITickManagerBehaviour _instance;

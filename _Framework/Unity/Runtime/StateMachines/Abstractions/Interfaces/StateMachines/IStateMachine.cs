@@ -9,6 +9,6 @@ namespace Bezoro.Framework.Unity.StateMachines
 
 		TState LastState { get; }
 
-		void DoTransition(TState toState);
+		void DoTransition( TState toState );
 	}
 }

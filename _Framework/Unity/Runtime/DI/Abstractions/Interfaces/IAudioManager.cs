@@ -2,6 +2,6 @@ namespace Bezoro.Framework.Unity.DI
 {
 	public interface IAudioManager : IService
 	{
-		void PlaySound(string soundName);
+		void PlaySound( string soundName );
 	}
 }

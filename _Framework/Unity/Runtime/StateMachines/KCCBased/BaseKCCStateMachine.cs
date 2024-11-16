@@ -9,7 +9,7 @@ namespace Bezoro.Framework.Unity
 	public abstract class BaseKCCStateMachine : ScriptableObject,
 		IKCCStateMachine
 	{
-		public void Init(KCCStateMachineOwner owner)
+		public void Init( KCCStateMachineOwner owner )
 		{
 			_owner = owner;
 			RegisterStates();
@@ -33,7 +33,7 @@ namespace Bezoro.Framework.Unity
 
 		public void Enable()
 		{
-			if (_wasDisabled && DisableMethod is DisableMethod.Restart)
+			if ( _wasDisabled && DisableMethod is DisableMethod.Restart )
 			{
 				OnEnabled();
 				_currentState.Enable();
@@ -41,7 +41,7 @@ namespace Bezoro.Framework.Unity
 				_currentState.Enter();
 				_wasDisabled = false;
 			}
-			else if (_wasDisabled)
+			else if ( _wasDisabled )
 			{
 				OnEnabled();
 				_currentState.Enable();
@@ -71,43 +71,43 @@ namespace Bezoro.Framework.Unity
 
 	#region KCC Methods
 
-		public void UpdateRotation(ref Quaternion currentRotation, float deltaTime)
+		public void UpdateRotation( ref Quaternion currentRotation, float deltaTime )
 		{
-			_currentState.UpdateRotation(ref currentRotation, deltaTime);
+			_currentState.UpdateRotation( ref currentRotation, deltaTime );
 		}
 
-		public void UpdateVelocity(ref Vector3 currentVelocity, float deltaTime)
+		public void UpdateVelocity( ref Vector3 currentVelocity, float deltaTime )
 		{
-			_currentState.UpdateVelocity(ref currentVelocity, deltaTime);
+			_currentState.UpdateVelocity( ref currentVelocity, deltaTime );
 		}
 
-		public void BeforeCharacterUpdate(float deltaTime)
+		public void BeforeCharacterUpdate( float deltaTime )
 		{
-			_currentState.BeforeCharacterUpdate(deltaTime);
+			_currentState.BeforeCharacterUpdate( deltaTime );
 		}
 
-		public void PostGroundingUpdate(float deltaTime)
+		public void PostGroundingUpdate( float deltaTime )
 		{
-			_currentState.PostGroundingUpdate(deltaTime);
+			_currentState.PostGroundingUpdate( deltaTime );
 		}
 
-		public void AfterCharacterUpdate(float deltaTime)
+		public void AfterCharacterUpdate( float deltaTime )
 		{
-			_currentState.AfterCharacterUpdate(deltaTime);
+			_currentState.AfterCharacterUpdate( deltaTime );
 		}
 
-		public bool IsColliderValidForCollisions(Collider coll)
+		public bool IsColliderValidForCollisions( Collider coll )
 		{
 			return !CheckForMonoBehaviourToIgnoreCollisionsWith();
 
 			bool CheckForMonoBehaviourToIgnoreCollisionsWith()
 			{
-				if (CheckInState(_currentState))
+				if ( CheckInState( _currentState ) )
 				{
 					return true;
 				}
 
-				if (!_currentState.IsSubStateMachine(out var rootSubStateMachine))
+				if ( !_currentState.IsSubStateMachine( out var rootSubStateMachine ) )
 				{
 					return false;
 				}
@@ -115,12 +115,12 @@ namespace Bezoro.Framework.Unity
 				var currentState = rootSubStateMachine.CurrentState;
 				while (true)
 				{
-					if (CheckInState(currentState))
+					if ( CheckInState( currentState ) )
 					{
 						return true;
 					}
 
-					if (!currentState.IsSubStateMachine(out var subStateMachine))
+					if ( !currentState.IsSubStateMachine( out var subStateMachine ) )
 					{
 						return false;
 					}
@@ -128,12 +128,12 @@ namespace Bezoro.Framework.Unity
 					currentState = subStateMachine.CurrentState;
 				}
 
-				bool CheckInState(IKCCState state)
+				bool CheckInState( IKCCState state )
 				{
 					foreach ( var monoBehaviour in
 							 state.MonoBehaviourTypesToIgnoreCollisionsWith )
 					{
-						if (coll.TryGetComponent(monoBehaviour, out _))
+						if ( coll.TryGetComponent( monoBehaviour, out _ ) )
 						{
 							return true;
 						}
@@ -152,7 +152,7 @@ namespace Bezoro.Framework.Unity
 			ref HitStabilityReport hitStabilityReport
 		)
 		{
-			_currentState.GroundHit(hitCollider, hitNormal, hitPoint, ref hitStabilityReport);
+			_currentState.GroundHit( hitCollider, hitNormal, hitPoint, ref hitStabilityReport );
 		}
 
 		public void OnMovementHit
@@ -163,7 +163,7 @@ namespace Bezoro.Framework.Unity
 			ref HitStabilityReport hitStabilityReport
 		)
 		{
-			_currentState.MovementHit(hitCollider, hitNormal, hitPoint, ref hitStabilityReport);
+			_currentState.MovementHit( hitCollider, hitNormal, hitPoint, ref hitStabilityReport );
 		}
 
 		public void ProcessHitStabilityReport
@@ -186,9 +186,9 @@ namespace Bezoro.Framework.Unity
 			);
 		}
 
-		public void OnDiscreteCollisionDetected(Collider hitCollider)
+		public void OnDiscreteCollisionDetected( Collider hitCollider )
 		{
-			_currentState.DiscreteCollisionDetected(hitCollider);
+			_currentState.DiscreteCollisionDetected( hitCollider );
 		}
 
 	#endregion
@@ -212,10 +212,10 @@ namespace Bezoro.Framework.Unity
 			_currentState.Destroy();
 		}
 
-		public void DoTransition(IKCCState toState)
+		public void DoTransition( IKCCState toState )
 		{
 			_currentState.Exit();
-			_lastState = _currentState;
+			_lastState    = _currentState;
 			_currentState = toState;
 			_currentState.Enter();
 		}
@@ -282,7 +282,8 @@ namespace Bezoro.Framework.Unity
 		where T : class, IKCCState, new()
 		{
 			var newState = new T();
-			newState.Init(_owner, this, _owner.Motor);
+			newState.Init( _owner, this, _owner.Motor );
+
 			return newState;
 		}
 

@@ -60,9 +60,9 @@ namespace Bezoro.Framework.Unity.Jobs
 
 	#endregion
 
-		public void Execute(int index)
+		public void Execute( int index )
 		{
-			if (NumPointsWidth <= 0 && NumPointsHeight <= 0)
+			if ( NumPointsWidth <= 0 && NumPointsHeight <= 0 )
 			{
 				return;
 			}

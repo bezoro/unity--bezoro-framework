@@ -1,6 +1,6 @@
 ﻿using Bezoro.Framework.Unity.StateMachines;
 using Bezoro.Framework.Unity.States;
-using Bezoro.Framework.Unity.Utilities.Helpers;
+using Bezoro.Framework.Unity.Utilities;
 using UnityEngine;
 
 namespace Bezoro.Framework.Unity
@@ -8,9 +8,9 @@ namespace Bezoro.Framework.Unity
 	public abstract class BaseTickableSubStateMachine :
 		ITickableStateMachine, ITickableState
 	{
-		public void Init(TickableStateMachineOwner owner, ITickableStateMachine owningStateMachine)
+		public void Init( TickableStateMachineOwner owner, ITickableStateMachine owningStateMachine )
 		{
-			_owner = owner;
+			_owner              = owner;
 			_owningStateMachine = owningStateMachine;
 			RegisterStates();
 			SetUpTransitions();
@@ -68,7 +68,7 @@ namespace Bezoro.Framework.Unity
 			{
 				for ( var i = 0 ; i < _transitions.Length ; i++ )
 				{
-					if (_transitions[i] == null)
+					if ( _transitions[i] == null )
 					{
 						continue;
 					}
@@ -78,9 +78,9 @@ namespace Bezoro.Framework.Unity
 			}
 		}
 
-		public void OnTransitionRaised(ITickableState toState)
+		public void OnTransitionRaised( ITickableState toState )
 		{
-			_owningStateMachine.DoTransition(toState);
+			_owningStateMachine.DoTransition( toState );
 		}
 
 		public void Exit()
@@ -104,18 +104,19 @@ namespace Bezoro.Framework.Unity
 			_currentState.Destroy();
 		}
 
-		public TickTransition TransitionsTo(ITickableState toState)
+		public TickTransition TransitionsTo( ITickableState toState )
 		{
 			var newTransition = new TickTransition();
-			newTransition.Init(this, toState, _owner);
-			ArrayHelpers.Add(ref _transitions, newTransition);
+			newTransition.Init( this, toState, _owner );
+			ArrayHelpers.Add( ref _transitions, newTransition );
+
 			return newTransition;
 		}
 
-		public void DoTransition(ITickableState toState)
+		public void DoTransition( ITickableState toState )
 		{
 			_currentState.Exit();
-			_lastState = _currentState;
+			_lastState    = _currentState;
 			_currentState = toState;
 			_currentState.Enter();
 		}
@@ -198,7 +199,8 @@ namespace Bezoro.Framework.Unity
 		where T : class, ITickableState, new()
 		{
 			var newState = new T();
-			newState.Init(_owner, this);
+			newState.Init( _owner, this );
+
 			return newState;
 		}
 
@@ -206,7 +208,7 @@ namespace Bezoro.Framework.Unity
 		{
 			for ( var i = 0 ; i < _transitions.Length ; i++ )
 			{
-				if (_transitions[i] == null)
+				if ( _transitions[i] == null )
 				{
 					continue;
 				}
@@ -219,7 +221,7 @@ namespace Bezoro.Framework.Unity
 		{
 			for ( var i = 0 ; i < _transitions.Length ; i++ )
 			{
-				if (_transitions[i] == null)
+				if ( _transitions[i] == null )
 				{
 					continue;
 				}

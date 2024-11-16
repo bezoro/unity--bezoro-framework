@@ -1,5 +1,4 @@
-﻿using Bezoro.Framework.Unity.Utilities.Helpers;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace Bezoro.Framework.Unity.Utilities
 {
@@ -14,7 +13,7 @@ namespace Bezoro.Framework.Unity.Utilities
 				for ( var x = 0 ; x < gridSize.x ; x++ )
 				{
 					var index = y * gridSize.x + x;
-					positions[index] = VectorHelpers.CalculateLocalPosition( x, y, cellSize, localBounds );
+					positions[index] = VectorHelpers.CalculateCellCenter( x, y, cellSize, localBounds );
 				}
 			}
 

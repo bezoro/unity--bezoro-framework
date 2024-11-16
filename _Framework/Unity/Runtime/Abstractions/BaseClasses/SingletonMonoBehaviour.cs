@@ -8,18 +8,19 @@ namespace Bezoro.Framework.Unity
 
 		protected virtual void Awake()
 		{
-			if (Instance == null)
+			if ( Instance == null )
 			{
 				Instance = this as T;
-				Debug.Assert(Instance != null, $"SingletonMonoBehaviour<{typeof(T).Name}> is not a MonoBehaviour");
-				DontDestroyOnLoad(gameObject);
+				Debug.Assert( Instance != null, $"SingletonMonoBehaviour<{typeof(T).Name}> is not a MonoBehaviour" );
+				DontDestroyOnLoad( gameObject );
+
 				return;
 			}
 
-			Destroy(gameObject);
+			Destroy( gameObject );
 		}
 
-		[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+		[RuntimeInitializeOnLoadMethod( RuntimeInitializeLoadType.SubsystemRegistration )]
 		private static void Init()
 		{
 			Instance = null;

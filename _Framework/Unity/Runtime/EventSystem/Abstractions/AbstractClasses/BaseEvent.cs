@@ -4,10 +4,10 @@
 	{
 		public TPayload Payload { get; private set; }
 
-		public void Initialize(TPayload payload, int priority = 1, bool runOnThreadPool = false)
+		public void Initialize( TPayload payload, int priority = 1, bool runOnThreadPool = false )
 		{
 			Payload = payload;
-			base.Initialize(priority, runOnThreadPool);
+			base.Initialize( priority, runOnThreadPool );
 		}
 	}
 
@@ -16,9 +16,9 @@
 		public int Priority { get; protected set; } = 1;
 		public bool RunOnThreadPool { get; protected set; }
 
-		protected virtual void Initialize(int priority = 1, bool runOnThreadPool = false)
+		protected virtual void Initialize( int priority = 1, bool runOnThreadPool = false )
 		{
-			Priority = priority;
+			Priority        = priority;
 			RunOnThreadPool = runOnThreadPool;
 		}
 	}

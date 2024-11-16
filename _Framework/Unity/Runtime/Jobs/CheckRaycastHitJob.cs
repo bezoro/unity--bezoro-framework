@@ -14,9 +14,9 @@ namespace Bezoro.Framework.Unity.Jobs
 		[WriteOnly]
 		public NativeArray<RaycastHit> ValidHits;
 
-		public void Execute(int index)
+		public void Execute( int index )
 		{
-			if (Hits[index].distance > 0)
+			if ( Hits[index].distance > 0 )
 			{
 				ValidHits[index] = Hits[index];
 			}

@@ -14,107 +14,107 @@ namespace Bezoro.Framework.Unity.Serializable2DArray
 
 		public int Height => height;
 
-		public Serializable2DArray(int width, int height)
+		public Serializable2DArray( int width, int height )
 		{
-			if (width <= 0 || height <= 0)
+			if ( width <= 0 || height <= 0 )
 			{
-				throw new ArgumentException("Width and height must be greater than zero.");
+				throw new ArgumentException( "Width and height must be greater than zero." );
 			}
 
-			this.width = width;
+			this.width  = width;
 			this.height = height;
 		}
 
-		public Serializable2DArray(T[,] array2D)
+		public Serializable2DArray( T[,] array2D )
 		{
-			if (array2D == null)
+			if ( array2D == null )
 			{
-				throw new ArgumentNullException(nameof(array2D), "Input array cannot be null.");
+				throw new ArgumentNullException( nameof(array2D), "Input array cannot be null." );
 			}
 
-			var newWidth = array2D.GetLength(0);
-			var newHeight = array2D.GetLength(1);
+			var newWidth = array2D.GetLength( 0 );
+			var newHeight = array2D.GetLength( 1 );
 
-			if (newWidth <= 0 || newHeight <= 0)
+			if ( newWidth <= 0 || newHeight <= 0 )
 			{
-				throw new ArgumentException("Width and height must be greater than zero.");
+				throw new ArgumentException( "Width and height must be greater than zero." );
 			}
 
-			width = newWidth;
+			width  = newWidth;
 			height = newHeight;
-			FromArray2D(array2D);
+			FromArray2D( array2D );
 		}
 
-		public Serializable2DArray(T[] array1D, int width, int height)
+		public Serializable2DArray( T[] array1D, int width, int height )
 		{
-			if (array1D == null)
+			if ( array1D == null )
 			{
-				throw new ArgumentNullException(nameof(array1D), "Input array cannot be null.");
+				throw new ArgumentNullException( nameof(array1D), "Input array cannot be null." );
 			}
 
-			if (width <= 0 || height <= 0)
+			if ( width <= 0 || height <= 0 )
 			{
-				throw new ArgumentException("Width and height must be greater than zero.");
+				throw new ArgumentException( "Width and height must be greater than zero." );
 			}
 
-			if (array1D.Length != width * height)
+			if ( array1D.Length != width * height )
 			{
 				throw new ArgumentException
-					("The length of the input array does not match the specified dimensions.");
+					( "The length of the input array does not match the specified dimensions." );
 			}
 
-			this.width = width;
+			this.width  = width;
 			this.height = height;
-			SetData(array1D, width, height);
+			SetData( array1D, width, height );
 		}
 
 		public T[] Data => data ??= new T[width * height];
 
-		public T this[int x, int y]
+		public T this[ int x, int y ]
 		{
 			get
 			{
-				if (x < 0 || x >= width || y < 0 || y >= height)
+				if ( x < 0 || x >= width || y < 0 || y >= height )
 				{
-					throw new IndexOutOfRangeException($"Index [{x},{y}] is out of range.");
+					throw new IndexOutOfRangeException( $"Index [{x},{y}] is out of range." );
 				}
 
 				return data[y * width + x];
 			}
 			set
 			{
-				if (x < 0 || x >= width || y < 0 || y >= height)
+				if ( x < 0 || x >= width || y < 0 || y >= height )
 				{
-					throw new IndexOutOfRangeException($"Index [{x},{y}] is out of range.");
+					throw new IndexOutOfRangeException( $"Index [{x},{y}] is out of range." );
 				}
 
 				data[y * width + x] = value;
 			}
 		}
 
-		public void Resize(int newWidth, int newHeight)
+		public void Resize( int newWidth, int newHeight )
 		{
-			if (newWidth <= 0 || newHeight <= 0)
+			if ( newWidth <= 0 || newHeight <= 0 )
 			{
-				throw new ArgumentException("New width and height must be greater than zero.");
+				throw new ArgumentException( "New width and height must be greater than zero." );
 			}
 
-			if (newWidth == width && newHeight == height)
+			if ( newWidth == width && newHeight == height )
 			{
 				return; // No need to resize if dimensions are the same
 			}
 
 			var newData = new T[newWidth * newHeight];
-			var minWidth = Math.Min(width, newWidth);
-			var minHeight = Math.Min(height, newHeight);
+			var minWidth = Math.Min( width, newWidth );
+			var minHeight = Math.Min( height, newHeight );
 
 			for ( var y = 0 ; y < minHeight ; y++ )
 			{
-				Array.Copy(Data, y * width, newData, y * newWidth, minWidth);
+				Array.Copy( Data, y * width, newData, y * newWidth, minWidth );
 			}
 
-			data = newData;
-			width = newWidth;
+			data   = newData;
+			width  = newWidth;
 			height = newHeight;
 		}
 
@@ -133,24 +133,24 @@ namespace Bezoro.Framework.Unity.Serializable2DArray
 			return array2D;
 		}
 
-		public void SetData(T[] newData, int newWidth, int newHeight)
+		public void SetData( T[] newData, int newWidth, int newHeight )
 		{
-			if (newData.Length != newWidth * newHeight)
+			if ( newData.Length != newWidth * newHeight )
 			{
-				throw new ArgumentException("Array length does not match the specified dimensions.");
+				throw new ArgumentException( "Array length does not match the specified dimensions." );
 			}
 
-			width = newWidth;
+			width  = newWidth;
 			height = newHeight;
-			data = new T[width * height];
-			Array.Copy(newData, data, newData.Length);
+			data   = new T[width * height];
+			Array.Copy( newData, data, newData.Length );
 		}
 
-		private void FromArray2D(T[,] array2D)
+		private void FromArray2D( T[,] array2D )
 		{
-			width = array2D.GetLength(0);
-			height = array2D.GetLength(1);
-			data = new T[width * height];
+			width  = array2D.GetLength( 0 );
+			height = array2D.GetLength( 1 );
+			data   = new T[width * height];
 
 			for ( var y = 0 ; y < height ; y++ )
 			{
@@ -161,31 +161,24 @@ namespace Bezoro.Framework.Unity.Serializable2DArray
 			}
 		}
 
-		public static implicit operator T[](Serializable2DArray<T> array)
-		{
-			return array.data;
-		}
+		public static implicit operator T[]( Serializable2DArray<T> array ) => array.data;
 
-		public static implicit operator Serializable2DArray<T>(T[] array1D)
+		public static implicit operator Serializable2DArray<T>( T[] array1D )
 		{
-			var size = (int)Math.Sqrt(array1D.Length);
+			var size = (int)Math.Sqrt( array1D.Length );
 
-			if (size * size != array1D.Length)
+			if ( size * size != array1D.Length )
 			{
-				throw new ArgumentException("Array length must be a perfect square for implicit conversion.");
+				throw new ArgumentException( "Array length must be a perfect square for implicit conversion." );
 			}
 
-			return new Serializable2DArray<T>(array1D, size, size);
+			return new(array1D, size, size);
 		}
 
-		public static implicit operator Serializable2DArray<T>(T[,] array2D)
-		{
-			return new Serializable2DArray<T>(array2D);
-		}
+		public static implicit operator Serializable2DArray<T>( T[,] array2D ) => new(array2D);
 
-		public static explicit operator T[,](Serializable2DArray<T> serializable2DArray)
-		{
-			return serializable2DArray.To2DArray();
-		}
+		public static explicit operator T[,]
+			( Serializable2DArray<T> serializable2DArray ) =>
+			serializable2DArray.To2DArray();
 	}
 }

@@ -4,10 +4,10 @@ namespace Bezoro.Framework.Unity
 {
 	public abstract class BaseKCCCondition
 	{
-		public void Init(MonoBehaviour stateMachine, bool inverted = false)
+		public void Init( MonoBehaviour stateMachine, bool inverted = false )
 		{
 			_stateMachine = stateMachine;
-			_inverted = inverted;
+			_inverted     = inverted;
 			OnInit();
 		}
 
@@ -20,10 +20,7 @@ namespace Bezoro.Framework.Unity
 			OnBecomeRelevant();
 		}
 
-		public bool Tick()
-		{
-			return _inverted ? !OnTick() : OnTick();
-		}
+		public bool Tick() => _inverted ? !OnTick() : OnTick();
 
 		public void CeaseRelevant()
 		{

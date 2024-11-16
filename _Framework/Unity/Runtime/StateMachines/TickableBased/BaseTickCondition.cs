@@ -4,9 +4,9 @@ namespace Bezoro.Framework.Unity
 {
 	public abstract class BaseTickCondition
 	{
-		public void Init(TickableStateMachineOwner owner, bool inverted = false)
+		public void Init( TickableStateMachineOwner owner, bool inverted = false )
 		{
-			_owner = owner;
+			_owner    = owner;
 			_inverted = inverted;
 			OnInit();
 		}
@@ -20,10 +20,7 @@ namespace Bezoro.Framework.Unity
 			OnBecomeRelevant();
 		}
 
-		public bool Tick()
-		{
-			return _inverted ? !OnTick() : OnTick();
-		}
+		public bool Tick() => _inverted ? !OnTick() : OnTick();
 
 		public void CeaseRelevant()
 		{

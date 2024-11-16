@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using Bezoro.Framework.Unity.StateMachines;
 using Bezoro.Framework.Unity.States;
 using Bezoro.Framework.Unity.Utilities;
-using Bezoro.Framework.Unity.Utilities.Helpers;
 using KCC;
 using UnityEngine;
 
@@ -19,9 +18,9 @@ namespace Bezoro.Framework.Unity
 			KinematicCharacterMotor motor
 		)
 		{
-			_owner = owner;
+			_owner              = owner;
 			_owningStateMachine = owningStateMachine;
-			_motor = motor;
+			_motor              = motor;
 			OnInit();
 		}
 
@@ -67,36 +66,36 @@ namespace Bezoro.Framework.Unity
 
 	#region KCC Methods
 
-		public void UpdateRotation(ref Quaternion currentRotation, float deltaTime)
+		public void UpdateRotation( ref Quaternion currentRotation, float deltaTime )
 		{
-			OnUpdateRotation(ref currentRotation, deltaTime);
+			OnUpdateRotation( ref currentRotation, deltaTime );
 		}
 
-		public void UpdateVelocity(ref Vector3 currentVelocity, float deltaTime)
+		public void UpdateVelocity( ref Vector3 currentVelocity, float deltaTime )
 		{
-			OnUpdateVelocity(ref currentVelocity, deltaTime);
+			OnUpdateVelocity( ref currentVelocity, deltaTime );
 		}
 
-		public void BeforeCharacterUpdate(float deltaTime)
+		public void BeforeCharacterUpdate( float deltaTime )
 		{
-			OnBeforeCharacterUpdate(deltaTime);
+			OnBeforeCharacterUpdate( deltaTime );
 		}
 
-		public void PostGroundingUpdate(float deltaTime)
+		public void PostGroundingUpdate( float deltaTime )
 		{
-			OnPostGroundingUpdate(deltaTime);
+			OnPostGroundingUpdate( deltaTime );
 		}
 
-		public void AfterCharacterUpdate(float deltaTime)
+		public void AfterCharacterUpdate( float deltaTime )
 		{
-			OnAfterCharacterUpdate(deltaTime);
+			OnAfterCharacterUpdate( deltaTime );
 			AllTransitionsTick();
 
 			void AllTransitionsTick()
 			{
 				for ( var i = 0 ; i < _transitions.Length ; i++ )
 				{
-					if (_transitions[i] == null)
+					if ( _transitions[i] == null )
 					{
 						continue;
 					}
@@ -114,7 +113,7 @@ namespace Bezoro.Framework.Unity
 			ref HitStabilityReport hitStabilityReport
 		)
 		{
-			OnGroundHit(hitCollider, hitNormal, hitPoint, ref hitStabilityReport);
+			OnGroundHit( hitCollider, hitNormal, hitPoint, ref hitStabilityReport );
 		}
 
 		public void MovementHit
@@ -125,7 +124,7 @@ namespace Bezoro.Framework.Unity
 			ref HitStabilityReport hitStabilityReport
 		)
 		{
-			OnMovementHit(hitCollider, hitNormal, hitPoint, ref hitStabilityReport);
+			OnMovementHit( hitCollider, hitNormal, hitPoint, ref hitStabilityReport );
 		}
 
 		public void ProcessHitStabilityReport
@@ -148,16 +147,16 @@ namespace Bezoro.Framework.Unity
 			);
 		}
 
-		public void DiscreteCollisionDetected(Collider hitCollider)
+		public void DiscreteCollisionDetected( Collider hitCollider )
 		{
-			OnDiscreteCollisionDetected(hitCollider);
+			OnDiscreteCollisionDetected( hitCollider );
 		}
 
 	#endregion
 
-		public void OnTransitionRaised(IKCCState toState)
+		public void OnTransitionRaised( IKCCState toState )
 		{
-			_owningStateMachine.DoTransition(toState);
+			_owningStateMachine.DoTransition( toState );
 		}
 
 		public void Exit()
@@ -178,24 +177,26 @@ namespace Bezoro.Framework.Unity
 			AllTransitionsCeaseRelevant();
 		}
 
-		public KCCTransition TransitionsTo(IKCCState toState)
+		public KCCTransition TransitionsTo( IKCCState toState )
 		{
 			var newTransition = new KCCTransition();
-			newTransition.Init(this, toState, _owner);
-			ArrayHelpers.Add(ref _transitions, newTransition);
+			newTransition.Init( this, toState, _owner );
+			ArrayHelpers.Add( ref _transitions, newTransition );
+
 			return newTransition;
 		}
 
-		public bool IsSubStateMachine(out IKCCStateMachine outStateMachine)
+		public bool IsSubStateMachine( out IKCCStateMachine outStateMachine )
 		{
 			outStateMachine = null;
+
 			return false;
 		}
 
 		public void AddMonoBehaviourToIgnoreCollisionsWith<T>()
 		where T : MonoBehaviour
 		{
-			KCCStateExtensions.AddMonoBehaviourToIgnoreCollisionsWith<T>(this);
+			KCCStateExtensions.AddMonoBehaviourToIgnoreCollisionsWith<T>( this );
 		}
 
 	#region Abstract Methods
@@ -237,15 +238,15 @@ namespace Bezoro.Framework.Unity
 		/// </summary>
 		protected abstract void OnLateTick();
 
-		protected abstract void OnUpdateRotation(ref Quaternion currentRotation, float deltaTime);
+		protected abstract void OnUpdateRotation( ref Quaternion currentRotation, float deltaTime );
 
-		protected abstract void OnUpdateVelocity(ref Vector3 currentVelocity, float deltaTime);
+		protected abstract void OnUpdateVelocity( ref Vector3 currentVelocity, float deltaTime );
 
-		protected abstract void OnBeforeCharacterUpdate(float deltaTime);
+		protected abstract void OnBeforeCharacterUpdate( float deltaTime );
 
-		protected abstract void OnPostGroundingUpdate(float deltaTime);
+		protected abstract void OnPostGroundingUpdate( float deltaTime );
 
-		protected abstract void OnAfterCharacterUpdate(float deltaTime);
+		protected abstract void OnAfterCharacterUpdate( float deltaTime );
 
 		protected abstract void OnGroundHit
 		(
@@ -273,7 +274,7 @@ namespace Bezoro.Framework.Unity
 			ref HitStabilityReport hitStabilityReport
 		);
 
-		protected abstract void OnDiscreteCollisionDetected(Collider hitCollider);
+		protected abstract void OnDiscreteCollisionDetected( Collider hitCollider );
 
 		/// <summary>
 		///     Called when the <b>State</b> is <i>Exited</i>.
@@ -296,7 +297,7 @@ namespace Bezoro.Framework.Unity
 		{
 			for ( var i = 0 ; i < _transitions.Length ; i++ )
 			{
-				if (_transitions[i] == null)
+				if ( _transitions[i] == null )
 				{
 					continue;
 				}
@@ -309,7 +310,7 @@ namespace Bezoro.Framework.Unity
 		{
 			for ( var i = 0 ; i < _transitions.Length ; i++ )
 			{
-				if (_transitions[i] == null)
+				if ( _transitions[i] == null )
 				{
 					continue;
 				}

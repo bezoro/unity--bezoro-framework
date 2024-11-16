@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace Bezoro.Framework.Unity.Jobs
 {
-	[BurstCompile(FloatPrecision.Low, FloatMode.Fast)]
+	[BurstCompile( FloatPrecision.Low, FloatMode.Fast )]
 	public struct CreateRaycastCommandsJob : IJobParallelFor
 	{
 		[ReadOnly] [NativeDisableParallelForRestriction]
@@ -19,17 +19,17 @@ namespace Bezoro.Framework.Unity.Jobs
 		public NativeArray<RaycastCommand> Commands;
 
 		[BurstCompile]
-		public void Execute(int index)
+		public void Execute( int index )
 		{
 			var queryParams = new QueryParameters
 			{
-				hitBackfaces = false,
+				hitBackfaces     = false,
 				hitMultipleFaces = false,
-				layerMask = -1,
-				hitTriggers = QueryTriggerInteraction.UseGlobal
+				layerMask        = -1,
+				hitTriggers      = QueryTriggerInteraction.UseGlobal
 			};
 
-			Commands[index] = new RaycastCommand(Origins[index], Direction, queryParams);
+			Commands[index] = new(Origins[index], Direction, queryParams);
 		}
 	}
 }

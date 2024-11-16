@@ -5,9 +5,9 @@ namespace Bezoro.Framework.Unity
 {
 	public sealed class CustomFixedTick
 	{
-		public CustomFixedTick(float customFixedDeltaTime, Action customFixedTickCallback)
+		public CustomFixedTick( float customFixedDeltaTime, Action customFixedTickCallback )
 		{
-			CustomFixedDeltaTime = customFixedDeltaTime;
+			CustomFixedDeltaTime    = customFixedDeltaTime;
 			CustomFixedTickCallback = customFixedTickCallback;
 		}
 
@@ -19,7 +19,7 @@ namespace Bezoro.Framework.Unity
 
 		public double FixedTime { get; private set; }
 
-		public bool Tick(float deltaTime)
+		public bool Tick( float deltaTime )
 		{
 			_stopWatch.Reset();
 			_stopWatch.Start();
@@ -30,7 +30,7 @@ namespace Bezoro.Framework.Unity
 				FixedTime += CustomFixedDeltaTime;
 				CustomFixedTickCallback?.Invoke();
 
-				if (_stopWatch.ElapsedMilliseconds / 1000.0f > MaxAllowedTimestep)
+				if ( _stopWatch.ElapsedMilliseconds / 1000.0f > MaxAllowedTimestep )
 				{
 					return false;
 				}

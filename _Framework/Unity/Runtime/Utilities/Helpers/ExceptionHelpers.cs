@@ -2,7 +2,7 @@
 using System.Diagnostics;
 using System.Linq;
 
-namespace Bezoro.Framework.Unity.Utilities.Helpers
+namespace Bezoro.Framework.Unity.Utilities
 {
 	public static class ExceptionHelpers
 	{
@@ -14,18 +14,18 @@ namespace Bezoro.Framework.Unity.Utilities.Helpers
 		) where T : Exception
 		{
 			var exceptionType = typeof(T).Name;
-			var exceptionMessage = FormatExceptionMessage(exceptionType, objectInstance, methodName, message);
+			var exceptionMessage = FormatExceptionMessage( exceptionType, objectInstance, methodName, message );
 
-			throw (Exception)Activator.CreateInstance(typeof(T), exceptionMessage);
+			throw (Exception)Activator.CreateInstance( typeof(T), exceptionMessage );
 		}
 
-		[Conditional("UNITY_EDITOR")]
-		public static void ThrowExceptionEditorOnly<T>(string exceptionMessage) where T : Exception
+		[Conditional( "UNITY_EDITOR" )]
+		public static void ThrowExceptionEditorOnly<T>( string exceptionMessage ) where T : Exception
 		{
-			ThrowExceptionEditorOnly<T>(null, string.Empty, exceptionMessage);
+			ThrowExceptionEditorOnly<T>( null, string.Empty, exceptionMessage );
 		}
 
-		[Conditional("UNITY_EDITOR")]
+		[Conditional( "UNITY_EDITOR" )]
 		public static void ThrowExceptionEditorOnly<T>
 		(
 			object instance,
@@ -33,10 +33,10 @@ namespace Bezoro.Framework.Unity.Utilities.Helpers
 			string exceptionMessage
 		) where T : Exception
 		{
-			ThrowExceptionEditorOnly<T>(instance.GetType(), callingMethodName, exceptionMessage);
+			ThrowExceptionEditorOnly<T>( instance.GetType(), callingMethodName, exceptionMessage );
 		}
 
-		[Conditional("UNITY_EDITOR")]
+		[Conditional( "UNITY_EDITOR" )]
 		public static void ThrowExceptionEditorOnly<T>
 		(
 			Type instanceType,
@@ -44,7 +44,7 @@ namespace Bezoro.Framework.Unity.Utilities.Helpers
 			string exceptionMessage
 		) where T : Exception
 		{
-			ThrowException<T>(instanceType, callingMethodName, exceptionMessage);
+			ThrowException<T>( instanceType, callingMethodName, exceptionMessage );
 		}
 
 		private static string FormatExceptionMessage
@@ -57,15 +57,15 @@ namespace Bezoro.Framework.Unity.Utilities.Helpers
 		)
 		{
 			var objectType = objectInstance?.GetType().Name ?? "Unknown";
-			var paramNamesFormatted = FormatParamNames(paramNames);
+			var paramNamesFormatted = FormatParamNames( paramNames );
 
 			return
 				$"{exceptionType} occurred in {objectType}.{methodName} for parameters [{paramNamesFormatted}]: {message}";
 		}
 
-		private static string FormatParamNames(params object[] paramNames)
+		private static string FormatParamNames( params object[] paramNames )
 		{
-			return string.Join(", ", paramNames.Select(p => p?.GetType().Name ?? "Unknown"));
+			return string.Join( ", ", paramNames.Select( p => p?.GetType().Name ?? "Unknown" ) );
 		}
 	}
 }

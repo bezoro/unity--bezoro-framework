@@ -1,4 +1,4 @@
-﻿using Bezoro.Framework.Unity.Utilities.Helpers;
+﻿using Bezoro.Framework.Unity.Utilities;
 
 namespace Bezoro.Framework.Unity
 {
@@ -33,44 +33,44 @@ namespace Bezoro.Framework.Unity
 			}
 		}
 
-		public void AddUniqueEarlyTickable(Tickable tickable)
+		public void AddUniqueEarlyTickable( Tickable tickable )
 		{
-			ArrayHelpers.AddUnique(ref _earlyTickables, tickable, ref _earlyTickablesCount, out _);
+			ArrayHelpers.AddUnique( ref _earlyTickables, tickable, ref _earlyTickablesCount, out _ );
 		}
 
-		public void AddUniqueTickable(Tickable tickable)
+		public void AddUniqueTickable( Tickable tickable )
 		{
-			ArrayHelpers.AddUnique(ref _tickables, tickable, ref _tickablesCount, out _);
+			ArrayHelpers.AddUnique( ref _tickables, tickable, ref _tickablesCount, out _ );
 		}
 
-		public void AddUniqueFixedTickable(Tickable tickable)
+		public void AddUniqueFixedTickable( Tickable tickable )
 		{
-			ArrayHelpers.AddUnique(ref _fixedTickables, tickable, ref _fixedTickablesCount, out _);
+			ArrayHelpers.AddUnique( ref _fixedTickables, tickable, ref _fixedTickablesCount, out _ );
 		}
 
-		public void AddUniqueLateTickable(Tickable tickable)
+		public void AddUniqueLateTickable( Tickable tickable )
 		{
-			ArrayHelpers.AddUnique(ref _lateTickables, tickable, ref _lateTickablesCount, out _);
+			ArrayHelpers.AddUnique( ref _lateTickables, tickable, ref _lateTickablesCount, out _ );
 		}
 
-		public void RemoveEarlyTickable(Tickable tickable)
+		public void RemoveEarlyTickable( Tickable tickable )
 		{
-			ArrayHelpers.Remove(ref _earlyTickables, tickable, ref _earlyTickablesCount, out _);
+			ArrayHelpers.Remove( ref _earlyTickables, tickable, ref _earlyTickablesCount, out _ );
 		}
 
-		public void RemoveTickable(Tickable tickable)
+		public void RemoveTickable( Tickable tickable )
 		{
-			ArrayHelpers.Remove(ref _tickables, tickable, ref _tickablesCount, out _);
+			ArrayHelpers.Remove( ref _tickables, tickable, ref _tickablesCount, out _ );
 		}
 
-		public void RemoveFixedTickable(Tickable tickable)
+		public void RemoveFixedTickable( Tickable tickable )
 		{
-			ArrayHelpers.Remove(ref _fixedTickables, tickable, ref _fixedTickablesCount, out _);
+			ArrayHelpers.Remove( ref _fixedTickables, tickable, ref _fixedTickablesCount, out _ );
 		}
 
-		public void RemoveLateTickable(Tickable tickable)
+		public void RemoveLateTickable( Tickable tickable )
 		{
-			ArrayHelpers.Remove(ref _lateTickables, tickable, ref _lateTickablesCount, out _);
+			ArrayHelpers.Remove( ref _lateTickables, tickable, ref _lateTickablesCount, out _ );
 		}
 
 		private Tickable[] _earlyTickables = new Tickable[128];

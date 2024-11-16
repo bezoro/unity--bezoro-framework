@@ -8,12 +8,12 @@ namespace Bezoro.Framework.Unity.AI
 
 		protected virtual void OnEnable()
 		{
-			AITickManagerBehaviour.Instance.AddUnique(this);
+			AITickManagerBehaviour.Instance.AddUnique( this );
 		}
 
 		protected virtual void OnDisable()
 		{
-			AITickManagerBehaviour.Instance.Remove(this);
+			AITickManagerBehaviour.Instance.Remove( this );
 		}
 	}
 }

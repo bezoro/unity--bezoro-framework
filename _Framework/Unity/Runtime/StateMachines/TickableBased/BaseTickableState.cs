@@ -1,6 +1,6 @@
 ﻿using Bezoro.Framework.Unity.StateMachines;
 using Bezoro.Framework.Unity.States;
-using Bezoro.Framework.Unity.Utilities.Helpers;
+using Bezoro.Framework.Unity.Utilities;
 using UnityEngine;
 
 namespace Bezoro.Framework.Unity
@@ -8,9 +8,9 @@ namespace Bezoro.Framework.Unity
 	public abstract class BaseTickableState :
 		ITickableState
 	{
-		public void Init(TickableStateMachineOwner owner, ITickableStateMachine owningStateMachine)
+		public void Init( TickableStateMachineOwner owner, ITickableStateMachine owningStateMachine )
 		{
-			_owner = owner;
+			_owner              = owner;
 			_owningStateMachine = owningStateMachine;
 			OnInit();
 		}
@@ -55,7 +55,7 @@ namespace Bezoro.Framework.Unity
 			{
 				for ( var i = 0 ; i < _transitions.Length ; i++ )
 				{
-					if (_transitions[i] == null)
+					if ( _transitions[i] == null )
 					{
 						continue;
 					}
@@ -65,9 +65,9 @@ namespace Bezoro.Framework.Unity
 			}
 		}
 
-		public void OnTransitionRaised(ITickableState toState)
+		public void OnTransitionRaised( ITickableState toState )
 		{
-			_owningStateMachine.DoTransition(toState);
+			_owningStateMachine.DoTransition( toState );
 		}
 
 		public void Exit()
@@ -88,11 +88,12 @@ namespace Bezoro.Framework.Unity
 			AllTransitionsCeaseRelevant();
 		}
 
-		public TickTransition TransitionsTo(ITickableState toState)
+		public TickTransition TransitionsTo( ITickableState toState )
 		{
 			var newTransition = new TickTransition();
-			newTransition.Init(this, toState, _owner);
-			ArrayHelpers.Add(ref _transitions, newTransition);
+			newTransition.Init( this, toState, _owner );
+			ArrayHelpers.Add( ref _transitions, newTransition );
+
 			return newTransition;
 		}
 
@@ -156,7 +157,7 @@ namespace Bezoro.Framework.Unity
 		{
 			for ( var i = 0 ; i < _transitions.Length ; i++ )
 			{
-				if (_transitions[i] == null)
+				if ( _transitions[i] == null )
 				{
 					continue;
 				}
@@ -169,7 +170,7 @@ namespace Bezoro.Framework.Unity
 		{
 			for ( var i = 0 ; i < _transitions.Length ; i++ )
 			{
-				if (_transitions[i] == null)
+				if ( _transitions[i] == null )
 				{
 					continue;
 				}

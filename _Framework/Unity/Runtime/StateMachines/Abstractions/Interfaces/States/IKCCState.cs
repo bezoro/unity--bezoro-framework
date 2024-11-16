@@ -19,15 +19,15 @@ namespace Bezoro.Framework.Unity.States
 
 	#region KCC Methods
 
-		public void UpdateRotation(ref Quaternion currentRotation, float deltaTime);
+		public void UpdateRotation( ref Quaternion currentRotation, float deltaTime );
 
-		public void UpdateVelocity(ref Vector3 currentVelocity, float deltaTime);
+		public void UpdateVelocity( ref Vector3 currentVelocity, float deltaTime );
 
-		public void BeforeCharacterUpdate(float deltaTime);
+		public void BeforeCharacterUpdate( float deltaTime );
 
-		public void PostGroundingUpdate(float deltaTime);
+		public void PostGroundingUpdate( float deltaTime );
 
-		public void AfterCharacterUpdate(float deltaTime);
+		public void AfterCharacterUpdate( float deltaTime );
 
 		public void GroundHit
 		(
@@ -55,10 +55,10 @@ namespace Bezoro.Framework.Unity.States
 			ref HitStabilityReport hitStabilityReport
 		);
 
-		public void DiscreteCollisionDetected(Collider hitCollider);
+		public void DiscreteCollisionDetected( Collider hitCollider );
 
 	#endregion
 
-		bool IsSubStateMachine(out IKCCStateMachine outStateMachine);
+		bool IsSubStateMachine( out IKCCStateMachine outStateMachine );
 	}
 }

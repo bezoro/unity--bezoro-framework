@@ -1,6 +1,6 @@
 ﻿using Bezoro.Framework.Unity.StateMachines;
 using Bezoro.Framework.Unity.States;
-using Bezoro.Framework.Unity.Utilities.Helpers;
+using Bezoro.Framework.Unity.Utilities;
 using UnityEngine;
 
 namespace Bezoro.Framework.Unity
@@ -8,9 +8,9 @@ namespace Bezoro.Framework.Unity
 	public abstract class BaseEventState :
 		IEventState
 	{
-		public void Init(EventStateMachineOwner owner, IEventStateMachine owningStateMachine)
+		public void Init( EventStateMachineOwner owner, IEventStateMachine owningStateMachine )
 		{
-			_owner = owner;
+			_owner              = owner;
 			_owningStateMachine = owningStateMachine;
 			OnInit();
 		}
@@ -31,9 +31,9 @@ namespace Bezoro.Framework.Unity
 			AllTransitionsBecomeRelevant();
 		}
 
-		public void OnTransitionRaised(IEventState toState)
+		public void OnTransitionRaised( IEventState toState )
 		{
-			_owningStateMachine.DoTransition(toState);
+			_owningStateMachine.DoTransition( toState );
 		}
 
 		public void Exit()
@@ -54,11 +54,12 @@ namespace Bezoro.Framework.Unity
 			AllTransitionsCeaseRelevant();
 		}
 
-		public EventTransition TransitionsTo(IEventState toState)
+		public EventTransition TransitionsTo( IEventState toState )
 		{
 			var newTransition = new EventTransition();
-			newTransition.Init(this, toState, _owner);
-			ArrayHelpers.Add(ref _transitions, newTransition);
+			newTransition.Init( this, toState, _owner );
+			ArrayHelpers.Add( ref _transitions, newTransition );
+
 			return newTransition;
 		}
 
@@ -102,7 +103,7 @@ namespace Bezoro.Framework.Unity
 		{
 			for ( var i = 0 ; i < _transitions.Length ; i++ )
 			{
-				if (_transitions[i] == null)
+				if ( _transitions[i] == null )
 				{
 					continue;
 				}
@@ -115,7 +116,7 @@ namespace Bezoro.Framework.Unity
 		{
 			for ( var i = 0 ; i < _transitions.Length ; i++ )
 			{
-				if (_transitions[i] == null)
+				if ( _transitions[i] == null )
 				{
 					continue;
 				}

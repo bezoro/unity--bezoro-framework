@@ -4,10 +4,10 @@ namespace Bezoro.Framework.Unity
 {
 	public abstract class BaseEventCondition
 	{
-		public void Init(EventStateMachineOwner owner, EventTransition transition)
+		public void Init( EventStateMachineOwner owner, EventTransition transition )
 		{
 			_transition = transition;
-			_owner = owner;
+			_owner      = owner;
 			OnInit();
 		}
 

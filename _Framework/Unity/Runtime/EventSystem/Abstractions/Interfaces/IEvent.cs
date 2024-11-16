@@ -4,7 +4,7 @@
 	{
 		TPayload Payload { get; }
 
-		void Initialize(TPayload payload, int priority = 1, bool runOnThreadPool = false);
+		void Initialize( TPayload payload, int priority = 1, bool runOnThreadPool = false );
 	}
 
 	public interface IEvent

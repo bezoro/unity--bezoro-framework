@@ -8,6 +8,6 @@ namespace Bezoro.Framework.Unity
 	{
 		T0[] Transitions { get; }
 
-		void OnTransitionRaised(T1 toState);
+		void OnTransitionRaised( T1 toState );
 	}
 }

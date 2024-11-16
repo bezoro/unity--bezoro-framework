@@ -1,6 +1,6 @@
 ﻿using Bezoro.Framework.Unity.Enums;
 using Bezoro.Framework.Unity.States;
-using Bezoro.Framework.Unity.Utilities.Helpers;
+using Bezoro.Framework.Unity.Utilities;
 
 namespace Bezoro.Framework.Unity
 {
@@ -14,8 +14,8 @@ namespace Bezoro.Framework.Unity
 		)
 		{
 			_fromState = fromState;
-			_toState = toState;
-			_owner = owner;
+			_toState   = toState;
+			_owner     = owner;
 		}
 
 		public void BecomeRelevant()
@@ -26,7 +26,7 @@ namespace Bezoro.Framework.Unity
 			{
 				for ( var i = 0 ; i < _conditions.Length ; i++ )
 				{
-					if (_conditions[i] == null)
+					if ( _conditions[i] == null )
 					{
 						continue;
 					}
@@ -42,12 +42,12 @@ namespace Bezoro.Framework.Unity
 
 			void TickConditions()
 			{
-				if (_conditionsCriteria is ConditionsCriteria.AnyTrue)
+				if ( _conditionsCriteria is ConditionsCriteria.AnyTrue )
 				{
 					TickAnyTrue();
 				}
 
-				else if (_conditionsCriteria is ConditionsCriteria.AllTrue)
+				else if ( _conditionsCriteria is ConditionsCriteria.AllTrue )
 				{
 					TickAllTrue();
 				}
@@ -56,14 +56,14 @@ namespace Bezoro.Framework.Unity
 				{
 					for ( var i = 0 ; i < _conditions.Length ; i++ )
 					{
-						if (_conditions[i] == null)
+						if ( _conditions[i] == null )
 						{
 							continue;
 						}
 
-						if (_conditions[i].Tick())
+						if ( _conditions[i].Tick() )
 						{
-							_fromState.OnTransitionRaised(_toState);
+							_fromState.OnTransitionRaised( _toState );
 						}
 					}
 				}
@@ -72,18 +72,18 @@ namespace Bezoro.Framework.Unity
 				{
 					for ( var i = 0 ; i < _conditions.Length ; i++ )
 					{
-						if (_conditions[i] == null)
+						if ( _conditions[i] == null )
 						{
 							continue;
 						}
 
-						if (!_conditions[i].Tick())
+						if ( !_conditions[i].Tick() )
 						{
 							return;
 						}
 					}
 
-					_fromState.OnTransitionRaised(_toState);
+					_fromState.OnTransitionRaised( _toState );
 				}
 			}
 		}
@@ -96,7 +96,7 @@ namespace Bezoro.Framework.Unity
 			{
 				for ( var i = 0 ; i < _conditions.Length ; i++ )
 				{
-					if (_conditions[i] == null)
+					if ( _conditions[i] == null )
 					{
 						continue;
 					}
@@ -106,12 +106,12 @@ namespace Bezoro.Framework.Unity
 			}
 		}
 
-		public void WithCondition<T>(bool inverted = false)
+		public void WithCondition<T>( bool inverted = false )
 		where T : BaseTickCondition, new()
 		{
 			var newCondition = new T();
-			newCondition.Init(_owner, inverted);
-			ArrayHelpers.Add(ref _conditions, newCondition);
+			newCondition.Init( _owner, inverted );
+			ArrayHelpers.Add( ref _conditions, newCondition );
 		}
 
 		public void WithConditions<T0, T1>
@@ -124,12 +124,12 @@ namespace Bezoro.Framework.Unity
 		where T1 : BaseTickCondition, new()
 		{
 			var newCondition0 = new T0();
-			newCondition0.Init(_owner, inverted0);
-			ArrayHelpers.Add(ref _conditions, newCondition0);
+			newCondition0.Init( _owner, inverted0 );
+			ArrayHelpers.Add( ref _conditions, newCondition0 );
 
 			var newCondition1 = new T1();
-			newCondition1.Init(_owner, inverted1);
-			ArrayHelpers.Add(ref _conditions, newCondition1);
+			newCondition1.Init( _owner, inverted1 );
+			ArrayHelpers.Add( ref _conditions, newCondition1 );
 
 			_conditionsCriteria = conditionsCriteria;
 		}
@@ -146,16 +146,16 @@ namespace Bezoro.Framework.Unity
 		where T2 : BaseTickCondition, new()
 		{
 			var newCondition0 = new T0();
-			newCondition0.Init(_owner, inverted0);
-			ArrayHelpers.Add(ref _conditions, newCondition0);
+			newCondition0.Init( _owner, inverted0 );
+			ArrayHelpers.Add( ref _conditions, newCondition0 );
 
 			var newCondition1 = new T1();
-			newCondition1.Init(_owner, inverted1);
-			ArrayHelpers.Add(ref _conditions, newCondition1);
+			newCondition1.Init( _owner, inverted1 );
+			ArrayHelpers.Add( ref _conditions, newCondition1 );
 
 			var newCondition2 = new T2();
-			newCondition2.Init(_owner, inverted2);
-			ArrayHelpers.Add(ref _conditions, newCondition2);
+			newCondition2.Init( _owner, inverted2 );
+			ArrayHelpers.Add( ref _conditions, newCondition2 );
 
 			_conditionsCriteria = conditionsCriteria;
 		}

@@ -12,7 +12,7 @@ namespace Bezoro.Framework.Unity.ReflectionProbeManager
 		public double Time => _customFixedTick.FixedTime;
 		public float DeltaTime => _customFixedTick.CustomFixedDeltaTime;
 
-		[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+		[RuntimeInitializeOnLoadMethod( RuntimeInitializeLoadType.SubsystemRegistration )]
 		private static void Init()
 		{
 			Instance = null;
@@ -20,27 +20,27 @@ namespace Bezoro.Framework.Unity.ReflectionProbeManager
 
 		private void Awake()
 		{
-			_customFixedTick = new CustomFixedTick(TickFrequency, RenderAllProbes);
+			_customFixedTick = new(TickFrequency, RenderAllProbes);
 		}
 
 		private void Update()
 		{
-			_customFixedTick.Tick(UnityEngine.Time.deltaTime);
+			_customFixedTick.Tick( UnityEngine.Time.deltaTime );
 		}
 
-		public void AddUnique(ReflectionProbe reflectionProbe)
+		public void AddUnique( ReflectionProbe reflectionProbe )
 		{
-			if (_reflectionProbes.Contains(reflectionProbe))
+			if ( _reflectionProbes.Contains( reflectionProbe ) )
 			{
 				return;
 			}
 
-			_reflectionProbes.Add(reflectionProbe);
+			_reflectionProbes.Add( reflectionProbe );
 		}
 
-		public void Remove(ReflectionProbe reflectionProbe)
+		public void Remove( ReflectionProbe reflectionProbe )
 		{
-			_reflectionProbes.Remove(reflectionProbe);
+			_reflectionProbes.Remove( reflectionProbe );
 		}
 
 		private void RenderAllProbes()

@@ -8,7 +8,7 @@ namespace Bezoro.Framework.Unity
 	public abstract class BaseTickableStateMachine : ScriptableObject,
 		ITickableStateMachine
 	{
-		public void Init(TickableStateMachineOwner owner)
+		public void Init( TickableStateMachineOwner owner )
 		{
 			_owner = owner;
 			RegisterStates();
@@ -32,7 +32,7 @@ namespace Bezoro.Framework.Unity
 
 		public void Enable()
 		{
-			if (_wasDisabled && DisableMethod is DisableMethod.Restart)
+			if ( _wasDisabled && DisableMethod is DisableMethod.Restart )
 			{
 				OnEnabled();
 				_currentState.Enable();
@@ -40,7 +40,7 @@ namespace Bezoro.Framework.Unity
 				_currentState.Enter();
 				_wasDisabled = false;
 			}
-			else if (_wasDisabled)
+			else if ( _wasDisabled )
 			{
 				OnEnabled();
 				_currentState.Enable();
@@ -87,10 +87,10 @@ namespace Bezoro.Framework.Unity
 			_currentState.Destroy();
 		}
 
-		public void DoTransition(ITickableState toState)
+		public void DoTransition( ITickableState toState )
 		{
 			_currentState.Exit();
-			_lastState = _currentState;
+			_lastState    = _currentState;
 			_currentState = toState;
 			_currentState.Enter();
 		}
@@ -157,7 +157,8 @@ namespace Bezoro.Framework.Unity
 		where T : class, ITickableState, new()
 		{
 			var newState = new T();
-			newState.Init(_owner, this);
+			newState.Init( _owner, this );
+
 			return newState;
 		}
 

@@ -11,24 +11,20 @@ namespace Bezoro.Framework.Unity.Utilities
 
 		public float Z { get; set; }
 
-		public static implicit operator Position(Vector3 vector)
-		{
-			return new Position
+		public static implicit operator Position( Vector3 vector ) =>
+			new()
 			{
 				X = vector.x,
 				Y = vector.y,
 				Z = vector.z
 			};
-		}
 
-		public static implicit operator Position(float3 vector)
-		{
-			return new Position
+		public static implicit operator Position( float3 vector ) =>
+			new()
 			{
 				X = vector.x,
 				Y = vector.y,
 				Z = vector.z
 			};
-		}
 	}
 }

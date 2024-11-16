@@ -2,7 +2,7 @@
 using System.Threading;
 using Cysharp.Threading.Tasks;
 
-namespace Bezoro.Framework.Unity.Utilities.Helpers
+namespace Bezoro.Framework.Unity.Utilities
 {
 	public static class AsyncHelpers
 	{
@@ -13,9 +13,9 @@ namespace Bezoro.Framework.Unity.Utilities.Helpers
 			CancellationToken cancellationToken = default
 		)
 		{
-			await UniTask.Delay(TimeSpan.FromSeconds(delayInSeconds), cancellationToken: cancellationToken);
+			await UniTask.Delay( TimeSpan.FromSeconds( delayInSeconds ), cancellationToken: cancellationToken );
 
-			if (!cancellationToken.IsCancellationRequested)
+			if ( !cancellationToken.IsCancellationRequested )
 			{
 				action?.Invoke();
 			}
@@ -31,7 +31,7 @@ namespace Bezoro.Framework.Unity.Utilities.Helpers
 			while (!cancellationToken.IsCancellationRequested)
 			{
 				await action();
-				await UniTask.Delay(TimeSpan.FromSeconds(intervalInSeconds), cancellationToken: cancellationToken);
+				await UniTask.Delay( TimeSpan.FromSeconds( intervalInSeconds ), cancellationToken: cancellationToken );
 			}
 		}
 	}

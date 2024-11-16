@@ -3,7 +3,7 @@ using Cysharp.Threading.Tasks;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
-namespace Bezoro.Framework.Unity.Utilities.Helpers
+namespace Bezoro.Framework.Unity.Utilities
 {
 	public static class InstantiationHelpers
 	{
@@ -16,8 +16,8 @@ namespace Bezoro.Framework.Unity.Utilities.Helpers
 		)
 		where T : Object
 		{
-			var instance = Object.Instantiate(prefab, position, Quaternion.identity, parent);
-			await initializeFunc(instance);
+			var instance = Object.Instantiate( prefab, position, Quaternion.identity, parent );
+			await initializeFunc( instance );
 		}
 	}
 }

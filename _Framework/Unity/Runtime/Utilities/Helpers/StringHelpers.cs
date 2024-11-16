@@ -1,15 +1,15 @@
 ﻿using System;
 
-namespace Bezoro.Framework.Unity.Utilities.Helpers
+namespace Bezoro.Framework.Unity.Utilities
 {
 	public static class StringHelpers
 	{
-		public static (int fileIndex, int rankIndex) ChessNotationToIndices(string notation)
+		public static (int fileIndex, int rankIndex) ChessNotationToIndices( string notation )
 		{
 			var file = notation[..1];
 			var rank = notation[1..];
 
-			return ( ChessNotationFileToInt(file), ChessNotationRankToInt(rank) );
+			return ( ChessNotationFileToInt( file ), ChessNotationRankToInt( rank ) );
 		}
 
 		/// <summary>
@@ -20,9 +20,9 @@ namespace Bezoro.Framework.Unity.Utilities.Helpers
 		/// <exception cref="ArgumentOutOfRangeException">
 		///     <paramref name="rank" /> is less than 1 or greater than 26.
 		/// </exception>
-		public static int ChessNotationRankToInt(string rank)
+		public static int ChessNotationRankToInt( string rank )
 		{
-			if (!int.TryParse(rank, out var result))
+			if ( !int.TryParse( rank, out var result ) )
 			{
 				throw new ArgumentException(
 					"Rank must be a valid integer.",
@@ -30,7 +30,7 @@ namespace Bezoro.Framework.Unity.Utilities.Helpers
 				);
 			}
 
-			if (result < 1 || result > 26)
+			if ( result < 1 || result > 26 )
 			{
 				throw new ArgumentOutOfRangeException(
 					nameof(rank),
@@ -52,9 +52,9 @@ namespace Bezoro.Framework.Unity.Utilities.Helpers
 		/// <exception cref="ArgumentOutOfRangeException">
 		///     <paramref name="file" /> is not between 'A' and 'Z'.
 		/// </exception>
-		public static int ChessNotationFileToInt(string file)
+		public static int ChessNotationFileToInt( string file )
 		{
-			if (file.Length != 1)
+			if ( file.Length != 1 )
 			{
 				throw new ArgumentException(
 					"File must be a single letter.",
@@ -62,9 +62,9 @@ namespace Bezoro.Framework.Unity.Utilities.Helpers
 				);
 			}
 
-			var fileChar = char.ToUpper(file[0]);
+			var fileChar = char.ToUpper( file[0] );
 
-			if (fileChar < 'A' || fileChar > 'Z')
+			if ( fileChar < 'A' || fileChar > 'Z' )
 			{
 				throw new ArgumentOutOfRangeException(
 					nameof(file),

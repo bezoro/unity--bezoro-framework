@@ -8,7 +8,7 @@ namespace Bezoro.Framework.Unity
 	public abstract class BaseEventStateMachine : ScriptableObject,
 		IEventStateMachine
 	{
-		public void Init(EventStateMachineOwner owner)
+		public void Init( EventStateMachineOwner owner )
 		{
 			_owner = owner;
 			RegisterStates();
@@ -32,7 +32,7 @@ namespace Bezoro.Framework.Unity
 
 		public void Enable()
 		{
-			if (_wasDisabled && DisableMethod is DisableMethod.Restart)
+			if ( _wasDisabled && DisableMethod is DisableMethod.Restart )
 			{
 				OnEnabled();
 				_currentState.Enable();
@@ -40,7 +40,7 @@ namespace Bezoro.Framework.Unity
 				_currentState.Enter();
 				_wasDisabled = false;
 			}
-			else if (_wasDisabled)
+			else if ( _wasDisabled )
 			{
 				OnEnabled();
 				_currentState.Enable();
@@ -48,10 +48,10 @@ namespace Bezoro.Framework.Unity
 			}
 		}
 
-		public void DoTransition(IEventState toState)
+		public void DoTransition( IEventState toState )
 		{
 			_currentState.Exit();
-			_lastState = _currentState;
+			_lastState    = _currentState;
 			_currentState = toState;
 			_currentState.Enter();
 		}
@@ -137,7 +137,8 @@ namespace Bezoro.Framework.Unity
 		where T : class, IEventState, new()
 		{
 			var newState = new T();
-			newState.Init(_owner, this);
+			newState.Init( _owner, this );
+
 			return newState;
 		}
 
