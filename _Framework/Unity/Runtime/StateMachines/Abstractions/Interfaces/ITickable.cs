@@ -1,4 +1,4 @@
-﻿namespace Bezoro.Framework.Unity
+﻿namespace Bezoro.Framework.Unity.StateMachines
 {
 	public interface ITickable
 	{

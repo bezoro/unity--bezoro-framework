@@ -1,10 +1,7 @@
-﻿using Bezoro.Framework.Unity.Enums;
-using Bezoro.Framework.Unity.StateMachines;
-using Bezoro.Framework.Unity.States;
-using KCC;
+﻿using KCC;
 using UnityEngine;
 
-namespace Bezoro.Framework.Unity
+namespace Bezoro.Framework.Unity.StateMachines.KCCBased
 {
 	public abstract class BaseKCCStateMachine : ScriptableObject,
 		IKCCStateMachine

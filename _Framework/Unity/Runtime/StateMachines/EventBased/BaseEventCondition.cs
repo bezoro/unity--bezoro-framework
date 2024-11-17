@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace Bezoro.Framework.Unity
+namespace Bezoro.Framework.Unity.StateMachines.EventBased
 {
 	public abstract class BaseEventCondition
 	{

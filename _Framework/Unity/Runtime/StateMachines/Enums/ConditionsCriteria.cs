@@ -1,4 +1,4 @@
-namespace Bezoro.Framework.Unity.Enums
+namespace Bezoro.Framework.Unity.StateMachines
 {
 	public enum ConditionsCriteria
 	{

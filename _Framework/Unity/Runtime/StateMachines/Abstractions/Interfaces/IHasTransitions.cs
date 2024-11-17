@@ -1,6 +1,4 @@
-﻿using Bezoro.Framework.Unity.States;
-
-namespace Bezoro.Framework.Unity
+﻿namespace Bezoro.Framework.Unity.StateMachines
 {
 	public interface IHasTransitions<T0, T1>
 	where T0 : ITransition

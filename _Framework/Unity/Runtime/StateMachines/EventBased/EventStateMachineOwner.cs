@@ -1,8 +1,7 @@
-﻿using Bezoro.Framework.Unity.States;
-using Bezoro.Framework.Unity.Utilities;
+﻿using Bezoro.Framework.Unity.StateMachines.Utilities;
 using UnityEngine;
 
-namespace Bezoro.Framework.Unity
+namespace Bezoro.Framework.Unity.StateMachines.EventBased
 {
 	[DisallowMultipleComponent]
 	public sealed class EventStateMachineOwner : MonoBehaviour

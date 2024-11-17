@@ -1,9 +1,7 @@
-﻿using Bezoro.Framework.Unity.StateMachines;
-using Bezoro.Framework.Unity.States;
-using UnityEngine;
+﻿using UnityEngine;
 using ArrayHelpers = Bezoro.Framework.Core.ArrayHelpers;
 
-namespace Bezoro.Framework.Unity
+namespace Bezoro.Framework.Unity.StateMachines.TickableBased
 {
 	public abstract class BaseTickableSubStateMachine :
 		ITickableStateMachine, ITickableState

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Bezoro.Framework.Unity
+namespace Bezoro.Framework.Unity.EventSystem
 {
 	public class TypeSafeEventQueue
 	{

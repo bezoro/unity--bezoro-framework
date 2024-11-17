@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace Bezoro.Framework.Unity
+namespace Bezoro.Framework.Unity.StateMachines.TickableBased
 {
 	public abstract class BaseTickCondition
 	{

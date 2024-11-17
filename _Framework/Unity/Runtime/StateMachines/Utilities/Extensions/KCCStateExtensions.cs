@@ -1,7 +1,6 @@
-using Bezoro.Framework.Unity.States;
 using UnityEngine;
 
-namespace Bezoro.Framework.Unity.Utilities
+namespace Bezoro.Framework.Unity.StateMachines.Utilities
 {
 	public static class KCCStateExtensions
 	{

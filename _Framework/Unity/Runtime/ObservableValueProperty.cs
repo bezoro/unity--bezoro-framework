@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Bezoro.Framework.Unity.Editor
+namespace Bezoro.Framework.Unity
 {
 	public abstract class ObservableValueProperty<T> where T : struct
 	{

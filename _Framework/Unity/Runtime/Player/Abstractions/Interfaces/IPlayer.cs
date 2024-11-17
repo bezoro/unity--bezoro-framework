@@ -1,4 +1,4 @@
-﻿namespace Bezoro.Framework.Unity.Interfaces
+﻿namespace Bezoro.Framework.Unity.Player
 {
 	public interface IPlayer {}
 }

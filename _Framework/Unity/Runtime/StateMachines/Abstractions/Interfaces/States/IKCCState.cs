@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using Bezoro.Framework.Unity.StateMachines;
+using Bezoro.Framework.Unity.StateMachines.KCCBased;
 using KCC;
 using UnityEngine;
 
-namespace Bezoro.Framework.Unity.States
+namespace Bezoro.Framework.Unity.StateMachines
 {
 	public interface IKCCState : IState, ITickable, IHasTransitions<KCCTransition, IKCCState>
 	{

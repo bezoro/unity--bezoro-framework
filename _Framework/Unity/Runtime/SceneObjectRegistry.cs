@@ -23,11 +23,9 @@ namespace Bezoro.Framework.Unity
 			{
 				case PlayModeStateChange.EnteredPlayMode or PlayModeStateChange.ExitingEditMode:
 					ScanForObjectUIDs();
-
 					break;
 				case PlayModeStateChange.ExitingPlayMode:
 					EditorApplication.playModeStateChanged -= OnPlayModeStateChanged;
-
 					break;
 			}
 		}

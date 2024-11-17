@@ -1,7 +1,6 @@
-﻿using Bezoro.Framework.Unity.States;
-using ArrayHelpers = Bezoro.Framework.Core.ArrayHelpers;
+﻿using ArrayHelpers = Bezoro.Framework.Core.ArrayHelpers;
 
-namespace Bezoro.Framework.Unity
+namespace Bezoro.Framework.Unity.StateMachines.EventBased
 {
 	public sealed class EventTransition : ITransition
 	{

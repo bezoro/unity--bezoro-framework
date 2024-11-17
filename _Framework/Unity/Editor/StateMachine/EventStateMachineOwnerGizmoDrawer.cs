@@ -1,4 +1,5 @@
 ﻿using Bezoro.Framework.Unity.StateMachines;
+using Bezoro.Framework.Unity.StateMachines.EventBased;
 using UnityEditor;
 using UnityEngine;
 

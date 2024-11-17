@@ -1,5 +1,4 @@
 ﻿using System;
-using KCC.Abstractions;
 using KCC.Attributes;
 using UnityEngine;
 
@@ -22,7 +21,7 @@ namespace KCC
 	///     Component that manages the movement of moving kinematic rigidbodies for
 	///     proper interaction with characters
 	/// </summary>
-	[RequireComponent(typeof(Rigidbody))]
+	[RequireComponent( typeof(Rigidbody) )]
 	public class PhysicsMover : MonoBehaviour
 	{
 		/// <summary>
@@ -135,22 +134,22 @@ namespace KCC
 		{
 			Rigidbody = gameObject.GetComponent<Rigidbody>();
 
-			Rigidbody.centerOfMass = Vector3.zero;
-			Rigidbody.maxAngularVelocity = Mathf.Infinity;
+			Rigidbody.centerOfMass             = Vector3.zero;
+			Rigidbody.maxAngularVelocity       = Mathf.Infinity;
 			Rigidbody.maxDepenetrationVelocity = Mathf.Infinity;
-			Rigidbody.isKinematic = true;
-			Rigidbody.interpolation = RigidbodyInterpolation.None;
+			Rigidbody.isKinematic              = true;
+			Rigidbody.interpolation            = RigidbodyInterpolation.None;
 		}
 
 		private void OnEnable()
 		{
 			KinematicCharacterSystem.EnsureCreation();
-			KinematicCharacterSystem.RegisterPhysicsMover(this);
+			KinematicCharacterSystem.RegisterPhysicsMover( this );
 		}
 
 		private void OnDisable()
 		{
-			KinematicCharacterSystem.UnregisterPhysicsMover(this);
+			KinematicCharacterSystem.UnregisterPhysicsMover( this );
 		}
 
 		private void Awake()
@@ -158,10 +157,10 @@ namespace KCC
 			Transform = transform;
 			ValidateData();
 
-			TransientPosition = Rigidbody.position;
-			TransientRotation = Rigidbody.rotation;
-			InitialSimulationPosition = Rigidbody.position;
-			InitialSimulationRotation = Rigidbody.rotation;
+			TransientPosition           = Rigidbody.position;
+			TransientRotation           = Rigidbody.rotation;
+			InitialSimulationPosition   = Rigidbody.position;
+			InitialSimulationRotation   = Rigidbody.rotation;
 			LatestInterpolationPosition = Transform.position;
 			LatestInterpolationRotation = Transform.rotation;
 		}
@@ -169,37 +168,37 @@ namespace KCC
 		/// <summary>
 		///     Sets the mover's position directly
 		/// </summary>
-		public void SetPosition(Vector3 position)
+		public void SetPosition( Vector3 position )
 		{
-			Transform.position = position;
-			Rigidbody.position = position;
+			Transform.position        = position;
+			Rigidbody.position        = position;
 			InitialSimulationPosition = position;
-			TransientPosition = position;
+			TransientPosition         = position;
 		}
 
 		/// <summary>
 		///     Sets the mover's rotation directly
 		/// </summary>
-		public void SetRotation(Quaternion rotation)
+		public void SetRotation( Quaternion rotation )
 		{
-			Transform.rotation = rotation;
-			Rigidbody.rotation = rotation;
+			Transform.rotation        = rotation;
+			Rigidbody.rotation        = rotation;
 			InitialSimulationRotation = rotation;
-			TransientRotation = rotation;
+			TransientRotation         = rotation;
 		}
 
 		/// <summary>
 		///     Sets the mover's position and rotation directly
 		/// </summary>
-		public void SetPositionAndRotation(Vector3 position, Quaternion rotation)
+		public void SetPositionAndRotation( Vector3 position, Quaternion rotation )
 		{
-			Transform.SetPositionAndRotation(position, rotation);
-			Rigidbody.position = position;
-			Rigidbody.rotation = rotation;
+			Transform.SetPositionAndRotation( position, rotation );
+			Rigidbody.position        = position;
+			Rigidbody.rotation        = rotation;
 			InitialSimulationPosition = position;
 			InitialSimulationRotation = rotation;
-			TransientPosition = position;
-			TransientRotation = rotation;
+			TransientPosition         = position;
+			TransientRotation         = rotation;
 		}
 
 		/// <summary>
@@ -209,9 +208,9 @@ namespace KCC
 		{
 			var state = new PhysicsMoverState();
 
-			state.Position = TransientPosition;
-			state.Rotation = TransientRotation;
-			state.Velocity = Velocity;
+			state.Position        = TransientPosition;
+			state.Rotation        = TransientRotation;
+			state.Velocity        = Velocity;
 			state.AngularVelocity = AngularVelocity;
 
 			return state;
@@ -220,28 +219,28 @@ namespace KCC
 		/// <summary>
 		///     Applies a mover state instantly
 		/// </summary>
-		public void ApplyState(PhysicsMoverState state)
+		public void ApplyState( PhysicsMoverState state )
 		{
-			SetPositionAndRotation(state.Position, state.Rotation);
-			Velocity = state.Velocity;
+			SetPositionAndRotation( state.Position, state.Rotation );
+			Velocity        = state.Velocity;
 			AngularVelocity = state.AngularVelocity;
 		}
 
 		/// <summary>
 		///     Caches velocity values based on deltatime and target position/rotations
 		/// </summary>
-		public void VelocityUpdate(float deltaTime)
+		public void VelocityUpdate( float deltaTime )
 		{
 			InitialSimulationPosition = TransientPosition;
 			InitialSimulationRotation = TransientRotation;
 
-			MoverController.UpdateMovement(out _internalTransientPosition, out _internalTransientRotation, deltaTime);
+			MoverController.UpdateMovement( out _internalTransientPosition, out _internalTransientRotation, deltaTime );
 
-			if (deltaTime > 0f)
+			if ( deltaTime > 0f )
 			{
 				Velocity = ( TransientPosition - InitialSimulationPosition ) / deltaTime;
 
-				var rotationFromCurrentToGoal = TransientRotation * Quaternion.Inverse(InitialSimulationRotation);
+				var rotationFromCurrentToGoal = TransientRotation * Quaternion.Inverse( InitialSimulationRotation );
 				AngularVelocity = Mathf.Deg2Rad * rotationFromCurrentToGoal.eulerAngles / deltaTime;
 			}
 		}

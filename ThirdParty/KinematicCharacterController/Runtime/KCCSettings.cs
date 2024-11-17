@@ -9,12 +9,12 @@ namespace KCC
 		///     Determines if the system simulates automatically.
 		///     If true, the simulation is done on FixedUpdate
 		/// </summary>
-		[Tooltip("Determines if the system simulates automatically. If true, the simulation is done on FixedUpdate")]
+		[Tooltip( "Determines if the system simulates automatically. If true, the simulation is done on FixedUpdate" )]
 		public bool AutoSimulation = true;
 		/// <summary>
 		///     Should interpolation of characters and PhysicsMovers be handled
 		/// </summary>
-		[Tooltip("Should interpolation of characters and PhysicsMovers be handled")]
+		[Tooltip( "Should interpolation of characters and PhysicsMovers be handled" )]
 		public bool Interpolate = true;
 		/// <summary>
 		///     Initial capacity of the system's list of Motors (will resize automatically if needed, but setting a high initial

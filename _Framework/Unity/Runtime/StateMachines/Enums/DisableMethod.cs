@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Bezoro.Framework.Unity.Enums
+namespace Bezoro.Framework.Unity.StateMachines
 {
 	[Tooltip(
 		"What to do when Disabling the State Machine.\n"

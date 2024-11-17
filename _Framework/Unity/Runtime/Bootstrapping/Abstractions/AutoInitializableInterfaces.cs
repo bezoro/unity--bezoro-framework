@@ -1,4 +1,4 @@
-﻿namespace Bezoro.Framework.Unity.Bootstrapping.Abstractions
+﻿namespace Bezoro.Framework.Unity.Bootstrapping
 {
 	public interface IAfterSceneLoadInitializable
 	{

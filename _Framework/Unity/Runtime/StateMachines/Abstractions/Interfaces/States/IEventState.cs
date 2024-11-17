@@ -1,6 +1,6 @@
-﻿using Bezoro.Framework.Unity.StateMachines;
+﻿using Bezoro.Framework.Unity.StateMachines.EventBased;
 
-namespace Bezoro.Framework.Unity.States
+namespace Bezoro.Framework.Unity.StateMachines
 {
 	public interface IEventState : IState, IHasTransitions<EventTransition, IEventState>
 	{

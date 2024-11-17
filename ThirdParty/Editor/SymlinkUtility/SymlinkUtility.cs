@@ -10,7 +10,7 @@ namespace SymlinkUtility.Editor
 {
 	/**
 	 * An editor utility for easily creating symlinks in your project.
-	 * 
+	 *
 	 * Adds a Menu item under `Assets/Create/Folder (Symlink)`, and
 	 * draws a small indicator in the Project view for folders that are
 	 * symlinks.
@@ -33,11 +33,11 @@ namespace SymlinkUtility.Editor
 		private static GUIStyle _symlinkMarkerStyle;
 
 		private static GUIStyle SymlinkMarkerStyle =>
-			_symlinkMarkerStyle ??= new GUIStyle(EditorStyles.label)
+			_symlinkMarkerStyle ??= new(EditorStyles.label)
 			{
 				normal =
 				{
-					textColor = new Color(.2f, .8f, .2f, .8f)
+					textColor = new(.2f, .8f, .2f, .8f)
 				},
 				alignment = TextAnchor.MiddleRight
 			};
@@ -53,22 +53,22 @@ namespace SymlinkUtility.Editor
 		/**
 		 * Draw a little indicator if folder is a symlink
 		 */
-		private static void OnProjectWindowItemGUI(string guid, Rect r)
+		private static void OnProjectWindowItemGUI( string guid, Rect r )
 		{
 			try
 			{
-				var path = AssetDatabase.GUIDToAssetPath(guid);
+				var path = AssetDatabase.GUIDToAssetPath( guid );
 
-				if (string.IsNullOrEmpty(path))
+				if ( string.IsNullOrEmpty( path ) )
 				{
 					return;
 				}
 
-				var attributes = File.GetAttributes(path);
+				var attributes = File.GetAttributes( path );
 
-				if (( attributes & FOLDER_SYMLINK_ATTRIBS ) == FOLDER_SYMLINK_ATTRIBS)
+				if ( ( attributes & FOLDER_SYMLINK_ATTRIBS ) == FOLDER_SYMLINK_ATTRIBS )
 				{
-					GUI.Label(r, "<=>", SymlinkMarkerStyle);
+					GUI.Label( r, "<=>", SymlinkMarkerStyle );
 				}
 			}
 			catch
@@ -82,71 +82,70 @@ namespace SymlinkUtility.Editor
 		 */
 #if UNITY_EDITOR_WIN
 		// Create an absolute junction
-		[MenuItem("Assets/Create/Folder (Junction)", false, 20)]
-		private static void Junction() =>
-			Symlink(SymlinkType.Junction);
+		[MenuItem( "Assets/Create/Folder (Junction)", false, 20 )]
+		private static void Junction() => Symlink( SymlinkType.Junction );
 #endif
 
 		// Create an absolute symbolic link
-		[MenuItem("Assets/Create/Folder (Absolute Symlink)", false, 21)]
+		[MenuItem( "Assets/Create/Folder (Absolute Symlink)", false, 21 )]
 		private static void SymlinkAbsolute()
 		{
-			Symlink(SymlinkType.Absolute);
+			Symlink( SymlinkType.Absolute );
 		}
 
 		// Create a relative symbolic link
-		[MenuItem("Assets/Create/Folder (Relative Symlink)", false, 22)]
+		[MenuItem( "Assets/Create/Folder (Relative Symlink)", false, 22 )]
 		private static void SymlinkRelative()
 		{
-			Symlink(SymlinkType.Relative);
+			Symlink( SymlinkType.Relative );
 		}
 
-		private static void Symlink(SymlinkType linkType)
+		private static void Symlink( SymlinkType linkType )
 		{
-			var sourceFolderPath = EditorUtility.OpenFolderPanel("Select Folder Source", "", "");
+			var sourceFolderPath = EditorUtility.OpenFolderPanel( "Select Folder Source", "", "" );
 
 			// Cancelled dialog
-			if (string.IsNullOrEmpty(sourceFolderPath))
+			if ( string.IsNullOrEmpty( sourceFolderPath ) )
 			{
 				return;
 			}
 
-			if (sourceFolderPath.Contains(Application.dataPath))
+			if ( sourceFolderPath.Contains( Application.dataPath ) )
 			{
-				Debug.LogWarning("Cannot create a symlink to folder in your project!");
+				Debug.LogWarning( "Cannot create a symlink to folder in your project!" );
 				return;
 			}
 
-			var sourceFolderName = sourceFolderPath.Split('/', '\\').LastOrDefault();
+			var sourceFolderName = sourceFolderPath.Split( '/', '\\' ).LastOrDefault();
 
-			if (string.IsNullOrEmpty(sourceFolderName))
+			if ( string.IsNullOrEmpty( sourceFolderName ) )
 			{
-				Debug.LogWarning("Couldn't deduce the folder name?");
+				Debug.LogWarning( "Couldn't deduce the folder name?" );
 				return;
 			}
 
 			var uobject = Selection.activeObject;
 
-			var targetPath = uobject != null ? AssetDatabase.GetAssetPath(uobject) : null;
+			var targetPath = uobject != null ? AssetDatabase.GetAssetPath( uobject ) : null;
 
-			if (string.IsNullOrEmpty(targetPath))
+			if ( string.IsNullOrEmpty( targetPath ) )
 			{
 				targetPath = "Assets";
 			}
 
-			var attributes = File.GetAttributes(targetPath);
+			var attributes = File.GetAttributes( targetPath );
 
-			if (( attributes & FileAttributes.Directory ) != FileAttributes.Directory)
+			if ( ( attributes & FileAttributes.Directory ) != FileAttributes.Directory )
 			{
-				targetPath = Path.GetDirectoryName(targetPath);
+				targetPath = Path.GetDirectoryName( targetPath );
 			}
 
 			// Get path to project.
-			var pathToProject = Application.dataPath.Split(new[] { "/Assets" }, StringSplitOptions.None)[0];
+			var pathToProject = Application.dataPath.Split( new[] { "/Assets" }, StringSplitOptions.None )[0];
 
 			targetPath = $"{pathToProject}/{targetPath}/{sourceFolderName}";
 
-			if (Directory.Exists(targetPath))
+			if ( Directory.Exists( targetPath ) )
 			{
 				Debug.LogWarning
 				(
@@ -158,7 +157,7 @@ namespace SymlinkUtility.Editor
 
 			// Use absolute path or relative path?
 			var sourcePath = linkType == SymlinkType.Relative
-				? GetRelativePath(sourceFolderPath, targetPath)
+				? GetRelativePath( sourceFolderPath, targetPath )
 				: sourceFolderPath;
 #if UNITY_EDITOR_WIN
 			var linkOption = linkType == SymlinkType.Junction ? "/J" : "/D";
@@ -177,30 +176,30 @@ namespace SymlinkUtility.Editor
             // Is Linux the same as OSX?
 #endif
 
-			AssetDatabase.Refresh(ImportAssetOptions.ForceUpdate);
+			AssetDatabase.Refresh( ImportAssetOptions.ForceUpdate );
 		}
 
-		private static string GetRelativePath(string sourcePath, string outputPath)
+		private static string GetRelativePath( string sourcePath, string outputPath )
 		{
-			if (string.IsNullOrEmpty(outputPath))
+			if ( string.IsNullOrEmpty( outputPath ) )
 			{
 				return sourcePath;
 			}
 
-			if (sourcePath == null)
+			if ( sourcePath == null )
 			{
 				sourcePath = string.Empty;
 			}
 
-			var splitOutput = outputPath.Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
+			var splitOutput = outputPath.Split( new[] { '/' }, StringSplitOptions.RemoveEmptyEntries );
 
-			var splitSource = sourcePath.Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
+			var splitSource = sourcePath.Split( new[] { '/' }, StringSplitOptions.RemoveEmptyEntries );
 
-			var max = Mathf.Min(splitOutput.Length, splitSource.Length);
+			var max = Mathf.Min( splitOutput.Length, splitSource.Length );
 			var i = 0;
 			while (i < max)
 			{
-				if (splitOutput[i] != splitSource[i])
+				if ( splitOutput[i] != splitSource[i] )
 				{
 					break;
 				}
@@ -222,21 +221,21 @@ namespace SymlinkUtility.Editor
 				newSplitTarget[j] = splitSource[i];
 			}
 
-			return string.Join(Path.DirectorySeparatorChar.ToString(), newSplitTarget);
+			return string.Join( Path.DirectorySeparatorChar.ToString(), newSplitTarget );
 		}
 
-		private static void ExecuteCmdCommand(string command, bool asAdmin)
+		private static void ExecuteCmdCommand( string command, bool asAdmin )
 		{
 			var startInfo = new ProcessStartInfo
 			{
-				FileName = "CMD.exe",
-				Arguments = "/C " + command,
-				UseShellExecute = asAdmin,
+				FileName              = "CMD.exe",
+				Arguments             = "/C " + command,
+				UseShellExecute       = asAdmin,
 				RedirectStandardError = !asAdmin,
-				CreateNoWindow = true
+				CreateNoWindow        = true
 			};
 
-			if (asAdmin)
+			if ( asAdmin )
 			{
 				startInfo.Verb = "runas";
 			}
@@ -248,27 +247,27 @@ namespace SymlinkUtility.Editor
 				proc.Start();
 				proc.WaitForExit();
 
-				if (!asAdmin && !proc.StandardError.EndOfStream)
+				if ( !asAdmin && !proc.StandardError.EndOfStream )
 				{
-					Debug.LogError(proc.StandardError.ReadToEnd());
+					Debug.LogError( proc.StandardError.ReadToEnd() );
 				}
 			}
 		}
 
-		private static void ExecuteBashCommand(string command)
+		private static void ExecuteBashCommand( string command )
 		{
-			command = command.Replace("\"", "\"\"");
+			command = command.Replace( "\"", "\"\"" );
 
 			var proc = new Process
 			{
-				StartInfo = new ProcessStartInfo
+				StartInfo = new()
 				{
-					FileName = "/bin/bash",
-					Arguments = "-c \"" + command + "\"",
-					UseShellExecute = false,
+					FileName               = "/bin/bash",
+					Arguments              = "-c \"" + command + "\"",
+					UseShellExecute        = false,
 					RedirectStandardOutput = true,
-					RedirectStandardError = true,
-					CreateNoWindow = true
+					RedirectStandardError  = true,
+					CreateNoWindow         = true
 				}
 			};
 
@@ -277,9 +276,9 @@ namespace SymlinkUtility.Editor
 				proc.Start();
 				proc.WaitForExit();
 
-				if (!proc.StandardError.EndOfStream)
+				if ( !proc.StandardError.EndOfStream )
 				{
-					Debug.LogError(proc.StandardError.ReadToEnd());
+					Debug.LogError( proc.StandardError.ReadToEnd() );
 				}
 			}
 		}

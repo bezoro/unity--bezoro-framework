@@ -1,48 +1,52 @@
-﻿using UnityEngine;
+﻿using Bezoro.Framework.Unity.Utilities;
+using UnityEngine;
 
-public static class RectTransformExtensions
+namespace Bezoro.Framework.Unity
 {
-	public static void UpdateUIElementPositionFromWorld
-	(
-		this RectTransform uiElement,
-		Transform target,
-		Canvas canvas = null,
-		Camera camera = null
-	)
+	public static class RectTransformExtensions
 	{
-		if ( uiElement == null || target == null ) { return; }
-
-		canvas ??= uiElement.GetComponentInParent<Canvas>();
-		if ( canvas == null )
+		public static void UpdateUIElementPositionFromWorld
+		(
+			this RectTransform uiElement,
+			Transform target,
+			Canvas canvas = null,
+			Camera camera = null
+		)
 		{
-			BDebug.LogError( "Canvas not found!" );
+			if ( uiElement == null || target == null ) { return; }
+
+			canvas ??= uiElement.GetComponentInParent<Canvas>();
+			if ( canvas == null )
+			{
+				BDebug.LogError( "Canvas not found!" );
+			}
+
+			camera ??= Camera.main;
+			if ( camera == null )
+			{
+				BDebug.LogError( "No main camera found!" );
+
+				return;
+			}
+
+			var worldPosition = target.position;
+			Vector2 screenPoint = camera.WorldToScreenPoint( worldPosition );
+
+			var canvasRectTransform = canvas.GetComponent<RectTransform>();
+			if ( canvasRectTransform == null )
+			{
+				BDebug.LogError( "Canvas RectTransform not found!" );
+
+				return;
+			}
+
+			RectTransformUtility.ScreenPointToLocalPointInRectangle(
+				canvasRectTransform,
+				screenPoint,
+				null,
+				out var localPoint
+			);
+			uiElement.anchoredPosition = localPoint;
 		}
-
-		camera ??= Camera.main;
-		if ( camera == null )
-		{
-			BDebug.LogError( "No main camera found!" );
-
-			return;
-		}
-
-		var worldPosition = target.position;
-		Vector2 screenPoint = camera.WorldToScreenPoint( worldPosition );
-
-		var canvasRectTransform = canvas.GetComponent<RectTransform>();
-		if ( canvasRectTransform == null )
-		{
-			BDebug.LogError( "Canvas RectTransform not found!" );
-
-			return;
-		}
-
-		RectTransformUtility.ScreenPointToLocalPointInRectangle(
-			canvasRectTransform,
-			screenPoint,
-			null,
-			out var localPoint
-		);
-		uiElement.anchoredPosition = localPoint;
 	}
 }

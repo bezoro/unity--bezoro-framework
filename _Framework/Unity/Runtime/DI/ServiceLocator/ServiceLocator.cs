@@ -47,7 +47,6 @@ namespace Bezoro.Framework.Unity.DI
 
 				case ServiceLifespan.LazySingleton:
 					RegisterLazySingletonService<TInterface, TImplementation>( factory );
-
 					break;
 
 				case ServiceLifespan.Transient: RegisterTransientService<TInterface, TImplementation>( factory ); break;

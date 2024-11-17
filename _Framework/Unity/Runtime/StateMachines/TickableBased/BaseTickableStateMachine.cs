@@ -1,9 +1,6 @@
-using Bezoro.Framework.Unity.Enums;
-using Bezoro.Framework.Unity.StateMachines;
-using Bezoro.Framework.Unity.States;
 using UnityEngine;
 
-namespace Bezoro.Framework.Unity
+namespace Bezoro.Framework.Unity.StateMachines.TickableBased
 {
 	public abstract class BaseTickableStateMachine : ScriptableObject,
 		ITickableStateMachine

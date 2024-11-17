@@ -2,7 +2,7 @@
 using Bezoro.Framework.Unity.DI;
 using Cysharp.Threading.Tasks;
 
-namespace Bezoro.Framework.Unity
+namespace Bezoro.Framework.Unity.EventSystem
 {
 	public interface IEventBus : IService, IDisposable
 	{

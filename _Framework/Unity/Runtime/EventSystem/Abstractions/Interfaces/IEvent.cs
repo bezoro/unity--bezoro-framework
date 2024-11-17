@@ -1,4 +1,4 @@
-﻿namespace Bezoro.Framework.Unity
+﻿namespace Bezoro.Framework.Unity.EventSystem
 {
 	public interface IEvent<TPayload> : IEvent
 	{

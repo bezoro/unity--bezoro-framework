@@ -1,8 +1,6 @@
-﻿using Bezoro.Framework.Unity.Enums;
-using Bezoro.Framework.Unity.States;
-using ArrayHelpers = Bezoro.Framework.Core.ArrayHelpers;
+﻿using ArrayHelpers = Bezoro.Framework.Core.ArrayHelpers;
 
-namespace Bezoro.Framework.Unity
+namespace Bezoro.Framework.Unity.StateMachines.TickableBased
 {
 	public class TickTransition : ITransition
 	{

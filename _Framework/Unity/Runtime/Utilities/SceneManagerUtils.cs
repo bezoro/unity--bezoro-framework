@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Cysharp.Threading.Tasks;
 using Eflatun.SceneReference;
-using UnityEngine;
 using UnityEngine.SceneManagement;
 
 namespace Bezoro.Framework.Unity.Utilities
@@ -73,7 +72,7 @@ namespace Bezoro.Framework.Unity.Utilities
 			}
 			else
 			{
-				Debug.LogWarning( $"Cannot set active scene: {sceneReference.Path} is not loaded" );
+				BDebug.LogWarning( $"Cannot set active scene: {sceneReference.Path} is not loaded" );
 			}
 		}
 

@@ -1,13 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using Bezoro.Framework.Unity.StateMachines;
-using Bezoro.Framework.Unity.States;
-using Bezoro.Framework.Unity.Utilities;
+using Bezoro.Framework.Unity.StateMachines.Utilities;
 using KCC;
 using UnityEngine;
 using ArrayHelpers = Bezoro.Framework.Core.ArrayHelpers;
 
-namespace Bezoro.Framework.Unity
+namespace Bezoro.Framework.Unity.StateMachines.KCCBased
 {
 	public abstract class BaseKCCState :
 		IKCCState

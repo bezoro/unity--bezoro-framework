@@ -1,4 +1,5 @@
 ﻿using Bezoro.Framework.Unity.StateMachines;
+using Bezoro.Framework.Unity.StateMachines.TickableBased;
 using UnityEditor;
 using UnityEngine;
 

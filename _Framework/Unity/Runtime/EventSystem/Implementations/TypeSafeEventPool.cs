@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 
-namespace Bezoro.Framework.Unity
+namespace Bezoro.Framework.Unity.EventSystem
 {
 	public class TypeSafeEventPool<T> where T : IEvent
 	{

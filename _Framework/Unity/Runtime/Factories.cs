@@ -22,9 +22,9 @@ namespace Bezoro.Framework.Unity
 			Transform parent = null
 		)
 		{
-			Position = position == default( Vector3 ) ? Vector3.zero : position;
-			Rotation = rotation == default( Quaternion ) ? Quaternion.identity : rotation;
-			Scale    = scale    == default( Vector3 ) ? Vector3.one : scale;
+			Position = position == default(Vector3) ? Vector3.zero : position;
+			Rotation = rotation == default(Quaternion) ? Quaternion.identity : rotation;
+			Scale    = scale    == default(Vector3) ? Vector3.one : scale;
 			Parent   = parent;
 		}
 	}

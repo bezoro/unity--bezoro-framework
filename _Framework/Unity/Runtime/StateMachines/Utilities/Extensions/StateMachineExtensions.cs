@@ -1,7 +1,4 @@
-﻿using Bezoro.Framework.Unity.StateMachines;
-using Bezoro.Framework.Unity.States;
-
-namespace Bezoro.Framework.Unity.Utilities
+﻿namespace Bezoro.Framework.Unity.StateMachines.Utilities
 {
 	public static class StateMachineExtensions
 	{

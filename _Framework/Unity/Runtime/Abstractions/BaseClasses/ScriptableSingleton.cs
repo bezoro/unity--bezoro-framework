@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using Bezoro.Framework.Unity.Utilities;
+using UnityEngine;
 
 namespace Bezoro.Framework.Unity
 {
