@@ -7,6 +7,11 @@ namespace Bezoro.Framework.Unity.Editor
 {
 	public static class GameObjectExtensions
 	{
+		public static bool IsPrefabAsset( this GameObject go ) =>
+			!go.gameObject.scene.IsValid()
+		 && ( PrefabUtility.IsPartOfPrefabAsset( go.gameObject )
+		   || PrefabUtility.IsPartOfVariantPrefab( go.gameObject ) );
+
 		public static string TryGetAssetGUID( this GameObject gameObject )
 		{
 			var path = AssetDatabase.GetAssetPath( gameObject );
