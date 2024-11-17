@@ -1,7 +1,7 @@
 ﻿using Bezoro.Framework.Unity.Enums;
 using Bezoro.Framework.Unity.States;
-using Bezoro.Framework.Unity.Utilities;
 using UnityEngine;
+using ArrayHelpers = Bezoro.Framework.Core.ArrayHelpers;
 
 namespace Bezoro.Framework.Unity
 {

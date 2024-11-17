@@ -1,4 +1,4 @@
-﻿using Bezoro.Framework.Unity.Utilities;
+﻿using Bezoro.Framework.Core;
 
 namespace Bezoro.Framework.Unity
 {
@@ -55,22 +55,22 @@ namespace Bezoro.Framework.Unity
 
 		public void RemoveEarlyTickable( Tickable tickable )
 		{
-			ArrayHelpers.Remove( ref _earlyTickables, tickable, ref _earlyTickablesCount, out _ );
+			ArrayHelpers.TryRemoveElement( ref _earlyTickables, tickable, ref _earlyTickablesCount, out _ );
 		}
 
 		public void RemoveTickable( Tickable tickable )
 		{
-			ArrayHelpers.Remove( ref _tickables, tickable, ref _tickablesCount, out _ );
+			ArrayHelpers.TryRemoveElement( ref _tickables, tickable, ref _tickablesCount, out _ );
 		}
 
 		public void RemoveFixedTickable( Tickable tickable )
 		{
-			ArrayHelpers.Remove( ref _fixedTickables, tickable, ref _fixedTickablesCount, out _ );
+			ArrayHelpers.TryRemoveElement( ref _fixedTickables, tickable, ref _fixedTickablesCount, out _ );
 		}
 
 		public void RemoveLateTickable( Tickable tickable )
 		{
-			ArrayHelpers.Remove( ref _lateTickables, tickable, ref _lateTickablesCount, out _ );
+			ArrayHelpers.TryRemoveElement( ref _lateTickables, tickable, ref _lateTickablesCount, out _ );
 		}
 
 		private Tickable[] _earlyTickables = new Tickable[128];

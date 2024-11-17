@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 
-namespace Core
+namespace Bezoro.Framework.Core
 {
 	public static class ObjectHelpers
 	{

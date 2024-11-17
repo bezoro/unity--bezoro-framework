@@ -15,7 +15,7 @@ namespace Bezoro.Framework.Unity.Utilities
 			for ( var i = 0 ; i < SceneManager.sceneCount ; i++ )
 			{
 				var scene = SceneManager.GetSceneAt( i );
-				ArrayHelpers.Merge( scene.GetRootGameObjects(), ref results );
+				Core.ArrayHelpers.Merge( scene.GetRootGameObjects(), ref results );
 			}
 		}
 
@@ -35,7 +35,7 @@ namespace Bezoro.Framework.Unity.Utilities
 				return true;
 			}
 
-			scene = default( Scene );
+			scene = default(Scene);
 			index = -1;
 
 			return false;
@@ -57,7 +57,7 @@ namespace Bezoro.Framework.Unity.Utilities
 				return true;
 			}
 
-			scene = default( Scene );
+			scene = default(Scene);
 			index = -1;
 
 			return false;
