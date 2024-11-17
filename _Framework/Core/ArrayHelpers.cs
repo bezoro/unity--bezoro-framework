@@ -1,10 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Bezoro.Framework.Core
 {
 	public static class ArrayHelpers
 	{
+		public static int ParallelThreshold;
+
+		static ArrayHelpers()
+		{
+			ParallelThreshold = 100;
+		}
+
 		public static bool ArraysAreEqual<T>( T[] a, T[] b ) where T : class
 		{
 			if ( a == null && b == null ) { return true; }
@@ -258,24 +266,23 @@ namespace Bezoro.Framework.Core
 			Assert.IsFalse( array.Length == 0 );
 			Assert.IsNotNull( element );
 			Assert.IsTrue( validSize >= 0 );
+			Assert.IsTrue( validSize <= array.Length );
 
-			// Find the index of the element to remove
+			return validSize < ParallelThreshold
+				? TryRemoveElementSequential( ref array, element, ref validSize, out index )
+				: TryRemoveElementParallel( ref array, element, ref validSize, out index );
+		}
+
+		private static bool TryRemoveElementSequential<T>( ref T[] array, T element, ref int validSize, out int index )
+		where T : class
+		{
 			var removalIndex = Array.IndexOf( array, element, 0, validSize );
-
 			if ( removalIndex >= 0 )
 			{
-				// Move the last valid element to the removalIndex
 				array[removalIndex] = array[validSize - 1];
-
-				// Set the last valid element to the default value
-				array[validSize - 1] = default(T)!;
-
-				// Update the valid size
+				array[validSize                       - 1] = default(T)!;
 				validSize--;
-
-				// Set the index to the removalIndex
 				index = removalIndex;
-
 				return true;
 			}
 
@@ -283,30 +290,117 @@ namespace Bezoro.Framework.Core
 			return false;
 		}
 
-		public static void Clear<T>( ref T[] array ) where T : class
+		private static bool TryRemoveElementParallel<T>( ref T[] array, T element, ref int validSize, out int index )
+		where T : class
 		{
-			if ( array == null || array.Length == 0 )
+			var localArray = array;
+			var localValidSize = validSize;
+
+			var removalIndex = -1;
+			var lockObject = new object();
+
+			Parallel.For(
+				0,
+				localValidSize,
+				( i, state ) =>
+				{
+					if ( !EqualityComparer<T>.Default.Equals( localArray[i], element ) )
+					{
+						return;
+					}
+
+					lock (lockObject)
+					{
+						if ( removalIndex != -1 ) { return; }
+
+						removalIndex = i;
+						state.Stop();
+					}
+				}
+			);
+
+			if ( removalIndex >= 0 )
 			{
-				return;
+				// Synchronize array updates
+				lock (lockObject)
+				{
+					localArray[removalIndex] = localArray[localValidSize - 1];
+					localArray[localValidSize                            - 1] = default(T)!;
+					localValidSize--;
+
+					array     = localArray;
+					validSize = localValidSize;
+
+					index = removalIndex;
+					return true;
+				}
 			}
 
-			for ( var i = 0 ; i < array.Length ; i++ )
+			index = -1;
+			return false;
+		}
+
+		public static void Clear<T>( ref T[] array )
+		{
+			Assert.IsNotNull( array );
+			Assert.IsFalse( array.Length == 0 );
+
+			var tempArray = new T[array.Length];
+
+			if ( array.Length < ParallelThreshold )
 			{
-				array[i] = default(T)!;
+				for ( var i = 0 ; i < array.Length ; i++ )
+				{
+					tempArray[i] = default(T);
+				}
+			}
+			else
+			{
+				Parallel.For(
+					0,
+					array.Length,
+					i =>
+					{
+						tempArray[i] = default(T);
+					}
+				);
+			}
+
+			Array.Copy( tempArray, array, array.Length );
+		}
+
+		public static void Clear<T>( T[] array )
+		{
+			Assert.IsNotNull( array );
+			Assert.IsFalse( array.Length == 0 );
+
+			if ( array.Length < ParallelThreshold )
+			{
+				for ( var i = 0 ; i < array.Length ; i++ )
+				{
+					array[i] = default(T);
+				}
+			}
+			else
+			{
+				Parallel.For(
+					0,
+					array.Length,
+					i =>
+					{
+						array[i] = default(T);
+					}
+				);
 			}
 		}
 
-		public static void Clear<T>( ref T[] array, int validSize ) where T : class
+		public static void Clear<T>( ref T[] array, int validSize )
+		where T : class
 		{
-			if ( validSize <= 0 )
-			{
-				return;
-			}
-
-			if ( array == null || array.Length == 0 )
-			{
-				return;
-			}
+			Assert.IsNotNull( array );
+			Assert.IsFalse( array.Length == 0 );
+			Assert.IsTrue( validSize     >= 0 );
+			Assert.IsTrue( validSize     <= array.Length );
 
 			for ( var i = 0 ; i < validSize ; i++ )
 			{
