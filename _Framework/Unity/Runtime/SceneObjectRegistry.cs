@@ -54,6 +54,35 @@ namespace Bezoro.Framework.Unity
 			}
 		}
 
+		public static bool IsGUIDRegisteredWithDifferentObject( ObjectUID objectUID )
+		{
+			lock (Lock)
+			{
+				if ( !IsValidUID( objectUID ) ) { return false; }
+
+				if ( !GUIDToObjectMap.TryGetValue( objectUID.UID, out var registeredObject ) )
+				{
+					return false;
+				}
+
+				if ( registeredObject == null )
+				{
+					GUIDToObjectMap.Remove( objectUID.UID );
+					return false;
+				}
+
+				var isDifferentObject = registeredObject != objectUID.gameObject;
+				if ( isDifferentObject )
+				{
+					Debug.Log(
+						$"GUID {objectUID.UID} is already registered with a different object: {registeredObject.name}"
+					);
+				}
+
+				return isDifferentObject;
+			}
+		}
+
 		public static bool IsGUIDUnique( string guid )
 		{
 			lock (Lock)
