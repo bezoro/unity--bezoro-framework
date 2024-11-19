@@ -25,10 +25,17 @@ namespace Bezoro.Framework.Unity
 
 		private static void Initialize()
 		{
+			if ( _instance != null ) { return; }
+			var instances = Resources.LoadAll<T>( "" );
+			if ( instances.Length == 0 )
+			{
+				BDebug.LogError( string.Format( NO_INSTANCE_FOUND_ERROR, typeof(T) ) );
+				return;
+			}
+
 			lock (_lock)
 			{
 				if ( _initialized ) { return; }
-				var instances = Resources.LoadAll<T>( "" );
 				HandleInstances( instances );
 				_initialized = true;
 			}
@@ -40,9 +47,13 @@ namespace Bezoro.Framework.Unity
 			{
 				BDebug.LogError( string.Format( MULTIPLE_INSTANCES_ERROR, typeof(T) ) );
 				_instance = instances[0];
+				for ( var i = 1 ; i < instances.Length ; i++ )
+				{
+					BDebug.LogError( string.Format( MULTIPLE_INSTANCES_DETECTED_ERROR, typeof(T), instances[i].name ) );
+					DestroyImmediate( instances[i], true );
+				}
 			}
-			else if ( instances.Length == 1 ) { _instance = instances[0]; }
-			else { BDebug.LogError( string.Format( NO_INSTANCE_FOUND_ERROR, typeof(T) ) ); }
+			else { _instance = instances[0]; }
 		}
 
 		protected virtual void OnEnable()
@@ -55,7 +66,6 @@ namespace Bezoro.Framework.Unity
 					DestroyImmediate( this, true );
 					return;
 				}
-
 				if ( _initialized ) { return; }
 				_instance    = this as T;
 				_initialized = true;
