@@ -11,11 +11,26 @@ using UnityEngine;
 
 namespace Bezoro.Framework.Unity.Editor.Utilities
 {
+	/// <summary>
+	///     Utility class for managing various Unity editor events such as test runs, compilation, assembly reloads, asset
+	///     imports, and builds.
+	///     Ensures thread safety and proper initialization/cleanup of event subscriptions.
+	/// </summary>
 	[InitializeOnLoad]
 	public class EditorUtils :
 		ICallbacks,
 		IPreprocessBuildWithReport, IPostprocessBuildWithReport
 	{
+		static EditorUtils()
+		{
+			Initialize();
+		}
+
+		~EditorUtils()
+		{
+			Cleanup();
+		}
+
 	#region Events
 
 		public static event Action TestRunStarted;
@@ -31,14 +46,39 @@ namespace Bezoro.Framework.Unity.Editor.Utilities
 
 	#endregion
 
-		public static bool IsTestRunInProgress;
-		public static bool IsDomainReloadInProgress;
-		public static bool IsBuildInProgress;
+	#region State Flags
+
+		private static volatile bool _isTestRunInProgress;
+
+		public static bool IsTestRunInProgress
+		{
+			get => _isTestRunInProgress;
+			private set => _isTestRunInProgress = value;
+		}
+
+		private static volatile bool _isDomainReloadInProgress;
+
+		public static bool IsDomainReloadInProgress
+		{
+			get => _isDomainReloadInProgress;
+			private set => _isDomainReloadInProgress = value;
+		}
+
+		private static volatile bool _isBuildInProgress;
+
+		public static bool IsBuildInProgress
+		{
+			get => _isBuildInProgress;
+			private set => _isBuildInProgress = value;
+		}
 
 		public static bool IsCompilationInProgress => EditorApplication.isCompiling;
 		public static bool IsAssetImportInProgress => AssetDatabase.IsAssetImportWorkerProcess();
 		public static bool IsUpdating => EditorApplication.isUpdating;
 
+		/// <summary>
+		///     Checks if the Unity editor is busy with any process such as compilation, asset import, build, etc.
+		/// </summary>
 		public static bool IsEditorBusy() =>
 			IsCompilationInProgress
 		 || IsUpdating
@@ -49,26 +89,38 @@ namespace Bezoro.Framework.Unity.Editor.Utilities
 
 		public int callbackOrder => 0;
 
-		static EditorUtils()
+	#endregion
+
+	#region Initialization and Cleanup
+
+		/// <summary>
+		///     Initializes the EditorUtils class.
+		///     Subscribes to necessary compilation pipeline and assembly reload events.
+		/// </summary>
+		private static void Initialize()
 		{
 			IsTestRunInProgress      = false;
 			IsDomainReloadInProgress = false;
 			IsBuildInProgress        = false;
 
-			// EditorApplication.update -= Update;
-			// AssemblyReloadEvents.beforeAssemblyReload -= OnBeforeAssemblyReload;
-			CompilationPipeline.compilationStarted   -= OnCompilationStarted;
-			CompilationPipeline.compilationFinished  -= OnCompilationFinished;
-			AssemblyReloadEvents.afterAssemblyReload -= OnAfterAssemblyReload;
-
-			// EditorApplication.update += Update;
-			// AssemblyReloadEvents.beforeAssemblyReload += OnBeforeAssemblyReload;
 			CompilationPipeline.compilationStarted   += OnCompilationStarted;
 			CompilationPipeline.compilationFinished  += OnCompilationFinished;
 			AssemblyReloadEvents.afterAssemblyReload += OnAfterAssemblyReload;
-
-			// MonitorEditorBusyAsync().Forget();
 		}
+
+		/// <summary>
+		///     Cleans up event subscriptions when the instance is destroyed.
+		/// </summary>
+		private void Cleanup()
+		{
+			CompilationPipeline.compilationStarted   -= OnCompilationStarted;
+			CompilationPipeline.compilationFinished  -= OnCompilationFinished;
+			AssemblyReloadEvents.afterAssemblyReload -= OnAfterAssemblyReload;
+		}
+
+	#endregion
+
+	#region Event Handlers
 
 		private static void OnBeforeAssemblyReload()
 		{
@@ -78,42 +130,67 @@ namespace Bezoro.Framework.Unity.Editor.Utilities
 
 		private static void OnAfterAssemblyReload()
 		{
-			if ( IsCompilationInProgress ) { return; }
-			if ( IsBuildInProgress ) { return; }
+			if ( IsProcessing() )
+			{
+				return;
+			}
+
 			IsDomainReloadInProgress = false;
 			RaiseEvent( AssemblyReloadFinished );
 		}
 
+		private static bool IsProcessing() => IsCompilationInProgress || IsBuildInProgress;
+
 		private static void TryRaiseAssetImporterEvents()
 		{
-			if ( AssetDatabase.IsAssetImportWorkerProcess() && !IsAssetImportInProgress )
+			if ( AssetDatabase.IsAssetImportWorkerProcess() )
 			{
-				RaiseEvent( AssetImportStarted );
+				if ( !IsAssetImportInProgress )
+				{
+					RaiseEvent( AssetImportStarted );
+				}
 			}
-			else if ( !AssetDatabase.IsAssetImportWorkerProcess() && IsAssetImportInProgress )
+			else if ( IsAssetImportInProgress )
 			{
 				RaiseEvent( AssetImportFinished );
 			}
 		}
 
-		private static void OnCompilationFinished( object o )
+		private static void OnCompilationFinished( object context )
 		{
-			if ( IsBuildInProgress ) { return; }
-			if ( IsTestRunInProgress ) { return; }
+			if ( IsBuildInProgress || IsTestRunInProgress )
+			{
+				return;
+			}
+
 			RaiseEvent( CompilationFinished );
 		}
 
-		private static void OnCompilationStarted( object o )
+		private static void OnCompilationStarted( object context )
 		{
-			if ( IsBuildInProgress ) { return; }
-			if ( IsTestRunInProgress ) { return; }
+			if ( IsBuildInProgress || IsTestRunInProgress )
+			{
+				return;
+			}
+
 			RaiseEvent( CompilationStarted );
 		}
 
+	#endregion
+
+	#region Event Raising
+
+		/// <summary>
+		///     Safely invokes the specified event if it is not null.
+		/// </summary>
 		private static void RaiseEvent( Action eventAction )
 		{
 			eventAction?.Invoke();
 		}
+
+	#endregion
+
+	#region ICallbacks Implementation
 
 		public void RunStarted( ITestAdaptor testsToRun )
 		{
@@ -131,6 +208,10 @@ namespace Bezoro.Framework.Unity.Editor.Utilities
 
 		public void TestFinished( ITestResultAdaptor result ) {}
 
+	#endregion
+
+	#region IPreprocessBuildWithReport and IPostprocessBuildWithReport Implementation
+
 		public void OnPreprocessBuild( BuildReport report )
 		{
 			IsBuildInProgress = true;
@@ -143,35 +224,57 @@ namespace Bezoro.Framework.Unity.Editor.Utilities
 			RaiseEvent( BuildFinished );
 		}
 
+	#endregion
+
+	#region Audio Clip Playback
+
+		/// <summary>
+		///     Plays a given AudioClip in the Unity Editor.
+		/// </summary>
+		/// <param name="clip">The AudioClip to be played.</param>
 		public static void PlayClip( AudioClip clip )
 		{
 			Assert.IsNotNull( clip );
 			try
 			{
-				var unityEditorAssembly = typeof(AudioImporter).Assembly;
-				var audioUtilClass = unityEditorAssembly.GetType( "UnityEditor.AudioUtil" );
-
-				var stopMethod = audioUtilClass?.GetMethod(
-					"StopAllPreviewClips",
-					BindingFlags.Static | BindingFlags.Public
-				);
-
-				stopMethod?.Invoke( null, null );
-
-				var method = audioUtilClass?.GetMethod(
-					"PlayPreviewClip",
-					BindingFlags.Static | BindingFlags.Public,
-					null,
-					new[] { typeof(AudioClip), typeof(int), typeof(bool) },
-					null
-				);
-
-				method?.Invoke( null, new object[] { clip, 0, false } );
+				StopAllPreviewClips();
+				InvokePlayPreviewClip( clip );
 			}
-			catch ( Exception e )
+			catch ( Exception ex )
 			{
-				BDebug.LogError( "Error playing compilation sound: " + e.Message );
+				BDebug.LogError( $"Error playing compilation sound: {ex.Message}" );
 			}
 		}
+
+		private static void StopAllPreviewClips()
+		{
+			var stopMethod = GetAudioUtilMethod( "StopAllPreviewClips" );
+			stopMethod?.Invoke( null, null );
+		}
+
+		private static void InvokePlayPreviewClip( AudioClip clip )
+		{
+			var method = GetAudioUtilMethod( "PlayPreviewClip" );
+			method?.Invoke( null, new object[] { clip, 0, false } );
+		}
+
+		private static MethodInfo GetAudioUtilMethod( string methodName )
+		{
+			const string audioUtilClassName = "UnityEditor.AudioUtil";
+			var unityEditorAssembly = typeof(AudioImporter).Assembly;
+			try
+			{
+				var audioUtilClass = unityEditorAssembly.GetType( audioUtilClassName );
+				const BindingFlags flags = BindingFlags.Static | BindingFlags.Public;
+				return audioUtilClass?.GetMethod( methodName, flags );
+			}
+			catch ( Exception ex )
+			{
+				BDebug.LogError( $"Error retrieving method {methodName} from {audioUtilClassName}: {ex.Message}" );
+				return null;
+			}
+		}
+
+	#endregion
 	}
 }
