@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Reflection;
 using System.Threading;
+using System.Threading.Tasks;
 using Bezoro.Framework.Core;
 using Bezoro.Framework.Unity.Utilities;
 using UnityEditor;
@@ -44,6 +45,7 @@ namespace Bezoro.Framework.Unity.Editor.Utilities
 		public static event Action AssetImportFinished;
 		public static event Action BuildStarted;
 		public static event Action BuildFinished;
+		public static event Action EditorReady;
 
 	#endregion
 
@@ -107,6 +109,14 @@ namespace Bezoro.Framework.Unity.Editor.Utilities
 			CompilationPipeline.compilationStarted   += OnCompilationStarted;
 			CompilationPipeline.compilationFinished  += OnCompilationFinished;
 			AssemblyReloadEvents.afterAssemblyReload += OnAfterAssemblyReload;
+			_                                        =  MonitorEditorBusyAsync();
+		}
+
+		private static async Task MonitorEditorBusyAsync()
+		{
+			while (IsEditorBusy()) { await Task.Yield(); }
+			await Task.Delay( 1500 );
+			RaiseEvent( EditorReady );
 		}
 
 		/// <summary>
