@@ -1,15 +1,18 @@
 ﻿using System;
-using Cysharp.Threading.Tasks;
+using System.Reflection;
+using Bezoro.Framework.Core;
+using Bezoro.Framework.Unity.Utilities;
 using UnityEditor;
 using UnityEditor.Build;
 using UnityEditor.Build.Reporting;
 using UnityEditor.Compilation;
 using UnityEditor.TestTools.TestRunner.Api;
+using UnityEngine;
 
 namespace Bezoro.Framework.Unity.Editor.Utilities
 {
 	[InitializeOnLoad]
-	public abstract class EditorUtils :
+	public class EditorUtils :
 		ICallbacks,
 		IPreprocessBuildWithReport, IPostprocessBuildWithReport
 	{
@@ -19,8 +22,8 @@ namespace Bezoro.Framework.Unity.Editor.Utilities
 		public static event Action TestRunFinished;
 		public static event Action CompilationStarted;
 		public static event Action CompilationFinished;
-		public static event Action DomainReloadStarted;
-		public static event Action DomainReloadFinished;
+		public static event Action AssemblyReloadStarted;
+		public static event Action AssemblyReloadFinished;
 		public static event Action AssetImportStarted;
 		public static event Action AssetImportFinished;
 		public static event Action BuildStarted;
@@ -29,19 +32,27 @@ namespace Bezoro.Framework.Unity.Editor.Utilities
 	#endregion
 
 		public static bool IsTestRunInProgress;
-		public static bool IsCompilationInProgress;
 		public static bool IsDomainReloadInProgress;
-		public static bool IsAssetImportInProgress;
 		public static bool IsBuildInProgress;
+
+		public static bool IsCompilationInProgress => EditorApplication.isCompiling;
+		public static bool IsAssetImportInProgress => AssetDatabase.IsAssetImportWorkerProcess();
+		public static bool IsUpdating => EditorApplication.isUpdating;
+
+		public static bool IsEditorBusy() =>
+			IsCompilationInProgress
+		 || IsUpdating
+		 || IsAssetImportInProgress
+		 || IsBuildInProgress
+		 || IsTestRunInProgress
+		 || IsDomainReloadInProgress;
 
 		public int callbackOrder => 0;
 
 		static EditorUtils()
 		{
 			IsTestRunInProgress      = false;
-			IsCompilationInProgress  = false;
 			IsDomainReloadInProgress = false;
-			IsAssetImportInProgress  = false;
 			IsBuildInProgress        = false;
 
 			// EditorApplication.update -= Update;
@@ -55,82 +66,53 @@ namespace Bezoro.Framework.Unity.Editor.Utilities
 			CompilationPipeline.compilationStarted   += OnCompilationStarted;
 			CompilationPipeline.compilationFinished  += OnCompilationFinished;
 			AssemblyReloadEvents.afterAssemblyReload += OnAfterAssemblyReload;
-		}
 
-		private static void Update()
-		{
-			TryRaiseCompilationEvents();
-			TryRaiseAssetImporterEvents();
+			// MonitorEditorBusyAsync().Forget();
 		}
 
 		private static void OnBeforeAssemblyReload()
 		{
 			IsDomainReloadInProgress = true;
-			RaiseEvent( DomainReloadStarted );
+			RaiseEvent( AssemblyReloadStarted );
 		}
 
 		private static void OnAfterAssemblyReload()
 		{
+			if ( IsCompilationInProgress ) { return; }
+			if ( IsBuildInProgress ) { return; }
 			IsDomainReloadInProgress = false;
-			RaiseEvent( DomainReloadFinished );
+			RaiseEvent( AssemblyReloadFinished );
 		}
 
 		private static void TryRaiseAssetImporterEvents()
 		{
 			if ( AssetDatabase.IsAssetImportWorkerProcess() && !IsAssetImportInProgress )
 			{
-				IsAssetImportInProgress = true;
 				RaiseEvent( AssetImportStarted );
 			}
 			else if ( !AssetDatabase.IsAssetImportWorkerProcess() && IsAssetImportInProgress )
 			{
-				IsAssetImportInProgress = false;
 				RaiseEvent( AssetImportFinished );
 			}
 		}
 
-		private static void TryRaiseCompilationEvents()
-		{
-			// TryRaiseCompilationStarted();
-			// TryRaiseCompilationFinished();
-		}
-
 		private static void OnCompilationFinished( object o )
 		{
-			// if ( EditorApplication.isCompiling ) { return; }
-
-			// if ( !IsCompilationInProgress ) { return; }
-
-			IsCompilationInProgress = false;
+			if ( IsBuildInProgress ) { return; }
+			if ( IsTestRunInProgress ) { return; }
 			RaiseEvent( CompilationFinished );
 		}
 
 		private static void OnCompilationStarted( object o )
 		{
-			// Debug.Log( EditorApplication.isCompiling );
-			// Debug.Log( IsCompilationInProgress );
-			// if ( !EditorApplication.isCompiling ) { return; }
-
-			// if ( IsCompilationInProgress ) { return; }
-
-			IsCompilationInProgress = true;
+			if ( IsBuildInProgress ) { return; }
+			if ( IsTestRunInProgress ) { return; }
 			RaiseEvent( CompilationStarted );
 		}
 
 		private static void RaiseEvent( Action eventAction )
 		{
-			// BDebug.Log( $"{nameof(RaiseEvent)}: {eventAction.Method.Name}" );
 			eventAction?.Invoke();
-		}
-
-		public static bool IsEditorBusy()
-		{
-			UniTask.ReturnToMainThread();
-			return IsCompilationInProgress
-				|| EditorApplication.isUpdating
-				|| AssetDatabase.IsAssetImportWorkerProcess()
-				|| IsBuildInProgress
-				|| IsTestRunInProgress;
 		}
 
 		public void RunStarted( ITestAdaptor testsToRun )
@@ -159,6 +141,37 @@ namespace Bezoro.Framework.Unity.Editor.Utilities
 		{
 			IsBuildInProgress = false;
 			RaiseEvent( BuildFinished );
+		}
+
+		public static void PlayClip( AudioClip clip )
+		{
+			Assert.IsNotNull( clip );
+			try
+			{
+				var unityEditorAssembly = typeof(AudioImporter).Assembly;
+				var audioUtilClass = unityEditorAssembly.GetType( "UnityEditor.AudioUtil" );
+
+				var stopMethod = audioUtilClass?.GetMethod(
+					"StopAllPreviewClips",
+					BindingFlags.Static | BindingFlags.Public
+				);
+
+				stopMethod?.Invoke( null, null );
+
+				var method = audioUtilClass?.GetMethod(
+					"PlayPreviewClip",
+					BindingFlags.Static | BindingFlags.Public,
+					null,
+					new[] { typeof(AudioClip), typeof(int), typeof(bool) },
+					null
+				);
+
+				method?.Invoke( null, new object[] { clip, 0, false } );
+			}
+			catch ( Exception e )
+			{
+				BDebug.LogError( "Error playing compilation sound: " + e.Message );
+			}
 		}
 	}
 }
