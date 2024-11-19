@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Reflection;
+using System.Threading;
 using Bezoro.Framework.Core;
 using Bezoro.Framework.Unity.Utilities;
 using UnityEditor;
@@ -48,28 +49,28 @@ namespace Bezoro.Framework.Unity.Editor.Utilities
 
 	#region State Flags
 
-		private static volatile bool _isTestRunInProgress;
+		private static int _isTestRunInProgress;
 
 		public static bool IsTestRunInProgress
 		{
-			get => _isTestRunInProgress;
-			private set => _isTestRunInProgress = value;
+			get => Interlocked.CompareExchange( ref _isTestRunInProgress, 0, 0 ) == 1;
+			private set => Interlocked.Exchange( ref _isTestRunInProgress, value ? 1 : 0 );
 		}
 
-		private static volatile bool _isDomainReloadInProgress;
+		private static int _isDomainReloadInProgress;
 
 		public static bool IsDomainReloadInProgress
 		{
-			get => _isDomainReloadInProgress;
-			private set => _isDomainReloadInProgress = value;
+			get => Interlocked.CompareExchange( ref _isDomainReloadInProgress, 0, 0 ) == 1;
+			private set => Interlocked.Exchange( ref _isDomainReloadInProgress, value ? 1 : 0 );
 		}
 
-		private static volatile bool _isBuildInProgress;
+		private static int _isBuildInProgress;
 
 		public static bool IsBuildInProgress
 		{
-			get => _isBuildInProgress;
-			private set => _isBuildInProgress = value;
+			get => Interlocked.CompareExchange( ref _isBuildInProgress, 0, 0 ) == 1;
+			private set => Interlocked.Exchange( ref _isBuildInProgress, value ? 1 : 0 );
 		}
 
 		public static bool IsCompilationInProgress => EditorApplication.isCompiling;
@@ -111,7 +112,7 @@ namespace Bezoro.Framework.Unity.Editor.Utilities
 		/// <summary>
 		///     Cleans up event subscriptions when the instance is destroyed.
 		/// </summary>
-		private void Cleanup()
+		private static void Cleanup()
 		{
 			CompilationPipeline.compilationStarted   -= OnCompilationStarted;
 			CompilationPipeline.compilationFinished  -= OnCompilationFinished;
