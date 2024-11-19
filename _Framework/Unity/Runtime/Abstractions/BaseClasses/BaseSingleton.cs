@@ -1,19 +1,19 @@
 using System;
 using System.Reflection;
 using System.Threading;
-using System.Threading.Tasks;
-using Bezoro.Framework.Unity.Utilities;
 
 namespace Bezoro.Framework.Unity
 {
-	public abstract class BaseSingleton<T> : IDisposable
+	/// <summary>
+	///     Base class for creating a singleton instance with thread-safe lazy initialization, proper disposal, and lifecycle
+	///     management.
+	/// </summary>
+	/// <typeparam name="T">Type of the singleton class.</typeparam>
+	public abstract class BaseSingleton<T> :
+		IDisposable
 	where T : BaseSingleton<T>
 	{
-		private static Lazy<T> _lazyInstance = new(
-			CreateInstance,
-			LazyThreadSafetyMode.ExecutionAndPublication
-		);
-
+		private static Lazy<T> _lazyInstance = new(CreateInstance, LazyThreadSafetyMode.ExecutionAndPublication);
 		private volatile bool _isDisposed;
 		private volatile bool _isInitialized;
 
@@ -21,62 +21,43 @@ namespace Bezoro.Framework.Unity
 		public static bool IsInitialized => _lazyInstance.IsValueCreated && _lazyInstance.Value._isInitialized;
 		public bool IsDisposed => _isDisposed;
 
-		protected BaseSingleton()
-		{
-			ValidationHelpers.ValidateConditionIsFalse(
-				_lazyInstance.IsValueCreated && _lazyInstance.Value != this,
-				"Instance already created."
-			);
-		}
+		public static event Action Initialized;
+		public static event Action Disposed;
 
+		/// <summary>
+		///     Protected constructor to prevent direct instantiation.
+		/// </summary>
+		protected BaseSingleton() {}
+
+		/// <summary>
+		///     Creates an instance of the singleton.
+		/// </summary>
 		private static T CreateInstance()
 		{
 			var type = typeof(T);
 			var constructors = type.GetConstructors( BindingFlags.Instance | BindingFlags.NonPublic );
 
-			ValidationHelpers.ValidateConditionIsFalse(
-				constructors.Length == 0,
-				$"No non-public instance constructor found for type {type.Name}. Ensure the class has a non-public constructor."
-			);
-
 			return (T)constructors[0].Invoke( null );
 		}
 
+		/// <summary>
+		///     Ensures the singleton is initialized synchronously.
+		/// </summary>
 		public static void EnsureInitialized()
 		{
-			if ( !Instance._isInitialized )
+			if ( Instance._isInitialized ) { return; }
+			lock (Instance)
 			{
-				lock (Instance)
-				{
-					if ( !Instance._isInitialized )
-					{
-						Instance.Initialize();
-						Instance._isInitialized = true;
-					}
-				}
+				if ( Instance._isInitialized ) { return; }
+				Instance.OnInitialize();
+				Instance._isInitialized = true;
+				Initialized?.Invoke();
 			}
 		}
 
-		public static async Task EnsureInitializedAsync()
-		{
-			if ( !Instance._isInitialized )
-			{
-				await Task.Run(
-					() =>
-					{
-						lock (Instance)
-						{
-							if ( !Instance._isInitialized )
-							{
-								Instance.Initialize();
-								Instance._isInitialized = true;
-							}
-						}
-					}
-				);
-			}
-		}
-
+		/// <summary>
+		///     Resets the singleton instance.
+		/// </summary>
 		public static void ResetInstance()
 		{
 			if ( _lazyInstance.IsValueCreated )
@@ -85,31 +66,25 @@ namespace Bezoro.Framework.Unity
 				_lazyInstance.Value.Dispose();
 			}
 
-			_lazyInstance = new(
-				CreateInstance,
-				LazyThreadSafetyMode.ExecutionAndPublication
-			);
+			_lazyInstance = new(CreateInstance, LazyThreadSafetyMode.ExecutionAndPublication);
 		}
 
-		protected virtual void OnReset() {}
+		protected abstract void OnReset();
 
+		/// <summary>
+		///     Disposes the singleton instance, releasing managed resources.
+		/// </summary>
 		public void Dispose()
 		{
-			if ( _isDisposed || !_lazyInstance.IsValueCreated )
-			{
-				return;
-			}
-
+			if ( _isDisposed ) { return; }
+			if ( !_lazyInstance.IsValueCreated ) { return; }
 			lock (this)
 			{
-				if ( _isDisposed )
-				{
-					return;
-				}
-
+				if ( _isDisposed ) { return; }
 				DisposeManagedResources();
 				_isDisposed    = true;
 				_isInitialized = false;
+				Disposed?.Invoke();
 				GC.SuppressFinalize( this );
 			}
 		}
@@ -119,21 +94,14 @@ namespace Bezoro.Framework.Unity
 			Dispose();
 		}
 
+		/// <summary>
+		///     Abstract method to dispose managed resources, to be implemented by derived classes.
+		/// </summary>
 		protected abstract void DisposeManagedResources();
-		protected abstract void Initialize();
 
-#if UNITY_EDITOR
-		private void ValidateInitializationState()
-		{
-			ValidationHelpers.ValidateConditionIsFalse(
-				_isDisposed,
-				$"Attempting to use disposed singleton of type {typeof(T).Name}"
-			);
-			ValidationHelpers.ValidateCondition(
-				_isInitialized,
-				$"Singleton of type {typeof(T).Name} not initialized. Call EnsureInitialized first."
-			);
-		}
-#endif
+		/// <summary>
+		///     Abstract method to initialize resources, to be implemented by derived classes.
+		/// </summary>
+		protected abstract void OnInitialize();
 	}
 }
