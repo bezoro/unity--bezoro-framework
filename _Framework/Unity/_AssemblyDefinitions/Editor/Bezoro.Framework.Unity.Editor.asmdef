@@ -2,6 +2,8 @@
     "name": "Bezoro.Framework.Unity.Editor",
     "rootNamespace": "Bezoro.Framework.Unity.Editor",
     "references": [
+        "GUID:3818b356cb5a2954f883526453e5f59d",
+        "GUID:e8eb6b9442bbe644280489f8180bb4bd",
         "GUID:b5120e6e7c923514e83c2ac656701190",
         "GUID:478a2357cc57436488a56e564b08d223",
         "GUID:d8b63aba1907145bea998dd612889d6b",
