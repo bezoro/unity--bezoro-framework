@@ -141,11 +141,7 @@ namespace Bezoro.Framework.Unity.Editor.Utilities
 
 		private static void OnAfterAssemblyReload()
 		{
-			if ( IsProcessing() )
-			{
-				return;
-			}
-
+			if ( IsProcessing() ) { return; }
 			IsDomainReloadInProgress = false;
 			RaiseEvent( AssemblyReloadFinished );
 		}
@@ -156,10 +152,7 @@ namespace Bezoro.Framework.Unity.Editor.Utilities
 		{
 			if ( AssetDatabase.IsAssetImportWorkerProcess() )
 			{
-				if ( !IsAssetImportInProgress )
-				{
-					RaiseEvent( AssetImportStarted );
-				}
+				if ( !IsAssetImportInProgress ) { RaiseEvent( AssetImportStarted ); }
 			}
 			else if ( IsAssetImportInProgress )
 			{
@@ -169,21 +162,13 @@ namespace Bezoro.Framework.Unity.Editor.Utilities
 
 		private static void OnCompilationFinished( object context )
 		{
-			if ( IsBuildInProgress || IsTestRunInProgress )
-			{
-				return;
-			}
-
+			if ( IsBuildInProgress || IsTestRunInProgress ) { return; }
 			RaiseEvent( CompilationFinished );
 		}
 
 		private static void OnCompilationStarted( object context )
 		{
-			if ( IsBuildInProgress || IsTestRunInProgress )
-			{
-				return;
-			}
-
+			if ( IsBuildInProgress || IsTestRunInProgress ) { return; }
 			RaiseEvent( CompilationStarted );
 		}
 
