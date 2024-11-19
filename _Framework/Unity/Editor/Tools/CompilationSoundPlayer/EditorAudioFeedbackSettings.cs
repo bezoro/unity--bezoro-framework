@@ -63,13 +63,16 @@ namespace Bezoro.Framework.Unity.Editor.Tools
 		/// </summary>
 		private void SubscribeToEditorEvents()
 		{
-			EditorUtils.CompilationStarted  += OnCompilationStarted;
-			EditorUtils.CompilationFinished += OnCompilationFinished;
-			EditorUtils.BuildStarted        += OnBuildStarted;
-			EditorUtils.BuildFinished       += OnBuildFinished;
-			EditorUtils.TestRunStarted      += OnTestRunStarted;
-			EditorUtils.TestRunFinished     += OnTestRunFinished;
-			EditorUtils.EditorReady         += OnEditorReady;
+			CompilationEventHandler.CompilationStarted  += OnCompilationStarted;
+			CompilationEventHandler.CompilationFinished += OnCompilationFinished;
+
+			BuildEventHandler.BuildStarted  += OnBuildStarted;
+			BuildEventHandler.BuildFinished += OnBuildFinished;
+
+			TestRunEventHandler.TestRunStarted  += OnTestRunStarted;
+			TestRunEventHandler.TestRunFinished += OnTestRunFinished;
+
+			EditorStatusWatcher.EditorReady += OnEditorReady;
 		}
 
 		private void OnEditorReady()
@@ -82,12 +85,16 @@ namespace Bezoro.Framework.Unity.Editor.Tools
 		/// </summary>
 		private void UnsubscribeFromEditorEvents()
 		{
-			EditorUtils.CompilationStarted  -= OnCompilationStarted;
-			EditorUtils.CompilationFinished -= OnCompilationFinished;
-			EditorUtils.BuildStarted        -= OnBuildStarted;
-			EditorUtils.BuildFinished       -= OnBuildFinished;
-			EditorUtils.TestRunStarted      -= OnTestRunStarted;
-			EditorUtils.TestRunFinished     -= OnTestRunFinished;
+			CompilationEventHandler.CompilationStarted  -= OnCompilationStarted;
+			CompilationEventHandler.CompilationFinished -= OnCompilationFinished;
+
+			BuildEventHandler.BuildStarted  -= OnBuildStarted;
+			BuildEventHandler.BuildFinished -= OnBuildFinished;
+
+			TestRunEventHandler.TestRunStarted  -= OnTestRunStarted;
+			TestRunEventHandler.TestRunFinished -= OnTestRunFinished;
+
+			EditorStatusWatcher.EditorReady -= OnEditorReady;
 		}
 
 	#endregion
@@ -136,7 +143,7 @@ namespace Bezoro.Framework.Unity.Editor.Tools
 		{
 			if ( clip != null )
 			{
-				EditorUtils.PlayClip( clip );
+				EditorAudioManager.PlayClip( clip );
 			}
 		}
 
