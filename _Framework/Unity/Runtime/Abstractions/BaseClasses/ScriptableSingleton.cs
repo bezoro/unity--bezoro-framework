@@ -9,15 +9,16 @@ namespace Bezoro.Framework.Unity
 		private static readonly object _lock = new();
 		private static bool _initialized;
 
+		private const string MULTIPLE_INSTANCES_ERROR = "Found multiple instances of {0}. There should only be one.";
+		private const string NO_INSTANCE_FOUND_ERROR = "No instance of {0} found. Please ensure one exists.";
+		private const string MULTIPLE_INSTANCES_DETECTED_ERROR =
+			"Multiple instances of {0} detected. Destroying duplicate at {1}";
+
 		public static T Instance
 		{
 			get
 			{
-				if ( _instance == null )
-				{
-					Initialize();
-				}
-
+				if ( _instance == null ) { Initialize(); }
 				return _instance;
 			}
 		}
@@ -26,42 +27,39 @@ namespace Bezoro.Framework.Unity
 		{
 			lock (_lock)
 			{
-				if ( _initialized )
-				{
-					return;
-				}
-
+				if ( _initialized ) { return; }
 				var instances = Resources.LoadAll<T>( "" );
-				if ( instances.Length > 1 )
-				{
-					BDebug.LogError( $"Found multiple instances of {typeof(T)}. There should only be one." );
-					_instance = instances[0];
-				}
-				else if ( instances.Length == 1 )
-				{
-					_instance = instances[0];
-				}
-				else
-				{
-					BDebug.LogError( $"No instance of {typeof(T)} found. Please ensure one exists." );
-				}
-
+				HandleInstances( instances );
 				_initialized = true;
 			}
 		}
 
+		private static void HandleInstances( T[] instances )
+		{
+			if ( instances.Length > 1 )
+			{
+				BDebug.LogError( string.Format( MULTIPLE_INSTANCES_ERROR, typeof(T) ) );
+				_instance = instances[0];
+			}
+			else if ( instances.Length == 1 ) { _instance = instances[0]; }
+			else { BDebug.LogError( string.Format( NO_INSTANCE_FOUND_ERROR, typeof(T) ) ); }
+		}
+
 		protected virtual void OnEnable()
 		{
-			if ( _instance != null && _instance != this )
+			lock (_lock)
 			{
-				BDebug.LogError( $"Multiple instances of {typeof(T)} detected. Destroying duplicate at {name}" );
-				DestroyImmediate( this );
+				if ( _instance != null && _instance != this )
+				{
+					BDebug.LogError( string.Format( MULTIPLE_INSTANCES_DETECTED_ERROR, typeof(T), name ) );
+					DestroyImmediate( this, true );
+					return;
+				}
 
-				return;
+				if ( _initialized ) { return; }
+				_instance    = this as T;
+				_initialized = true;
 			}
-
-			_instance    = this as T;
-			_initialized = true;
 		}
 	}
 }
