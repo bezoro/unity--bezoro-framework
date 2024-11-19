@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+using Bezoro.Framework.Core;
 using Bezoro.Framework.Unity.Utilities;
 using Cysharp.Threading.Tasks;
 using JetBrains.Annotations;
@@ -28,13 +29,16 @@ namespace Bezoro.Framework.Unity.Bootstrapping
 			BDebug.LogStarted();
 
 			_gameInitConfigAsset = Resources.LoadAll<GameInitializationConfig>( "" ).FirstOrDefault();
-			_initializables      = new();
-			_currentState        = InitializationState.NotStarted;
+			Assert.IsNotNull( _gameInitConfigAsset, "Game initialization config asset not found." );
+			_initializables = new();
+			_currentState   = InitializationState.NotStarted;
 
 			BDebug.LogCompleted();
 		}
 
-		protected override void Initialize() {}
+		protected override void OnInitialize() {}
+
+		protected override void OnReset() {}
 
 		protected override void DisposeManagedResources()
 		{
