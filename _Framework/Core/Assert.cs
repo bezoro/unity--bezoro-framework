@@ -105,7 +105,7 @@ namespace Bezoro.Framework.Core
 		}
 
 		[Conditional( "UNITY_EDITOR" )]
-		public static void IsGreaterThanOrEqual<T>( T left, T right, string message = null ) where T : IComparable<T>
+		public static void IsGreaterThanOrEqualTo<T>( T left, T right, string message = null ) where T : IComparable<T>
 		{
 			if ( left.CompareTo( right ) < 0 )
 			{
