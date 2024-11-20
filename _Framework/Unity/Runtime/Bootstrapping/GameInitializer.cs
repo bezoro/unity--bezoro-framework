@@ -27,25 +27,20 @@ namespace Bezoro.Framework.Unity.Bootstrapping
 		private GameInitializer()
 		{
 			BDebug.LogStarted();
-
 			_gameInitConfigAsset = Resources.LoadAll<GameInitializationConfig>( "" ).FirstOrDefault();
 			Assert.IsNotNull( _gameInitConfigAsset, "Game initialization config asset not found." );
 			_initializables = new();
 			_currentState   = InitializationState.NotStarted;
-
 			BDebug.LogCompleted();
 		}
 
 		protected override void OnInitialize() {}
-
 		protected override void OnReset() {}
 
 		protected override void DisposeManagedResources()
 		{
 			BDebug.LogStarted();
-
 			_initializables.Clear();
-
 			BDebug.LogCompleted();
 		}
 
@@ -80,12 +75,10 @@ namespace Bezoro.Framework.Unity.Bootstrapping
 		private static void OnAfterSceneLoad()
 		{
 			Instance._gameInitConfigAsset.AfterSceneLoadPhase();
-
 			IsInitializationComplete = true;
 			Instance.EnableInstantiatedGameObjects();
 			Instance.Dispose();
 			Instance._currentState = InitializationState.Completed;
-
 			BDebug.LogCompleted();
 		}
 
@@ -128,7 +121,14 @@ namespace Bezoro.Framework.Unity.Bootstrapping
 				$"Found {initializableTypes.Count.ToString().Color( Color.green ).Bold()} initializable types"
 			);
 
-			var sortedTypes = TopologicalSort( initializableTypes );
+			var sortedTypes = TypeSorter.TopologicalSort(
+				initializableTypes,
+				type =>
+				{
+					var attr = type.GetCustomAttribute<AutoInitializeAttribute>();
+					return attr.Before.Concat( attr.After );
+				}
+			);
 
 			foreach ( var type in sortedTypes )
 			{
@@ -139,86 +139,11 @@ namespace Bezoro.Framework.Unity.Bootstrapping
 			BDebug.LogCompleted();
 		}
 
-		// TODO: Refactor into a reusable helper method
-		private List<Type> TopologicalSort( List<Type> types )
-		{
-			var graph = new Dictionary<Type, HashSet<Type>>();
-			var inDegree = new Dictionary<Type, int>();
-
-			// Initialize graph and in-degree
-			foreach ( var type in types )
-			{
-				graph[type]    = new();
-				inDegree[type] = 0;
-			}
-
-			// Build the graph
-			foreach ( var type in types )
-			{
-				var attr = type.GetCustomAttribute<AutoInitializeAttribute>();
-
-				foreach ( var beforeType in attr.Before )
-				{
-					if ( types.Contains( beforeType ) )
-					{
-						graph[beforeType].Add( type );
-						inDegree[type]++;
-					}
-				}
-
-				foreach ( var afterType in attr.After )
-				{
-					if ( types.Contains( afterType ) )
-					{
-						graph[type].Add( afterType );
-						inDegree[afterType]++;
-					}
-				}
-			}
-
-			// Perform topological sort
-			var queue = new Queue<Type>( types.Where( t => inDegree[t] == 0 ) );
-			var result = new List<Type>();
-
-			while (queue.Count > 0)
-			{
-				var current = queue.Dequeue();
-				result.Add( current );
-
-				foreach ( var neighbor in graph[current] )
-				{
-					inDegree[neighbor]--;
-
-					if ( inDegree[neighbor] == 0 )
-					{
-						queue.Enqueue( neighbor );
-					}
-				}
-			}
-
-			// Check for cycles
-			if ( result.Count != types.Count )
-			{
-				throw new InvalidOperationException( "Circular dependency detected in initialization order." );
-			}
-
-			// Sort by priority within each level
-			return result.OrderBy( t => t.GetCustomAttribute<AutoInitializeAttribute>().Priority ).ToList();
-		}
-
 		private async Task<object> CreateInstance( Type type )
 		{
-			if ( !type.IsSubclassOf( typeof(MonoBehaviour) ) )
-			{
-				return Activator.CreateInstance( type );
-			}
-
+			if ( !type.IsSubclassOf( typeof(MonoBehaviour) ) ) { return Activator.CreateInstance( type ); }
 			var unityObjectInstance = Object.FindAnyObjectByType( type );
-
-			if ( unityObjectInstance != null )
-			{
-				return unityObjectInstance;
-			}
+			if ( unityObjectInstance != null ) { return unityObjectInstance; }
 
 			var go = await Factories.GameObjectFactory.Create(
 				type.Name,
@@ -227,8 +152,7 @@ namespace Bezoro.Framework.Unity.Bootstrapping
 			);
 
 			_instantiatedGameObjects.Add( go );
-
-			return unityObjectInstance;
+			return go.GetComponent( type );
 		}
 
 	#region InitializationPhases
@@ -236,36 +160,18 @@ namespace Bezoro.Framework.Unity.Bootstrapping
 		private void InitializePhase( InitializationPhase phase )
 		{
 			BDebug.LogStarted();
-
-			if ( _currentState == InitializationState.Completed )
-			{
-				return;
-			}
-
+			if ( _currentState == InitializationState.Completed ) { return; }
 			_currentState = InitializationState.InProgress;
-
 			foreach ( var initializable in _initializables )
 			{
-				try
-				{
-					InitializeForPhase( initializable, phase );
-				}
-				catch ( Exception ex )
-				{
-					HandleInitializationException( initializable, phase, ex );
-				}
+				try { InitializeForPhase( initializable, phase ); }
+				catch ( Exception ex ) { HandleInitializationException( initializable, ex ); }
 			}
-
-			if ( phase != InitializationPhase.AfterSceneLoad )
-			{
-				return;
-			}
-
+			if ( phase != InitializationPhase.AfterSceneLoad ) { return; }
 			IsInitializationComplete = true;
 			EnableInstantiatedGameObjects();
 			Dispose();
 			_currentState = InitializationState.Completed;
-
 			BDebug.LogCompleted();
 		}
 
@@ -284,124 +190,94 @@ namespace Bezoro.Framework.Unity.Bootstrapping
 		private void InitializeSubsystemRegistration( object initializable )
 		{
 			BDebug.LogStarted();
-
 			if ( initializable is ISubsystemRegistrationInitializable subsystemInit )
 			{
 				BDebug.LogStarted();
-
 				subsystemInit.InitializeSubsystemRegistration();
-
 				BDebug.LogCompleted();
 			}
-
 			BDebug.LogCompleted();
 		}
 
 		private void InitializeAfterAssembliesLoaded( object initializable )
 		{
 			BDebug.LogStarted();
-
 			if ( initializable is IAfterAssembliesLoadedInitializable assembliesInit )
 			{
 				BDebug.LogStarted();
-
 				assembliesInit.InitializeAfterAssembliesLoaded();
-
 				BDebug.LogCompleted();
 			}
-
 			BDebug.LogCompleted();
 		}
 
 		private void InitializeBeforeSplashScreen( object initializable )
 		{
 			BDebug.LogStarted();
-
 			if ( initializable is IBeforeSplashScreenInitializable splashInit )
 			{
 				BDebug.LogStarted();
-
 				splashInit.InitializeBeforeSplashScreen();
-
 				BDebug.LogCompleted();
 			}
-
 			BDebug.LogCompleted();
 		}
 
 		private void InitializeBeforeSceneLoad( object initializable )
 		{
 			BDebug.LogStarted();
-
 			if ( initializable is IBeforeSceneLoadInitializable beforeSceneInit )
 			{
 				BDebug.LogStarted();
-
 				beforeSceneInit.InitializeBeforeSceneLoad();
-
 				BDebug.LogCompleted();
 			}
-
 			BDebug.LogCompleted();
 		}
 
 		private void InitializeAfterSceneLoad( object initializable )
 		{
 			BDebug.LogStarted();
-
 			if ( initializable is IAfterSceneLoadInitializable afterSceneInit )
 			{
 				BDebug.LogStarted();
-
 				afterSceneInit.InitializeAfterSceneLoad();
-
 				BDebug.LogCompleted();
 			}
-
 			BDebug.LogCompleted();
 		}
 
 	#endregion
 
-		private void HandleInitializationException( object initializable, InitializationPhase phase, Exception ex )
+		private void HandleInitializationException( object initializable, Exception ex )
 		{
 			BDebug.LogException( ex, initializable as Object );
-
 			_currentState = InitializationState.Failed;
-
 			BDebug.LogError( "Initialization failed" );
 		}
 
 		private static void ResetGameInitializer()
 		{
-			if ( IsInitialized )
-			{
-				Instance.Reset();
-			}
+			if ( IsInitialized ) { Instance.Reset(); }
 		}
 
 		private void Reset()
 		{
 			BDebug.LogStarted();
-
 			_instantiatedGameObjects.Clear();
 			_initializables.Clear();
 			_currentState = InitializationState.NotStarted;
-
 			ResetInstance();
 		}
 
 		private void EnableInstantiatedGameObjects()
 		{
 			BDebug.LogStarted();
-
 			foreach ( var gameObject in _instantiatedGameObjects )
 			{
 				BDebug.LogStarted();
-
 				gameObject.SetActive( true );
 			}
-
 			BDebug.LogCompleted();
 		}
 	}
