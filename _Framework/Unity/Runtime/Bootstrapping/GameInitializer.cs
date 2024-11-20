@@ -6,7 +6,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Bezoro.Framework.Core;
 using Bezoro.Framework.Unity.Utilities;
-using Cysharp.Threading.Tasks;
 using JetBrains.Annotations;
 using UnityEngine;
 using Object = UnityEngine.Object;
@@ -84,15 +83,11 @@ namespace Bezoro.Framework.Unity.Bootstrapping
 
 	#endregion
 
-		public static async UniTask<bool> WaitForInitializationComplete( CancellationToken cancellationToken = default )
-		{
-			while (!IsInitializationComplete)
-			{
-				await UniTask.Yield( cancellationToken );
-			}
-
-			return true;
-		}
+		// public static async UniTask<bool> WaitForInitializationComplete( CancellationToken cancellationToken = default )
+		// {
+		// 	while (!IsInitializationComplete) { await UniTask.Yield( cancellationToken ); }
+		// 	return true;
+		// }
 
 		private void AutoRegisterInitializables()
 		{

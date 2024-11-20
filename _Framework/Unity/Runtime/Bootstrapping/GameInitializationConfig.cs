@@ -1,4 +1,6 @@
-﻿using UnityEngine;
+﻿using System.Threading;
+using Cysharp.Threading.Tasks;
+using UnityEngine;
 
 namespace Bezoro.Framework.Unity.Bootstrapping
 {
@@ -11,7 +13,10 @@ namespace Bezoro.Framework.Unity.Bootstrapping
 		[SerializeReference] private IInitializationObject[] beforeSceneLoadEntries;
 		[SerializeReference] private IInitializationObject[] afterSceneLoadEntries;
 
-		private void ExecuteEntries( IInitializationObject[] entries )
+		public static bool IsGameInitialized { get; private set; }
+
+		[RuntimeInitializeOnLoadMethod( RuntimeInitializeLoadType.SubsystemRegistration )]
+		public static void SubsystemRegistrationPhase()
 		{
 			foreach ( var entry in entries )
 			{
@@ -42,6 +47,12 @@ namespace Bezoro.Framework.Unity.Bootstrapping
 		public void AfterSceneLoadPhase()
 		{
 			ExecuteEntries( afterSceneLoadEntries );
+		}
+
+		public static async UniTask<bool> WaitForInitializationComplete( CancellationToken cancellationToken = default )
+		{
+			while (!IsGameInitialized) { await UniTask.Yield( cancellationToken ); }
+			return true;
 		}
 	}
 
