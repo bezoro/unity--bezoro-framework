@@ -20,11 +20,15 @@ namespace Bezoro.Framework.Unity.Editor.Utilities
 
 		private static void OnCompilationStarted( object context )
 		{
+			if ( BuildEventHandler.IsBuildInProgress ) { return; }
+			if ( TestRunEventHandler.IsTestRunInProgress ) { return; }
 			RaiseEvent( CompilationStarted );
 		}
 
 		private static void OnCompilationFinished( object context )
 		{
+			if ( BuildEventHandler.IsBuildInProgress ) { return; }
+			if ( TestRunEventHandler.IsTestRunInProgress ) { return; }
 			RaiseEvent( CompilationFinished );
 		}
 
