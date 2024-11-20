@@ -4,6 +4,7 @@ using UnityEngine;
 
 namespace Bezoro.Framework.Unity.Bootstrapping
 {
+	[DefaultExecutionOrder( int.MinValue )]
 	[CreateAssetMenu( fileName = "GIC_NewGameInitConfig", menuName = "Bezoro/Game Init Config", order = 0 )]
 	public sealed class GameInitializationConfig : ScriptableSingleton<GameInitializationConfig>
 	{
@@ -18,35 +19,37 @@ namespace Bezoro.Framework.Unity.Bootstrapping
 		[RuntimeInitializeOnLoadMethod( RuntimeInitializeLoadType.SubsystemRegistration )]
 		public static void SubsystemRegistrationPhase()
 		{
-			foreach ( var entry in entries )
-			{
-				entry.Initialize();
-			}
+			ExecuteEntries( Instance.subsystemRegistrationEntries );
 		}
 
-		public void SubsystemRegistrationPhase()
+		[RuntimeInitializeOnLoadMethod( RuntimeInitializeLoadType.AfterAssembliesLoaded )]
+		public static void AfterAssemblyLoadPhase()
 		{
-			ExecuteEntries( subsystemRegistrationEntries );
+			ExecuteEntries( Instance.afterAssemblyLoadEntries );
 		}
 
-		public void AfterAssemblyLoadPhase()
+		[RuntimeInitializeOnLoadMethod( RuntimeInitializeLoadType.BeforeSplashScreen )]
+		public static void BeforeSplashScreenPhase()
 		{
-			ExecuteEntries( afterAssemblyLoadEntries );
+			ExecuteEntries( Instance.beforeSplashScreenEntries );
 		}
 
-		public void BeforeSplashScreenPhase()
+		[RuntimeInitializeOnLoadMethod( RuntimeInitializeLoadType.BeforeSceneLoad )]
+		public static void BeforeSceneLoadPhase()
 		{
-			ExecuteEntries( beforeSplashScreenEntries );
+			ExecuteEntries( Instance.beforeSceneLoadEntries );
 		}
 
-		public void BeforeSceneLoadPhase()
+		[RuntimeInitializeOnLoadMethod( RuntimeInitializeLoadType.AfterSceneLoad )]
+		public static void AfterSceneLoadPhase()
 		{
-			ExecuteEntries( beforeSceneLoadEntries );
+			ExecuteEntries( Instance.afterSceneLoadEntries );
+			IsGameInitialized = true;
 		}
 
-		public void AfterSceneLoadPhase()
+		private static void ExecuteEntries( IInitializationObject[] entries )
 		{
-			ExecuteEntries( afterSceneLoadEntries );
+			foreach ( var entry in entries ) { entry.Initialize(); }
 		}
 
 		public static async UniTask<bool> WaitForInitializationComplete( CancellationToken cancellationToken = default )
