@@ -66,7 +66,6 @@ namespace Bezoro.Framework.Unity.Editor.Tools
 			CompilationEventHandler.CompilationStarted  += OnCompilationStarted;
 			CompilationEventHandler.CompilationFinished += OnCompilationFinished;
 
-			BuildEventHandler.BuildStarted  += OnBuildStarted;
 			BuildEventHandler.BuildFinished += OnBuildFinished;
 
 			TestRunEventHandler.TestRunStarted  += OnTestRunStarted;
@@ -88,7 +87,6 @@ namespace Bezoro.Framework.Unity.Editor.Tools
 			CompilationEventHandler.CompilationStarted  -= OnCompilationStarted;
 			CompilationEventHandler.CompilationFinished -= OnCompilationFinished;
 
-			BuildEventHandler.BuildStarted  -= OnBuildStarted;
 			BuildEventHandler.BuildFinished -= OnBuildFinished;
 
 			TestRunEventHandler.TestRunStarted  -= OnTestRunStarted;
@@ -110,11 +108,6 @@ namespace Bezoro.Framework.Unity.Editor.Tools
 		///     Handles the event when compilation finishes.
 		/// </summary>
 		private void OnCompilationFinished() => PlayAudioClip( compilationEndClip );
-
-		/// <summary>
-		///     Handles the event when a build starts.
-		/// </summary>
-		private void OnBuildStarted() => PlayAudioClip( buildCompletedClip );
 
 		/// <summary>
 		///     Handles the event when a build finishes.
