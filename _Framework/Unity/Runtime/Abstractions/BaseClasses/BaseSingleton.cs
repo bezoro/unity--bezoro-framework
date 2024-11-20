@@ -37,20 +37,21 @@ namespace Bezoro.Framework.Unity
 			var type = typeof(T);
 			var constructors = type.GetConstructors( BindingFlags.Instance | BindingFlags.NonPublic );
 
-			return (T)constructors[0].Invoke( null );
+			var instance = (T)constructors[0].Invoke( null );
+			instance.EnsureInitialized();
+			return instance;
 		}
 
 		/// <summary>
-		///     Ensures the singleton is initialized synchronously.
+		///     Ensures the singleton is initialized.
 		/// </summary>
-		public static void EnsureInitialized()
+		public void EnsureInitialized()
 		{
-			if ( Instance._isInitialized ) { return; }
-			lock (Instance)
+			lock (_lazyInstance)
 			{
-				if ( Instance._isInitialized ) { return; }
-				Instance.OnInitialize();
-				Instance._isInitialized = true;
+				if ( _isInitialized ) { return; }
+				OnInitialize();
+				_isInitialized = true;
 				Initialized?.Invoke();
 			}
 		}
