@@ -72,6 +72,24 @@ namespace Bezoro.Framework.Core
 		}
 
 		[Conditional( "UNITY_EDITOR" )]
+		public static void IsNullOrEmpty( string str, string message = null )
+		{
+			if ( !string.IsNullOrEmpty( str ) )
+			{
+				throw new AssertionException( message ?? "Assertion failed: Expected string to be null or empty." );
+			}
+		}
+
+		[Conditional( "UNITY_EDITOR" )]
+		public static void IsNotNullOrEmpty( string str, string message = null )
+		{
+			if ( string.IsNullOrEmpty( str ) )
+			{
+				throw new AssertionException( message ?? "Assertion failed: Expected string to not be null or empty." );
+			}
+		}
+
+		[Conditional( "UNITY_EDITOR" )]
 		public static void AreNotEqual<T>( T notExpected, T actual, string message = null )
 		{
 			if ( EqualityComparer<T>.Default.Equals( notExpected, actual ) )
