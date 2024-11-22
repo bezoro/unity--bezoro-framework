@@ -1,9 +1,19 @@
+using System;
 using UnityEngine;
 
 namespace Bezoro.Framework.Unity.Utilities
 {
 	public static class StringExtensions
 	{
+		public static Color HTMLColorToRGBA( this string htmlColor )
+		{
+			if ( ColorUtility.TryParseHtmlString( htmlColor, out var color ) )
+			{
+				return color;
+			}
+			throw new ArgumentException( $"Invalid HTML color string: {htmlColor}" );
+		}
+
 		// Text formatting
 		public static string Bold( this string text ) => $"<b>{text}</b>";
 
@@ -19,8 +29,7 @@ namespace Bezoro.Framework.Unity.Utilities
 		// General color application
 		public static string Color( this string text, string colorName ) => $"<color={colorName}>{text}</color>";
 
-		public static string Color
-			( this string text, Color color ) =>
+		public static string Color( this string text, Color color ) =>
 			$"<color=#{ColorUtility.ToHtmlStringRGB( color )}>{text}</color>";
 
 		// Common colors
