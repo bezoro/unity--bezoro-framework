@@ -95,24 +95,33 @@ namespace Bezoro.Framework.Unity.Utilities
 			}
 		}
 
-		public static void SetParentAndReset( this GameObject child, GameObject parent )
+		public static void SetParent(
+			this GameObject           child,
+			GameObject                parent,
+			TransformAdjustmentMethod transformAdjustmentMethod = TransformAdjustmentMethod.KeepTransformState
+		)
 		{
-			child.transform.SetParent( parent.transform );
-			child.transform.localPosition = Vector3.zero;
-			child.transform.localRotation = Quaternion.identity;
-			child.transform.localScale    = Vector3.one;
+			switch ( transformAdjustmentMethod )
+			{
+				case TransformAdjustmentMethod.KeepTransformState: child.transform.SetParent( parent.transform ); break;
+				case TransformAdjustmentMethod.ResetTransformState:
+					child.transform.SetParent( parent.transform );
+					child.transform.ResetAll();
+					break;
+			}
 		}
 
-		public static Component[] AddComponents
-			( this GameObject go, Type[] componentTypes ) =>
+		public static Component[] AddComponents( this GameObject go, Type[] componentTypes ) =>
 			go.AddComponentsInternal( componentTypes ).GetAwaiter().GetResult();
 
-		public static async UniTask<Component[]> AddComponentsAsync
-			( this GameObject go, Type[] componentTypes ) =>
+		public static async UniTask<Component[]> AddComponentsAsync( this GameObject go, Type[] componentTypes ) =>
 			await go.AddComponentsInternal( componentTypes, true );
 
-		private static async UniTask<Component[]> AddComponentsInternal
-			( this GameObject go, Type[] componentTypes, bool useAsync = false )
+		private static async UniTask<Component[]> AddComponentsInternal(
+			this GameObject go,
+			Type[]          componentTypes,
+			bool            useAsync = false
+		)
 		{
 			if ( !PlayerLoopHelper.IsMainThread )
 			{
@@ -123,7 +132,7 @@ namespace Bezoro.Framework.Unity.Utilities
 			ValidationHelpers.ValidateObjectNotNull( componentTypes );
 
 			var addedComponents = new Component[componentTypes.Length];
-			var behaviours = new Behaviour[componentTypes.Length];
+			var behaviours      = new Behaviour[componentTypes.Length];
 
 			foreach ( var componentType in componentTypes )
 			{
@@ -205,8 +214,8 @@ namespace Bezoro.Framework.Unity.Utilities
 		public static bool TryGetComponentInGameObjectHierarchy<T>( this GameObject gameObject, out T component )
 		where T : Component =>
 			gameObject.TryGetComponent( out component )
-		 || gameObject.TryGetComponentInChildren( out component )
-		 || TryGetComponentInParents( gameObject, out component );
+			|| gameObject.TryGetComponentInChildren( out component )
+			|| TryGetComponentInParents( gameObject, out component );
 
 		public static bool TryGetComponentInChildren<T>( this GameObject gameObject, out T component )
 		where T : Component
@@ -224,8 +233,8 @@ namespace Bezoro.Framework.Unity.Utilities
 		/// <param name="gameObject">The GameObject of which to retrieve the component.</param>
 		/// <param name="component">The component of type <typeparamref name="T" /> if found, otherwise null.</param>
 		/// <returns>true if the component was found, false otherwise.</returns>
-		public static bool TryGetComponentInParents<T>
-			( this GameObject gameObject, out T component ) where T : Component
+		public static bool TryGetComponentInParents<T>( this GameObject gameObject, out T component )
+		where T : Component
 		{
 			component = gameObject.GetComponentInParents( typeof(T) ) as T;
 
@@ -297,10 +306,9 @@ namespace Bezoro.Framework.Unity.Utilities
 		///     Thrown if <paramref name="gameObject" /> or <paramref name="dependencies" /> is
 		///     null.
 		/// </exception>
-		public static T AddComponentWithDependencies<T, TDependencies>
-		(
+		public static T AddComponentWithDependencies<T, TDependencies>(
 			this GameObject gameObject,
-			TDependencies dependencies
+			TDependencies   dependencies
 		)
 		where T : MonoBehaviour, IInjectable<TDependencies>
 		{
@@ -324,9 +332,8 @@ namespace Bezoro.Framework.Unity.Utilities
 		///     Thrown if <paramref name="gameObject" /> or
 		///     <paramref name="dependenciesFactory" /> is null.
 		/// </exception>
-		public static T AddComponentWithDependencies<T, TDependencies>
-		(
-			this GameObject gameObject,
+		public static T AddComponentWithDependencies<T, TDependencies>(
+			this GameObject        gameObject,
 			Func<T, TDependencies> dependenciesFactory
 		)
 		where T : MonoBehaviour, IInjectable<TDependencies>
@@ -355,10 +362,9 @@ namespace Bezoro.Framework.Unity.Utilities
 		/// <returns>The added component with injected dependencies.</returns>
 		/// <exception cref="ArgumentNullException">Thrown if <paramref name="gameObject" /> or <paramref name="arg" /> is null.</exception>
 		/// <exception cref="ArgumentException">Thrown if the dependencies are invalid.</exception>
-		private static T AddComponentWithDependenciesInternal<T, TArg, TDependencies>
-		(
-			GameObject gameObject,
-			TArg arg,
+		private static T AddComponentWithDependenciesInternal<T, TArg, TDependencies>(
+			GameObject                                                        gameObject,
+			TArg                                                              arg,
 			Func<GameObject, TArg, (T component, TDependencies dependencies)> factory
 		)
 		where T : MonoBehaviour, IInjectable<TDependencies>
@@ -429,19 +435,18 @@ namespace Bezoro.Framework.Unity.Utilities
 			root.SetActive( false );
 		}
 
-		public static IEnumerable<(Transform transform, Component[] components)> GetHierarchyComponents
-		(
+		public static IEnumerable<(Transform transform, Component[] components)> GetHierarchyComponents(
 			this GameObject root,
-			int initialCapacity = 16,
-			bool trim = false
+			int             initialCapacity = 16,
+			bool            trim            = false
 		)
 		{
 			var transforms = root.GetComponentsInChildren<Transform>( true );
-			var length = transforms.Length;
-			var result = new (Transform transform, Component[] components)[length];
+			var length     = transforms.Length;
+			var result     = new (Transform transform, Component[] components)[length];
 
-			var componentList = new List<Component>( initialCapacity );
-			var filteredArray = new Component[initialCapacity];
+			var componentList        = new List<Component>( initialCapacity );
+			var filteredArray        = new Component[initialCapacity];
 			var enabledPropertyCache = new Dictionary<Type, bool>( initialCapacity );
 
 			for ( var i = 0 ; i < length ; i++ )
@@ -478,5 +483,11 @@ namespace Bezoro.Framework.Unity.Utilities
 
 			return result;
 		}
+	}
+
+	public enum TransformAdjustmentMethod
+	{
+		KeepTransformState = 0,
+		ResetTransformState
 	}
 }
