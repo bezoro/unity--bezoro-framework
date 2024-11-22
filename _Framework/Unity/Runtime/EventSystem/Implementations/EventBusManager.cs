@@ -23,6 +23,7 @@ public sealed class EventBusManager : BaseSingleton<EventBusManager>
 	{
 		Assert.IsNotNullOrEmpty( context );
 		Assert.IsNotNull( _eventBuses );
+
 		return _eventBuses.GetOrAdd( context, _ => new EventBus() );
 	}
 
@@ -30,6 +31,7 @@ public sealed class EventBusManager : BaseSingleton<EventBusManager>
 	{
 		Assert.IsNotNullOrEmpty( context );
 		Assert.IsNotNull( _eventBuses );
+
 		return _eventBuses.TryGetValue( context, out eventBus );
 	}
 
@@ -37,12 +39,14 @@ public sealed class EventBusManager : BaseSingleton<EventBusManager>
 	{
 		Assert.IsNotNullOrEmpty( context );
 		Assert.IsNotNull( _eventBuses );
+
 		return _eventBuses.TryRemove( context, out _ );
 	}
 
 	public void ClearAll()
 	{
 		Assert.IsNotNull( _eventBuses );
+
 		_eventBuses.Clear();
 	}
 
