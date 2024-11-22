@@ -1,6 +1,7 @@
 using System;
 using System.Reflection;
 using System.Threading;
+using Bezoro.Framework.Unity.Utilities;
 
 namespace Bezoro.Framework.Unity
 {
@@ -13,13 +14,13 @@ namespace Bezoro.Framework.Unity
 		IDisposable
 	where T : BaseSingleton<T>
 	{
-		private static Lazy<T> _lazyInstance = new(CreateInstance, LazyThreadSafetyMode.ExecutionAndPublication);
-		private volatile bool _isDisposed;
-		private volatile bool _isInitialized;
+		private static   Lazy<T> _lazyInstance = new(CreateInstance, LazyThreadSafetyMode.ExecutionAndPublication);
+		private volatile bool    _isDisposed;
+		private volatile bool    _isInitialized;
 
-		public static T Instance => _lazyInstance.Value;
+		public static T    Instance      => _lazyInstance.Value;
 		public static bool IsInitialized => _lazyInstance.IsValueCreated && _lazyInstance.Value._isInitialized;
-		public bool IsDisposed => _isDisposed;
+		public        bool IsDisposed    => _isDisposed;
 
 		public static event Action Initialized;
 		public static event Action Disposed;
@@ -47,7 +48,7 @@ namespace Bezoro.Framework.Unity
 		/// <returns>A fully initialized instance of the singleton.</returns>
 		private static T CreateInstance()
 		{
-			var type = typeof(T);
+			var type         = typeof(T);
 			var constructors = type.GetConstructors( BindingFlags.Instance | BindingFlags.NonPublic );
 			try
 			{
@@ -55,10 +56,7 @@ namespace Bezoro.Framework.Unity
 				instance.EnsureInitialized();
 				return instance;
 			}
-			catch ( Exception e )
-			{
-				throw new InvalidOperationException( $"Failed to create instance of {type}", e );
-			}
+			catch ( Exception e ) { throw new InvalidOperationException( $"Failed to create instance of {type}", e ); }
 		}
 
 		/// <summary>
@@ -90,7 +88,6 @@ namespace Bezoro.Framework.Unity
 				instance.OnReset();
 				instance.Dispose();
 			}
-
 			_lazyInstance = new(CreateInstance, LazyThreadSafetyMode.ExecutionAndPublication);
 		}
 
@@ -112,14 +109,12 @@ namespace Bezoro.Framework.Unity
 		protected virtual void Dispose( bool disposing )
 		{
 			if ( _isDisposed ) { return; }
-
 			if ( disposing )
 			{
 				DisposeManagedResources();
 				lock (_lazyInstance) { _isInitialized = false; }
 				InvokeDisposed();
 			}
-
 			_isDisposed = true;
 		}
 
@@ -141,14 +136,10 @@ namespace Bezoro.Framework.Unity
 		{
 			var handlers = Initialized;
 			if ( handlers == null ) { return; }
-
 			foreach ( var handler in handlers.GetInvocationList() )
 			{
 				try { ( (Action)handler )?.Invoke(); }
-				catch ( Exception e )
-				{
-					// Optional: Log the exception
-				}
+				catch ( Exception e ) { BDebug.LogException( e ); }
 			}
 		}
 
@@ -159,14 +150,10 @@ namespace Bezoro.Framework.Unity
 		{
 			var handlers = Disposed;
 			if ( handlers == null ) { return; }
-
 			foreach ( var handler in handlers.GetInvocationList() )
 			{
 				try { ( (Action)handler )?.Invoke(); }
-				catch ( Exception e )
-				{
-					// Optional: Log the exception
-				}
+				catch ( Exception e ) { BDebug.LogException( e ); }
 			}
 		}
 	}
