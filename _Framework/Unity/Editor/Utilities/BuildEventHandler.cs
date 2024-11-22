@@ -10,7 +10,9 @@ namespace Bezoro.Framework.Unity.Editor.Utilities
 		IPreprocessBuildWithReport, IPostprocessBuildWithReport
 	{
 		public static event Action BuildStarted;
-		public static event Action BuildFinished;
+		public static event Action BuildFinishedSuccessfully;
+		public static event Action BuildFailed;
+		public static event Action BuildCancelled;
 
 		public static bool IsBuildInProgress { get; private set; }
 
@@ -33,7 +35,12 @@ namespace Bezoro.Framework.Unity.Editor.Utilities
 		public void OnPostprocessBuild( BuildReport report )
 		{
 			IsBuildInProgress = false;
-			RaiseEvent( BuildFinished );
+			switch ( report.summary.result )
+			{
+				case BuildResult.Failed:    RaiseEvent( BuildFailed ); break;
+				case BuildResult.Cancelled: RaiseEvent( BuildCancelled ); break;
+				case BuildResult.Succeeded: RaiseEvent( BuildFinishedSuccessfully ); break;
+			}
 		}
 
 		private static void RaiseEvent( Action eventAction )
