@@ -22,7 +22,10 @@ namespace Bezoro.Framework.Unity.Editor.Tools
 		public AudioClip unityFullyInitializedClip;
 
 		[Tooltip( "Audio clip to play when a build is completed" )]
-		public AudioClip buildCompletedClip;
+		public AudioClip buildCompletedSuccessfullyClip;
+
+		[Tooltip( "Audio clip to play when a build fails" )]
+		public AudioClip buildFailedClip;
 
 		[Tooltip( "Audio clip to play at the start of tests" )]
 		public AudioClip testStartClip;
@@ -66,12 +69,18 @@ namespace Bezoro.Framework.Unity.Editor.Tools
 			CompilationEventHandler.CompilationStarted  += OnCompilationStarted;
 			CompilationEventHandler.CompilationFinished += OnCompilationFinished;
 
-			BuildEventHandler.BuildFinished += OnBuildFinished;
+			BuildEventHandler.BuildFinishedSuccessfully += OnBuildFinishedSuccessfully;
+			BuildEventHandler.BuildFailed               += OnBuildFailed;
 
 			TestRunEventHandler.TestRunStarted  += OnTestRunStarted;
 			TestRunEventHandler.TestRunFinished += OnTestRunFinished;
 
 			EditorStatusWatcher.EditorReady += OnEditorReady;
+		}
+
+		private void OnBuildFailed()
+		{
+			PlayAudioClip( buildFailedClip );
 		}
 
 		private void OnEditorReady()
@@ -87,7 +96,8 @@ namespace Bezoro.Framework.Unity.Editor.Tools
 			CompilationEventHandler.CompilationStarted  -= OnCompilationStarted;
 			CompilationEventHandler.CompilationFinished -= OnCompilationFinished;
 
-			BuildEventHandler.BuildFinished -= OnBuildFinished;
+			BuildEventHandler.BuildFinishedSuccessfully -= OnBuildFinishedSuccessfully;
+			BuildEventHandler.BuildFailed               -= OnBuildFailed;
 
 			TestRunEventHandler.TestRunStarted  -= OnTestRunStarted;
 			TestRunEventHandler.TestRunFinished -= OnTestRunFinished;
@@ -112,7 +122,7 @@ namespace Bezoro.Framework.Unity.Editor.Tools
 		/// <summary>
 		///     Handles the event when a build finishes.
 		/// </summary>
-		private void OnBuildFinished() => PlayAudioClip( buildCompletedClip );
+		private void OnBuildFinishedSuccessfully() => PlayAudioClip( buildCompletedSuccessfullyClip );
 
 		/// <summary>
 		///     Handles the event when a test run starts.
