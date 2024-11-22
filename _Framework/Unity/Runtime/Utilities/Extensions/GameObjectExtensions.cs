@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
+using Bezoro.Framework.Core;
 using Bezoro.Framework.Unity.DI;
 using Cysharp.Threading.Tasks;
 using Unity.Profiling;
@@ -13,6 +14,8 @@ namespace Bezoro.Framework.Unity.Utilities
 	{
 		public static void SetLayerRecursively( this GameObject gameObject, int layer )
 		{
+			Assert.IsNotNull( gameObject );
+
 			gameObject.layer = layer;
 			foreach ( Transform child in gameObject.transform )
 			{
@@ -20,30 +23,37 @@ namespace Bezoro.Framework.Unity.Utilities
 			}
 		}
 
-		public static void SetActiveChildren( this GameObject gameObject, bool isActive )
+		public static void SetActiveForHierarchy( this GameObject gameObject, bool value )
 		{
+			Assert.IsNotNull( gameObject );
+
+			gameObject.SetActive( value );
 			foreach ( Transform child in gameObject.transform )
 			{
-				child.gameObject.SetActive( isActive );
+				child.gameObject.SetActive( value );
 			}
 		}
 
-		public static T GetComponentInChildrenIncludingInactive<T>( this GameObject gameObject ) where T : Component
+		public static T GetComponentInChildren<T>( this GameObject gameObject, bool includingInactive )
+		where T : Component
 		{
-			foreach ( var childTransform in gameObject.GetComponentsInChildren<Transform>( true ) )
+			Assert.IsNotNull( gameObject );
+
+			var component = gameObject.GetComponent<T>();
+			if ( component.NotEqualsNull() ) { return component; }
+			foreach ( var childTransform in gameObject.GetComponentsInChildren<Transform>( includingInactive ) )
 			{
-				var component = childTransform.GetComponent<T>();
-				if ( component != null )
-				{
-					return component;
-				}
+				component = childTransform.GetComponent<T>();
+				if ( component != null ) { return component; }
 			}
 
 			return null;
 		}
 
-		public static void DestroyChildren( this GameObject gameObject )
+		public static void DestroyAllChildren( this GameObject gameObject )
 		{
+			Assert.IsNotNull( gameObject );
+
 			foreach ( Transform child in gameObject.transform )
 			{
 				Object.Destroy( child.gameObject );
@@ -52,45 +62,57 @@ namespace Bezoro.Framework.Unity.Utilities
 
 		public static void ResetTransform( this GameObject gameObject )
 		{
+			Assert.IsNotNull( gameObject );
+
 			var transform = gameObject.transform;
 			transform.position   = Vector3.zero;
 			transform.rotation   = Quaternion.identity;
 			transform.localScale = Vector3.one;
 		}
 
-		public static bool HasComponent<T>( this GameObject gameObject ) where T : Component =>
-			gameObject.GetComponent<T>() != null;
+		public static bool HasComponent<T>( this GameObject gameObject ) where T : Component
+		{
+			Assert.IsNotNull( gameObject );
+
+			return gameObject.GetComponent<T>() != null;
+		}
 
 		public static void CopyComponentsFrom( this GameObject destination, GameObject source )
 		{
-			foreach ( var sourceComponent in source.GetComponents<Component>() )
+			Assert.IsNotNull( destination );
+			Assert.IsNotNull( source );
+
+			// Instantiate a temporary clone of the source GameObject
+			var tempClone = Object.Instantiate( source );
+
+			// Transfer components one by one
+			foreach ( var tempComponent in tempClone.GetComponents<Component>() )
 			{
-				if ( sourceComponent is Transform )
-				{
-					continue;
-				}
+				if ( tempComponent is Transform ) { continue; }
+				var destinationComponent = destination.GetComponent( tempComponent.GetType() )
+										   ?? destination.AddComponent( tempComponent.GetType() );
+				CopyComponentData( tempComponent, destinationComponent );
+			}
+			// Destroy the temporary clone
+			Object.DestroyImmediate( tempClone );
+		}
 
-				var destinationComponent = destination.GetComponent( sourceComponent.GetType() );
-				if ( !destinationComponent )
-				{
-					destinationComponent = destination.AddComponent( sourceComponent.GetType() );
-				}
+		private static void CopyComponentData( Component source, Component destination )
+		{
+			var type = source.GetType();
 
-				foreach ( var field in sourceComponent.GetType().GetFields(
-							 BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance
-						 ) )
-				{
-					field.SetValue( destinationComponent, field.GetValue( sourceComponent ) );
-				}
+			foreach ( var field in type.GetFields(
+						 BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance ) )
+			{
+				field.SetValue( destination, field.GetValue( source ) );
+			}
 
-				foreach ( var prop in sourceComponent.GetType().GetProperties(
-							 BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance
-						 ) )
+			foreach ( var prop in type.GetProperties(
+						 BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance ) )
+			{
+				if ( prop.CanWrite )
 				{
-					if ( prop.CanWrite )
-					{
-						prop.SetValue( destinationComponent, prop.GetValue( sourceComponent, null ), null );
-					}
+					prop.SetValue( destination, prop.GetValue( source ) );
 				}
 			}
 		}
