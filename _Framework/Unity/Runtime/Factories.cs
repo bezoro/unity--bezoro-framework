@@ -13,7 +13,18 @@ namespace Bezoro.Framework.Unity
 		{
 			public const float DEFAULT_CREATION_TIMEOUT = 5f;
 
-			public static async UniTask<GameObject> Create(
+			public static GameObject Create(
+				string        objectName      = "NewGameObject",
+				TransformData transformData   = default,
+				Func<bool>    enableCondition = null,
+				float         timeoutDuration = DEFAULT_CREATION_TIMEOUT,
+				params Type[] componentTypes
+			) =>
+				CreateAsync( objectName, transformData, enableCondition, timeoutDuration, componentTypes )
+					.GetAwaiter()
+					.GetResult();
+
+			public static async UniTask<GameObject> CreateAsync(
 				string        objectName      = "NewGameObject",
 				TransformData transformData   = default,
 				Func<bool>    enableCondition = null,
@@ -72,7 +83,7 @@ namespace Bezoro.Framework.Unity
 				var createdObjects = new List<GameObject>();
 				foreach ( ( var name, var components ) in objectSpecs )
 				{
-					var go = await Create(
+					var go = await CreateAsync(
 								 name,
 								 transformData,
 								 enableCondition,
