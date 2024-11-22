@@ -1,4 +1,5 @@
 ﻿using System.Threading;
+using Bezoro.Framework.Core;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
@@ -49,6 +50,8 @@ namespace Bezoro.Framework.Unity.Bootstrapping
 
 		private static void ExecuteEntries( IInitializationObject[] entries )
 		{
+			Assert.IsNotNull( entries );
+
 			foreach ( var entry in entries ) { entry.Initialize(); }
 		}
 
