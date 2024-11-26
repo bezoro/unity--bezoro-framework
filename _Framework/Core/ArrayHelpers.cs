@@ -16,19 +16,13 @@ namespace Bezoro.Framework.Core
 		public static bool ArraysAreEqual<T>( T[] a, T[] b ) where T : class
 		{
 			if ( a == null && b == null ) { return true; }
-
 			if ( a == null || b == null ) { return false; }
-
 			if ( a.Length != b.Length ) { return false; }
 
 			for ( var i = 0 ; i < a.Length ; i++ )
 			{
-				if ( !EqualityComparer<T>.Default.Equals( a[i], b[i] ) )
-				{
-					return false;
-				}
+				if ( !EqualityComparer<T>.Default.Equals( a[i], b[i] ) ) { return false; }
 			}
-
 			return true;
 		}
 
@@ -42,7 +36,6 @@ namespace Bezoro.Framework.Core
 			if ( element == null )
 			{
 				index = -1;
-
 				return;
 			}
 
@@ -50,25 +43,19 @@ namespace Bezoro.Framework.Core
 			{
 				CreateArrayAndAddFirstElement( ref array, element );
 				index = 0;
-
 				return;
 			}
 
 			for ( var i = 0 ; i < array.Length ; i++ )
 			{
-				if ( array[i] != null )
-				{
-					continue;
-				}
-
+				if ( array[i] != null ) { continue; }
 				array[i] = element;
 				index    = i;
-
 				return;
 			}
 
-			ResizeArrayAndAddElement( ref array, element, 2, out var oldLength );
-			index = oldLength;
+			ResizeArrayAndAddElement( ref array, element, 2, out var old_length );
+			index = old_length;
 		}
 
 		private static void ResizeArrayAndAddElement<T>( ref T[] array, T element, int factor, out int oldLength )
@@ -83,14 +70,12 @@ namespace Bezoro.Framework.Core
 			if ( validSize < 0 )
 			{
 				index = -1;
-
 				return;
 			}
 
 			if ( element == null )
 			{
 				index = -1;
-
 				return;
 			}
 
@@ -99,7 +84,6 @@ namespace Bezoro.Framework.Core
 				CreateArrayAndAddFirstElement( ref array, element );
 				validSize = 1;
 				index     = 0;
-
 				return;
 			}
 
@@ -108,16 +92,19 @@ namespace Bezoro.Framework.Core
 				array[validSize] = element;
 				validSize++;
 				index = validSize;
-
 				return;
 			}
 
-			ResizeArrayAndAddElement( ref array, element, 2, ref validSize, out var oldLength );
-			index = oldLength;
+			ResizeArrayAndAddElement( ref array, element, 2, ref validSize, out var old_length );
+			index = old_length;
 		}
 
-		private static void ResizeArrayAndAddElement<T>
-			( ref T[] array, T element, int factor, ref int validSize, out int oldLength )
+		private static void ResizeArrayAndAddElement<T>(
+			ref T[] array,
+			T       element,
+			int     factor,
+			ref int validSize,
+			out int oldLength )
 		{
 			ResizeArrayAndAddElement( ref array, element, factor, out oldLength );
 			validSize++;
@@ -133,7 +120,6 @@ namespace Bezoro.Framework.Core
 			if ( element == null )
 			{
 				index = -1;
-
 				return;
 			}
 
@@ -141,14 +127,12 @@ namespace Bezoro.Framework.Core
 			{
 				CreateArrayAndAddFirstElement( ref array, element );
 				index = 0;
-
 				return;
 			}
 
 			if ( Array.IndexOf( array, element ) >= 0 )
 			{
 				index = -1;
-
 				return;
 			}
 
@@ -161,7 +145,6 @@ namespace Bezoro.Framework.Core
 			if ( element == null )
 			{
 				index = -1;
-
 				return;
 			}
 
@@ -170,14 +153,12 @@ namespace Bezoro.Framework.Core
 				CreateArrayAndAddFirstElement( ref array, element );
 				validSize = 1;
 				index     = 0;
-
 				return;
 			}
 
 			if ( Array.IndexOf( array, element, 0, validSize ) >= 0 )
 			{
 				index = -1;
-
 				return;
 			}
 
@@ -188,27 +169,21 @@ namespace Bezoro.Framework.Core
 		public static void CreateArrayAndAddFirstElement<T>( ref T[] array, T element )
 		{
 			Assert.IsNotNull( element );
-			if ( array == null || array.Length == 0 )
-			{
-				array = new T[1];
-			}
-
+			if ( array             == null ) { array = new T[1]; }
+			else if ( array.Length == 0 ) { array    = new T[1]; }
 			array[0] = element;
 		}
 
 		public static void Merge<T>( T[] from, ref T[] to )
 		where T : class
 		{
-			if ( from == null || from.Length == 0 )
-			{
-				return;
-			}
+			if ( from        == null ) { return; }
+			if ( from.Length == 0 ) { return; }
 
 			if ( to == null || to.Length == 0 )
 			{
 				Array.Resize( ref to, from.Length );
 				Copy( from, ref to );
-
 				return;
 			}
 
@@ -216,14 +191,12 @@ namespace Bezoro.Framework.Core
 			{
 				Array.Resize( ref to, from.Length );
 				Copy( from, ref to );
-
 				return;
 			}
 
 			for ( var i = 0 ; i < from.Length ; i++ )
 			{
 				if ( to[i] != null ) { continue; }
-
 				to[i] = from[i];
 			}
 		}
@@ -247,11 +220,11 @@ namespace Bezoro.Framework.Core
 			Assert.IsFalse( array.Length == 0 );
 			Assert.IsNotNull( element );
 
-			var foundIndex = Array.IndexOf( array, element );
-			if ( foundIndex >= 0 )
+			var found_index = Array.IndexOf( array, element );
+			if ( found_index >= 0 )
 			{
-				array[foundIndex] = default(T);
-				index             = foundIndex;
+				array[found_index] = default(T);
+				index              = found_index;
 				return true;
 			}
 
@@ -269,20 +242,20 @@ namespace Bezoro.Framework.Core
 			Assert.IsTrue( validSize <= array.Length );
 
 			return validSize < ParallelThreshold
-				? TryRemoveElementSequential( ref array, element, ref validSize, out index )
-				: TryRemoveElementParallel( ref array, element, ref validSize, out index );
+						 ? TryRemoveElementSequential( ref array, element, ref validSize, out index )
+						 : TryRemoveElementParallel( ref array, element, ref validSize, out index );
 		}
 
 		private static bool TryRemoveElementSequential<T>( ref T[] array, T element, ref int validSize, out int index )
 		where T : class
 		{
-			var removalIndex = Array.IndexOf( array, element, 0, validSize );
-			if ( removalIndex >= 0 )
+			var removal_index = Array.IndexOf( array, element, 0, validSize );
+			if ( removal_index >= 0 )
 			{
-				array[removalIndex] = array[validSize - 1];
-				array[validSize                       - 1] = default(T)!;
+				array[removal_index] = array[validSize - 1];
+				array[validSize                        - 1] = default(T)!;
 				validSize--;
-				index = removalIndex;
+				index = removal_index;
 				return true;
 			}
 
@@ -293,45 +266,39 @@ namespace Bezoro.Framework.Core
 		private static bool TryRemoveElementParallel<T>( ref T[] array, T element, ref int validSize, out int index )
 		where T : class
 		{
-			var localArray = array;
-			var localValidSize = validSize;
+			var local_array      = array;
+			var local_valid_size = validSize;
 
-			var removalIndex = -1;
-			var lockObject = new object();
+			var removal_index = -1;
+			var lock_object   = new object();
 
 			Parallel.For(
 				0,
-				localValidSize,
+				local_valid_size,
 				( i, state ) =>
 				{
-					if ( !EqualityComparer<T>.Default.Equals( localArray[i], element ) )
+					if ( !EqualityComparer<T>.Default.Equals( local_array[i], element ) ) { return; }
+					lock (lock_object)
 					{
-						return;
-					}
-
-					lock (lockObject)
-					{
-						if ( removalIndex != -1 ) { return; }
-
-						removalIndex = i;
+						if ( removal_index != -1 ) { return; }
+						removal_index = i;
 						state.Stop();
 					}
 				}
 			);
 
-			if ( removalIndex >= 0 )
+			if ( removal_index >= 0 )
 			{
 				// Synchronize array updates
-				lock (lockObject)
+				lock (lock_object)
 				{
-					localArray[removalIndex] = localArray[localValidSize - 1];
-					localArray[localValidSize                            - 1] = default(T)!;
-					localValidSize--;
+					local_array[removal_index] = local_array[local_valid_size - 1];
+					local_array[local_valid_size                              - 1] = default(T)!;
+					local_valid_size--;
 
-					array     = localArray;
-					validSize = localValidSize;
-
-					index = removalIndex;
+					array     = local_array;
+					validSize = local_valid_size;
+					index     = removal_index;
 					return true;
 				}
 			}
@@ -345,28 +312,21 @@ namespace Bezoro.Framework.Core
 			Assert.IsNotNull( array );
 			Assert.IsFalse( array.Length == 0 );
 
-			var tempArray = new T[array.Length];
-
+			var temp_array = new T[array.Length];
 			if ( array.Length < ParallelThreshold )
 			{
-				for ( var i = 0 ; i < array.Length ; i++ )
-				{
-					tempArray[i] = default(T);
-				}
+				for ( var i = 0 ; i < array.Length ; i++ ) { temp_array[i] = default(T); }
 			}
 			else
 			{
 				Parallel.For(
 					0,
 					array.Length,
-					i =>
-					{
-						tempArray[i] = default(T);
-					}
+					i => { temp_array[i] = default(T); }
 				);
 			}
 
-			Array.Copy( tempArray, array, array.Length );
+			Array.Copy( temp_array, array, array.Length );
 		}
 
 		public static void Clear<T>( T[] array )
@@ -383,14 +343,7 @@ namespace Bezoro.Framework.Core
 			}
 			else
 			{
-				Parallel.For(
-					0,
-					array.Length,
-					i =>
-					{
-						array[i] = default(T);
-					}
-				);
+				Parallel.For( 0, array.Length, i => { array[i] = default(T); } );
 			}
 		}
 
@@ -402,10 +355,19 @@ namespace Bezoro.Framework.Core
 			Assert.IsTrue( validSize     >= 0 );
 			Assert.IsTrue( validSize     <= array.Length );
 
-			for ( var i = 0 ; i < validSize ; i++ )
+			var temp_array = array;
+			if ( validSize < ParallelThreshold )
 			{
-				array[i] = default(T)!;
+				for ( var i = 0 ; i < validSize ; i++ )
+				{
+					temp_array[i] = default(T)!;
+				}
 			}
+			else
+			{
+				Parallel.For( 0, validSize, i => { temp_array[i] = default(T)!; } );
+			}
+			Array.Copy( temp_array, array, array.Length );
 		}
 	}
 }
