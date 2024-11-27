@@ -18,7 +18,7 @@ namespace Bezoro.Framework.Unity
 		public static T Instance => Get_Instance();
 
 #if UNITY_EDITOR
-		private void OnValidate()
+		protected virtual void OnValidate()
 		{
 			_instance           = this;
 			serialized_instance = this as T;
