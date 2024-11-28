@@ -5,21 +5,21 @@ using System.Linq;
 namespace Bezoro.Framework.Unity.Utilities
 {
 	/// <summary>
-	///     Provides methods for performing topological sorting of a collection of items.
+	///    Provides methods for performing topological sorting of a collection of items.
 	/// </summary>
-	public static class TypeSorter
+	public static class Dependency_Sorter
 	{
 		/// <summary>
-		///     Performs a topological sort on a collection of items based on their dependencies.
+		///    Performs a topological sort on a collection of items based on their dependencies.
 		/// </summary>
 		/// <typeparam name="T">The type of the items.</typeparam>
 		/// <param name="items">The collection of items to be sorted.</param>
 		/// <param name="getDependencies">A function to get the dependencies of an item.</param>
 		/// <returns>A list of items sorted in topological order.</returns>
 		/// <exception cref="InvalidOperationException">Thrown when a circular dependency is detected.</exception>
-		public static List<T> TopologicalSort<T>( List<T> items, Func<T, IEnumerable<T>> getDependencies )
+		public static List<T> Sort_By_Dependencies<T>( List<T> items, Func<T, IEnumerable<T>> getDependencies )
 		{
-			var graph = new Dictionary<T, HashSet<T>>();
+			var graph    = new Dictionary<T, HashSet<T>>();
 			var inDegree = new Dictionary<T, int>();
 
 			// Initialize graph and in-degree
@@ -43,7 +43,7 @@ namespace Bezoro.Framework.Unity.Utilities
 			}
 
 			// Perform topological sort
-			var queue = new Queue<T>( items.Where( item => inDegree[item] == 0 ) );
+			var queue  = new Queue<T>( items.Where( item => inDegree[item] == 0 ) );
 			var result = new List<T>();
 
 			while (queue.Count > 0)
