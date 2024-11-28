@@ -1,13 +1,12 @@
-﻿using ArrayHelpers = Bezoro.Framework.Core.ArrayHelpers;
+﻿using Bezoro.Framework.Core;
 
 namespace Bezoro.Framework.Unity.StateMachines.TickableBased
 {
 	public class TickTransition : ITransition
 	{
-		public void Init
-		(
-			ITickableState fromState,
-			ITickableState toState,
+		public void Init(
+			ITickableState            fromState,
+			ITickableState            toState,
 			TickableStateMachineOwner owner
 		)
 		{
@@ -109,35 +108,33 @@ namespace Bezoro.Framework.Unity.StateMachines.TickableBased
 		{
 			var newCondition = new T();
 			newCondition.Init( _owner, inverted );
-			ArrayHelpers.Add( ref _conditions, newCondition );
+			Array_Helpers.Add( ref _conditions, newCondition );
 		}
 
-		public void WithConditions<T0, T1>
-		(
+		public void WithConditions<T0, T1>(
 			ConditionsCriteria conditionsCriteria = ConditionsCriteria.AnyTrue,
-			bool inverted0 = false,
-			bool inverted1 = false
+			bool               inverted0          = false,
+			bool               inverted1          = false
 		)
 		where T0 : BaseTickCondition, new()
 		where T1 : BaseTickCondition, new()
 		{
 			var newCondition0 = new T0();
 			newCondition0.Init( _owner, inverted0 );
-			ArrayHelpers.Add( ref _conditions, newCondition0 );
+			Array_Helpers.Add( ref _conditions, newCondition0 );
 
 			var newCondition1 = new T1();
 			newCondition1.Init( _owner, inverted1 );
-			ArrayHelpers.Add( ref _conditions, newCondition1 );
+			Array_Helpers.Add( ref _conditions, newCondition1 );
 
 			_conditionsCriteria = conditionsCriteria;
 		}
 
-		public void WithConditions<T0, T1, T2>
-		(
+		public void WithConditions<T0, T1, T2>(
 			ConditionsCriteria conditionsCriteria = ConditionsCriteria.AnyTrue,
-			bool inverted0 = false,
-			bool inverted1 = false,
-			bool inverted2 = false
+			bool               inverted0          = false,
+			bool               inverted1          = false,
+			bool               inverted2          = false
 		)
 		where T0 : BaseTickCondition, new()
 		where T1 : BaseTickCondition, new()
@@ -145,23 +142,23 @@ namespace Bezoro.Framework.Unity.StateMachines.TickableBased
 		{
 			var newCondition0 = new T0();
 			newCondition0.Init( _owner, inverted0 );
-			ArrayHelpers.Add( ref _conditions, newCondition0 );
+			Array_Helpers.Add( ref _conditions, newCondition0 );
 
 			var newCondition1 = new T1();
 			newCondition1.Init( _owner, inverted1 );
-			ArrayHelpers.Add( ref _conditions, newCondition1 );
+			Array_Helpers.Add( ref _conditions, newCondition1 );
 
 			var newCondition2 = new T2();
 			newCondition2.Init( _owner, inverted2 );
-			ArrayHelpers.Add( ref _conditions, newCondition2 );
+			Array_Helpers.Add( ref _conditions, newCondition2 );
 
 			_conditionsCriteria = conditionsCriteria;
 		}
 
 		private TickableStateMachineOwner _owner;
-		private ITickableState _fromState;
-		private ITickableState _toState;
-		private BaseTickCondition[] _conditions = new BaseTickCondition[4];
-		private ConditionsCriteria _conditionsCriteria = ConditionsCriteria.AnyTrue;
+		private ITickableState            _fromState;
+		private ITickableState            _toState;
+		private BaseTickCondition[]       _conditions         = new BaseTickCondition[4];
+		private ConditionsCriteria        _conditionsCriteria = ConditionsCriteria.AnyTrue;
 	}
 }

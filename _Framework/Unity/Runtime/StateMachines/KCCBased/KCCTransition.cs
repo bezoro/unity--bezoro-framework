@@ -1,5 +1,5 @@
-﻿using UnityEngine;
-using ArrayHelpers = Bezoro.Framework.Core.ArrayHelpers;
+﻿using Bezoro.Framework.Core;
+using UnityEngine;
 
 namespace Bezoro.Framework.Unity.StateMachines.KCCBased
 {
@@ -105,35 +105,33 @@ namespace Bezoro.Framework.Unity.StateMachines.KCCBased
 		{
 			var newCondition = new T();
 			newCondition.Init( _stateMachine, inverted );
-			ArrayHelpers.Add( ref _conditions, newCondition );
+			Array_Helpers.Add( ref _conditions, newCondition );
 		}
 
-		public void WithConditions<T0, T1>
-		(
+		public void WithConditions<T0, T1>(
 			ConditionsCriteria conditionsCriteria = ConditionsCriteria.AnyTrue,
-			bool inverted0 = false,
-			bool inverted1 = false
+			bool               inverted0          = false,
+			bool               inverted1          = false
 		)
 		where T0 : BaseKCCCondition, new()
 		where T1 : BaseKCCCondition, new()
 		{
 			var newCondition0 = new T0();
 			newCondition0.Init( _stateMachine, inverted0 );
-			ArrayHelpers.Add( ref _conditions, newCondition0 );
+			Array_Helpers.Add( ref _conditions, newCondition0 );
 
 			var newCondition1 = new T1();
 			newCondition1.Init( _stateMachine, inverted1 );
-			ArrayHelpers.Add( ref _conditions, newCondition1 );
+			Array_Helpers.Add( ref _conditions, newCondition1 );
 
 			_conditionsCriteria = conditionsCriteria;
 		}
 
-		public void WithConditions<T0, T1, T2>
-		(
+		public void WithConditions<T0, T1, T2>(
 			ConditionsCriteria conditionsCriteria = ConditionsCriteria.AnyTrue,
-			bool inverted0 = false,
-			bool inverted1 = false,
-			bool inverted2 = false
+			bool               inverted0          = false,
+			bool               inverted1          = false,
+			bool               inverted2          = false
 		)
 		where T0 : BaseKCCCondition, new()
 		where T1 : BaseKCCCondition, new()
@@ -141,23 +139,23 @@ namespace Bezoro.Framework.Unity.StateMachines.KCCBased
 		{
 			var newCondition0 = new T0();
 			newCondition0.Init( _stateMachine, inverted0 );
-			ArrayHelpers.Add( ref _conditions, newCondition0 );
+			Array_Helpers.Add( ref _conditions, newCondition0 );
 
 			var newCondition1 = new T1();
 			newCondition1.Init( _stateMachine, inverted1 );
-			ArrayHelpers.Add( ref _conditions, newCondition1 );
+			Array_Helpers.Add( ref _conditions, newCondition1 );
 
 			var newCondition2 = new T2();
 			newCondition2.Init( _stateMachine, inverted2 );
-			ArrayHelpers.Add( ref _conditions, newCondition2 );
+			Array_Helpers.Add( ref _conditions, newCondition2 );
 
 			_conditionsCriteria = conditionsCriteria;
 		}
 
-		private MonoBehaviour _stateMachine;
-		private IKCCState _fromState;
-		private IKCCState _toState;
-		private BaseKCCCondition[] _conditions = new BaseKCCCondition[4];
+		private MonoBehaviour      _stateMachine;
+		private IKCCState          _fromState;
+		private IKCCState          _toState;
+		private BaseKCCCondition[] _conditions         = new BaseKCCCondition[4];
 		private ConditionsCriteria _conditionsCriteria = ConditionsCriteria.AnyTrue;
 	}
 }
