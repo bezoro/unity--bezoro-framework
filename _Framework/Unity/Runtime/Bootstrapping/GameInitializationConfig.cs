@@ -7,44 +7,39 @@ namespace Bezoro.Framework.Unity.Bootstrapping
 {
 	[DefaultExecutionOrder( int.MinValue )]
 	[CreateAssetMenu( fileName = "GIC_NewGameInitConfig", menuName = "Bezoro/Game Init Config", order = 0 )]
-	public sealed class GameInitializationConfig : ScriptableSingleton<GameInitializationConfig>
+	public sealed class GameInitializationConfig : ScriptableObject
 	{
-		[SerializeReference] private IInitializationObject[] subsystemRegistrationEntries;
-		[SerializeReference] private IInitializationObject[] afterAssemblyLoadEntries;
-		[SerializeReference] private IInitializationObject[] beforeSplashScreenEntries;
-		[SerializeReference] private IInitializationObject[] beforeSceneLoadEntries;
-		[SerializeReference] private IInitializationObject[] afterSceneLoadEntries;
+		[SerializeReference] private IInitializationObject[] subsystem_registration_entries = {};
+		[SerializeReference] private IInitializationObject[] after_assembly_load_entries    = {};
+		[SerializeReference] private IInitializationObject[] before_splash_screen_entries   = {};
+		[SerializeReference] private IInitializationObject[] before_scene_load_entries      = {};
+		[SerializeReference] private IInitializationObject[] after_scene_load_entries       = {};
 
 		public static bool IsGameInitialized { get; private set; }
 
-		[RuntimeInitializeOnLoadMethod( RuntimeInitializeLoadType.SubsystemRegistration )]
-		public static void SubsystemRegistrationPhase()
+		public void SubsystemRegistrationPhase()
 		{
-			ExecuteEntries( Instance.subsystemRegistrationEntries );
+			ExecuteEntries( subsystem_registration_entries );
 		}
 
-		[RuntimeInitializeOnLoadMethod( RuntimeInitializeLoadType.AfterAssembliesLoaded )]
-		public static void AfterAssemblyLoadPhase()
+		public void AfterAssemblyLoadPhase()
 		{
-			ExecuteEntries( Instance.afterAssemblyLoadEntries );
+			ExecuteEntries( after_assembly_load_entries );
 		}
 
-		[RuntimeInitializeOnLoadMethod( RuntimeInitializeLoadType.BeforeSplashScreen )]
-		public static void BeforeSplashScreenPhase()
+		public void BeforeSplashScreenPhase()
 		{
-			ExecuteEntries( Instance.beforeSplashScreenEntries );
+			ExecuteEntries( before_splash_screen_entries );
 		}
 
-		[RuntimeInitializeOnLoadMethod( RuntimeInitializeLoadType.BeforeSceneLoad )]
-		public static void BeforeSceneLoadPhase()
+		public void BeforeSceneLoadPhase()
 		{
-			ExecuteEntries( Instance.beforeSceneLoadEntries );
+			ExecuteEntries( before_scene_load_entries );
 		}
 
-		[RuntimeInitializeOnLoadMethod( RuntimeInitializeLoadType.AfterSceneLoad )]
-		public static void AfterSceneLoadPhase()
+		public void AfterSceneLoadPhase()
 		{
-			ExecuteEntries( Instance.afterSceneLoadEntries );
+			ExecuteEntries( after_scene_load_entries );
 			IsGameInitialized = true;
 		}
 
