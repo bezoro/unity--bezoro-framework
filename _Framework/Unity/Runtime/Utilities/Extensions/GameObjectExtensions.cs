@@ -90,7 +90,7 @@ namespace Bezoro.Framework.Unity.Utilities
 			{
 				if ( tempComponent is Transform ) { continue; }
 				var destinationComponent = destination.GetComponent( tempComponent.GetType() )
-										   ?? destination.AddComponent( tempComponent.GetType() );
+												?? destination.AddComponent( tempComponent.GetType() );
 				CopyComponentData( tempComponent, destinationComponent );
 			}
 			// Destroy the temporary clone
@@ -102,13 +102,13 @@ namespace Bezoro.Framework.Unity.Utilities
 			var type = source.GetType();
 
 			foreach ( var field in type.GetFields(
-						 BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance ) )
+							BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance ) )
 			{
 				field.SetValue( destination, field.GetValue( source ) );
 			}
 
 			foreach ( var prop in type.GetProperties(
-						 BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance ) )
+							BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance ) )
 			{
 				if ( prop.CanWrite )
 				{
@@ -133,11 +133,15 @@ namespace Bezoro.Framework.Unity.Utilities
 			}
 		}
 
-		public static Component[] AddComponents( this GameObject go, Type[] componentTypes ) =>
-			go.AddComponentsInternal( componentTypes ).GetAwaiter().GetResult();
+		public static Component[] AddComponents( this GameObject go, Type[] componentTypes )
+		{
+			return go.AddComponentsInternal( componentTypes ).GetAwaiter().GetResult();
+		}
 
-		public static async UniTask<Component[]> AddComponentsAsync( this GameObject go, Type[] componentTypes ) =>
-			await go.AddComponentsInternal( componentTypes, true );
+		public static async UniTask<Component[]> AddComponentsAsync( this GameObject go, Type[] componentTypes )
+		{
+			return await go.AddComponentsInternal( componentTypes, true );
+		}
 
 		private static async UniTask<Component[]> AddComponentsInternal(
 			this GameObject go,
@@ -160,7 +164,7 @@ namespace Bezoro.Framework.Unity.Utilities
 			{
 				if ( componentType.IsNull() )
 				{
-					BDebug.LogWarning( "Component type is null. Skipping...", go );
+					BDebug.Log_Warning( "Component type is null. Skipping...", go );
 
 					continue;
 				}
@@ -234,10 +238,12 @@ namespace Bezoro.Framework.Unity.Utilities
 		/// <param name="component">The component of type <typeparamref name="T" /> if found, otherwise null.</param>
 		/// <returns>true if the component was found, false otherwise.</returns>
 		public static bool TryGetComponentInGameObjectHierarchy<T>( this GameObject gameObject, out T component )
-		where T : Component =>
-			gameObject.TryGetComponent( out component )
-			|| gameObject.TryGetComponentInChildren( out component )
-			|| TryGetComponentInParents( gameObject, out component );
+		where T : Component
+		{
+			return gameObject.TryGetComponent( out component )
+				 || gameObject.TryGetComponentInChildren( out component )
+				 || TryGetComponentInParents( gameObject, out component );
+		}
 
 		public static bool TryGetComponentInChildren<T>( this GameObject gameObject, out T component )
 		where T : Component
