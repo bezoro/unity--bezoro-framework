@@ -7,10 +7,12 @@ namespace Bezoro.Framework.Unity.Editor
 {
 	public static class GameObjectExtensions
 	{
-		public static bool IsPrefabAsset( this GameObject go ) =>
-			!go.gameObject.scene.IsValid()
-		 && ( PrefabUtility.IsPartOfPrefabAsset( go.gameObject )
-		   || PrefabUtility.IsPartOfVariantPrefab( go.gameObject ) );
+		public static bool IsPrefabAsset( this GameObject go )
+		{
+			return !go.gameObject.scene.IsValid()
+				 && ( PrefabUtility.IsPartOfPrefabAsset( go.gameObject )
+					|| PrefabUtility.IsPartOfVariantPrefab( go.gameObject ) );
+		}
 
 		public static string TryGetAssetGUID( this GameObject gameObject )
 		{
@@ -20,22 +22,30 @@ namespace Bezoro.Framework.Unity.Editor
 				return AssetDatabase.AssetPathToGUID( path );
 			}
 
-			BDebug.LogError( "GameObject is not an asset or is not part of the project." );
+			BDebug.Log_Error( "GameObject is not an asset or is not part of the project." );
 
 			return null;
 		}
 
-		public static bool IsPrefabVariant( this GameObject gameObject ) =>
-			PrefabUtility.GetPrefabAssetType( gameObject ) == PrefabAssetType.Variant;
+		public static bool IsPrefabVariant( this GameObject gameObject )
+		{
+			return PrefabUtility.GetPrefabAssetType( gameObject ) == PrefabAssetType.Variant;
+		}
 
-		public static bool IsNotPrefabVariant( this GameObject gameObject ) =>
-			PrefabUtility.GetPrefabAssetType( gameObject ) != PrefabAssetType.Variant;
+		public static bool IsNotPrefabVariant( this GameObject gameObject )
+		{
+			return PrefabUtility.GetPrefabAssetType( gameObject ) != PrefabAssetType.Variant;
+		}
 
-		public static bool IsPrefab( this GameObject gameObject ) =>
-			PrefabUtility.GetPrefabAssetType( gameObject ) != PrefabAssetType.NotAPrefab;
+		public static bool IsPrefab( this GameObject gameObject )
+		{
+			return PrefabUtility.GetPrefabAssetType( gameObject ) != PrefabAssetType.NotAPrefab;
+		}
 
-		public static bool IsNotPrefab( this GameObject gameObject ) =>
-			PrefabUtility.GetPrefabAssetType( gameObject ) == PrefabAssetType.NotAPrefab;
+		public static bool IsNotPrefab( this GameObject gameObject )
+		{
+			return PrefabUtility.GetPrefabAssetType( gameObject ) == PrefabAssetType.NotAPrefab;
+		}
 
 		public static void SetLayerRecursively( this GameObject gameObject, int layer )
 		{
@@ -84,9 +94,10 @@ namespace Bezoro.Framework.Unity.Editor
 			transform.localScale = Vector3.one;
 		}
 
-		public static bool HasComponent<T>
-			( this GameObject gameObject ) where T : Component =>
-			gameObject.GetComponent<T>() != null;
+		public static bool HasComponent<T>( this GameObject gameObject ) where T : Component
+		{
+			return gameObject.GetComponent<T>() != null;
+		}
 
 		public static void CopyComponentsFrom( this GameObject destination, GameObject source )
 		{
@@ -104,18 +115,18 @@ namespace Bezoro.Framework.Unity.Editor
 				}
 
 				foreach ( var field in sourceComponent.GetType()
-													  .GetFields(
-														  BindingFlags.Public
-														| BindingFlags.NonPublic
-														| BindingFlags.Instance
-													  ) )
+							  .GetFields(
+									BindingFlags.Public
+								 | BindingFlags.NonPublic
+								 | BindingFlags.Instance
+								) )
 				{
 					field.SetValue( destinationComponent, field.GetValue( sourceComponent ) );
 				}
 
 				foreach ( var prop in sourceComponent.GetType().GetProperties(
-							 BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance
-						 ) )
+								BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance
+							) )
 				{
 					if ( prop.CanWrite )
 					{
