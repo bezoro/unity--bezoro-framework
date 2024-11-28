@@ -4,13 +4,31 @@ using System.Threading.Tasks;
 
 namespace Bezoro.Framework.Core
 {
-	public static class ArrayHelpers
+	public static class Array_Helpers
 	{
-		public static int ParallelThreshold;
+		public static int Parallel_Threshold;
 
-		static ArrayHelpers()
+		static Array_Helpers()
 		{
-			ParallelThreshold = 100;
+			Parallel_Threshold = 100;
+		}
+
+		public static void RemoveDuplicates<T>( ref T[] array ) where T : class
+		{
+			if ( array is not { Length: > 1 } ) { return; }
+
+			var unique_elements = new List<T>();
+			var seen_elements   = new HashSet<T>();
+
+			foreach ( var element in array )
+			{
+				if ( element == null ) { continue; }
+				if ( !seen_elements.Add( element ) ) { continue; }
+
+				unique_elements.Add( element );
+			}
+
+			array = unique_elements.ToArray();
 		}
 
 		public static bool ArraysAreEqual<T>( T[] a, T[] b ) where T : class
@@ -241,7 +259,7 @@ namespace Bezoro.Framework.Core
 			Assert.IsTrue( validSize >= 0 );
 			Assert.IsTrue( validSize <= array.Length );
 
-			return validSize < ParallelThreshold
+			return validSize < Parallel_Threshold
 						 ? TryRemoveElementSequential( ref array, element, ref validSize, out index )
 						 : TryRemoveElementParallel( ref array, element, ref validSize, out index );
 		}
@@ -313,7 +331,7 @@ namespace Bezoro.Framework.Core
 			Assert.IsFalse( array.Length == 0 );
 
 			var temp_array = new T[array.Length];
-			if ( array.Length < ParallelThreshold )
+			if ( array.Length < Parallel_Threshold )
 			{
 				for ( var i = 0 ; i < array.Length ; i++ ) { temp_array[i] = default(T); }
 			}
@@ -334,7 +352,7 @@ namespace Bezoro.Framework.Core
 			Assert.IsNotNull( array );
 			Assert.IsFalse( array.Length == 0 );
 
-			if ( array.Length < ParallelThreshold )
+			if ( array.Length < Parallel_Threshold )
 			{
 				for ( var i = 0 ; i < array.Length ; i++ )
 				{
@@ -356,7 +374,7 @@ namespace Bezoro.Framework.Core
 			Assert.IsTrue( validSize     <= array.Length );
 
 			var temp_array = array;
-			if ( validSize < ParallelThreshold )
+			if ( validSize < Parallel_Threshold )
 			{
 				for ( var i = 0 ; i < validSize ; i++ )
 				{
