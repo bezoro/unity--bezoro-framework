@@ -22,7 +22,7 @@ namespace Bezoro.Framework.Unity
 
 		public static T Instance => Get_Instance();
 
-#if UNITY_EDITOR
+		[Conditional( "UNITY_EDITOR" )]
 		protected virtual void OnValidate()
 		{
 			Ensure_Single_Instance();
@@ -42,7 +42,6 @@ namespace Bezoro.Framework.Unity
 				DestroyImmediate( instance, true );
 			}
 		}
-#endif
 
 		protected virtual void Awake()
 		{
