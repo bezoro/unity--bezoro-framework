@@ -1,10 +1,15 @@
-﻿using UnityEngine;
+﻿using System.Diagnostics;
+using System.Linq;
+using Bezoro.Framework.Unity.Attributes;
+using UnityEngine;
+using Debug = UnityEngine.Debug;
 
 namespace Bezoro.Framework.Unity
 {
 	public abstract class Scriptable_Singleton<T> : ScriptableObject
 	where T : ScriptableObject
 	{
+		[ReadOnly]
 		[SerializeField] private T serialized_instance;
 
 		private static          Scriptable_Singleton<T> _instance;
@@ -20,17 +25,35 @@ namespace Bezoro.Framework.Unity
 #if UNITY_EDITOR
 		protected virtual void OnValidate()
 		{
+			Ensure_Single_Instance();
 			_instance           = this;
 			serialized_instance = this as T;
 		}
+
+		private void Ensure_Single_Instance()
+		{
+			var instances = Resources.FindObjectsOfTypeAll<T>();
+			if ( instances.Length <= 1 ) { return; }
+			Debug.LogError( MULTIPLE_INSTANCES_ERROR );
+			foreach ( var instance in instances )
+			{
+				if ( instance == this ) { continue; }
+				Debug.LogError( instance.name, instance );
+				DestroyImmediate( instance, true );
+			}
+		}
 #endif
+
+		protected virtual void Awake()
+		{
+			// _instance = this;
+			// serialized_instance = this as T;
+			Debug.Log( $"Singleton<{typeof(T).Name}> awake." );
+		}
 
 		protected virtual void OnEnable()
 		{
-			if ( _instance != null && _instance != this )
-			{
-				Log_Error( MULTIPLE_INSTANCES_DETECTED_ERROR, typeof(T), name );
-			}
+			Debug.Log( $"Singleton<{typeof(T).Name}> enabled." );
 		}
 
 		private static T Get_Instance()
@@ -39,20 +62,18 @@ namespace Bezoro.Framework.Unity
 			return _instance.serialized_instance;
 		}
 
+		[Conditional( "UNITY_EDITOR" )]
 		private static void Initialize()
 		{
 			if ( _instance != null ) { return; }
 
 			lock (_lock)
 			{
-				_instance = CreateInstance<T>() as Scriptable_Singleton<T>;
+				_instance                     = Resources.LoadAll<Scriptable_Singleton<T>>( "" ).FirstOrDefault();
+				_instance.serialized_instance = _instance as T;
 			}
-			Debug.Log( $"Singleton<{typeof(T).Name}> initialized." );
-		}
 
-		private static void Log_Error( string message, params object[] args )
-		{
-			Debug.LogErrorFormat( message, args );
+			Debug.Log( $"Singleton<{typeof(T).Name}> initialized." );
 		}
 	}
 }
