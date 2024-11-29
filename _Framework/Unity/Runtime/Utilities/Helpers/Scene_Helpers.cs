@@ -1,9 +1,10 @@
-﻿using UnityEngine;
+﻿using Bezoro.Framework.Core;
+using UnityEngine;
 using UnityEngine.SceneManagement;
 
 namespace Bezoro.Framework.Unity.Utilities
 {
-	public static class SceneHelpers
+	public static class Scene_Helpers
 	{
 		public static void GetAllRootGameObjectsNonAlloc( ref GameObject[] results )
 		{
@@ -15,7 +16,7 @@ namespace Bezoro.Framework.Unity.Utilities
 			for ( var i = 0 ; i < SceneManager.sceneCount ; i++ )
 			{
 				var scene = SceneManager.GetSceneAt( i );
-				Core.ArrayHelpers.Merge( scene.GetRootGameObjects(), ref results );
+				Array_Helpers.Merge( scene.GetRootGameObjects(), ref results );
 			}
 		}
 
