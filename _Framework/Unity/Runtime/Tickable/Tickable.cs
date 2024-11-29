@@ -25,22 +25,22 @@ namespace Bezoro.Framework.Unity
 			{
 				if ( ( TickType & TickType.Early ) != 0 )
 				{
-					TickableManager.Instance.AddUniqueEarlyTickable( this );
+					Tickable_Manager.Instance.AddUniqueEarlyTickable( this );
 				}
 
 				if ( ( TickType & TickType.Normal ) != 0 )
 				{
-					TickableManager.Instance.AddUniqueTickable( this );
+					Tickable_Manager.Instance.AddUniqueTickable( this );
 				}
 
 				if ( ( TickType & TickType.Fixed ) != 0 )
 				{
-					TickableManager.Instance.AddUniqueFixedTickable( this );
+					Tickable_Manager.Instance.AddUniqueFixedTickable( this );
 				}
 
 				if ( ( TickType & TickType.Late ) != 0 )
 				{
-					TickableManager.Instance.AddUniqueLateTickable( this );
+					Tickable_Manager.Instance.AddUniqueLateTickable( this );
 				}
 			}
 		}
@@ -61,10 +61,10 @@ namespace Bezoro.Framework.Unity
 
 			switch ( flag )
 			{
-				case TickType.Early:  TickableManager.Instance.AddUniqueEarlyTickable( this ); break;
-				case TickType.Normal: TickableManager.Instance.AddUniqueTickable( this ); break;
-				case TickType.Fixed:  TickableManager.Instance.AddUniqueFixedTickable( this ); break;
-				case TickType.Late:   TickableManager.Instance.AddUniqueLateTickable( this ); break;
+				case TickType.Early:  Tickable_Manager.Instance.AddUniqueEarlyTickable( this ); break;
+				case TickType.Normal: Tickable_Manager.Instance.AddUniqueTickable( this ); break;
+				case TickType.Fixed:  Tickable_Manager.Instance.AddUniqueFixedTickable( this ); break;
+				case TickType.Late:   Tickable_Manager.Instance.AddUniqueLateTickable( this ); break;
 			}
 		}
 
@@ -79,10 +79,10 @@ namespace Bezoro.Framework.Unity
 
 			switch ( flag )
 			{
-				case TickType.Early:  TickableManager.Instance.RemoveEarlyTickable( this ); break;
-				case TickType.Normal: TickableManager.Instance.RemoveTickable( this ); break;
-				case TickType.Fixed:  TickableManager.Instance.RemoveFixedTickable( this ); break;
-				case TickType.Late:   TickableManager.Instance.RemoveLateTickable( this ); break;
+				case TickType.Early:  Tickable_Manager.Instance.RemoveEarlyTickable( this ); break;
+				case TickType.Normal: Tickable_Manager.Instance.RemoveTickable( this ); break;
+				case TickType.Fixed:  Tickable_Manager.Instance.RemoveFixedTickable( this ); break;
+				case TickType.Late:   Tickable_Manager.Instance.RemoveLateTickable( this ); break;
 			}
 		}
 
@@ -90,22 +90,22 @@ namespace Bezoro.Framework.Unity
 		{
 			if ( ( TickType & TickType.Early ) != 0 )
 			{
-				TickableManager.Instance.RemoveEarlyTickable( this );
+				Tickable_Manager.Instance.RemoveEarlyTickable( this );
 			}
 
 			if ( ( TickType & TickType.Normal ) != 0 )
 			{
-				TickableManager.Instance.RemoveTickable( this );
+				Tickable_Manager.Instance.RemoveTickable( this );
 			}
 
 			if ( ( TickType & TickType.Fixed ) != 0 )
 			{
-				TickableManager.Instance.RemoveFixedTickable( this );
+				Tickable_Manager.Instance.RemoveFixedTickable( this );
 			}
 
 			if ( ( TickType & TickType.Late ) != 0 )
 			{
-				TickableManager.Instance.RemoveLateTickable( this );
+				Tickable_Manager.Instance.RemoveLateTickable( this );
 			}
 		}
 	}
@@ -114,9 +114,9 @@ namespace Bezoro.Framework.Unity
 	[Tooltip( "Which <b>Tick</b> to receive." )]
 	public enum TickType
 	{
-		Early = 1,
+		Early  = 1,
 		Normal = 2,
-		Fixed = 4,
-		Late = 8
+		Fixed  = 4,
+		Late   = 8
 	}
 }

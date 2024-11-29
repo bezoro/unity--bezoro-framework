@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace Bezoro.Framework.Unity.Utilities
 {
-	public static class ObjectUIDHelpers
+	public static class Object_UID_Helpers
 	{
 		public static string[] GetUIDsFromGameObjects( IList<GameObject> gameObjects, string[] outputArray = null )
 		{
@@ -13,21 +13,21 @@ namespace Bezoro.Framework.Unity.Utilities
 				return Array.Empty<string>();
 			}
 
-			var count = gameObjects.Count;
-			var uids = outputArray ?? new string[count];
-			var validCount = 0;
+			var count       = gameObjects.Count;
+			var uids        = outputArray ?? new string[count];
+			var valid_count = 0;
 
 			for ( var i = 0 ; i < count ; i++ )
 			{
-				if ( gameObjects[i].TryGetComponent( out ObjectUID uidComponent ) )
+				if ( gameObjects[i].TryGetComponent( out Object_UID uid_component ) )
 				{
-					uids[validCount++] = uidComponent.UID;
+					uids[valid_count++] = uid_component.UID;
 				}
 			}
 
-			if ( validCount < count )
+			if ( valid_count < count )
 			{
-				Array.Resize( ref uids, validCount );
+				Array.Resize( ref uids, valid_count );
 			}
 
 			return uids;

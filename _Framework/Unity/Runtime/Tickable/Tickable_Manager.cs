@@ -2,7 +2,7 @@
 
 namespace Bezoro.Framework.Unity
 {
-	public sealed class TickableManager : SingletonMonoBehaviour<TickableManager>
+	public sealed class Tickable_Manager : Singleton_MonoBehaviour<Tickable_Manager>
 	{
 		private void Update()
 		{
@@ -35,54 +35,54 @@ namespace Bezoro.Framework.Unity
 
 		public void AddUniqueEarlyTickable( Tickable tickable )
 		{
-			ArrayHelpers.AddUnique( ref _earlyTickables, tickable, ref _earlyTickablesCount, out _ );
+			Array_Helpers.AddUnique( ref _earlyTickables, tickable, ref _earlyTickablesCount, out _ );
 		}
 
 		public void AddUniqueTickable( Tickable tickable )
 		{
-			ArrayHelpers.AddUnique( ref _tickables, tickable, ref _tickablesCount, out _ );
+			Array_Helpers.AddUnique( ref _tickables, tickable, ref _tickablesCount, out _ );
 		}
 
 		public void AddUniqueFixedTickable( Tickable tickable )
 		{
-			ArrayHelpers.AddUnique( ref _fixedTickables, tickable, ref _fixedTickablesCount, out _ );
+			Array_Helpers.AddUnique( ref _fixedTickables, tickable, ref _fixedTickablesCount, out _ );
 		}
 
 		public void AddUniqueLateTickable( Tickable tickable )
 		{
-			ArrayHelpers.AddUnique( ref _lateTickables, tickable, ref _lateTickablesCount, out _ );
+			Array_Helpers.AddUnique( ref _lateTickables, tickable, ref _lateTickablesCount, out _ );
 		}
 
 		public void RemoveEarlyTickable( Tickable tickable )
 		{
-			ArrayHelpers.TryRemoveElement( ref _earlyTickables, tickable, ref _earlyTickablesCount, out _ );
+			Array_Helpers.TryRemoveElement( ref _earlyTickables, tickable, ref _earlyTickablesCount, out _ );
 		}
 
 		public void RemoveTickable( Tickable tickable )
 		{
-			ArrayHelpers.TryRemoveElement( ref _tickables, tickable, ref _tickablesCount, out _ );
+			Array_Helpers.TryRemoveElement( ref _tickables, tickable, ref _tickablesCount, out _ );
 		}
 
 		public void RemoveFixedTickable( Tickable tickable )
 		{
-			ArrayHelpers.TryRemoveElement( ref _fixedTickables, tickable, ref _fixedTickablesCount, out _ );
+			Array_Helpers.TryRemoveElement( ref _fixedTickables, tickable, ref _fixedTickablesCount, out _ );
 		}
 
 		public void RemoveLateTickable( Tickable tickable )
 		{
-			ArrayHelpers.TryRemoveElement( ref _lateTickables, tickable, ref _lateTickablesCount, out _ );
+			Array_Helpers.TryRemoveElement( ref _lateTickables, tickable, ref _lateTickablesCount, out _ );
 		}
 
 		private Tickable[] _earlyTickables = new Tickable[128];
-		private int _earlyTickablesCount;
+		private int        _earlyTickablesCount;
 
 		private Tickable[] _tickables = new Tickable[128];
-		private int _tickablesCount;
+		private int        _tickablesCount;
 
 		private Tickable[] _fixedTickables = new Tickable[128];
-		private int _fixedTickablesCount;
+		private int        _fixedTickablesCount;
 
 		private Tickable[] _lateTickables = new Tickable[128];
-		private int _lateTickablesCount;
+		private int        _lateTickablesCount;
 	}
 }

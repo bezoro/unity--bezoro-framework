@@ -10,7 +10,7 @@ using Object = UnityEngine.Object;
 
 namespace Bezoro.Framework.Unity.Utilities
 {
-	public static class GameObjectExtensions
+	public static class GameObject_Extensions
 	{
 		public static void SetLayerRecursively( this GameObject gameObject, int layer )
 		{
@@ -230,8 +230,8 @@ namespace Bezoro.Framework.Unity.Utilities
 		}
 
 		/// <summary>
-		///     Tries to get the component of type <typeparamref name="T" /> in the specified
-		///     <paramref name="gameObject" /> hierarchy.
+		///    Tries to get the component of type <typeparamref name="T" /> in the specified
+		///    <paramref name="gameObject" /> hierarchy.
 		/// </summary>
 		/// <typeparam name="T">The type of component to retrieve.</typeparam>
 		/// <param name="gameObject">The GameObject of which to retrieve the component.</param>
@@ -254,8 +254,8 @@ namespace Bezoro.Framework.Unity.Utilities
 		}
 
 		/// <summary>
-		///     Tries to get the component of type <typeparamref name="T" /> in the parents of the specified
-		///     <paramref name="gameObject" />.
+		///    Tries to get the component of type <typeparamref name="T" /> in the parents of the specified
+		///    <paramref name="gameObject" />.
 		/// </summary>
 		/// <typeparam name="T">The type of component to retrieve.</typeparam>
 		/// <param name="gameObject">The GameObject of which to retrieve the component.</param>
@@ -322,8 +322,8 @@ namespace Bezoro.Framework.Unity.Utilities
 		}
 
 		/// <summary>
-		///     Adds a component of type <typeparamref name="T" /> to the specified <paramref name="gameObject" />
-		///     and injects the provided <paramref name="dependencies" />.
+		///    Adds a component of type <typeparamref name="T" /> to the specified <paramref name="gameObject" />
+		///    and injects the provided <paramref name="dependencies" />.
 		/// </summary>
 		/// <typeparam name="T">The type of component to add.</typeparam>
 		/// <typeparam name="TDependencies">The type of dependencies to inject.</typeparam>
@@ -331,8 +331,8 @@ namespace Bezoro.Framework.Unity.Utilities
 		/// <param name="dependencies">The dependencies to inject into the component.</param>
 		/// <returns>The added component with injected dependencies.</returns>
 		/// <exception cref="ArgumentNullException">
-		///     Thrown if <paramref name="gameObject" /> or <paramref name="dependencies" /> is
-		///     null.
+		///    Thrown if <paramref name="gameObject" /> or <paramref name="dependencies" /> is
+		///    null.
 		/// </exception>
 		public static T AddComponentWithDependencies<T, TDependencies>(
 			this GameObject gameObject,
@@ -348,8 +348,8 @@ namespace Bezoro.Framework.Unity.Utilities
 		}
 
 		/// <summary>
-		///     Adds a component of type <typeparamref name="T" /> to the specified <paramref name="gameObject" />
-		///     and injects dependencies created by the provided <paramref name="dependenciesFactory" />.
+		///    Adds a component of type <typeparamref name="T" /> to the specified <paramref name="gameObject" />
+		///    and injects dependencies created by the provided <paramref name="dependenciesFactory" />.
 		/// </summary>
 		/// <typeparam name="T">The type of component to add.</typeparam>
 		/// <typeparam name="TDependencies">The type of dependencies to inject.</typeparam>
@@ -357,8 +357,8 @@ namespace Bezoro.Framework.Unity.Utilities
 		/// <param name="dependenciesFactory">A factory function to create dependencies for the component.</param>
 		/// <returns>The added component with injected dependencies.</returns>
 		/// <exception cref="ArgumentNullException">
-		///     Thrown if <paramref name="gameObject" /> or
-		///     <paramref name="dependenciesFactory" /> is null.
+		///    Thrown if <paramref name="gameObject" /> or
+		///    <paramref name="dependenciesFactory" /> is null.
 		/// </exception>
 		public static T AddComponentWithDependencies<T, TDependencies>(
 			this GameObject        gameObject,
@@ -379,7 +379,7 @@ namespace Bezoro.Framework.Unity.Utilities
 		}
 
 		/// <summary>
-		///     Internal method to add a component to a GameObject with dependency injection.
+		///    Internal method to add a component to a GameObject with dependency injection.
 		/// </summary>
 		/// <typeparam name="T">The type of component to add.</typeparam>
 		/// <typeparam name="TArg">The type of the argument used to create dependencies.</typeparam>
@@ -473,40 +473,40 @@ namespace Bezoro.Framework.Unity.Utilities
 			var length     = transforms.Length;
 			var result     = new (Transform transform, Component[] components)[length];
 
-			var componentList        = new List<Component>( initialCapacity );
-			var filteredArray        = new Component[initialCapacity];
-			var enabledPropertyCache = new Dictionary<Type, bool>( initialCapacity );
+			var component_list         = new List<Component>( initialCapacity );
+			var filtered_array         = new Component[initialCapacity];
+			var enabled_property_cache = new Dictionary<Type, bool>( initialCapacity );
 
 			for ( var i = 0 ; i < length ; i++ )
 			{
 				var transform = transforms[i];
-				componentList.Clear();
-				filteredArray.Clear();
-				transform.GetComponents( componentList );
+				component_list.Clear();
+				filtered_array.Clear();
+				transform.GetComponents( component_list );
 
-				foreach ( var component in componentList )
+				foreach ( var component in component_list )
 				{
 					if ( component is Behaviour )
 					{
-						filteredArray.Add( component );
+						filtered_array.Add( component );
 
 						continue;
 					}
 
-					var componentType = component.GetType();
-					if ( !enabledPropertyCache.TryGetValue( componentType, out var hasEnabled ) )
+					var component_type = component.GetType();
+					if ( !enabled_property_cache.TryGetValue( component_type, out var has_enabled ) )
 					{
-						hasEnabled                          = componentType.GetProperty( "enabled" ) != null;
-						enabledPropertyCache[componentType] = hasEnabled;
+						has_enabled                            = component_type.GetProperty( "enabled" ) != null;
+						enabled_property_cache[component_type] = has_enabled;
 					}
 
-					if ( hasEnabled )
+					if ( has_enabled )
 					{
-						filteredArray.Add( component );
+						filtered_array.Add( component );
 					}
 				}
 
-				result[i] = ( transform, trim ? filteredArray.Trim() : filteredArray );
+				result[i] = ( transform, trim ? filtered_array.Trim() : filtered_array );
 			}
 
 			return result;

@@ -1,19 +1,20 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using Bezoro.Framework.Core;
 using Bezoro.Framework.Unity.Utilities;
 
 namespace Bezoro.Framework.Unity.DI
 {
-	public sealed class ServiceLocator : IServiceLocator
+	public sealed class Service_Locator : IServiceLocator
 	{
-		private readonly ConcurrentDictionary<Type, IService> _singletonServices;
+		private readonly ConcurrentDictionary<Type, IService>       _singletonServices;
 		private readonly ConcurrentDictionary<Type, Lazy<IService>> _lazySingletonServices;
 		private readonly ConcurrentDictionary<Type, Func<IService>> _transientServices;
-		private readonly ConcurrentDictionary<Type, object> _scopedServices;
-		private readonly HashSet<IDisposable> _disposableServices;
+		private readonly ConcurrentDictionary<Type, object>         _scopedServices;
+		private readonly HashSet<IDisposable>                       _disposableServices;
 
-		public ServiceLocator()
+		public Service_Locator()
 		{
 			_singletonServices     = new();
 			_lazySingletonServices = new();
@@ -22,23 +23,27 @@ namespace Bezoro.Framework.Unity.DI
 			_disposableServices    = new();
 		}
 
-		public IServiceLocator RegisterService<TInterface, TImplementation>
-		(
+		~Service_Locator()
+		{
+			Dispose();
+		}
+
+		public IServiceLocator RegisterService<TInterface, TImplementation>(
 			Func<TImplementation> factory,
-			ServiceLifespan lifespan,
-			bool replace = false
+			ServiceLifespan       lifespan,
+			bool                  replace = false
 		)
 		where TInterface : IService
 		where TImplementation : class, TInterface
 		{
-			ValidationHelpers.ValidateObjectNotNull( factory );
-			ValidateLifespan( lifespan );
+			Assert.IsNotNull( factory, nameof(factory) );
+			Assert.IsFalse( lifespan == ServiceLifespan.None, nameof(lifespan) );
 
-			var interfaceType = typeof(TInterface);
-
-			if ( IsServiceRegistered( interfaceType ) && !replace )
+			var interface_type = typeof(TInterface);
+			if ( IsServiceRegistered( interface_type ) && !replace )
 			{
-				throw new ServiceAlreadyRegisteredException( interfaceType );
+				BDebug.Log_Warning( $"Service {interface_type.Name} is already registered." );
+				return this;
 			}
 
 			switch ( lifespan )
@@ -46,8 +51,7 @@ namespace Bezoro.Framework.Unity.DI
 				case ServiceLifespan.Singleton: RegisterSingletonService<TInterface, TImplementation>( factory ); break;
 
 				case ServiceLifespan.LazySingleton:
-					RegisterLazySingletonService<TInterface, TImplementation>( factory );
-					break;
+					RegisterLazySingletonService<TInterface, TImplementation>( factory ); break;
 
 				case ServiceLifespan.Transient: RegisterTransientService<TInterface, TImplementation>( factory ); break;
 
@@ -84,7 +88,10 @@ namespace Bezoro.Framework.Unity.DI
 			throw new ServiceNotFoundException( serviceType );
 		}
 
-		public bool IsServiceRegistered<T>() where T : IService => IsServiceRegistered( typeof(T) );
+		public bool IsServiceRegistered<T>() where T : IService
+		{
+			return IsServiceRegistered( typeof(T) );
+		}
 
 		public void UnregisterService<T>() where T : IService
 		{
@@ -181,12 +188,14 @@ namespace Bezoro.Framework.Unity.DI
 			AddDisposableService( instance );
 		}
 
-		private bool IsServiceRegistered( Type serviceType ) =>
-			_singletonServices.ContainsKey
-				( serviceType )
-		 || _lazySingletonServices.ContainsKey( serviceType )
-		 || _transientServices.ContainsKey( serviceType )
-		 || _scopedServices.ContainsKey( serviceType );
+		private bool IsServiceRegistered( Type serviceType )
+		{
+			return _singletonServices.ContainsKey
+						 ( serviceType )
+				 || _lazySingletonServices.ContainsKey( serviceType )
+				 || _transientServices.ContainsKey( serviceType )
+				 || _scopedServices.ContainsKey( serviceType );
+		}
 
 		private void AddDisposableService( object service )
 		{
@@ -221,10 +230,10 @@ namespace Bezoro.Framework.Unity.DI
 
 	public enum ServiceLifespan
 	{
-		None = -1,
-		Transient = 0,
-		Singleton = 1,
+		None          = -1,
+		Transient     = 0,
+		Singleton     = 1,
 		LazySingleton = 2,
-		Scoped = 3
+		Scoped        = 3
 	}
 }
