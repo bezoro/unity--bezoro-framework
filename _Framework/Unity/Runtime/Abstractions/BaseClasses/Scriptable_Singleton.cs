@@ -1,8 +1,8 @@
 ﻿using System.Diagnostics;
-using System.Linq;
 using Bezoro.Framework.Unity.Attributes;
+using Bezoro.Framework.Unity.Utilities;
 using UnityEngine;
-using Debug = UnityEngine.Debug;
+using UnityEngine.AddressableAssets;
 
 namespace Bezoro.Framework.Unity
 {
@@ -20,7 +20,14 @@ namespace Bezoro.Framework.Unity
 		private const string MULTIPLE_INSTANCES_DETECTED_ERROR =
 			"Multiple instances of {0} detected. Destroying duplicate at {1}";
 
-		public static T Instance => Get_Instance();
+		public static T Instance
+		{
+			get
+			{
+				Initialize();
+				return _instance.serialized_instance;
+			}
+		}
 
 		[Conditional( "UNITY_EDITOR" )]
 		protected virtual void OnValidate()
@@ -30,35 +37,23 @@ namespace Bezoro.Framework.Unity
 			serialized_instance = this as T;
 		}
 
+		protected virtual void Awake()
+		{
+			_instance = this;
+		}
+
+		[Conditional( "UNITY_EDITOR" )]
 		private void Ensure_Single_Instance()
 		{
 			var instances = Resources.FindObjectsOfTypeAll<T>();
 			if ( instances.Length <= 1 ) { return; }
-			Debug.LogError( MULTIPLE_INSTANCES_ERROR );
+			BDebug.Log_Error( MULTIPLE_INSTANCES_ERROR );
 			foreach ( var instance in instances )
 			{
 				if ( instance == this ) { continue; }
-				Debug.LogError( instance.name, instance );
+				BDebug.Log_Error( instance.name, instance );
 				DestroyImmediate( instance, true );
 			}
-		}
-
-		protected virtual void Awake()
-		{
-			// _instance = this;
-			// serialized_instance = this as T;
-			Debug.Log( $"Singleton<{typeof(T).Name}> awake." );
-		}
-
-		protected virtual void OnEnable()
-		{
-			Debug.Log( $"Singleton<{typeof(T).Name}> enabled." );
-		}
-
-		private static T Get_Instance()
-		{
-			Initialize();
-			return _instance.serialized_instance;
 		}
 
 		[Conditional( "UNITY_EDITOR" )]
@@ -68,11 +63,11 @@ namespace Bezoro.Framework.Unity
 
 			lock (_lock)
 			{
-				_instance                     = Resources.LoadAll<Scriptable_Singleton<T>>( "" ).FirstOrDefault();
+				_instance = Addressables.LoadAssetAsync<Scriptable_Singleton<T>>( nameof(T) ).WaitForCompletion();
 				_instance.serialized_instance = _instance as T;
 			}
 
-			Debug.Log( $"Singleton<{typeof(T).Name}> initialized." );
+			BDebug.Log( $"Singleton<{typeof(T).Name}> initialized." );
 		}
 	}
 }
