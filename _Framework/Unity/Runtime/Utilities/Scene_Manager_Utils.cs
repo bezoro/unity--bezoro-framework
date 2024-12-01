@@ -16,6 +16,8 @@ namespace Bezoro.Framework.Unity.Utilities
 		public static event Action<string> SceneUnloadStarted;
 		public static event Action<string> SceneUnloadCompleted;
 
+		private static string _current_load_screen_path;
+
 		public static async UniTask LoadScenes( SceneReference[] scenes, LoadSceneMode mode = LoadSceneMode.Additive )
 		{
 			var scene_paths = new string[scenes.Length];
@@ -122,17 +124,28 @@ namespace Bezoro.Framework.Unity.Utilities
 			return SceneManager.sceneCount;
 		}
 
+		public static string[] GetAllLoadedScenesPaths()
+		{
+			var all_loaded_scenes = GetAllLoadedScenes();
+			var paths             = new string[all_loaded_scenes.Length];
+			for ( var i = 0 ; i < all_loaded_scenes.Length ; i++ )
+			{
+				paths[i] = all_loaded_scenes[i].path;
+			}
+			return paths;
+		}
+
 		public static Scene[] GetAllLoadedScenes()
 		{
-			var countLoaded  = SceneManager.sceneCount;
-			var loadedScenes = new Scene[countLoaded];
+			var count_loaded  = SceneManager.sceneCount;
+			var loaded_scenes = new Scene[count_loaded];
 
-			for ( var i = 0 ; i < countLoaded ; i++ )
+			for ( var i = 0 ; i < count_loaded ; i++ )
 			{
-				loadedScenes[i] = SceneManager.GetSceneAt( i );
+				loaded_scenes[i] = SceneManager.GetSceneAt( i );
 			}
 
-			return loadedScenes;
+			return loaded_scenes;
 		}
 
 		public static bool IsSceneReferenceLoaded( SceneReference sceneReference )
@@ -187,6 +200,7 @@ namespace Bezoro.Framework.Unity.Utilities
 			SceneReference loadingScene )
 		{
 			// Load loading screen additively
+			_current_load_screen_path = loadingScene.Path;
 			await LoadScene( loadingScene.Path, LoadSceneMode.Additive );
 
 			// TODO: Unload all previous scenes?
@@ -206,6 +220,7 @@ namespace Bezoro.Framework.Unity.Utilities
 			SceneReference   load_screen_scene )
 		{
 			await LoadScene( load_screen_scene.Path, LoadSceneMode.Additive );
+			_current_load_screen_path = load_screen_scene.Path;
 			await UnloadScenes( current_scenes );
 			await LoadScenes( scenes_to_load );
 			await UnloadScene( load_screen_scene );
@@ -236,6 +251,7 @@ namespace Bezoro.Framework.Unity.Utilities
 			LoadSceneMode mode,
 			string        loading_screen_scene_path )
 		{
+			_current_load_screen_path = loading_screen_scene_path;
 			await LoadScene( loading_screen_scene_path, LoadSceneMode.Additive );
 			await LoadScenes( scenes_to_load_paths, mode );
 			await UnloadScene( loading_screen_scene_path );
@@ -243,8 +259,17 @@ namespace Bezoro.Framework.Unity.Utilities
 
 		public static async UniTask ClearLoadedScenes()
 		{
-			var loaded_scenes = GetAllLoadedScenes();
-			await UnloadScenes( loaded_scenes );
+			var all_loaded_scenes_paths = GetAllLoadedScenesPaths();
+
+			var filtered_scenes_paths = new string[all_loaded_scenes_paths.Length - 1];
+			foreach ( var path in all_loaded_scenes_paths )
+			{
+				if ( path == _current_load_screen_path ) { continue; }
+				filtered_scenes_paths.Add( path );
+				Debug.Log( $"Unloading: {path}" );
+			}
+
+			await UnloadScenes( filtered_scenes_paths );
 		}
 	}
 }
