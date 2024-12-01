@@ -45,11 +45,11 @@ namespace Bezoro.Framework.Unity.Editor.PropertyDrawers
 			}
 
 			var currentComponent = field.GetValue( mb ) as Component;
-			var newComponent = mb.gameObject.GetComponent( attr.ComponentType );
+			var newComponent     = mb.gameObject.GetComponent( attr.ComponentType );
 
 			if ( newComponent == null && attr.IncludeChildren )
 			{
-				newComponent = mb.gameObject.GetComponentInChildren( attr.ComponentType );
+				newComponent = mb.gameObject.GetComponentInChildren( attr.ComponentType, true );
 			}
 
 			if ( newComponent == null && attr.IncludeParents )
@@ -68,7 +68,7 @@ namespace Bezoro.Framework.Unity.Editor.PropertyDrawers
 			{
 				EditorGUILayout.HelpBox(
 					$"No component of type {attr.ComponentType.Name} found on {mb.gameObject.name}",
-					MessageType.Info
+					MessageType.Error
 				);
 			}
 
