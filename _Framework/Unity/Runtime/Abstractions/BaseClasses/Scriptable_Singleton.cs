@@ -63,7 +63,11 @@ namespace Bezoro.Framework.Unity
 
 			lock (_lock)
 			{
-				_instance = Addressables.LoadAssetAsync<Scriptable_Singleton<T>>( nameof(T) ).WaitForCompletion();
+				var async_operation = Addressables.LoadAssetAsync<Scriptable_Singleton<T>>( nameof(T) );
+				if ( async_operation.IsValid() )
+				{
+					_instance = async_operation.WaitForCompletion();
+				}
 				if ( _instance == null )
 				{
 					_instance = Resources.LoadAll<Scriptable_Singleton<T>>( "" )[0];
