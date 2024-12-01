@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Cysharp.Threading.Tasks;
 using Eflatun.SceneReference;
-using UnityEngine;
 using UnityEngine.SceneManagement;
 
 namespace Bezoro.Framework.Unity.Utilities
@@ -47,9 +46,8 @@ namespace Bezoro.Framework.Unity.Utilities
 			string        path,
 			LoadSceneMode mode = LoadSceneMode.Single )
 		{
-			Debug.Log( $"Loading scene: {path}" );
+			BDebug.Log( $"Loading scene: {path}" );
 			SceneLoadStarted?.Invoke( path );
-
 			var operation = SceneManager.LoadSceneAsync( path, mode );
 			if ( operation == null ) { return; }
 			operation.allowSceneActivation = true;
@@ -266,7 +264,7 @@ namespace Bezoro.Framework.Unity.Utilities
 			{
 				if ( path == _current_load_screen_path ) { continue; }
 				filtered_scenes_paths.Add( path );
-				Debug.Log( $"Unloading: {path}" );
+				BDebug.Log( $"Unloading: {path}" );
 			}
 
 			await UnloadScenes( filtered_scenes_paths );
