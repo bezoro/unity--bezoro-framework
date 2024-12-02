@@ -65,7 +65,7 @@ namespace Bezoro.Framework.Unity
 			LoadSceneMode mode                   = LoadSceneMode.Single,
 			bool          allow_scene_activation = true )
 		{
-			BDebug.Log( $"Loading scene: {path}" );
+			BDebug.Log( $"[{nameof(Scene_Manager).Bold()}] Loading scene: {path.Italic()}" );
 			Scene_Load_Started?.Invoke( path );
 			_currently_loaded_scene_paths.Add( path );
 			var operation = SceneManager.LoadSceneAsync( path, mode );
@@ -91,11 +91,7 @@ namespace Bezoro.Framework.Unity
 
 		public static async UniTask Unload_Scenes( string[] paths )
 		{
-			foreach ( var path in paths )
-			{
-				BDebug.Log( $"Unloading: {path}" );
-				await Unload_Scene( path );
-			}
+			foreach ( var path in paths ) { await Unload_Scene( path ); }
 		}
 
 		public static async UniTask Unload_Scenes( Scene[] scenes )
@@ -107,13 +103,14 @@ namespace Bezoro.Framework.Unity
 		{
 			if ( !Is_Scene_Loaded( path ) )
 			{
-				BDebug.Log_Warning( $"Cannot unload scene: {path.Bold()} is not loaded" );
+				BDebug.Log_Warning(
+					$"[{nameof(Scene_Manager).Bold()}] Cannot unload scene: {path.Italic()} is not loaded" );
 				return;
 			}
 			var operation = SceneManager.UnloadSceneAsync( path );
 			_currently_loaded_scene_paths.Remove( path );
 			Scene_Unload_Started?.Invoke( path );
-			BDebug.Log( $"[{nameof(Scene_Manager)}] Unloading scene: {path}" );
+			BDebug.Log( $"[{nameof(Scene_Manager).Bold()}] Unloading scene: {path.Italic()}" );
 			if ( operation == null ) { return; }
 			while (!operation.isDone)
 			{
