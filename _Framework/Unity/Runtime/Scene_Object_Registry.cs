@@ -33,9 +33,12 @@ namespace Bezoro.Framework.Unity
 		{
 			switch ( state )
 			{
-				case PlayModeStateChange.EnteredPlayMode or PlayModeStateChange.ExitingEditMode: Refresh_Registry(); break;
+				case PlayModeStateChange.EnteredPlayMode or PlayModeStateChange.ExitingEditMode:
+					Refresh_Registry();
+					break;
 				case PlayModeStateChange.ExitingPlayMode:
-					EditorApplication.playModeStateChanged -= On_Play_Mode_State_Changed; break;
+					EditorApplication.playModeStateChanged -= On_Play_Mode_State_Changed;
+					break;
 			}
 		}
 
@@ -143,7 +146,7 @@ namespace Bezoro.Framework.Unity
 				if ( !Is_Object_UID_Valid( object_uid ) ) { return; }
 				if ( !Is_Object_Registered( object_uid ) ) { return; }
 				GUID_To_Object_Map.Remove( object_uid.UID );
-				Debug.Log( $"Unregistered Object: {object_uid.gameObject.name} with GUID: {object_uid.UID}" );
+				BDebug.Log( $"Unregistered Object: {object_uid.gameObject.name} with GUID: {object_uid.UID}" );
 			}
 		}
 
