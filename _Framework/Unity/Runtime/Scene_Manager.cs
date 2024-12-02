@@ -111,6 +111,7 @@ namespace Bezoro.Framework.Unity
 				return;
 			}
 			var operation = SceneManager.UnloadSceneAsync( path );
+			_currently_loaded_scene_paths.Remove( path );
 			Scene_Unload_Started?.Invoke( path );
 			BDebug.Log( $"[{nameof(Scene_Manager)}] Unloading scene: {path}" );
 			if ( operation == null ) { return; }
