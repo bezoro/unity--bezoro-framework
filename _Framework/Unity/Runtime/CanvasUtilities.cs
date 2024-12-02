@@ -1,12 +1,25 @@
-﻿using Bezoro.Framework.Unity.Utilities;
+﻿using Bezoro.Framework.Core;
+using Bezoro.Framework.Unity.Utilities;
 using UnityEngine;
 
 namespace Bezoro.Framework.Unity
 {
 	public static class CanvasUtilities
 	{
-		public static Vector3 CalculateCanvasPosition( Vector2 normalizedPosition, Canvas canvas, Camera camera = null )
+		/// <summary>
+		///    Calculates the world position on a canvas based on normalized viewport coordinates.
+		/// </summary>
+		/// <param name="normalizedPosition">Normalized coordinates of the point to locate.</param>
+		/// <param name="canvas">The canvas to evaluate the position on.</param>
+		/// <param name="camera">Optional: The camera associated with the canvas, necessary for RenderMode.ScreenSpaceCamera.</param>
+		/// <returns>Returns the world position on the canvas.</returns>
+		public static Vector3 CalculatePositionsOnCanvas(
+			Vector2 normalizedPosition,
+			Canvas  canvas,
+			Camera  camera = null )
 		{
+			Assert.IsNotNull( canvas );
+
 			if ( normalizedPosition.x < 0 || normalizedPosition.x > 1
 			  || normalizedPosition.y < 0 || normalizedPosition.y > 1 )
 			{
@@ -15,6 +28,10 @@ namespace Bezoro.Framework.Unity
 				BDebug.Log_Warning( $"{nameof(normalizedPosition)} was out of [0..1] range. Clamping." );
 			}
 			var rect_transform = canvas.GetComponent<RectTransform>();
+			if ( rect_transform.EqualsNull() )
+			{
+				BDebug.Log_Exception( "There is no RectTransform in the Canvas. wtf?" );
+			}
 			switch ( canvas.renderMode )
 			{
 				case RenderMode.ScreenSpaceOverlay:
@@ -38,7 +55,9 @@ namespace Bezoro.Framework.Unity
 						0 );
 					return rect_transform.TransformPoint( world_position );
 				}
-				default: return Vector3.zero;
+				default:
+					BDebug.Log_Exception( $"Unknown canvas render mode: {canvas.renderMode}" );
+					return Vector3.zero;
 			}
 		}
 	}
