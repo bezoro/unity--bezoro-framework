@@ -6,8 +6,8 @@ using Bezoro.Framework.Unity.Utilities;
 namespace Bezoro.Framework.Unity
 {
 	/// <summary>
-	///     Base class for creating a singleton instance with thread-safe lazy initialization, proper disposal, and lifecycle
-	///     management.
+	///    Base class for creating a singleton instance with thread-safe lazy initialization, proper disposal, and lifecycle
+	///    management.
 	/// </summary>
 	/// <typeparam name="T">Type of the singleton class.</typeparam>
 	public abstract class BaseSingleton<T> :
@@ -26,7 +26,7 @@ namespace Bezoro.Framework.Unity
 		public static event Action Disposed;
 
 		/// <summary>
-		///     Protected constructor to prevent direct instantiation.
+		///    Protected constructor to prevent direct instantiation.
 		/// </summary>
 		protected BaseSingleton()
 		{
@@ -34,7 +34,7 @@ namespace Bezoro.Framework.Unity
 		}
 
 		/// <summary>
-		///     Finalizer that triggers the disposal.
+		///    Finalizer that triggers the disposal.
 		/// </summary>
 		~BaseSingleton()
 		{
@@ -42,8 +42,8 @@ namespace Bezoro.Framework.Unity
 		}
 
 		/// <summary>
-		///     Creates an instance of the singleton using a non-public constructor.
-		///     Ensures initialization of the instance.
+		///    Creates an instance of the singleton using a non-public constructor.
+		///    Ensures initialization of the instance.
 		/// </summary>
 		/// <returns>A fully initialized instance of the singleton.</returns>
 		private static T CreateInstance()
@@ -60,7 +60,7 @@ namespace Bezoro.Framework.Unity
 		}
 
 		/// <summary>
-		///     Ensures the singleton is initialized.
+		///    Ensures the singleton is initialized.
 		/// </summary>
 		public void EnsureInitialized()
 		{
@@ -78,7 +78,7 @@ namespace Bezoro.Framework.Unity
 		}
 
 		/// <summary>
-		///     Resets the singleton instance.
+		///    Resets the singleton instance.
 		/// </summary>
 		public static void ResetInstance()
 		{
@@ -94,7 +94,7 @@ namespace Bezoro.Framework.Unity
 		protected abstract void OnReset();
 
 		/// <summary>
-		///     Disposes the singleton instance, releasing managed resources.
+		///    Disposes the singleton instance, releasing managed resources.
 		/// </summary>
 		public void Dispose()
 		{
@@ -103,7 +103,7 @@ namespace Bezoro.Framework.Unity
 		}
 
 		/// <summary>
-		///     Implements the actual disposal logic.
+		///    Implements the actual disposal logic.
 		/// </summary>
 		/// <param name="disposing">Indicates whether managed resources should be disposed.</param>
 		protected virtual void Dispose( bool disposing )
@@ -119,18 +119,18 @@ namespace Bezoro.Framework.Unity
 		}
 
 		/// <summary>
-		///     Abstract method to dispose of managed resources, to be implemented by derived classes.
-		///     Ensure all references to managed resources are set to null.
+		///    Abstract method to dispose of managed resources, to be implemented by derived classes.
+		///    Ensure all references to managed resources are set to null.
 		/// </summary>
 		protected abstract void DisposeManagedResources();
 
 		/// <summary>
-		///     Abstract method to initialize resources, to be implemented by derived classes.
+		///    Abstract method to initialize resources, to be implemented by derived classes.
 		/// </summary>
 		protected abstract void OnInitialize();
 
 		/// <summary>
-		///     Safely invoke the Initialized event, handling exceptions.
+		///    Safely invoke the Initialized event, handling exceptions.
 		/// </summary>
 		private void InvokeInitialized()
 		{
@@ -139,12 +139,12 @@ namespace Bezoro.Framework.Unity
 			foreach ( var handler in handlers.GetInvocationList() )
 			{
 				try { ( (Action)handler )?.Invoke(); }
-				catch ( Exception e ) { BDebug.LogException( e ); }
+				catch ( Exception e ) { BDebug.Log_Exception( e ); }
 			}
 		}
 
 		/// <summary>
-		///     Safely invoke the Disposed event, handling exceptions.
+		///    Safely invoke the Disposed event, handling exceptions.
 		/// </summary>
 		private void InvokeDisposed()
 		{
@@ -153,7 +153,7 @@ namespace Bezoro.Framework.Unity
 			foreach ( var handler in handlers.GetInvocationList() )
 			{
 				try { ( (Action)handler )?.Invoke(); }
-				catch ( Exception e ) { BDebug.LogException( e ); }
+				catch ( Exception e ) { BDebug.Log_Exception( e ); }
 			}
 		}
 	}

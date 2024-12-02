@@ -19,10 +19,12 @@ namespace Bezoro.Framework.Unity
 				Func<bool>    enableCondition = null,
 				float         timeoutDuration = DEFAULT_CREATION_TIMEOUT,
 				params Type[] componentTypes
-			) =>
-				CreateAsync( objectName, transformData, enableCondition, timeoutDuration, componentTypes )
-					.GetAwaiter()
-					.GetResult();
+			)
+			{
+				return CreateAsync( objectName, transformData, enableCondition, timeoutDuration, componentTypes )
+				  .GetAwaiter()
+				  .GetResult();
+			}
 
 			public static async UniTask<GameObject> CreateAsync(
 				string        objectName      = "NewGameObject",
@@ -84,12 +86,12 @@ namespace Bezoro.Framework.Unity
 				foreach ( ( var name, var components ) in objectSpecs )
 				{
 					var go = await CreateAsync(
-								 name,
-								 transformData,
-								 enableCondition,
-								 timeoutDuration,
-								 components
-							 );
+									name,
+									transformData,
+									enableCondition,
+									timeoutDuration,
+									components
+								);
 					createdObjects.Add( go );
 					await UniTask.Yield( PlayerLoopTiming.Update );
 				}
@@ -119,7 +121,7 @@ namespace Bezoro.Framework.Unity
 				}
 				catch ( Exception exception )
 				{
-					BDebug.LogException( exception.Message );
+					BDebug.Log_Exception( exception.Message );
 					throw;
 				}
 			}
