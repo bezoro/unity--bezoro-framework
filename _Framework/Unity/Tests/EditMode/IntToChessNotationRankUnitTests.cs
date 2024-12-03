@@ -9,9 +9,15 @@ namespace Bezoro.Framework.Unity.Tests.EditMode
 	{
 		// Positive tests
 
-		[TestCase( 0, "A" )]
-		[TestCase( 7, "H" )]
-		[TestCase( 25, "Z" )]
+		[TestCase(
+			0,
+			"A" )]
+		[TestCase(
+			7,
+			"H" )]
+		[TestCase(
+			25,
+			"Z" )]
 		public void ValidInput_ReturnsCorrectNotation( int y, string expectedNotation )
 		{
 			// Act
@@ -33,7 +39,10 @@ namespace Bezoro.Framework.Unity.Tests.EditMode
 
 			for ( var i = 0 ; i < 10 ; i++ )
 			{
-				var y = random.Next( 0, 26 );
+				var y = random.Next(
+					0,
+					26 );
+
 				var expectedNotation = $"{(char)( 'A' + y )}";
 
 				// Act

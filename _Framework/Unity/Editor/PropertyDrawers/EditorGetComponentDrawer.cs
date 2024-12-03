@@ -6,13 +6,17 @@ using UnityEngine;
 
 namespace Bezoro.Framework.Unity.Editor.PropertyDrawers
 {
-	[CustomPropertyDrawer( typeof(EditorGetComponentAttribute) )]
+	[CustomPropertyDrawer( typeof( EditorGetComponentAttribute ) )]
 	public class EditorGetComponentDrawer : PropertyDrawer
 	{
 		public override void OnGUI( Rect position, SerializedProperty property, GUIContent label )
 		{
 			if ( Application.isPlaying ) { return; }
-			EditorGUI.BeginProperty( position, label, property );
+
+			EditorGUI.BeginProperty(
+				position,
+				label,
+				property );
 
 			var target = property.serializedObject.targetObject as MonoBehaviour;
 
@@ -23,19 +27,26 @@ namespace Bezoro.Framework.Unity.Editor.PropertyDrawers
 					BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic
 				);
 
-				if ( AssignComponent( target, field, attr ) )
+				if ( AssignComponent(
+						target,
+						field,
+						attr ) )
 				{
 					property.serializedObject.ApplyModifiedProperties();
 				}
 			}
 
-			EditorGUI.PropertyField( position, property, label );
+			EditorGUI.PropertyField(
+				position,
+				property,
+				label );
+
 			EditorGUI.EndProperty();
 		}
 
 		private bool AssignComponent( MonoBehaviour mb, FieldInfo field, EditorGetComponentAttribute attr )
 		{
-			if ( !typeof(Component).IsAssignableFrom( field.FieldType ) )
+			if ( !typeof( Component ).IsAssignableFrom( field.FieldType ) )
 			{
 				EditorGUILayout.HelpBox(
 					$"Field {field.Name} in {mb.GetType().Name} must inherit from UnityEngine.Component",
@@ -50,17 +61,21 @@ namespace Bezoro.Framework.Unity.Editor.PropertyDrawers
 
 			if ( newComponent == null && attr.IncludeChildren )
 			{
-				newComponent = mb.gameObject.GetComponentInChildren( attr.ComponentType, true );
+				newComponent = mb.gameObject.GetComponentInChildren(
+					attr.ComponentType,
+					true );
 			}
 
 			if ( newComponent == null && attr.IncludeParents )
 			{
-				newComponent = mb.gameObject.GetComponentInParents( attr.ComponentType );
+				newComponent = mb.gameObject.Get_Component_In_Parents( attr.ComponentType );
 			}
 
 			if ( currentComponent != newComponent )
 			{
-				field.SetValue( mb, newComponent );
+				field.SetValue(
+					mb,
+					newComponent );
 
 				return true;
 			}

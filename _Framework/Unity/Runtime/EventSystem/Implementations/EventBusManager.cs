@@ -5,47 +5,55 @@ using Bezoro.Framework.Unity.EventSystem;
 
 public sealed class EventBusManager : BaseSingleton<EventBusManager>
 {
-	private readonly ConcurrentDictionary<string, IEventBus> _eventBuses;
+	private readonly ConcurrentDictionary<string, I_Event_Bus> _eventBuses;
 
 	private EventBusManager()
 	{
 		_eventBuses = new();
 	}
 
-	protected override void OnInitialize() {}
+	protected override void OnInitialize()
+	{
+	}
 
 	protected override void DisposeManagedResources()
 	{
 		ClearAll();
 	}
 
-	public IEventBus GetOrCreateEventBus( string context )
+	public I_Event_Bus GetOrCreateEventBus( string context )
 	{
-		Assert.IsNotNullOrEmpty( context );
-		Assert.IsNotNull( _eventBuses );
+		Assert.Is_Not_Null_Or_Empty( context );
+		Assert.Is_Not_Null( _eventBuses );
 
-		return _eventBuses.GetOrAdd( context, _ => new EventBus() );
+		return _eventBuses.GetOrAdd(
+			context,
+			_ => new EventBus() );
 	}
 
-	public bool TryGetEventBus( string context, out IEventBus eventBus )
+	public bool TryGetEventBus( string context, out I_Event_Bus eventBus )
 	{
-		Assert.IsNotNullOrEmpty( context );
-		Assert.IsNotNull( _eventBuses );
+		Assert.Is_Not_Null_Or_Empty( context );
+		Assert.Is_Not_Null( _eventBuses );
 
-		return _eventBuses.TryGetValue( context, out eventBus );
+		return _eventBuses.TryGetValue(
+			context,
+			out eventBus );
 	}
 
 	public bool RemoveEventBus( string context )
 	{
-		Assert.IsNotNullOrEmpty( context );
-		Assert.IsNotNull( _eventBuses );
+		Assert.Is_Not_Null_Or_Empty( context );
+		Assert.Is_Not_Null( _eventBuses );
 
-		return _eventBuses.TryRemove( context, out _ );
+		return _eventBuses.TryRemove(
+			context,
+			out _ );
 	}
 
 	public void ClearAll()
 	{
-		Assert.IsNotNull( _eventBuses );
+		Assert.Is_Not_Null( _eventBuses );
 
 		_eventBuses.Clear();
 	}

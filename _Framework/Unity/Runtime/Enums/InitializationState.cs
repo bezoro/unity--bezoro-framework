@@ -2,9 +2,9 @@
 {
 	public enum InitializationState
 	{
-		None = -1,
+		None          = -1,
 		Uninitialized = 0,
-		InProgress = 1,
-		Done = 2
+		InProgress    = 1,
+		Done          = 2
 	}
 }

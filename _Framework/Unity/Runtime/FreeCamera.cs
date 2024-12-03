@@ -4,65 +4,32 @@ namespace Bezoro.Framework.Unity
 {
 	public class FreeCamera : MonoBehaviour
 	{
+		private const string ScrollWheelKey = "Mouse ScrollWheel";
+		private const string MouseXKey      = "Mouse X";
+		private const string MouseYKey      = "Mouse Y";
+		private const string VerticalKey    = "Vertical";
+		private const string HorizontalKey  = "Horizontal";
+
+		[SerializeField] private bool enableInputCapture = true;
+		[SerializeField] private bool lockAndHideCursor;
+		[SerializeField] private bool holdRightMouseCapture = true;
+
+		[SerializeField] private float     lookSpeed              = 5f;
+		[SerializeField] private float     moveSpeed              = 5f;
+		[SerializeField] private float     sprintSpeed            = 50f;
+		[SerializeField] private bool      useScrollSpeedIncrease = true;
+		[SerializeField] private float     speedIncreaseValue     = 100f;
+		[SerializeField] private float     cameraRoll;
+		private                  Transform _cachedTransform;
+
+		private bool  _inputCaptured;
+		private float _pitch;
+		private float _yaw;
+
 		private void Awake()
 		{
 			enabled          = enableInputCapture;
 			_cachedTransform = transform;
-		}
-
-		private void OnEnable()
-		{
-			if ( enableInputCapture && !holdRightMouseCapture )
-			{
-				CaptureInput();
-			}
-		}
-
-		private void OnDisable()
-		{
-			ReleaseInput();
-		}
-
-		private void OnValidate()
-		{
-			if ( Application.isPlaying )
-			{
-				enabled = enableInputCapture;
-			}
-		}
-
-		private void CaptureInput()
-		{
-			if ( lockAndHideCursor )
-			{
-				Cursor.lockState = CursorLockMode.Locked;
-				Cursor.visible   = false;
-			}
-
-			_inputCaptured = true;
-
-			var eulerAngles = _cachedTransform.eulerAngles;
-			_yaw   = eulerAngles.y;
-			_pitch = eulerAngles.x;
-		}
-
-		private void ReleaseInput()
-		{
-			if ( lockAndHideCursor )
-			{
-				Cursor.lockState = CursorLockMode.None;
-				Cursor.visible   = true;
-			}
-
-			_inputCaptured = false;
-		}
-
-		private void OnApplicationFocus( bool focus )
-		{
-			if ( _inputCaptured && !focus )
-			{
-				ReleaseInput();
-			}
 		}
 
 		private void Update()
@@ -112,18 +79,25 @@ namespace Bezoro.Framework.Unity
 			}
 
 			var rotStrafe = Input.GetAxis( MouseXKey );
-			var rotFwd = Input.GetAxis( MouseYKey );
+			var rotFwd    = Input.GetAxis( MouseYKey );
 
 			_yaw = ( _yaw + lookSpeed * rotStrafe ) % 360f;
 
 			_pitch = ( _pitch - lookSpeed * rotFwd ) % 360f;
 
 			transform.rotation =
-				Quaternion.AngleAxis( _yaw, Vector3.up ) * Quaternion.AngleAxis( _pitch, Vector3.right );
+				Quaternion.AngleAxis(
+					_yaw,
+					Vector3.up ) * Quaternion.AngleAxis(
+					_pitch,
+					Vector3.right );
 
 			var eulerAngles = _cachedTransform.eulerAngles;
 			_cachedTransform.eulerAngles =
-				new(eulerAngles.x, eulerAngles.y, cameraRoll);
+				new(
+					eulerAngles.x,
+					eulerAngles.y,
+					cameraRoll );
 
 			var speed = Time.deltaTime * ( Input.GetKey( KeyCode.LeftShift ) ? sprintSpeed : moveSpeed );
 
@@ -133,8 +107,63 @@ namespace Bezoro.Framework.Unity
 
 			var up = speed * ( ( Input.GetKey( KeyCode.E ) ? 1f : 0f ) - ( Input.GetKey( KeyCode.Q ) ? 1f : 0f ) );
 
-			transform.position +=
-				_cachedTransform.forward * forward + _cachedTransform.right * right + Vector3.up * up;
+			transform.position += _cachedTransform.forward * forward
+								  + _cachedTransform.right * right + Vector3.up * up;
+		}
+
+		private void OnEnable()
+		{
+			if ( enableInputCapture && !holdRightMouseCapture )
+			{
+				CaptureInput();
+			}
+		}
+
+		private void OnDisable()
+		{
+			ReleaseInput();
+		}
+
+		private void OnApplicationFocus( bool focus )
+		{
+			if ( _inputCaptured && !focus )
+			{
+				ReleaseInput();
+			}
+		}
+
+		private void OnValidate()
+		{
+			if ( Application.isPlaying )
+			{
+				enabled = enableInputCapture;
+			}
+		}
+
+		private void CaptureInput()
+		{
+			if ( lockAndHideCursor )
+			{
+				Cursor.lockState = CursorLockMode.Locked;
+				Cursor.visible   = false;
+			}
+
+			_inputCaptured = true;
+
+			var eulerAngles = _cachedTransform.eulerAngles;
+			_yaw   = eulerAngles.y;
+			_pitch = eulerAngles.x;
+		}
+
+		private void ReleaseInput()
+		{
+			if ( lockAndHideCursor )
+			{
+				Cursor.lockState = CursorLockMode.None;
+				Cursor.visible   = true;
+			}
+
+			_inputCaptured = false;
 		}
 
 		public void RefreshCameraRoll( float roll )
@@ -142,38 +171,10 @@ namespace Bezoro.Framework.Unity
 			cameraRoll = roll;
 			var eulerAngles = _cachedTransform.eulerAngles;
 			transform.eulerAngles =
-				new(eulerAngles.x, eulerAngles.y, cameraRoll);
+				new(
+					eulerAngles.x,
+					eulerAngles.y,
+					cameraRoll );
 		}
-
-		[SerializeField]
-		private bool enableInputCapture = true;
-		[SerializeField]
-		private bool lockAndHideCursor;
-		[SerializeField]
-		private bool holdRightMouseCapture = true;
-
-		[SerializeField]
-		private float lookSpeed = 5f;
-		[SerializeField]
-		private float moveSpeed = 5f;
-		[SerializeField]
-		private float sprintSpeed = 50f;
-		[SerializeField]
-		private bool useScrollSpeedIncrease = true;
-		[SerializeField]
-		private float speedIncreaseValue = 100f;
-		[SerializeField]
-		private float cameraRoll;
-
-		private bool _inputCaptured;
-		private float _yaw;
-		private float _pitch;
-		private Transform _cachedTransform;
-
-		private const string ScrollWheelKey = "Mouse ScrollWheel";
-		private const string MouseXKey = "Mouse X";
-		private const string MouseYKey = "Mouse Y";
-		private const string VerticalKey = "Vertical";
-		private const string HorizontalKey = "Horizontal";
 	}
 }

@@ -2,9 +2,10 @@
 
 namespace Bezoro.Framework.Unity.StateMachines
 {
-	public interface ITickableState : IState, ITickable,
+	public interface ITickableState : IState,
+		ITickable,
 		IHasTransitions<TickTransition, ITickableState>
 	{
-		void Init( TickableStateMachineOwner owner, ITickableStateMachine owningStateMachine );
+		public void Init( TickableStateMachineOwner owner, ITickableStateMachine owningStateMachine );
 	}
 }

@@ -11,15 +11,21 @@ namespace Bezoro.Framework.Unity.Editor.Tools
 	{
 		private static class DirectoryCreator
 		{
-			[MenuItem( "Bezoro/Project Preparer/Create Default Directories", false, 20 )]
+			[MenuItem(
+				"Bezoro/Project Preparer/Create Default Directories",
+				false,
+				20 )]
 			public static void CreateDefaultDirectories_MenuItem()
 			{
-				var root = Application.dataPath;
+				var root            = Application.dataPath;
 				var foldersToCreate = new[] { "__Project" };
 
 				foreach ( var folder in foldersToCreate )
 				{
-					if ( Directory.Exists( Path.Combine( root, folder ) ) )
+					if ( Directory.Exists(
+							Path.Combine(
+								root,
+								folder ) ) )
 					{
 						Debug.LogWarning
 							( $"Directory {folder.Bold()} already exists at {root.Italic()}." );
@@ -27,7 +33,11 @@ namespace Bezoro.Framework.Unity.Editor.Tools
 						continue;
 					}
 
-					Directory.CreateDirectory( Path.Combine( root, folder ) );
+					Directory.CreateDirectory(
+						Path.Combine(
+							root,
+							folder ) );
+
 					Debug.Log( $"Directory {folder.Bold()} created at {root.Italic()}." );
 				}
 
@@ -63,7 +73,7 @@ namespace Bezoro.Framework.Unity.Editor.Tools
 			// 		  60)]
 			public static async void OverwriteManifest_MenuItem()
 			{
-				var gistUrl = GistHelpers.GetUrl( "ebccb4c31b1bb9fc9379652f8acd15bc" );
+				var gistUrl         = GistHelpers.GetUrl( "ebccb4c31b1bb9fc9379652f8acd15bc" );
 				var contentsFromUrl = await UrlHelpers.GetContents( gistUrl );
 				ReplaceManifestText( contentsFromUrl );
 			}
@@ -71,20 +81,28 @@ namespace Bezoro.Framework.Unity.Editor.Tools
 			private static void ReplaceManifestText( string contents )
 			{
 				var existingManifest =
-					Path.Combine( Application.dataPath, "../Packages/manifest.json" );
+					Path.Combine(
+						Application.dataPath,
+						"../Packages/manifest.json" );
 
-				File.WriteAllText( existingManifest, contents );
+				File.WriteAllText(
+					existingManifest,
+					contents );
+
 				Client.Resolve();
 			}
 		}
 
 		private static class InputSystemSettingsSetter
 		{
-			[MenuItem( "Bezoro/Project Preparer/Set Input System (Both)", false, 80 )]
+			[MenuItem(
+				"Bezoro/Project Preparer/Set Input System (Both)",
+				false,
+				80 )]
 			private static void SetInputSystemBoth_MenuItem()
 			{
 				if ( InputSystemHelpers.GetActiveInputSystemProperty().intValue
-				  == (int)InputSystemHelpers.InputSystem.Both )
+					 == (int)InputSystemHelpers.InputSystem.Both )
 				{
 					EditorUtility.DisplayDialog(
 						"",

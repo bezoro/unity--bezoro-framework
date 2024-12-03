@@ -9,30 +9,19 @@ namespace Bezoro.Framework.Unity.Utilities
 {
 	public sealed class Log_Builder
 	{
-		private          string        _caller_name;
-		private          string        _method_name;
-		private readonly object        _message;
-		private          Object        _context;
-		private          LogType       _log_type       = LogType.Log;
-		private          string        _category       = DebugSettings.DEFAULT_CATEGORY;
-		private          string        _color_tag      = string.Empty;
 		private readonly StringBuilder _format_builder = new();
+		private readonly object        _message;
+		private          string        _caller_name;
+		private          string        _category  = DebugSettings.DEFAULT_CATEGORY;
+		private          string        _color_tag = string.Empty;
+		private          Object        _context;
 		private          bool          _has_been_sent;
+		private          LogType       _log_type = LogType.Log;
+		private          string        _method_name;
 
 		public Log_Builder( object message )
 		{
 			_message = message;
-		}
-
-		~Log_Builder()
-		{
-			if ( !_has_been_sent )
-			{
-				Debug.LogWarning(
-					$"Log_Builder was not sent. Did you forget to call Send()?: {_message}",
-					_context
-				);
-			}
 		}
 
 		// Converts to properties
@@ -54,6 +43,17 @@ namespace Bezoro.Framework.Unity.Utilities
 		public Color Colour
 		{
 			set => _color_tag = $"<color=#{ColorUtility.ToHtmlStringRGB( value )}>";
+		}
+
+		~Log_Builder()
+		{
+			if ( !_has_been_sent )
+			{
+				Debug.LogWarning(
+					$"Log_Builder was not sent. Did you forget to call Send()?: {_message}",
+					_context
+				);
+			}
 		}
 
 		// Retain capability of text formatting
@@ -90,7 +90,8 @@ namespace Bezoro.Framework.Unity.Utilities
 			return this;
 		}
 
-		[Conditional( "UNITY_EDITOR" )] [Conditional( "DEVELOPMENT_BUILD" )]
+		[Conditional( "UNITY_EDITOR" )]
+		[Conditional( "DEVELOPMENT_BUILD" )]
 		public void Send()
 		{
 			if ( !DebugSettings.Instance.enableLogging )
@@ -100,6 +101,7 @@ namespace Bezoro.Framework.Unity.Utilities
 
 			_has_been_sent = true;
 			var categorySettings = BDebug.GetCategorySettings( _category );
+
 			if ( categorySettings is not { isEnabled: true } )
 			{
 				return;
@@ -113,11 +115,13 @@ namespace Bezoro.Framework.Unity.Utilities
 		{
 			var prefix = $"[{category.name}]: ".Color( category.categoryColor );
 			var content = _format_builder.Length > 0
-								  ? _format_builder.ToString()
-								  : $"{_color_tag}{_message}{( _color_tag == string.Empty ? string.Empty : "</color>" )}";
+				? _format_builder.ToString()
+				: $"{_color_tag}{_message}{( _color_tag == string.Empty ? string.Empty : "</color>" )}";
+
 			var methodInfo = string.IsNullOrEmpty( _caller_name ) || string.IsNullOrEmpty( _method_name )
-									  ? string.Empty
-									  : $"{_caller_name}.{_method_name}() => ";
+				? string.Empty
+				: $"{_caller_name}.{_method_name}() => ";
+
 			return $"{prefix}{methodInfo}{content}";
 		}
 
@@ -125,24 +129,62 @@ namespace Bezoro.Framework.Unity.Utilities
 		{
 			switch ( _log_type )
 			{
-				case LogType.Log:     Debug.Log( finalMessage, _context ); break;
-				case LogType.Warning: Debug.LogWarning( finalMessage, _context ); break;
-				case LogType.Error:   Debug.LogError( finalMessage, _context ); break;
+				case LogType.Log:
+					Debug.Log(
+						finalMessage,
+						_context );
+
+					break;
+
+				case LogType.Warning:
+					Debug.LogWarning(
+						finalMessage,
+						_context );
+
+					break;
+
+				case LogType.Error:
+					Debug.LogError(
+						finalMessage,
+						_context );
+
+					break;
+
 				case LogType.Exception:
-					Debug.LogException( _message as Exception ?? new Exception( finalMessage ), _context ); break;
-				default: Debug.LogError( $"Unknown log type: {_log_type}", _context ); break;
+					Debug.LogException(
+						_message as Exception ?? new Exception( finalMessage ),
+						_context );
+
+					break;
+
+				default:
+					Debug.LogError(
+						$"Unknown log type: {_log_type}",
+						_context );
+
+					break;
 			}
 		}
 
 		public Log_Builder Caller( object caller )
 		{
-			_caller_name = caller.GetType().Name.Bold().Color( new Color( 0.2f, 0.4f, 1f ) );
+			_caller_name = caller.GetType().Name.Bold().Color(
+				new Color(
+					0.2f,
+					0.4f,
+					1f ) );
+
 			return this;
 		}
 
 		public Log_Builder Method( string methodName )
 		{
-			_method_name = methodName.Bold().Color( new Color( 0.2f, 0.4f, 1f ) );
+			_method_name = methodName.Bold().Color(
+				new Color(
+					0.2f,
+					0.4f,
+					1f ) );
+
 			return this;
 		}
 	}

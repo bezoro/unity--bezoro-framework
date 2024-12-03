@@ -19,15 +19,17 @@ namespace Bezoro.Framework.Unity.Utilities
 
 			for ( var i = 0 ; i < count ; i++ )
 			{
-				if ( gameObjects[i].TryGetComponent( out Object_UID uid_component ) )
+				if ( gameObjects[ i ].TryGetComponent( out Object_UID uid_component ) )
 				{
-					uids[valid_count++] = uid_component.UID;
+					uids[ valid_count++ ] = uid_component.UID;
 				}
 			}
 
 			if ( valid_count < count )
 			{
-				Array.Resize( ref uids, valid_count );
+				Array.Resize(
+					ref uids,
+					valid_count );
 			}
 
 			return uids;

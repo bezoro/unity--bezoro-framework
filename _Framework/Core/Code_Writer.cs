@@ -6,9 +6,9 @@ using System.Text;
 
 namespace Bezoro.Framework.Core
 {
-	public class CodeWriter
+	public class Code_Writer
 	{
-		private const string INDENT_STRING = "    "; // 4 spaces
+		private const string _INDENT_STRING = "    "; // 4 spaces
 
 		private readonly StringBuilder   _builder = new();
 		private readonly HashSet<string> _usings  = new();
@@ -16,24 +16,21 @@ namespace Bezoro.Framework.Core
 		private int  _indentLevel;
 		private bool _isNewLine = true;
 
-		public CodeWriter AddUsing( string nameSpace )
+		public Code_Writer AddUsing( string nameSpace )
 		{
 			_usings.Add( nameSpace );
 			return this;
 		}
 
-		public CodeWriter AddUsingRange( IEnumerable<string> namespaces )
+		public Code_Writer AddUsingRange( IEnumerable<string> namespaces )
 		{
-			foreach ( var ns in namespaces ) { AddUsing( ns ); }
+			foreach ( var @namespace in namespaces ) AddUsing( @namespace );
 			return this;
 		}
 
 		public IDisposable BeginScope( string declaration = null )
 		{
-			if ( declaration != null )
-			{
-				WriteLine( declaration );
-			}
+			if ( declaration != null ) WriteLine( declaration );
 			WriteLine( "{" );
 			_indentLevel++;
 			return new ScopeGuard( this );
@@ -45,32 +42,34 @@ namespace Bezoro.Framework.Core
 			WriteLine( closer );
 		}
 
-		public CodeWriter WriteLine( string line = "" )
+		public Code_Writer WriteLine( string line = "" )
 		{
 			if ( !string.IsNullOrEmpty( line ) )
 			{
 				WriteIndent();
 				_builder.AppendLine( line );
 			}
-			else { _builder.AppendLine(); }
+			else _builder.AppendLine();
+
 			_isNewLine = true;
 			return this;
 		}
 
-		public CodeWriter Write( string text )
+		public Code_Writer Write( string text )
 		{
 			if ( _isNewLine )
 			{
 				WriteIndent();
 				_isNewLine = false;
 			}
+
 			_builder.Append( text );
 			return this;
 		}
 
 		private void WriteIndent()
 		{
-			for ( var i = 0 ; i < _indentLevel ; i++ ) { _builder.Append( INDENT_STRING ); }
+			for ( var i = 0 ; i < _indentLevel ; i++ ) _builder.Append( _INDENT_STRING );
 		}
 
 		public override string ToString()
@@ -82,15 +81,8 @@ namespace Bezoro.Framework.Core
 			final_builder.AppendLine();
 
 			// Write usings
-			foreach ( var @using in _usings.OrderBy( x => x ) )
-			{
-				final_builder.AppendLine( $"using {@using};" );
-			}
-
-			if ( _usings.Any() )
-			{
-				final_builder.AppendLine();
-			}
+			foreach ( var @using in _usings.OrderBy( x => x ) ) final_builder.AppendLine( $"using {@using};" );
+			if ( _usings.Any() ) final_builder.AppendLine();
 
 			// Write main content
 			final_builder.Append( _builder.ToString() );
@@ -99,9 +91,9 @@ namespace Bezoro.Framework.Core
 
 		private class ScopeGuard : IDisposable
 		{
-			private readonly CodeWriter _writer;
+			private readonly Code_Writer _writer;
 
-			public ScopeGuard( CodeWriter writer )
+			public ScopeGuard( Code_Writer writer )
 			{
 				_writer = writer;
 			}
@@ -115,8 +107,8 @@ namespace Bezoro.Framework.Core
 
 	public class CSharpCodeBuilder
 	{
-		private readonly CodeWriter    _writer         = new();
 		private readonly Stack<string> _namespaceStack = new();
+		private readonly Code_Writer   _writer         = new();
 
 		private bool _isInClass;
 
@@ -137,9 +129,7 @@ namespace Bezoro.Framework.Core
 		public CSharpCodeBuilder EndNamespace()
 		{
 			if ( _namespaceStack.Count == 0 )
-			{
 				throw new InvalidOperationException( "No namespace to end" );
-			}
 
 			_namespaceStack.Pop();
 			_writer.EndScope();
@@ -147,40 +137,24 @@ namespace Bezoro.Framework.Core
 		}
 
 		public CSharpCodeBuilder BeginClass(
-			string   className,
-			string   accessibility = "public",
-			bool     isStatic      = false,
-			string   baseClass     = null,
-			string[] interfaces    = null )
+			string className,
+			string accessibility = "public",
+			bool isStatic = false,
+			string baseClass = null,
+			string[] interfaces = null
+		)
 		{
-			if ( _isInClass )
-			{
-				throw new InvalidOperationException( "Already in a class definition" );
-			}
+			if ( _isInClass ) throw new InvalidOperationException( "Already in a class definition" );
 
 			var declaration = new StringBuilder();
 			declaration.Append( $"{accessibility} " );
-			if ( isStatic )
-			{
-				declaration.Append( "static " );
-			}
+			if ( isStatic ) declaration.Append( "static " );
 			declaration.Append( $"class {className}" );
+			if ( baseClass != null ) declaration.Append( $" : {baseClass}" );
 
-			if ( baseClass != null )
+			if ( interfaces is { Length: > 0 } )
 			{
-				declaration.Append( $" : {baseClass}" );
-			}
-
-			if ( interfaces != null && interfaces.Length > 0 )
-			{
-				if ( baseClass == null )
-				{
-					declaration.Append( " : " );
-				}
-				else
-				{
-					declaration.Append( ", " );
-				}
+				declaration.Append( baseClass == null ? " : " : ", " );
 				declaration.Append( string.Join( ", ", interfaces ) );
 			}
 
@@ -192,10 +166,7 @@ namespace Bezoro.Framework.Core
 
 		public CSharpCodeBuilder EndClass()
 		{
-			if ( !_isInClass )
-			{
-				throw new InvalidOperationException( "Not in a class definition" );
-			}
+			if ( !_isInClass ) throw new InvalidOperationException( "Not in a class definition" );
 
 			_writer.EndScope();
 			_isInClass = false;
@@ -203,48 +174,37 @@ namespace Bezoro.Framework.Core
 		}
 
 		public CSharpCodeBuilder AddMethod(
-			string             name,
-			string             returnType    = "void",
-			string             accessibility = "public",
-			bool               isStatic      = false,
-			string[]           parameters    = null,
-			Action<CodeWriter> bodyWriter    = null,
-			string[]           attributes    = null )
+			string name,
+			string returnType = "void",
+			string accessibility = "public",
+			bool isStatic = false,
+			string[] parameters = null,
+			Action<Code_Writer> bodyWriter = null,
+			string[] attributes = null
+		)
 		{
-			if ( !_isInClass )
-			{
-				throw new InvalidOperationException( "Must be in a class to add a method" );
-			}
+			if ( !_isInClass ) throw new InvalidOperationException( "Must be in a class to add a method" );
 
 			// Write attributes
 			if ( attributes != null )
 			{
 				foreach ( var attribute in attributes )
-				{
 					_writer.WriteLine( $"[{attribute}]" );
-				}
 			}
 
 			var declaration = new StringBuilder();
 			declaration.Append( $"{accessibility} " );
-			if ( isStatic )
-			{
-				declaration.Append( "static " );
-			}
+
+			if ( isStatic ) declaration.Append( "static " );
+
 			declaration.Append( $"{returnType} {name}(" );
 
-			if ( parameters != null && parameters.Length > 0 )
-			{
-				declaration.Append( string.Join( ", ", parameters ) );
-			}
+			if ( parameters is { Length: > 0 } ) declaration.Append( string.Join( ", ", parameters ) );
 
 			declaration.Append( ")" );
 			_writer.WriteLine( declaration.ToString() );
 
-			using ( _writer.BeginScope() )
-			{
-				bodyWriter?.Invoke( _writer );
-			}
+			using ( _writer.BeginScope() ) bodyWriter?.Invoke( _writer );
 
 			return this;
 		}
@@ -252,35 +212,25 @@ namespace Bezoro.Framework.Core
 		public CSharpCodeBuilder AddProperty(
 			string name,
 			string type,
-			string accessibility       = "public",
-			bool   hasGetter           = true,
-			bool   hasSetter           = true,
-			string setterAccessibility = null )
+			string accessibility = "public",
+			bool hasGetter = true,
+			bool hasSetter = true,
+			string setterAccessibility = null
+		)
 		{
-			if ( !_isInClass )
-			{
-				throw new InvalidOperationException( "Must be in a class to add a property" );
-			}
+			if ( !_isInClass ) throw new InvalidOperationException( "Must be in a class to add a property" );
 
 			var declaration = $"{accessibility} {type} {name}";
 
 			if ( !hasGetter && !hasSetter )
-			{
 				throw new ArgumentException( "Property must have at least a getter or setter" );
-			}
 
 			_writer.Write( declaration );
 
 			using ( _writer.BeginScope( " {" ) )
 			{
-				if ( hasGetter )
-				{
-					_writer.WriteLine( "get;" );
-				}
-				if ( hasSetter )
-				{
-					_writer.WriteLine( $"{setterAccessibility ?? ""} set;".TrimStart() );
-				}
+				if ( hasGetter ) _writer.WriteLine( "get;" );
+				if ( hasSetter ) _writer.WriteLine( $"{setterAccessibility ?? ""} set;".TrimStart() );
 			}
 
 			return this;
@@ -290,26 +240,21 @@ namespace Bezoro.Framework.Core
 			string name,
 			string type,
 			string accessibility = "private",
-			bool   isReadonly    = false,
-			string initialValue  = null )
+			bool isReadonly = false,
+			string initialValue = null
+		)
 		{
 			if ( !_isInClass )
-			{
 				throw new InvalidOperationException( "Must be in a class to add a field" );
-			}
 
 			var declaration = new StringBuilder();
 			declaration.Append( $"{accessibility} " );
-			if ( isReadonly )
-			{
-				declaration.Append( "readonly " );
-			}
+
+			if ( isReadonly ) declaration.Append( "readonly " );
+
 			declaration.Append( $"{type} {name}" );
 
-			if ( initialValue != null )
-			{
-				declaration.Append( $" = {initialValue}" );
-			}
+			if ( initialValue != null ) declaration.Append( $" = {initialValue}" );
 
 			declaration.Append( ";" );
 
@@ -320,13 +265,9 @@ namespace Bezoro.Framework.Core
 		public string Generate()
 		{
 			if ( _namespaceStack.Count > 0 )
-			{
 				throw new InvalidOperationException( "Unclosed namespace definitions" );
-			}
-			if ( _isInClass )
-			{
-				throw new InvalidOperationException( "Unclosed class definition" );
-			}
+
+			if ( _isInClass ) throw new InvalidOperationException( "Unclosed class definition" );
 
 			return _writer.ToString();
 		}
@@ -334,8 +275,8 @@ namespace Bezoro.Framework.Core
 
 	public class CSharpFileGenerator
 	{
-		private readonly string            _outputPath;
 		private readonly CSharpCodeBuilder _builder;
+		private readonly string            _outputPath;
 
 		public CSharpFileGenerator( string outputPath )
 		{

@@ -5,6 +5,23 @@ namespace Bezoro.Framework.Unity.StateMachines.TickableBased
 	public abstract class BaseTickableStateMachine : ScriptableObject,
 		ITickableStateMachine
 	{
+		[field: SerializeField] public DisableMethod DisableMethod { get; private set; }
+
+		private TickableStateMachineOwner _owner;
+		private bool                      _wasDisabled;
+
+		public ITickableState CurrentState { get; private set; }
+
+		public ITickableState LastState { get; private set; }
+
+		public void DoTransition( ITickableState toState )
+		{
+			CurrentState.Exit();
+			LastState    = CurrentState;
+			CurrentState = toState;
+			CurrentState.Enter();
+		}
+
 		public void Init( TickableStateMachineOwner owner )
 		{
 			_owner = owner;
@@ -13,18 +30,11 @@ namespace Bezoro.Framework.Unity.StateMachines.TickableBased
 			OnInit();
 		}
 
-		public ITickableState CurrentState => _currentState;
-
-		public ITickableState LastState => _lastState;
-
-		[field: SerializeField]
-		public DisableMethod DisableMethod { get; private set; }
-
 		public void Start()
 		{
 			OnStart();
-			_currentState = ResolveStartState();
-			_currentState.Enter();
+			CurrentState = ResolveStartState();
+			CurrentState.Enter();
 		}
 
 		public void Enable()
@@ -32,64 +42,67 @@ namespace Bezoro.Framework.Unity.StateMachines.TickableBased
 			if ( _wasDisabled && DisableMethod is DisableMethod.Restart )
 			{
 				OnEnabled();
-				_currentState.Enable();
-				_currentState = ResolveStartState();
-				_currentState.Enter();
+				CurrentState.Enable();
+				CurrentState = ResolveStartState();
+				CurrentState.Enter();
 				_wasDisabled = false;
 			}
 			else if ( _wasDisabled )
 			{
 				OnEnabled();
-				_currentState.Enable();
+				CurrentState.Enable();
 				_wasDisabled = false;
 			}
 		}
 
 		public void EarlyTick()
 		{
-			_currentState.EarlyTick();
+			CurrentState.EarlyTick();
 		}
 
 		public void Tick()
 		{
-			_currentState.Tick();
+			CurrentState.Tick();
 		}
 
 		public void FixedTick()
 		{
-			_currentState.FixedTick();
+			CurrentState.FixedTick();
 		}
 
 		public void LateTick()
 		{
-			_currentState.LateTick();
+			CurrentState.LateTick();
 		}
 
 		public void Exit()
 		{
 			OnExit();
-			_currentState.Exit();
+			CurrentState.Exit();
 		}
 
 		public void Disable()
 		{
 			OnDisabled();
-			_currentState.Disable();
+			CurrentState.Disable();
 			_wasDisabled = true;
 		}
 
 		public void Destroy()
 		{
 			OnDestroyed();
-			_currentState.Destroy();
+			CurrentState.Destroy();
 		}
 
-		public void DoTransition( ITickableState toState )
+		protected T RegisterState<T>()
+		where T : class, ITickableState, new()
 		{
-			_currentState.Exit();
-			_lastState    = _currentState;
-			_currentState = toState;
-			_currentState.Enter();
+			var newState = new T();
+			newState.Init(
+				_owner,
+				this );
+
+			return newState;
 		}
 
 	#region Abstract Methods
@@ -149,19 +162,5 @@ namespace Bezoro.Framework.Unity.StateMachines.TickableBased
 		protected abstract void OnDestroyed();
 
 	#endregion
-
-		protected T RegisterState<T>()
-		where T : class, ITickableState, new()
-		{
-			var newState = new T();
-			newState.Init( _owner, this );
-
-			return newState;
-		}
-
-		private TickableStateMachineOwner _owner;
-		private ITickableState _currentState;
-		private ITickableState _lastState;
-		private bool _wasDisabled;
 	}
 }

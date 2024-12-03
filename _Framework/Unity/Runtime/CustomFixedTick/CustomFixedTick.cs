@@ -5,6 +5,8 @@ namespace Bezoro.Framework.Unity
 {
 	public sealed class CustomFixedTick
 	{
+		private readonly Stopwatch _stopWatch = new();
+
 		public CustomFixedTick( float customFixedDeltaTime, Action customFixedTickCallback )
 		{
 			CustomFixedDeltaTime    = customFixedDeltaTime;
@@ -25,7 +27,8 @@ namespace Bezoro.Framework.Unity
 			_stopWatch.Start();
 
 			ReferenceTime += deltaTime;
-			while (FixedTime < ReferenceTime)
+
+			while ( FixedTime < ReferenceTime )
 			{
 				FixedTime += CustomFixedDeltaTime;
 				CustomFixedTickCallback?.Invoke();
@@ -40,7 +43,5 @@ namespace Bezoro.Framework.Unity
 		}
 
 		private event Action CustomFixedTickCallback;
-
-		private readonly Stopwatch _stopWatch = new();
 	}
 }

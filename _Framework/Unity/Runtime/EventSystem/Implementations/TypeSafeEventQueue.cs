@@ -7,14 +7,17 @@ namespace Bezoro.Framework.Unity.EventSystem
 	{
 		private readonly Dictionary<Type, object> _queues = new();
 
-		public void Enqueue<T>( T eventData ) where T : IEvent
+		public void Enqueue<T>( T eventData )
+		where T : IEvent
 		{
-			lock (_queues)
+			lock ( _queues )
 			{
-				if ( !_queues.TryGetValue( typeof(T), out var queue ) )
+				if ( !_queues.TryGetValue(
+						typeof( T ),
+						out var queue ) )
 				{
-					queue              = new Queue<T>();
-					_queues[typeof(T)] = queue;
+					queue                  = new Queue<T>();
+					_queues[ typeof( T ) ] = queue;
 				}
 
 				( (Queue<T>)queue ).Enqueue( eventData );
@@ -23,7 +26,7 @@ namespace Bezoro.Framework.Unity.EventSystem
 
 		public bool TryDequeueAny( out Type eventType, out IEvent eventData )
 		{
-			lock (_queues)
+			lock ( _queues )
 			{
 				foreach ( var kvp in _queues )
 				{
@@ -47,7 +50,7 @@ namespace Bezoro.Framework.Unity.EventSystem
 
 		public void Clear()
 		{
-			lock (_queues)
+			lock ( _queues )
 			{
 				_queues.Clear();
 			}

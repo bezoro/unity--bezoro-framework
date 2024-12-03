@@ -2,26 +2,26 @@
 {
 	public interface IAfterSceneLoadInitializable
 	{
-		void InitializeAfterSceneLoad();
+		public void InitializeAfterSceneLoad();
 	}
 
 	public interface IBeforeSceneLoadInitializable
 	{
-		void InitializeBeforeSceneLoad();
+		public void InitializeBeforeSceneLoad();
 	}
 
 	public interface IBeforeSplashScreenInitializable
 	{
-		void InitializeBeforeSplashScreen();
+		public void InitializeBeforeSplashScreen();
 	}
 
 	public interface IAfterAssembliesLoadedInitializable
 	{
-		void InitializeAfterAssembliesLoaded();
+		public void InitializeAfterAssembliesLoaded();
 	}
 
 	public interface ISubsystemRegistrationInitializable
 	{
-		void InitializeSubsystemRegistration();
+		public void InitializeSubsystemRegistration();
 	}
 }

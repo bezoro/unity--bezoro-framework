@@ -2,14 +2,14 @@
 {
 	public interface IState
 	{
-		void Enable();
+		public void Enable();
 
-		void Enter();
+		public void Enter();
 
-		void Exit();
+		public void Exit();
 
-		void Disable();
+		public void Disable();
 
-		void Destroy();
+		public void Destroy();
 	}
 }

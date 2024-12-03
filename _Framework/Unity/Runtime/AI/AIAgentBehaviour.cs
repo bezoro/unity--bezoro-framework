@@ -4,8 +4,6 @@ namespace Bezoro.Framework.Unity.AI
 {
 	public abstract class AIAgentBehaviour : MonoBehaviour
 	{
-		public abstract void Tick();
-
 		protected virtual void OnEnable()
 		{
 			AITickManagerBehaviour.Instance.AddUnique( this );
@@ -15,5 +13,7 @@ namespace Bezoro.Framework.Unity.AI
 		{
 			AITickManagerBehaviour.Instance.Remove( this );
 		}
+
+		public abstract void Tick();
 	}
 }

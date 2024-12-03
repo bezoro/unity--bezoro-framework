@@ -9,9 +9,6 @@ namespace Bezoro.Framework.Unity.Editor
 	[InitializeOnLoad]
 	public static class EditorPlayModeStateNotifier
 	{
-		public static event Action<PlayModeStateChange> PlayModeStateChanged;
-		public static PlayModeStateChange PlayModeState { get; private set; }
-
 		private static bool _initialized;
 
 		static EditorPlayModeStateNotifier()
@@ -21,6 +18,9 @@ namespace Bezoro.Framework.Unity.Editor
 			EditorApplication.playModeStateChanged += OnPlayModeChanged;
 			_initialized                           =  true;
 		}
+
+		public static PlayModeStateChange               PlayModeState { get; private set; }
+		public static event Action<PlayModeStateChange> PlayModeStateChanged;
 
 		private static void OnPlayModeChanged( PlayModeStateChange playModeStateChange )
 		{

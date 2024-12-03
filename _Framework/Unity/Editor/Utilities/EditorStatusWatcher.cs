@@ -7,23 +7,24 @@ namespace Bezoro.Framework.Unity.Editor.Utilities
 	[InitializeOnLoad]
 	public static class EditorStatusWatcher
 	{
-		public static event Action EditorReady;
-
-		public static bool IsEditorBusy =>
-			CompilationEventHandler.IsCompilationInProgress
-		 || BuildEventHandler.IsBuildInProgress
-		 || TestRunEventHandler.IsTestRunInProgress
-		 || EditorApplication.isUpdating
-		 || AssetDatabase.IsAssetImportWorkerProcess();
-
 		static EditorStatusWatcher()
 		{
 			_ = MonitorEditorStatus();
 		}
 
+		public static bool IsEditorBusy =>
+			CompilationEventHandler.IsCompilationInProgress
+			|| BuildEventHandler.IsBuildInProgress
+			|| TestRunEventHandler.IsTestRunInProgress
+			|| EditorApplication.isUpdating
+			|| AssetDatabase.IsAssetImportWorkerProcess();
+
+		public static event Action EditorReady;
+
 		private static async Task MonitorEditorStatus()
 		{
-			while (IsEditorBusy) { await Task.Yield(); }
+			while ( IsEditorBusy ) { await Task.Yield(); }
+
 			await Task.Delay( 1500 );
 			RaiseEvent( EditorReady );
 		}

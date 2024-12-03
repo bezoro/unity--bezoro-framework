@@ -5,10 +5,24 @@ namespace Bezoro.Framework.Unity.AI
 {
 	public sealed class AITickManagerBehaviour : MonoBehaviour
 	{
-		public static AITickManagerBehaviour Instance { get; private set; }
-		public float TickFrequency => 0.1f;
-		public double Time => _customFixedTick.FixedTime;
-		public float DeltaTime => _customFixedTick.CustomFixedDeltaTime;
+		private static   AITickManagerBehaviour _instance;
+		private readonly List<AIAgentBehaviour> _ai_agents = new( 128 );
+		private          CustomFixedTick        _custom_fixed_tick;
+		public static    AITickManagerBehaviour Instance      { get; private set; }
+		public           float                  TickFrequency => 0.1f;
+		public           double                 Time          => _custom_fixed_tick.FixedTime;
+		public           float                  DeltaTime     => _custom_fixed_tick.CustomFixedDeltaTime;
+
+		private void Awake()
+		{
+			Instance           = this;
+			_custom_fixed_tick = new( TickFrequency, Tick );
+		}
+
+		private void Update()
+		{
+			_custom_fixed_tick.Tick( UnityEngine.Time.deltaTime );
+		}
 
 		[RuntimeInitializeOnLoadMethod( RuntimeInitializeLoadType.SubsystemRegistration )]
 		private static void Init()
@@ -16,44 +30,21 @@ namespace Bezoro.Framework.Unity.AI
 			Instance = null;
 		}
 
-		private void Awake()
-		{
-			Instance         = this;
-			_customFixedTick = new(TickFrequency, Tick);
-		}
-
-		private void Update()
-		{
-			_customFixedTick.Tick( UnityEngine.Time.deltaTime );
-		}
-
 		private void Tick()
 		{
-			for ( var i = 0 ; i < _aiAgents.Count ; i++ )
-			{
-				_aiAgents[i].Tick();
-			}
+			for ( var i = 0 ; i < _ai_agents.Count ; i++ ) { _ai_agents[ i ].Tick(); }
 		}
 
-		public void AddUnique( AIAgentBehaviour aiAgentBehaviour )
+		public void AddUnique( AIAgentBehaviour ai_agent_behaviour )
 		{
-			if ( _aiAgents.Contains( aiAgentBehaviour ) )
-			{
-				return;
-			}
+			if ( _ai_agents.Contains( ai_agent_behaviour ) ) { return; }
 
-			_aiAgents.Add( aiAgentBehaviour );
+			_ai_agents.Add( ai_agent_behaviour );
 		}
 
-		public void Remove( AIAgentBehaviour aiAgentBehaviour )
+		public void Remove( AIAgentBehaviour ai_agent_behaviour )
 		{
-			_aiAgents.Remove( aiAgentBehaviour );
+			_ai_agents.Remove( ai_agent_behaviour );
 		}
-
-		private static AITickManagerBehaviour _instance;
-
-		private CustomFixedTick _customFixedTick;
-
-		private readonly List<AIAgentBehaviour> _aiAgents = new(128);
 	}
 }

@@ -40,7 +40,7 @@ namespace Bezoro.Framework.Unity.Editor.Tools
 		private static Task<bool> RunTestsByModeAsync( TestMode testMode )
 		{
 			var testRunnerApi = ScriptableObject.CreateInstance<TestRunnerApi>();
-			var tcs = new TaskCompletionSource<bool>();
+			var tcs           = new TaskCompletionSource<bool>();
 			Callbacks = new();
 
 			Callbacks.TestsRunFinished += () => tcs.SetResult( true );
@@ -53,12 +53,13 @@ namespace Bezoro.Framework.Unity.Editor.Tools
 			};
 
 			testRunnerApi.RegisterCallbacks( Callbacks );
-			testRunnerApi.Execute( new(filter) );
+			testRunnerApi.Execute( new( filter ) );
 
 			return tcs.Task;
 		}
 
-		public class TestCallbacks : ICallbacks, IDisposable
+		public class TestCallbacks : ICallbacks,
+			IDisposable
 		{
 			private readonly TaskCompletionSource<bool> _tcs;
 

@@ -24,35 +24,48 @@ namespace Bezoro.Framework.Unity.Utilities
 			}
 		}
 
-		public static Vector3 CalculateCellCenter
-		(
+		public static Vector3 CalculateCellCenter(
 			int columnIndex,
 			int rowIndex,
 			Vector2 cellDimensions,
 			Bounds boundingBox
 		)
 		{
-			IntHelpers.ValidateIntegerInRange( columnIndex, 0, (int)boundingBox.size.x );
-			IntHelpers.ValidateIntegerInRange( rowIndex, 0, (int)boundingBox.size.y );
+			IntHelpers.ValidateIntegerInRange(
+				columnIndex,
+				0,
+				(int)boundingBox.size.x );
+
+			IntHelpers.ValidateIntegerInRange(
+				rowIndex,
+				0,
+				(int)boundingBox.size.y );
+
 			ValidateVector2( cellDimensions );
 			ValidateVector2( boundingBox.size );
 
 			var minimumBounds = boundingBox.min;
-			var centerX = ( columnIndex + 0.5f ) * cellDimensions.x;
-			var centerY = boundingBox.size.y;
-			var centerZ = ( rowIndex + 0.5f ) * cellDimensions.y;
+			var centerX       = ( columnIndex + 0.5f ) * cellDimensions.x;
+			var centerY       = boundingBox.size.y;
+			var centerZ       = ( rowIndex + 0.5f ) * cellDimensions.y;
 
-			var cellCenter = minimumBounds + new Vector3( centerX, centerY, centerZ );
+			var cellCenter = minimumBounds + new Vector3(
+				centerX,
+				centerY,
+				centerZ );
 
 			return cellCenter;
 		}
 
-		public static Vector3 RotateAroundPivot( this Vector3 point, Vector3 pivot, Vector3 angles ) =>
-			Quaternion.Euler( angles ) * ( point - pivot ) + pivot;
+		public static Vector3 RotateAroundPivot( this Vector3 point, Vector3 pivot, Vector3 angles )
+		{
+			return Quaternion.Euler( angles ) * ( point - pivot ) + pivot;
+		}
 
 		public static Vector3 Average( params Vector3[] vectors )
 		{
 			var sum = Vector3.zero;
+
 			foreach ( var vec in vectors )
 			{
 				sum += vec;
@@ -61,21 +74,52 @@ namespace Bezoro.Framework.Unity.Utilities
 			return sum / vectors.Length;
 		}
 
-		public static float AngleBetween( Vector3 from, Vector3 to ) => Vector3.Angle( from, to );
+		public static float AngleBetween( Vector3 from, Vector3 to )
+		{
+			return Vector3.Angle(
+				from,
+				to );
+		}
 
-		public static Vector3 MultiplyComponents( this Vector3 vector, Vector3 other ) =>
-			new(vector.x * other.x, vector.y * other.y, vector.z * other.z);
+		public static Vector3 MultiplyComponents( this Vector3 vector, Vector3 other )
+		{
+			return new(
+				vector.x * other.x,
+				vector.y * other.y,
+				vector.z * other.z );
+		}
 
-		public static Vector3 DivideComponents( this Vector3 vector, Vector3 other ) =>
-			new(vector.x / other.x, vector.y / other.y, vector.z / other.z);
+		public static Vector3 DivideComponents( this Vector3 vector, Vector3 other )
+		{
+			return new(
+				vector.x / other.x,
+				vector.y / other.y,
+				vector.z / other.z );
+		}
 
-		public static Vector3 ClampComponents( this Vector3 vector, Vector3 min, Vector3 max ) =>
-			new(
-				Mathf.Clamp( vector.x, min.x, max.x ),
-				Mathf.Clamp( vector.y, min.y, max.y ),
-				Mathf.Clamp( vector.z, min.z, max.z )
+		public static Vector3 ClampComponents( this Vector3 vector, Vector3 min, Vector3 max )
+		{
+			return new(
+				Mathf.Clamp(
+					vector.x,
+					min.x,
+					max.x ),
+				Mathf.Clamp(
+					vector.y,
+					min.y,
+					max.y ),
+				Mathf.Clamp(
+					vector.z,
+					min.z,
+					max.z )
 			);
+		}
 
-		public static Vector3 Perpendicular( Vector3 vector ) => Vector3.Cross( vector, Vector3.up );
+		public static Vector3 Perpendicular( Vector3 vector )
+		{
+			return Vector3.Cross(
+				vector,
+				Vector3.up );
+		}
 	}
 }

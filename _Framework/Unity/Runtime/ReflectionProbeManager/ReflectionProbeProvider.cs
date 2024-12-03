@@ -4,6 +4,8 @@ namespace Bezoro.Framework.Unity.ReflectionProbeManager
 {
 	public class ReflectionProbeProvider : MonoBehaviour
 	{
+		[SerializeField] [HideInInspector] private ReflectionProbe reflectionProbe;
+
 		public void OnEnable()
 		{
 			ReflectionProbeManager.Instance.AddUnique( reflectionProbe );
@@ -26,8 +28,5 @@ namespace Bezoro.Framework.Unity.ReflectionProbeManager
 				reflectionProbe = rp;
 			}
 		}
-
-		[SerializeField] [HideInInspector]
-		private ReflectionProbe reflectionProbe;
 	}
 }

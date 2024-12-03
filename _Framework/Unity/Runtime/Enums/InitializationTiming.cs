@@ -3,6 +3,6 @@
 	public enum InitializationTiming
 	{
 		Instant = 0,
-		Async = 1
+		Async   = 1
 	}
 }

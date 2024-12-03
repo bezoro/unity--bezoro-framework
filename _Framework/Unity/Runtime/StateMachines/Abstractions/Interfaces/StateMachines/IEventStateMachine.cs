@@ -1,4 +1,6 @@
 ﻿namespace Bezoro.Framework.Unity.StateMachines
 {
-	public interface IEventStateMachine : IStateMachine<IEventState> {}
+	public interface IEventStateMachine : IStateMachine<IEventState>
+	{
+	}
 }

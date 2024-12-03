@@ -24,6 +24,7 @@ namespace Bezoro.Framework.Unity.Editor.StateMachine
 				for ( var i = states.Count - 1 ; i >= 0 ; i-- )
 				{
 					var childRenderer = source.GetComponentInChildren<Renderer>();
+
 					if ( childRenderer is null )
 					{
 						return;
@@ -43,7 +44,7 @@ namespace Bezoro.Framework.Unity.Editor.StateMachine
 					{
 						Draw.Label2D(
 							positionToDrawLabel,
-							$"{states[i].GetType().Name}",
+							$"{states[ i ].GetType().Name}",
 							24f,
 							LabelAlignment.Center,
 							Color.blue

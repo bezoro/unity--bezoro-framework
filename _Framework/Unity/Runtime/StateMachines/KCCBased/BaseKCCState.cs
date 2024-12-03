@@ -10,25 +10,29 @@ namespace Bezoro.Framework.Unity.StateMachines.KCCBased
 	public abstract class BaseKCCState :
 		IKCCState
 	{
+		private KCCStateMachineOwner _owner;
+		private IKCCStateMachine     _owningStateMachine;
+		private KCCTransition[]      _transitions = new KCCTransition[4];
+
+		public MonoBehaviour Owner => _owner;
+
+		public KinematicCharacterMotor Motor { get; private set; }
+
 		public void Init(
-			KCCStateMachineOwner    owner,
-			IKCCStateMachine        owningStateMachine,
+			KCCStateMachineOwner owner,
+			IKCCStateMachine owningStateMachine,
 			KinematicCharacterMotor motor
 		)
 		{
 			_owner              = owner;
 			_owningStateMachine = owningStateMachine;
-			_motor              = motor;
+			Motor               = motor;
 			OnInit();
 		}
 
-		public MonoBehaviour Owner => _owner;
-
 		public KCCTransition[] Transitions => _transitions;
 
-		public KinematicCharacterMotor Motor => _motor;
-
-		public List<Type> MonoBehaviourTypesToIgnoreCollisionsWith { get; } = new(4);
+		public List<Type> MonoBehaviourTypesToIgnoreCollisionsWith { get; } = new( 4 );
 
 		public void Enable()
 		{
@@ -62,93 +66,6 @@ namespace Bezoro.Framework.Unity.StateMachines.KCCBased
 			OnLateTick();
 		}
 
-	#region KCC Methods
-
-		public void UpdateRotation( ref Quaternion currentRotation, float deltaTime )
-		{
-			OnUpdateRotation( ref currentRotation, deltaTime );
-		}
-
-		public void UpdateVelocity( ref Vector3 currentVelocity, float deltaTime )
-		{
-			OnUpdateVelocity( ref currentVelocity, deltaTime );
-		}
-
-		public void BeforeCharacterUpdate( float deltaTime )
-		{
-			OnBeforeCharacterUpdate( deltaTime );
-		}
-
-		public void PostGroundingUpdate( float deltaTime )
-		{
-			OnPostGroundingUpdate( deltaTime );
-		}
-
-		public void AfterCharacterUpdate( float deltaTime )
-		{
-			OnAfterCharacterUpdate( deltaTime );
-			AllTransitionsTick();
-
-			void AllTransitionsTick()
-			{
-				for ( var i = 0 ; i < _transitions.Length ; i++ )
-				{
-					if ( _transitions[i] == null )
-					{
-						continue;
-					}
-
-					_transitions[i].Tick();
-				}
-			}
-		}
-
-		public void GroundHit(
-			Collider               hitCollider,
-			Vector3                hitNormal,
-			Vector3                hitPoint,
-			ref HitStabilityReport hitStabilityReport
-		)
-		{
-			OnGroundHit( hitCollider, hitNormal, hitPoint, ref hitStabilityReport );
-		}
-
-		public void MovementHit(
-			Collider               hitCollider,
-			Vector3                hitNormal,
-			Vector3                hitPoint,
-			ref HitStabilityReport hitStabilityReport
-		)
-		{
-			OnMovementHit( hitCollider, hitNormal, hitPoint, ref hitStabilityReport );
-		}
-
-		public void ProcessHitStabilityReport(
-			Collider               hitCollider,
-			Vector3                hitNormal,
-			Vector3                hitPoint,
-			Vector3                atCharacterPosition,
-			Quaternion             atCharacterRotation,
-			ref HitStabilityReport hitStabilityReport
-		)
-		{
-			OnProcessHitStabilityReport(
-				hitCollider,
-				hitNormal,
-				hitPoint,
-				atCharacterPosition,
-				atCharacterRotation,
-				ref hitStabilityReport
-			);
-		}
-
-		public void DiscreteCollisionDetected( Collider hitCollider )
-		{
-			OnDiscreteCollisionDetected( hitCollider );
-		}
-
-	#endregion
-
 		public void OnTransitionRaised( IKCCState toState )
 		{
 			_owningStateMachine.DoTransition( toState );
@@ -172,20 +89,26 @@ namespace Bezoro.Framework.Unity.StateMachines.KCCBased
 			AllTransitionsCeaseRelevant();
 		}
 
-		public KCCTransition TransitionsTo( IKCCState toState )
-		{
-			var newTransition = new KCCTransition();
-			newTransition.Init( this, toState, _owner );
-			Array_Helpers.Add( ref _transitions, newTransition );
-
-			return newTransition;
-		}
-
 		public bool IsSubStateMachine( out IKCCStateMachine outStateMachine )
 		{
 			outStateMachine = null;
 
 			return false;
+		}
+
+		public KCCTransition TransitionsTo( IKCCState toState )
+		{
+			var newTransition = new KCCTransition();
+			newTransition.Init(
+				this,
+				toState,
+				_owner );
+
+			Array_Helpers.Add(
+				ref _transitions,
+				newTransition );
+
+			return newTransition;
 		}
 
 		public void AddMonoBehaviourToIgnoreCollisionsWith<T>()
@@ -194,42 +117,167 @@ namespace Bezoro.Framework.Unity.StateMachines.KCCBased
 			KCCStateExtensions.AddMonoBehaviourToIgnoreCollisionsWith<T>( this );
 		}
 
+		private void AllTransitionsBecomeRelevant()
+		{
+			for ( var i = 0 ; i < _transitions.Length ; i++ )
+			{
+				if ( _transitions[ i ] == null )
+				{
+					continue;
+				}
+
+				_transitions[ i ].BecomeRelevant();
+			}
+		}
+
+		private void AllTransitionsCeaseRelevant()
+		{
+			for ( var i = 0 ; i < _transitions.Length ; i++ )
+			{
+				if ( _transitions[ i ] == null )
+				{
+					continue;
+				}
+
+				_transitions[ i ].CeaseRelevant();
+			}
+		}
+
+	#region KCC Methods
+
+		public void UpdateRotation( ref Quaternion currentRotation, float deltaTime )
+		{
+			OnUpdateRotation(
+				ref currentRotation,
+				deltaTime );
+		}
+
+		public void UpdateVelocity( ref Vector3 currentVelocity, float deltaTime )
+		{
+			OnUpdateVelocity(
+				ref currentVelocity,
+				deltaTime );
+		}
+
+		public void BeforeCharacterUpdate( float deltaTime )
+		{
+			OnBeforeCharacterUpdate( deltaTime );
+		}
+
+		public void PostGroundingUpdate( float deltaTime )
+		{
+			OnPostGroundingUpdate( deltaTime );
+		}
+
+		public void AfterCharacterUpdate( float deltaTime )
+		{
+			OnAfterCharacterUpdate( deltaTime );
+			AllTransitionsTick();
+
+			void AllTransitionsTick()
+			{
+				for ( var i = 0 ; i < _transitions.Length ; i++ )
+				{
+					if ( _transitions[ i ] == null )
+					{
+						continue;
+					}
+
+					_transitions[ i ].Tick();
+				}
+			}
+		}
+
+		public void GroundHit(
+			Collider hitCollider,
+			Vector3 hitNormal,
+			Vector3 hitPoint,
+			ref HitStabilityReport hitStabilityReport
+		)
+		{
+			OnGroundHit(
+				hitCollider,
+				hitNormal,
+				hitPoint,
+				ref hitStabilityReport );
+		}
+
+		public void MovementHit(
+			Collider hitCollider,
+			Vector3 hitNormal,
+			Vector3 hitPoint,
+			ref HitStabilityReport hitStabilityReport
+		)
+		{
+			OnMovementHit(
+				hitCollider,
+				hitNormal,
+				hitPoint,
+				ref hitStabilityReport );
+		}
+
+		public void ProcessHitStabilityReport(
+			Collider hitCollider,
+			Vector3 hitNormal,
+			Vector3 hitPoint,
+			Vector3 atCharacterPosition,
+			Quaternion atCharacterRotation,
+			ref HitStabilityReport hitStabilityReport
+		)
+		{
+			OnProcessHitStabilityReport(
+				hitCollider,
+				hitNormal,
+				hitPoint,
+				atCharacterPosition,
+				atCharacterRotation,
+				ref hitStabilityReport
+			);
+		}
+
+		public void DiscreteCollisionDetected( Collider hitCollider )
+		{
+			OnDiscreteCollisionDetected( hitCollider );
+		}
+
+	#endregion
+
 	#region Abstract Methods
 
 		/// <summary>
-		///    Called once in the lifetime of the object, when it is created.
-		///    Use it like <b>Awake</b> in a <b>MonoBehaviour</b>.
+		///     Called once in the lifetime of the object, when it is created.
+		///     Use it like <b>Awake</b> in a <b>MonoBehaviour</b>.
 		/// </summary>
 		protected abstract void OnInit();
 
 		/// <summary>
-		///    Called when the <b>Owner</b> gets <i>Enabled</i> and was previously <i>Disabled</i>,
-		///    while this object is still being executed.
+		///     Called when the <b>Owner</b> gets <i>Enabled</i> and was previously <i>Disabled</i>,
+		///     while this object is still being executed.
 		/// </summary>
 		protected abstract void OnEnable();
 
 		/// <summary>
-		///    Called when the <b>State</b> is <i>Entered</i>.
+		///     Called when the <b>State</b> is <i>Entered</i>.
 		/// </summary>
 		protected abstract void OnEnter();
 
 		/// <summary>
-		///    Called every frame, before <b>OnTick</b>.
+		///     Called every frame, before <b>OnTick</b>.
 		/// </summary>
 		protected abstract void OnEarlyTick();
 
 		/// <summary>
-		///    Called every frame.
+		///     Called every frame.
 		/// </summary>
 		protected abstract void OnTick();
 
 		/// <summary>
-		///    Called at the same rate as <b>FixedUpdate</b>.
+		///     Called at the same rate as <b>FixedUpdate</b>.
 		/// </summary>
 		protected abstract void OnFixedTick();
 
 		/// <summary>
-		///    Called every frame after <b>OnTick</b>.
+		///     Called every frame after <b>OnTick</b>.
 		/// </summary>
 		protected abstract void OnLateTick();
 
@@ -244,76 +292,45 @@ namespace Bezoro.Framework.Unity.StateMachines.KCCBased
 		protected abstract void OnAfterCharacterUpdate( float deltaTime );
 
 		protected abstract void OnGroundHit(
-			Collider               hitCollider,
-			Vector3                hitNormal,
-			Vector3                hitPoint,
+			Collider hitCollider,
+			Vector3 hitNormal,
+			Vector3 hitPoint,
 			ref HitStabilityReport hitStabilityReport
 		);
 
 		protected abstract void OnMovementHit(
-			Collider               hitCollider,
-			Vector3                hitNormal,
-			Vector3                hitPoint,
+			Collider hitCollider,
+			Vector3 hitNormal,
+			Vector3 hitPoint,
 			ref HitStabilityReport hitStabilityReport
 		);
 
 		protected abstract void OnProcessHitStabilityReport(
-			Collider               hitCollider,
-			Vector3                hitNormal,
-			Vector3                hitPoint,
-			Vector3                atCharacterPosition,
-			Quaternion             atCharacterRotation,
+			Collider hitCollider,
+			Vector3 hitNormal,
+			Vector3 hitPoint,
+			Vector3 atCharacterPosition,
+			Quaternion atCharacterRotation,
 			ref HitStabilityReport hitStabilityReport
 		);
 
 		protected abstract void OnDiscreteCollisionDetected( Collider hitCollider );
 
 		/// <summary>
-		///    Called when the <b>State</b> is <i>Exited</i>.
+		///     Called when the <b>State</b> is <i>Exited</i>.
 		/// </summary>
 		protected abstract void OnExit();
 
 		/// <summary>
-		///    Called when the <b>Owner</b> is <i>Disabled</i> while this object is still being executed.
+		///     Called when the <b>Owner</b> is <i>Disabled</i> while this object is still being executed.
 		/// </summary>
 		protected abstract void OnDisable();
 
 		/// <summary>
-		///    Called when the <b>Owner</b> is <i>Destroyed</i> while this object is still being executed.
+		///     Called when the <b>Owner</b> is <i>Destroyed</i> while this object is still being executed.
 		/// </summary>
 		protected abstract void OnDestroy();
 
 	#endregion
-
-		private void AllTransitionsBecomeRelevant()
-		{
-			for ( var i = 0 ; i < _transitions.Length ; i++ )
-			{
-				if ( _transitions[i] == null )
-				{
-					continue;
-				}
-
-				_transitions[i].BecomeRelevant();
-			}
-		}
-
-		private void AllTransitionsCeaseRelevant()
-		{
-			for ( var i = 0 ; i < _transitions.Length ; i++ )
-			{
-				if ( _transitions[i] == null )
-				{
-					continue;
-				}
-
-				_transitions[i].CeaseRelevant();
-			}
-		}
-
-		private KCCStateMachineOwner    _owner;
-		private IKCCStateMachine        _owningStateMachine;
-		private KinematicCharacterMotor _motor;
-		private KCCTransition[]         _transitions = new KCCTransition[4];
 	}
 }

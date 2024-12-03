@@ -1,5 +1,5 @@
 ﻿using System.Diagnostics;
-using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace Bezoro.Framework.Unity.Utilities
 {
@@ -15,7 +15,7 @@ namespace Bezoro.Framework.Unity.Utilities
 		{
 			if ( obj == null )
 			{
-				throw new("Object is null.");
+				throw new( "Object is null." );
 			}
 		}
 	}

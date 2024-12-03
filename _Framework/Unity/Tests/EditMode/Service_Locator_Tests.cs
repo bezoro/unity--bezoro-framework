@@ -9,8 +9,6 @@ namespace Bezoro.Framework.Unity.Tests.EditMode
 	[Category( "Unit Tests" )]
 	public class Service_Locator_Tests
 	{
-		private IServiceLocator _service_locator;
-
 		[SetUp]
 		public void SetUp()
 		{
@@ -22,6 +20,8 @@ namespace Bezoro.Framework.Unity.Tests.EditMode
 		{
 			_service_locator.Dispose();
 		}
+
+		private IServiceLocator _service_locator;
 
 		[Test]
 		public void RegisterService_WhenCalledWithSingletonLifespan_RegistersService()
@@ -56,7 +56,9 @@ namespace Bezoro.Framework.Unity.Tests.EditMode
 			var service1 = _service_locator.GetService<ITestService>();
 			var service2 = _service_locator.GetService<ITestService>();
 
-			Assert.AreSame( service1, service2 );
+			Assert.AreSame(
+				service1,
+				service2 );
 		}
 
 		[Test]
@@ -70,7 +72,9 @@ namespace Bezoro.Framework.Unity.Tests.EditMode
 			var service1 = _service_locator.GetService<ITestService>();
 			var service2 = _service_locator.GetService<ITestService>();
 
-			Assert.AreNotSame( service1, service2 );
+			Assert.AreNotSame(
+				service1,
+				service2 );
 		}
 
 		[Test]
@@ -84,7 +88,9 @@ namespace Bezoro.Framework.Unity.Tests.EditMode
 			var service1 = _service_locator.GetService<ITestService>();
 			var service2 = _service_locator.GetService<ITestService>();
 
-			Assert.AreSame( service1, service2 );
+			Assert.AreSame(
+				service1,
+				service2 );
 		}
 
 		[Test]
@@ -103,11 +109,10 @@ namespace Bezoro.Framework.Unity.Tests.EditMode
 
 			Assert.Throws<ServiceAlreadyRegisteredException>
 			(
-				() =>
-					_service_locator.RegisterService<ITestService, TestService>(
-						() => new(),
-						ServiceLifespan.Singleton
-					)
+				() => _service_locator.RegisterService<ITestService, TestService>(
+					() => new(),
+					ServiceLifespan.Singleton
+				)
 			);
 		}
 
@@ -116,11 +121,10 @@ namespace Bezoro.Framework.Unity.Tests.EditMode
 		{
 			Assert.Throws<ArgumentNullException>
 			(
-				() =>
-					_service_locator.RegisterService<ITestService, TestService>(
-						null,
-						ServiceLifespan.Singleton
-					)
+				() => _service_locator.RegisterService<ITestService, TestService>(
+					null,
+					ServiceLifespan.Singleton
+				)
 			);
 		}
 
@@ -137,8 +141,12 @@ namespace Bezoro.Framework.Unity.Tests.EditMode
 			Assert.IsFalse( _service_locator.IsServiceRegistered<ITestService>() );
 		}
 
-		private interface ITestService : IService {}
+		private interface ITestService : IService
+		{
+		}
 
-		private class TestService : ITestService {}
+		private class TestService : ITestService
+		{
+		}
 	}
 }

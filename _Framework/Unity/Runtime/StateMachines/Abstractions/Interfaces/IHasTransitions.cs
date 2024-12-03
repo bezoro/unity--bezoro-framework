@@ -4,8 +4,8 @@
 	where T0 : ITransition
 	where T1 : IState
 	{
-		T0[] Transitions { get; }
+		public T0[] Transitions { get; }
 
-		void OnTransitionRaised( T1 toState );
+		public void OnTransitionRaised( T1 toState );
 	}
 }

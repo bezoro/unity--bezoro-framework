@@ -10,13 +10,14 @@ namespace Bezoro.Framework.Unity.Editor
 		public static bool IsPrefabAsset( this GameObject go )
 		{
 			return !go.gameObject.scene.IsValid()
-				 && ( PrefabUtility.IsPartOfPrefabAsset( go.gameObject )
-					|| PrefabUtility.IsPartOfVariantPrefab( go.gameObject ) );
+				   && ( PrefabUtility.IsPartOfPrefabAsset( go.gameObject )
+						|| PrefabUtility.IsPartOfVariantPrefab( go.gameObject ) );
 		}
 
 		public static string TryGetAssetGUID( this GameObject gameObject )
 		{
 			var path = AssetDatabase.GetAssetPath( gameObject );
+
 			if ( !string.IsNullOrEmpty( path ) )
 			{
 				return AssetDatabase.AssetPathToGUID( path );
@@ -50,6 +51,7 @@ namespace Bezoro.Framework.Unity.Editor
 		public static void SetLayerRecursively( this GameObject gameObject, int layer )
 		{
 			gameObject.layer = layer;
+
 			foreach ( Transform child in gameObject.transform )
 			{
 				child.gameObject.SetLayerRecursively( layer );
@@ -64,11 +66,13 @@ namespace Bezoro.Framework.Unity.Editor
 			}
 		}
 
-		public static T GetComponentInChildrenIncludingInactive<T>( this GameObject gameObject ) where T : Component
+		public static T GetComponentInChildrenIncludingInactive<T>( this GameObject gameObject )
+		where T : Component
 		{
 			foreach ( var childTransform in gameObject.GetComponentsInChildren<Transform>( true ) )
 			{
 				var component = childTransform.GetComponent<T>();
+
 				if ( component != null )
 				{
 					return component;
@@ -94,7 +98,8 @@ namespace Bezoro.Framework.Unity.Editor
 			transform.localScale = Vector3.one;
 		}
 
-		public static bool HasComponent<T>( this GameObject gameObject ) where T : Component
+		public static bool HasComponent<T>( this GameObject gameObject )
+		where T : Component
 		{
 			return gameObject.GetComponent<T>() != null;
 		}
@@ -109,28 +114,37 @@ namespace Bezoro.Framework.Unity.Editor
 				}
 
 				var destinationComponent = destination.GetComponent( sourceComponent.GetType() );
+
 				if ( !destinationComponent )
 				{
 					destinationComponent = destination.AddComponent( sourceComponent.GetType() );
 				}
 
 				foreach ( var field in sourceComponent.GetType()
-							  .GetFields(
-									BindingFlags.Public
-								 | BindingFlags.NonPublic
-								 | BindingFlags.Instance
-								) )
+													  .GetFields(
+														  BindingFlags.Public
+														  | BindingFlags.NonPublic
+														  | BindingFlags.Instance
+													  ) )
 				{
-					field.SetValue( destinationComponent, field.GetValue( sourceComponent ) );
+					field.SetValue(
+						destinationComponent,
+						field.GetValue( sourceComponent ) );
 				}
 
 				foreach ( var prop in sourceComponent.GetType().GetProperties(
-								BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance
-							) )
+							 BindingFlags.Public | BindingFlags.NonPublic
+												 | BindingFlags.Instance
+						 ) )
 				{
 					if ( prop.CanWrite )
 					{
-						prop.SetValue( destinationComponent, prop.GetValue( sourceComponent, null ), null );
+						prop.SetValue(
+							destinationComponent,
+							prop.GetValue(
+								sourceComponent,
+								null ),
+							null );
 					}
 				}
 			}

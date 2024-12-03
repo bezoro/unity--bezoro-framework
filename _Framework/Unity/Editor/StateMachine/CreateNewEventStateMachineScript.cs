@@ -17,12 +17,12 @@ namespace Bezoro.Framework.Unity.Editor.StateMachine
 					.EventStateMachineScriptTemplateName
 			);
 
-			if ( guids.IsNullOrEmpty() )
+			if ( guids.Is_Null_Or_Empty() )
 			{
 				return;
 			}
 
-			var templatePath = AssetDatabase.GUIDToAssetPath( guids[0] );
+			var templatePath = AssetDatabase.GUIDToAssetPath( guids[ 0 ] );
 			ProjectWindowUtil.CreateScriptAssetFromTemplateFile(
 				templatePath,
 				"newEventStateMachine.cs"

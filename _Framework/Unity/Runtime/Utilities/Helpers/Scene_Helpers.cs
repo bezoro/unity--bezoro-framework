@@ -16,7 +16,9 @@ namespace Bezoro.Framework.Unity.Utilities
 			for ( var i = 0 ; i < SceneManager.sceneCount ; i++ )
 			{
 				var scene = SceneManager.GetSceneAt( i );
-				Array_Helpers.Merge( scene.GetRootGameObjects(), ref results );
+				Array_Helpers.Merge(
+					scene.GetRootGameObjects(),
+					ref results );
 			}
 		}
 
@@ -25,6 +27,7 @@ namespace Bezoro.Framework.Unity.Utilities
 			for ( var i = 0 ; i < SceneManager.sceneCount ; i++ )
 			{
 				var sc = SceneManager.GetSceneAt( i );
+
 				if ( sc.path != path )
 				{
 					continue;
@@ -36,7 +39,7 @@ namespace Bezoro.Framework.Unity.Utilities
 				return true;
 			}
 
-			scene = default(Scene);
+			scene = default;
 			index = -1;
 
 			return false;
@@ -47,6 +50,7 @@ namespace Bezoro.Framework.Unity.Utilities
 			for ( var i = 0 ; i < SceneManager.sceneCount ; i++ )
 			{
 				var sc = SceneManager.GetSceneAt( i );
+
 				if ( sc.name != name )
 				{
 					continue;
@@ -58,7 +62,7 @@ namespace Bezoro.Framework.Unity.Utilities
 				return true;
 			}
 
-			scene = default(Scene);
+			scene = default;
 			index = -1;
 
 			return false;

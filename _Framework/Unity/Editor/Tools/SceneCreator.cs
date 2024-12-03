@@ -8,6 +8,9 @@ namespace Bezoro.Framework.Unity.Editor.Tools
 {
 	public static class SceneCreator
 	{
+		private const string MenuPath     = "Bezoro/Scene Creator/Create Scene From Selected Hierarchy";
+		private const string NewSceneName = "NewScene";
+
 		[MenuItem( MenuPath )]
 		private static void Create()
 		{
@@ -30,23 +33,33 @@ namespace Bezoro.Framework.Unity.Editor.Tools
 		private static Scene CreateSceneAssetFromSelection( string path )
 		{
 			var newScene =
-				EditorSceneManager.NewScene( NewSceneSetup.EmptyScene, NewSceneMode.Additive );
+				EditorSceneManager.NewScene(
+					NewSceneSetup.EmptyScene,
+					NewSceneMode.Additive );
 
 			var activeGameObject = Selection.activeGameObject;
-			var newObject = Object.Instantiate( activeGameObject );
+			var newObject        = Object.Instantiate( activeGameObject );
 			newObject.name = activeGameObject.name;
 
-			EditorSceneManager.SaveScene( newScene, path );
-			EditorSceneManager.CloseScene( newScene, true );
+			EditorSceneManager.SaveScene(
+				newScene,
+				path );
+
+			EditorSceneManager.CloseScene(
+				newScene,
+				true );
+
 			AssetDatabase.Refresh();
 
 			return newScene;
 		}
 
-		[MenuItem( MenuPath, true )]
-		private static bool Validate_Create() => Selection.activeGameObject is not null;
-
-		private const string MenuPath = "Bezoro/Scene Creator/Create Scene From Selected Hierarchy";
-		private const string NewSceneName = "NewScene";
+		[MenuItem(
+			MenuPath,
+			true )]
+		private static bool Validate_Create()
+		{
+			return Selection.activeGameObject is not null;
+		}
 	}
 }

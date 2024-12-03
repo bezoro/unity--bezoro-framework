@@ -6,14 +6,18 @@ namespace Bezoro.Framework.Unity.StateMachines.EventBased
 	public abstract class BaseEventState :
 		IEventState
 	{
+		private EventStateMachineOwner _owner;
+		private IEventStateMachine     _owningStateMachine;
+		private EventTransition[]      _transitions = new EventTransition[4];
+
+		public MonoBehaviour Owner => _owner;
+
 		public void Init( EventStateMachineOwner owner, IEventStateMachine owningStateMachine )
 		{
 			_owner              = owner;
 			_owningStateMachine = owningStateMachine;
 			OnInit();
 		}
-
-		public MonoBehaviour Owner => _owner;
 
 		public EventTransition[] Transitions => _transitions;
 
@@ -55,58 +59,28 @@ namespace Bezoro.Framework.Unity.StateMachines.EventBased
 		public EventTransition TransitionsTo( IEventState toState )
 		{
 			var newTransition = new EventTransition();
-			newTransition.Init( this, toState, _owner );
-			Array_Helpers.Add( ref _transitions, newTransition );
+			newTransition.Init(
+				this,
+				toState,
+				_owner );
+
+			Array_Helpers.Add(
+				ref _transitions,
+				newTransition );
 
 			return newTransition;
 		}
-
-	#region Abstract Methods
-
-		/// <summary>
-		///    Called once in the lifetime of the object, when it is created.
-		///    Use it like <b>Awake</b> in a <b>MonoBehaviour</b>.
-		/// </summary>
-		protected abstract void OnInit();
-
-		/// <summary>
-		///    Called when the <b>Owner</b> gets <i>Enabled</i> and was previously <i>Disabled</i>,
-		///    while this object is still being executed.
-		/// </summary>
-		protected abstract void OnEnable();
-
-		/// <summary>
-		///    Called when the <b>State</b> is <i>Entered</i>.
-		/// </summary>
-		protected abstract void OnEnter();
-
-		/// <summary>
-		///    Called when the <b>State</b> is <i>Exited</i>.
-		/// </summary>
-		protected abstract void OnExit();
-
-		/// <summary>
-		///    Called when the <b>Owner</b> is <i>Disabled</i> while this object is still being executed.
-		/// </summary>
-		protected abstract void OnDisable();
-
-		/// <summary>
-		///    Called when the <b>Owner</b> is <i>Destroyed</i> while this object is still being executed.
-		/// </summary>
-		protected abstract void OnDestroy();
-
-	#endregion
 
 		private void AllTransitionsBecomeRelevant()
 		{
 			for ( var i = 0 ; i < _transitions.Length ; i++ )
 			{
-				if ( _transitions[i] == null )
+				if ( _transitions[ i ] == null )
 				{
 					continue;
 				}
 
-				_transitions[i].BecomeRelevant();
+				_transitions[ i ].BecomeRelevant();
 			}
 		}
 
@@ -114,17 +88,49 @@ namespace Bezoro.Framework.Unity.StateMachines.EventBased
 		{
 			for ( var i = 0 ; i < _transitions.Length ; i++ )
 			{
-				if ( _transitions[i] == null )
+				if ( _transitions[ i ] == null )
 				{
 					continue;
 				}
 
-				_transitions[i].CeaseRelevant();
+				_transitions[ i ].CeaseRelevant();
 			}
 		}
 
-		private EventStateMachineOwner _owner;
-		private IEventStateMachine     _owningStateMachine;
-		private EventTransition[]      _transitions = new EventTransition[4];
+	#region Abstract Methods
+
+		/// <summary>
+		///     Called once in the lifetime of the object, when it is created.
+		///     Use it like <b>Awake</b> in a <b>MonoBehaviour</b>.
+		/// </summary>
+		protected abstract void OnInit();
+
+		/// <summary>
+		///     Called when the <b>Owner</b> gets <i>Enabled</i> and was previously <i>Disabled</i>,
+		///     while this object is still being executed.
+		/// </summary>
+		protected abstract void OnEnable();
+
+		/// <summary>
+		///     Called when the <b>State</b> is <i>Entered</i>.
+		/// </summary>
+		protected abstract void OnEnter();
+
+		/// <summary>
+		///     Called when the <b>State</b> is <i>Exited</i>.
+		/// </summary>
+		protected abstract void OnExit();
+
+		/// <summary>
+		///     Called when the <b>Owner</b> is <i>Disabled</i> while this object is still being executed.
+		/// </summary>
+		protected abstract void OnDisable();
+
+		/// <summary>
+		///     Called when the <b>Owner</b> is <i>Destroyed</i> while this object is still being executed.
+		/// </summary>
+		protected abstract void OnDestroy();
+
+	#endregion
 	}
 }

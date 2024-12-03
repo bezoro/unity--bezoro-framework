@@ -6,14 +6,12 @@ namespace Bezoro.Framework.Unity.StateMachines.EventBased
 	[DisallowMultipleComponent]
 	public sealed class EventStateMachineOwner : MonoBehaviour
 	{
-		public BaseEventStateMachine StateMachine => stateMachine;
-
-		[SerializeField]
-		private BaseEventStateMachine stateMachine;
+		[SerializeField] private BaseEventStateMachine stateMachine;
+		public                   BaseEventStateMachine StateMachine => stateMachine;
 
 		private void Awake()
 		{
-			var type = stateMachine.GetType();
+			var type                    = stateMachine.GetType();
 			var newStateMachineInstance = ScriptableObject.CreateInstance( type );
 			stateMachine = newStateMachineInstance as BaseEventStateMachine;
 			stateMachine.Init( this );

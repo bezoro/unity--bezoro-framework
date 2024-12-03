@@ -7,14 +7,6 @@ namespace Bezoro.Framework.Unity
 	{
 		public static T Instance { get; private set; }
 
-#if UNITY_EDITOR
-		[RuntimeInitializeOnLoadMethod( RuntimeInitializeLoadType.SubsystemRegistration )]
-		private static void Init()
-		{
-			Instance = null;
-		}
-#endif
-
 		protected virtual void Awake()
 		{
 			if ( Instance == null )
@@ -27,5 +19,13 @@ namespace Bezoro.Framework.Unity
 
 			Destroy( gameObject );
 		}
+
+#if UNITY_EDITOR
+		[RuntimeInitializeOnLoadMethod( RuntimeInitializeLoadType.SubsystemRegistration )]
+		private static void Init()
+		{
+			Instance = null;
+		}
+#endif
 	}
 }

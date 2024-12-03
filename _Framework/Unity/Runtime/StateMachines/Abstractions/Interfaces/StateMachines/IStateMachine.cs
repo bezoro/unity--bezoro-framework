@@ -3,10 +3,10 @@
 	public interface IStateMachine<TState>
 	where TState : IState
 	{
-		TState CurrentState { get; }
+		public TState CurrentState { get; }
 
-		TState LastState { get; }
+		public TState LastState { get; }
 
-		void DoTransition( TState toState );
+		public void DoTransition( TState toState );
 	}
 }

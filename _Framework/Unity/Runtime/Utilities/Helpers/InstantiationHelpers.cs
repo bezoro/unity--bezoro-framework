@@ -7,8 +7,7 @@ namespace Bezoro.Framework.Unity.Utilities
 {
 	public static class InstantiationHelpers
 	{
-		public static async UniTask InstantiateAsync<T>
-		(
+		public static async UniTask InstantiateAsync<T>(
 			T prefab,
 			Func<T, UniTask> initializeFunc,
 			Transform parent = null,
@@ -16,7 +15,12 @@ namespace Bezoro.Framework.Unity.Utilities
 		)
 		where T : Object
 		{
-			var instance = Object.Instantiate( prefab, position, Quaternion.identity, parent );
+			var instance = Object.Instantiate(
+				prefab,
+				position,
+				Quaternion.identity,
+				parent );
+
 			await initializeFunc( instance );
 		}
 	}

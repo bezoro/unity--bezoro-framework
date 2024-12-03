@@ -2,12 +2,12 @@
 {
 	public interface ITickable
 	{
-		void EarlyTick();
+		public void EarlyTick();
 
-		void Tick();
+		public void Tick();
 
-		void FixedTick();
+		public void FixedTick();
 
-		void LateTick();
+		public void LateTick();
 	}
 }

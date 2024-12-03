@@ -6,14 +6,17 @@ using UnityEngine;
 namespace Bezoro.Framework.Unity.Bootstrapping
 {
 	[DefaultExecutionOrder( int.MinValue )]
-	[CreateAssetMenu( fileName = "GIC_NewGameInitConfig", menuName = "Bezoro/Game Init Config", order = 0 )]
+	[CreateAssetMenu(
+		fileName = "GIC_NewGameInitConfig",
+		menuName = "Bezoro/Game Init Config",
+		order = 0 )]
 	public sealed class GameInitializationConfig : ScriptableObject
 	{
-		[SerializeReference] private IInitializationObject[] subsystem_registration_entries = {};
-		[SerializeReference] private IInitializationObject[] after_assembly_load_entries    = {};
-		[SerializeReference] private IInitializationObject[] before_splash_screen_entries   = {};
-		[SerializeReference] private IInitializationObject[] before_scene_load_entries      = {};
-		[SerializeReference] private IInitializationObject[] after_scene_load_entries       = {};
+		[SerializeReference] private IInitializationObject[] subsystem_registration_entries = { };
+		[SerializeReference] private IInitializationObject[] after_assembly_load_entries    = { };
+		[SerializeReference] private IInitializationObject[] before_splash_screen_entries   = { };
+		[SerializeReference] private IInitializationObject[] before_scene_load_entries      = { };
+		[SerializeReference] private IInitializationObject[] after_scene_load_entries       = { };
 
 		public static bool IsGameInitialized { get; private set; }
 
@@ -45,20 +48,21 @@ namespace Bezoro.Framework.Unity.Bootstrapping
 
 		private static void ExecuteEntries( IInitializationObject[] entries )
 		{
-			Assert.IsNotNull( entries );
+			Assert.Is_Not_Null( entries );
 
 			foreach ( var entry in entries ) { entry.Initialize(); }
 		}
 
 		public static async UniTask<bool> WaitForInitializationComplete( CancellationToken cancellationToken = default )
 		{
-			while (!IsGameInitialized) { await UniTask.Yield( cancellationToken ); }
+			while ( !IsGameInitialized ) { await UniTask.Yield( cancellationToken ); }
+
 			return true;
 		}
 	}
 
 	public interface IInitializationObject
 	{
-		void Initialize();
+		public void Initialize();
 	}
 }

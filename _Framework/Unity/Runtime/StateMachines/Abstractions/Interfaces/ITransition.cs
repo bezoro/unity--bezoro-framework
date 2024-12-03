@@ -1,4 +1,6 @@
 ﻿namespace Bezoro.Framework.Unity.StateMachines
 {
-	public interface ITransition {}
+	public interface ITransition
+	{
+	}
 }

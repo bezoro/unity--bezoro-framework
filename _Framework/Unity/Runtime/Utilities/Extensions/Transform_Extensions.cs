@@ -15,12 +15,17 @@ namespace Bezoro.Framework.Unity.Utilities
 
 			if ( mesh_renderers.Length == 0 )
 			{
-				BDebug.Log_Warning( "The parent doesn't have meshes to calculate bounds.", rootParent );
+				BDebug.Log_Warning(
+					"The parent doesn't have meshes to calculate bounds.",
+					rootParent );
 
 				return new();
 			}
 
-			var total_bounds = new Bounds( rootParent.position, Vector3.zero );
+			var total_bounds = new Bounds(
+				rootParent.position,
+				Vector3.zero );
+
 			foreach ( var renderer in mesh_renderers )
 			{
 				total_bounds.Encapsulate( renderer.bounds );
@@ -60,8 +65,10 @@ namespace Bezoro.Framework.Unity.Utilities
 		{
 			return new()
 			{
-				center  = transform.TransformPoint( localBounds.center ),
-				extents = TransformExtents( transform, localBounds.extents )
+				center = transform.TransformPoint( localBounds.center ),
+				extents = TransformExtents(
+					transform,
+					localBounds.extents )
 			};
 		}
 
@@ -69,8 +76,8 @@ namespace Bezoro.Framework.Unity.Utilities
 		{
 			var transformedAxes = new[]
 			{
-				transform.right   * extents.x,
-				transform.up      * extents.y,
+				transform.right * extents.x,
+				transform.up * extents.y,
 				transform.forward * extents.z
 			};
 
@@ -96,19 +103,24 @@ namespace Bezoro.Framework.Unity.Utilities
 
 			public bool HasChanged( Transform transform )
 			{
-				return HasChangedPosition( transform ) || HasChangedRotation( transform ) || HasChangedScale( transform );
+				return HasChangedPosition( transform ) || HasChangedRotation( transform )
+													   || HasChangedScale( transform );
 			}
 
-			private bool CheckAndUpdateValue<T>( T currentValue, ref T previousValue, float threshold ) where T : struct
+			private bool CheckAndUpdateValue<T>( T currentValue, ref T previousValue, float threshold )
+			where T : struct
 			{
 				var hasChanged = false;
+
 				if ( currentValue is Vector3 v3Current && previousValue is Vector3 v3Prev )
 				{
 					hasChanged = ( v3Current - v3Prev ).sqrMagnitude > threshold;
 				}
 				else if ( currentValue is Quaternion qCurrent && previousValue is Quaternion qPrev )
 				{
-					hasChanged = Quaternion.Angle( qCurrent, qPrev ) > threshold;
+					hasChanged = Quaternion.Angle(
+						qCurrent,
+						qPrev ) > threshold;
 				}
 
 				if ( hasChanged )
@@ -121,17 +133,26 @@ namespace Bezoro.Framework.Unity.Utilities
 
 			public bool HasChangedPosition( Transform transform )
 			{
-				return CheckAndUpdateValue( transform.localPosition, ref _previousPosition, EPSILON );
+				return CheckAndUpdateValue(
+					transform.localPosition,
+					ref _previousPosition,
+					EPSILON );
 			}
 
 			public bool HasChangedRotation( Transform transform )
 			{
-				return CheckAndUpdateValue( transform.localRotation, ref _previousRotation, EPSILON );
+				return CheckAndUpdateValue(
+					transform.localRotation,
+					ref _previousRotation,
+					EPSILON );
 			}
 
 			public bool HasChangedScale( Transform transform )
 			{
-				return CheckAndUpdateValue( transform.localScale, ref _previousScale, EPSILON );
+				return CheckAndUpdateValue(
+					transform.localScale,
+					ref _previousScale,
+					EPSILON );
 			}
 		}
 	}

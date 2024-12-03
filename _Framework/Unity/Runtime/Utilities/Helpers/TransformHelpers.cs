@@ -5,8 +5,7 @@ namespace Bezoro.Framework.Unity.Utilities
 {
 	public static class TransformHelpers
 	{
-		public static void SetRectTransformPositionRelativeToWorldTransform
-		(
+		public static void SetRectTransformPositionRelativeToWorldTransform(
 			Camera camera,
 			RectTransform canvasTransform,
 			RectTransform screenTransform,

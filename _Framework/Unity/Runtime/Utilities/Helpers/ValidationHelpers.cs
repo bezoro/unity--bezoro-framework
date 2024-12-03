@@ -5,9 +5,9 @@ namespace Bezoro.Framework.Unity.Utilities
 {
 	public static class ValidationHelpers
 	{
-		public static void ValidateIsSubclassOf<T>( object caller, string methodName, Type type )
+		public static void Validate_Is_Subclass_Of<T>( object caller, string methodName, Type type )
 		{
-			if ( !type.IsSubclassOf( typeof(T) ) )
+			if ( !type.IsSubclassOf( typeof( T ) ) )
 			{
 				ExceptionHelpers.ThrowExceptionEditorOnly<ArgumentNullException>(
 					caller,
@@ -19,11 +19,13 @@ namespace Bezoro.Framework.Unity.Utilities
 
 		public static void ValidatePositiveValue( float value )
 		{
-			ValidatePositiveValue( null, "", value );
+			ValidatePositiveValue(
+				null,
+				"",
+				value );
 		}
 
-		public static void ValidatePositiveValue
-		(
+		public static void ValidatePositiveValue(
 			object caller,
 			string methodName,
 			float value
@@ -39,8 +41,7 @@ namespace Bezoro.Framework.Unity.Utilities
 			}
 		}
 
-		public static void ValidateValueNotAboveMax
-		(
+		public static void ValidateValueNotAboveMax(
 			object caller,
 			string methodName,
 			int value,
@@ -52,31 +53,32 @@ namespace Bezoro.Framework.Unity.Utilities
 				ExceptionHelpers.ThrowExceptionEditorOnly<ArgumentException>(
 					caller,
 					methodName,
-					$"{nameof(value)} cannot be greater than {nameof(max)}. Received: {value}, Max: {max}"
+					$"{nameof( value )} cannot be greater than {nameof( max )}. Received: {value}, Max: {max}"
 				);
 			}
 		}
 
-		public static void ValidateListNotNullOrEmpty<T>
-		(
+		public static void ValidateListNotNullOrEmpty<T>(
 			object caller,
 			string methodName,
 			List<T> list
 		)
 		{
-			if ( list.IsNullOrEmpty() )
+			if ( list.Is_Null_Or_Empty() )
 			{
 				ExceptionHelpers.ThrowExceptionEditorOnly<ArgumentException>(
 					caller,
 					methodName,
-					$"{nameof(list)} is null or empty"
+					$"{nameof( list )} is null or empty"
 				);
 			}
 		}
 
 		public static void ValidateConditionIsFalse( bool condition, string errorMessage = "" )
 		{
-			ValidateConditionIsFalse<IncorrectConditionException>( condition, errorMessage );
+			ValidateConditionIsFalse<IncorrectConditionException>(
+				condition,
+				errorMessage );
 		}
 
 		public static void ValidateConditionIsFalse<TException>( bool condition, string errorMessage = "" )
@@ -88,18 +90,25 @@ namespace Bezoro.Framework.Unity.Utilities
 			}
 		}
 
-		public static void ValidateObjectNotNull( object objectToValidate )
+		public static void Validate_Object_Not_Null( object objectToValidate )
 		{
-			ValidateObjectNotNull( objectToValidate, "", "", null );
+			Validate_Object_Not_Null(
+				objectToValidate,
+				"",
+				"",
+				null );
 		}
 
-		public static void ValidateObjectNotNull( object objectToValidate, string errorMessage )
+		public static void Validate_Object_Not_Null( object objectToValidate, string errorMessage )
 		{
-			ValidateObjectNotNull( objectToValidate, errorMessage, "", null );
+			Validate_Object_Not_Null(
+				objectToValidate,
+				errorMessage,
+				"",
+				null );
 		}
 
-		public static void ValidateObjectNotNull
-		(
+		public static void Validate_Object_Not_Null(
 			object objectToValidate,
 			string errorMessage,
 			string callingMethodName,
@@ -111,7 +120,7 @@ namespace Bezoro.Framework.Unity.Utilities
 				return;
 			}
 
-			errorMessage = $"{nameof(objectToValidate)} is null; {errorMessage}";
+			errorMessage = $"{nameof( objectToValidate )} is null; {errorMessage}";
 
 			ExceptionHelpers.ThrowExceptionEditorOnly<ArgumentNullException>(
 				callingObject,
@@ -122,7 +131,10 @@ namespace Bezoro.Framework.Unity.Utilities
 
 		public static void ValidateString( string value )
 		{
-			ValidateString( null, "", value );
+			ValidateString(
+				null,
+				"",
+				value );
 		}
 
 		public static void ValidateString( object caller, string methodName, string value )
@@ -132,7 +144,7 @@ namespace Bezoro.Framework.Unity.Utilities
 				ExceptionHelpers.ThrowExceptionEditorOnly<ArgumentException>(
 					caller,
 					methodName,
-					$"{nameof(value)} is null or empty"
+					$"{nameof( value )} is null or empty"
 				);
 			}
 		}

@@ -4,23 +4,28 @@ namespace Bezoro.Framework.Unity.StateMachines.TickableBased
 {
 	public abstract class BaseTickCondition
 	{
-		public void Init( TickableStateMachineOwner owner, bool inverted = false )
-		{
-			_owner    = owner;
-			_inverted = inverted;
-			OnInit();
-		}
+		private TickableStateMachineOwner _owner;
 
 		public MonoBehaviour Owner => _owner;
 
-		public bool Inverted => _inverted;
+		public bool Inverted { get; private set; }
+
+		public void Init( TickableStateMachineOwner owner, bool inverted = false )
+		{
+			_owner   = owner;
+			Inverted = inverted;
+			OnInit();
+		}
 
 		public void BecomeRelevant()
 		{
 			OnBecomeRelevant();
 		}
 
-		public bool Tick() => _inverted ? !OnTick() : OnTick();
+		public bool Tick()
+		{
+			return Inverted ? !OnTick() : OnTick();
+		}
 
 		public void CeaseRelevant()
 		{
@@ -48,8 +53,5 @@ namespace Bezoro.Framework.Unity.StateMachines.TickableBased
 		protected abstract void OnCeaseRelevant();
 
 	#endregion
-
-		private TickableStateMachineOwner _owner;
-		private bool _inverted;
 	}
 }

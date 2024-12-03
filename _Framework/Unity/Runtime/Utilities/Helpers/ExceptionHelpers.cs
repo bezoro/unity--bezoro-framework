@@ -6,49 +6,64 @@ namespace Bezoro.Framework.Unity.Utilities
 {
 	public static class ExceptionHelpers
 	{
-		public static void ThrowException<T>
-		(
+		public static void ThrowException<T>(
 			object objectInstance,
 			string methodName,
 			string message
-		) where T : Exception
+		)
+		where T : Exception
 		{
-			var exceptionType = typeof(T).Name;
-			var exceptionMessage = FormatExceptionMessage( exceptionType, objectInstance, methodName, message );
+			var exceptionType = typeof( T ).Name;
+			var exceptionMessage = FormatExceptionMessage(
+				exceptionType,
+				objectInstance,
+				methodName,
+				message );
 
-			throw (Exception)Activator.CreateInstance( typeof(T), exceptionMessage );
+			throw (Exception)Activator.CreateInstance(
+				typeof( T ),
+				exceptionMessage );
 		}
 
 		[Conditional( "UNITY_EDITOR" )]
-		public static void ThrowExceptionEditorOnly<T>( string exceptionMessage ) where T : Exception
+		public static void ThrowExceptionEditorOnly<T>( string exceptionMessage )
+		where T : Exception
 		{
-			ThrowExceptionEditorOnly<T>( null, string.Empty, exceptionMessage );
+			ThrowExceptionEditorOnly<T>(
+				null,
+				string.Empty,
+				exceptionMessage );
 		}
 
 		[Conditional( "UNITY_EDITOR" )]
-		public static void ThrowExceptionEditorOnly<T>
-		(
+		public static void ThrowExceptionEditorOnly<T>(
 			object instance,
 			string callingMethodName,
 			string exceptionMessage
-		) where T : Exception
+		)
+		where T : Exception
 		{
-			ThrowExceptionEditorOnly<T>( instance.GetType(), callingMethodName, exceptionMessage );
+			ThrowExceptionEditorOnly<T>(
+				instance.GetType(),
+				callingMethodName,
+				exceptionMessage );
 		}
 
 		[Conditional( "UNITY_EDITOR" )]
-		public static void ThrowExceptionEditorOnly<T>
-		(
+		public static void ThrowExceptionEditorOnly<T>(
 			Type instanceType,
 			string callingMethodName,
 			string exceptionMessage
-		) where T : Exception
+		)
+		where T : Exception
 		{
-			ThrowException<T>( instanceType, callingMethodName, exceptionMessage );
+			ThrowException<T>(
+				instanceType,
+				callingMethodName,
+				exceptionMessage );
 		}
 
-		private static string FormatExceptionMessage
-		(
+		private static string FormatExceptionMessage(
 			string exceptionType,
 			object objectInstance,
 			string methodName,
@@ -56,7 +71,7 @@ namespace Bezoro.Framework.Unity.Utilities
 			params object[] paramNames
 		)
 		{
-			var objectType = objectInstance?.GetType().Name ?? "Unknown";
+			var objectType          = objectInstance?.GetType().Name ?? "Unknown";
 			var paramNamesFormatted = FormatParamNames( paramNames );
 
 			return
@@ -65,7 +80,9 @@ namespace Bezoro.Framework.Unity.Utilities
 
 		private static string FormatParamNames( params object[] paramNames )
 		{
-			return string.Join( ", ", paramNames.Select( p => p?.GetType().Name ?? "Unknown" ) );
+			return string.Join(
+				", ",
+				paramNames.Select( p => p?.GetType().Name ?? "Unknown" ) );
 		}
 	}
 }

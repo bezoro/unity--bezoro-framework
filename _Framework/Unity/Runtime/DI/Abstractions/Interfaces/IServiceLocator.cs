@@ -2,10 +2,11 @@
 
 namespace Bezoro.Framework.Unity.DI
 {
-	public interface IServiceLocator : IServiceProvider<IService>, IService, IDisposable
+	public interface IServiceLocator : IServiceProvider<IService>,
+		IService,
+		IDisposable
 	{
-		IServiceLocator RegisterService<TInterface, TImplementation>
-		(
+		public IServiceLocator RegisterService<TInterface, TImplementation>(
 			Func<TImplementation> factory,
 			ServiceLifespan lifespan,
 			bool replace = false
@@ -13,6 +14,7 @@ namespace Bezoro.Framework.Unity.DI
 		where TInterface : IService
 		where TImplementation : class, TInterface;
 
-		void UnregisterService<T>() where T : IService;
+		public void UnregisterService<T>()
+		where T : IService;
 	}
 }

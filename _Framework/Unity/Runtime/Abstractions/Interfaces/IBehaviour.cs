@@ -6,8 +6,8 @@ namespace Bezoro.Framework.Unity
 	where TInterface : class
 	where TBehaviour : MonoBehaviour
 	{
-		TInterface Model { get; }
-		TBehaviour Behaviour { get; }
-		GameObject GameObject { get; }
+		public TInterface Model      { get; }
+		public TBehaviour Behaviour  { get; }
+		public GameObject GameObject { get; }
 	}
 }

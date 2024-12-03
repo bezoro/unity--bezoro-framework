@@ -14,7 +14,7 @@ namespace Bezoro.Framework.Unity.Tests.EditMode
 		[SetUp]
 		public void SetUp()
 		{
-			_logic                = new(new EditorPrefsSettingsStorage());
+			_logic                = new( new EditorPrefsSettingsStorage() );
 			_mockStorage          = new();
 			_originalAutoRunValue = _logic.AutoRun;
 		}
@@ -25,9 +25,9 @@ namespace Bezoro.Framework.Unity.Tests.EditMode
 			_logic.SetAutoRun( _originalAutoRunValue );
 		}
 
-		private Mock<ISettingsStorage> _mockStorage;
+		private Mock<ISettingsStorage>          _mockStorage;
 		private AutoTestRunnerEditorWindowLogic _logic;
-		private bool _originalAutoRunValue;
+		private bool                            _originalAutoRunValue;
 
 		[Test]
 		public void Constructor_NullSettingsStorage_ShouldThrowArgumentNullException()
@@ -77,7 +77,11 @@ namespace Bezoro.Framework.Unity.Tests.EditMode
 			logic.SetAutoRun( true );
 
 			Assert.IsTrue( logic.AutoRun );
-			_mockStorage.Verify( m => m.SetBool( "AutoRunTests_Enabled", true ), Times.Exactly( 3 ) );
+			_mockStorage.Verify(
+				m => m.SetBool(
+					"AutoRunTests_Enabled",
+					true ),
+				Times.Exactly( 3 ) );
 		}
 
 		[Test]
@@ -115,7 +119,10 @@ namespace Bezoro.Framework.Unity.Tests.EditMode
 		{
 			var logic = new AutoTestRunnerEditorWindowLogic( _mockStorage.Object );
 
-			Parallel.For( 0, 1000, _ => { logic.SetAutoRun( true ); } );
+			Parallel.For(
+				0,
+				1000,
+				_ => { logic.SetAutoRun( true ); } );
 
 			Assert.IsTrue( logic.AutoRun );
 		}
@@ -134,7 +141,10 @@ namespace Bezoro.Framework.Unity.Tests.EditMode
 
 			sw.Stop();
 
-			Assert.Less( sw.ElapsedMilliseconds, 1000, "SetAutoRun took too long for 10000 calls" );
+			Assert.Less(
+				sw.ElapsedMilliseconds,
+				1000,
+				"SetAutoRun took too long for 10000 calls" );
 		}
 	}
 }

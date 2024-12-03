@@ -5,6 +5,23 @@ namespace Bezoro.Framework.Unity.StateMachines.EventBased
 	public abstract class BaseEventStateMachine : ScriptableObject,
 		IEventStateMachine
 	{
+		[field: SerializeField] public DisableMethod DisableMethod { get; private set; }
+
+		private EventStateMachineOwner _owner;
+		private bool                   _wasDisabled;
+
+		public IEventState CurrentState { get; private set; }
+
+		public IEventState LastState { get; private set; }
+
+		public void DoTransition( IEventState toState )
+		{
+			CurrentState.Exit();
+			LastState    = CurrentState;
+			CurrentState = toState;
+			CurrentState.Enter();
+		}
+
 		public void Init( EventStateMachineOwner owner )
 		{
 			_owner = owner;
@@ -13,18 +30,11 @@ namespace Bezoro.Framework.Unity.StateMachines.EventBased
 			OnInit();
 		}
 
-		public IEventState CurrentState => _currentState;
-
-		public IEventState LastState => _lastState;
-
-		[field: SerializeField]
-		public DisableMethod DisableMethod { get; private set; }
-
 		public void Start()
 		{
 			OnStart();
-			_currentState = ResolveStartState();
-			_currentState.Enter();
+			CurrentState = ResolveStartState();
+			CurrentState.Enter();
 		}
 
 		public void Enable()
@@ -32,44 +42,47 @@ namespace Bezoro.Framework.Unity.StateMachines.EventBased
 			if ( _wasDisabled && DisableMethod is DisableMethod.Restart )
 			{
 				OnEnabled();
-				_currentState.Enable();
-				_currentState = ResolveStartState();
-				_currentState.Enter();
+				CurrentState.Enable();
+				CurrentState = ResolveStartState();
+				CurrentState.Enter();
 				_wasDisabled = false;
 			}
 			else if ( _wasDisabled )
 			{
 				OnEnabled();
-				_currentState.Enable();
+				CurrentState.Enable();
 				_wasDisabled = false;
 			}
-		}
-
-		public void DoTransition( IEventState toState )
-		{
-			_currentState.Exit();
-			_lastState    = _currentState;
-			_currentState = toState;
-			_currentState.Enter();
 		}
 
 		public void Exit()
 		{
 			OnExit();
-			_currentState.Exit();
+			CurrentState.Exit();
 		}
 
 		public void Disable()
 		{
 			OnDisabled();
-			_currentState.Disable();
+			CurrentState.Disable();
 			_wasDisabled = true;
 		}
 
 		public void Destroy()
 		{
 			OnDestroyed();
-			_currentState.Destroy();
+			CurrentState.Destroy();
+		}
+
+		protected T RegisterState<T>()
+		where T : class, IEventState, new()
+		{
+			var newState = new T();
+			newState.Init(
+				_owner,
+				this );
+
+			return newState;
 		}
 
 	#region Abstract Methods
@@ -129,19 +142,5 @@ namespace Bezoro.Framework.Unity.StateMachines.EventBased
 		protected abstract void OnDestroyed();
 
 	#endregion
-
-		protected T RegisterState<T>()
-		where T : class, IEventState, new()
-		{
-			var newState = new T();
-			newState.Init( _owner, this );
-
-			return newState;
-		}
-
-		private EventStateMachineOwner _owner;
-		private IEventState _currentState;
-		private IEventState _lastState;
-		private bool _wasDisabled;
 	}
 }

@@ -4,14 +4,17 @@ namespace Bezoro.Framework.Unity.StateMachines.EventBased
 {
 	public abstract class BaseEventCondition
 	{
+		private EventStateMachineOwner _owner;
+		private EventTransition        _transition;
+
+		public MonoBehaviour Owner => _owner;
+
 		public void Init( EventStateMachineOwner owner, EventTransition transition )
 		{
 			_transition = transition;
 			_owner      = owner;
 			OnInit();
 		}
-
-		public MonoBehaviour Owner => _owner;
 
 		public void BecomeRelevant()
 		{
@@ -47,8 +50,5 @@ namespace Bezoro.Framework.Unity.StateMachines.EventBased
 		protected abstract void OnCeaseRelevant();
 
 	#endregion
-
-		private EventStateMachineOwner _owner;
-		private EventTransition _transition;
 	}
 }

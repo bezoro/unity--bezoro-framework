@@ -21,7 +21,7 @@ namespace Bezoro.Framework.Unity.Editor.StateMachine
 
 				const float offset = 4f;
 
-				while (true)
+				while ( true )
 				{
 					var labelPosition = source.transform.position + Vector3.up * offset;
 

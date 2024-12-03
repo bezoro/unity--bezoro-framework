@@ -6,16 +6,19 @@ using UnityEngine;
 
 namespace Bezoro.Framework.Unity.StateMachines
 {
-	public interface IKCCState : IState, ITickable, IHasTransitions<KCCTransition, IKCCState>
+	public interface IKCCState : IState,
+		ITickable,
+		IHasTransitions<KCCTransition, IKCCState>
 	{
-		void Init
-		(
+		public List<Type> MonoBehaviourTypesToIgnoreCollisionsWith { get; }
+
+		public void Init(
 			KCCStateMachineOwner owner,
 			IKCCStateMachine owningStateMachine,
 			KinematicCharacterMotor motor
 		);
 
-		List<Type> MonoBehaviourTypesToIgnoreCollisionsWith { get; }
+		public bool IsSubStateMachine( out IKCCStateMachine outStateMachine );
 
 	#region KCC Methods
 
@@ -29,24 +32,21 @@ namespace Bezoro.Framework.Unity.StateMachines
 
 		public void AfterCharacterUpdate( float deltaTime );
 
-		public void GroundHit
-		(
+		public void GroundHit(
 			Collider hitCollider,
 			Vector3 hitNormal,
 			Vector3 hitPoint,
 			ref HitStabilityReport hitStabilityReport
 		);
 
-		public void MovementHit
-		(
+		public void MovementHit(
 			Collider hitCollider,
 			Vector3 hitNormal,
 			Vector3 hitPoint,
 			ref HitStabilityReport hitStabilityReport
 		);
 
-		public void ProcessHitStabilityReport
-		(
+		public void ProcessHitStabilityReport(
 			Collider hitCollider,
 			Vector3 hitNormal,
 			Vector3 hitPoint,
@@ -58,7 +58,5 @@ namespace Bezoro.Framework.Unity.StateMachines
 		public void DiscreteCollisionDetected( Collider hitCollider );
 
 	#endregion
-
-		bool IsSubStateMachine( out IKCCStateMachine outStateMachine );
 	}
 }

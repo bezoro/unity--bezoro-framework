@@ -6,16 +6,7 @@ namespace Bezoro.Framework.Unity
 	[SelectionBase]
 	public abstract class Tickable : MonoBehaviour
 	{
-		[field: SerializeField]
-		public TickType TickType { get; protected set; } = TickType.Normal;
-
-		public abstract void EarlyTick();
-
-		public abstract void Tick();
-
-		public abstract void FixedTick();
-
-		public abstract void LateTick();
+		[field: SerializeField] public TickType TickType { get; protected set; } = TickType.Normal;
 
 		protected virtual void OnEnable()
 		{
@@ -50,6 +41,14 @@ namespace Bezoro.Framework.Unity
 			UnregisterFromTickableManager();
 		}
 
+		public abstract void EarlyTick();
+
+		public abstract void Tick();
+
+		public abstract void FixedTick();
+
+		public abstract void LateTick();
+
 		public void AddToTickPool( TickType flag )
 		{
 			if ( ( TickType & flag ) != 0 )
@@ -61,10 +60,21 @@ namespace Bezoro.Framework.Unity
 
 			switch ( flag )
 			{
-				case TickType.Early:  Tickable_Manager.Instance.AddUniqueEarlyTickable( this ); break;
-				case TickType.Normal: Tickable_Manager.Instance.AddUniqueTickable( this ); break;
-				case TickType.Fixed:  Tickable_Manager.Instance.AddUniqueFixedTickable( this ); break;
-				case TickType.Late:   Tickable_Manager.Instance.AddUniqueLateTickable( this ); break;
+				case TickType.Early:
+					Tickable_Manager.Instance.AddUniqueEarlyTickable( this );
+					break;
+
+				case TickType.Normal:
+					Tickable_Manager.Instance.AddUniqueTickable( this );
+					break;
+
+				case TickType.Fixed:
+					Tickable_Manager.Instance.AddUniqueFixedTickable( this );
+					break;
+
+				case TickType.Late:
+					Tickable_Manager.Instance.AddUniqueLateTickable( this );
+					break;
 			}
 		}
 
@@ -79,10 +89,21 @@ namespace Bezoro.Framework.Unity
 
 			switch ( flag )
 			{
-				case TickType.Early:  Tickable_Manager.Instance.RemoveEarlyTickable( this ); break;
-				case TickType.Normal: Tickable_Manager.Instance.RemoveTickable( this ); break;
-				case TickType.Fixed:  Tickable_Manager.Instance.RemoveFixedTickable( this ); break;
-				case TickType.Late:   Tickable_Manager.Instance.RemoveLateTickable( this ); break;
+				case TickType.Early:
+					Tickable_Manager.Instance.RemoveEarlyTickable( this );
+					break;
+
+				case TickType.Normal:
+					Tickable_Manager.Instance.RemoveTickable( this );
+					break;
+
+				case TickType.Fixed:
+					Tickable_Manager.Instance.RemoveFixedTickable( this );
+					break;
+
+				case TickType.Late:
+					Tickable_Manager.Instance.RemoveLateTickable( this );
+					break;
 			}
 		}
 

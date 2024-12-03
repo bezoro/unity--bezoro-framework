@@ -1,4 +1,6 @@
 ﻿namespace Bezoro.Framework.Unity.StateMachines
 {
-	public interface ITickableStateMachine : IStateMachine<ITickableState> {}
+	public interface ITickableStateMachine : IStateMachine<ITickableState>
+	{
+	}
 }

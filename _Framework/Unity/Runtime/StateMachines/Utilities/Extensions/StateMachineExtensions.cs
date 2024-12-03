@@ -2,12 +2,15 @@
 {
 	public static class StateMachineExtensions
 	{
-		public static bool TryFindStateInCurrentHierarchy<T0, T1>
-			( this IStateMachine<T0> stateMachine, out T1 outState )
+		public static bool TryFindStateInCurrentHierarchy<T0, T1>(
+			this IStateMachine<T0> stateMachine,
+			out T1 outState
+		)
 		where T0 : class, IState
 		where T1 : class, IState
 		{
 			var currentState = stateMachine.CurrentState;
+
 			if ( currentState is T1 )
 			{
 				outState = currentState as T1;
@@ -23,7 +26,8 @@
 			}
 
 			currentState = rootSubStateMachine.CurrentState;
-			while (true)
+
+			while ( true )
 			{
 				if ( currentState is T1 )
 				{
@@ -43,12 +47,12 @@
 			}
 		}
 
-		public static bool TryFindStateInLastHierarchy<T0, T1>
-			( this IStateMachine<T0> stateMachine, out T1 outState )
+		public static bool TryFindStateInLastHierarchy<T0, T1>( this IStateMachine<T0> stateMachine, out T1 outState )
 		where T0 : class, IState
 		where T1 : class, IState
 		{
 			var lastState = stateMachine.LastState;
+
 			if ( lastState is T1 )
 			{
 				outState = lastState as T1;
@@ -64,7 +68,8 @@
 			}
 
 			lastState = rootSubStateMachine.LastState;
-			while (true)
+
+			while ( true )
 			{
 				if ( lastState is T1 )
 				{

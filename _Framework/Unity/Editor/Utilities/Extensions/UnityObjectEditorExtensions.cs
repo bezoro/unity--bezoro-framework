@@ -17,8 +17,8 @@ namespace Bezoro.Framework.Unity.Editor.Utilities.Extensions
 		public static bool WarnIfNotUniqueInAssets<T>( this T asset, bool logWarning = true )
 		where T : Object
 		{
-			var typeName = typeof(T).Name;
-			var guids = AssetDatabase.FindAssets( $"t:{typeName}" );
+			var typeName = typeof( T ).Name;
+			var guids    = AssetDatabase.FindAssets( $"t:{typeName}" );
 
 			if ( guids.Length <= 1 )
 			{
@@ -43,13 +43,15 @@ namespace Bezoro.Framework.Unity.Editor.Utilities.Extensions
 				return false;
 			}
 
-			var assetPathsString = string.Join( "\n", assetPaths );
+			var assetPathsString = string.Join(
+				"\n",
+				assetPaths );
 
 			Debug.LogWarning
 			(
 				$"Multiple instances of {typeName} found. Only one should exist.\n"
-			  + $"This asset is located at: {assetPath}\n"
-			  + $"Other instances found at:\n{assetPathsString}"
+				+ $"This asset is located at: {assetPath}\n"
+				+ $"Other instances found at:\n{assetPathsString}"
 			);
 
 			return false;

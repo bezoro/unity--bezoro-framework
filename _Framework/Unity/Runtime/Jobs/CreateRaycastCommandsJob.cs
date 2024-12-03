@@ -6,14 +6,15 @@ using UnityEngine;
 
 namespace Bezoro.Framework.Unity.Jobs
 {
-	[BurstCompile( FloatPrecision.Low, FloatMode.Fast )]
+	[BurstCompile(
+		FloatPrecision.Low,
+		FloatMode.Fast )]
 	public struct CreateRaycastCommandsJob : IJobParallelFor
 	{
 		[ReadOnly] [NativeDisableParallelForRestriction]
 		public NativeArray<float3> Origins;
 
-		[ReadOnly]
-		public float3 Direction;
+		[ReadOnly] public float3 Direction;
 
 		[WriteOnly] [NativeDisableParallelForRestriction]
 		public NativeArray<RaycastCommand> Commands;
@@ -29,7 +30,10 @@ namespace Bezoro.Framework.Unity.Jobs
 				hitTriggers      = QueryTriggerInteraction.UseGlobal
 			};
 
-			Commands[index] = new(Origins[index], Direction, queryParams);
+			Commands[ index ] = new(
+				Origins[ index ],
+				Direction,
+				queryParams );
 		}
 	}
 }

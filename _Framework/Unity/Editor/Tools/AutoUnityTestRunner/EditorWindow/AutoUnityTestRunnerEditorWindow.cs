@@ -8,15 +8,6 @@ namespace Bezoro.Framework.Unity.Editor.Tools
 {
 	public class AutoUnityTestRunnerEditorWindow : EditorWindow
 	{
-	#region Private Fields
-
-		private bool _isRunningTests;
-
-		private AutoTestRunnerEditorWindowLogic _logic;
-		private bool _reloadingAssembly;
-
-	#endregion
-
 	#region Properties
 
 		public bool IsAutoRunEnabled
@@ -34,6 +25,15 @@ namespace Bezoro.Framework.Unity.Editor.Tools
 		{
 			GetWindow<AutoUnityTestRunnerEditorWindow>( "Auto Test Runner" );
 		}
+
+	#endregion
+
+	#region Private Fields
+
+		private bool _isRunningTests;
+
+		private AutoTestRunnerEditorWindowLogic _logic;
+		private bool                            _reloadingAssembly;
 
 	#endregion
 
@@ -73,7 +73,7 @@ namespace Bezoro.Framework.Unity.Editor.Tools
 
 		private void OnEnable()
 		{
-			_logic                                    =  new(new EditorPrefsSettingsStorage());
+			_logic                                    =  new( new EditorPrefsSettingsStorage() );
 			AssemblyReloadEvents.beforeAssemblyReload += OnBeforeAssemblyReload;
 			AssemblyReloadEvents.afterAssemblyReload  += OnAfterAssemblyReload;
 
@@ -93,7 +93,9 @@ namespace Bezoro.Framework.Unity.Editor.Tools
 		private void OnGUI()
 		{
 			EditorGUI.BeginChangeCheck();
-			var newState = EditorGUILayout.Toggle( "Auto Run Tests", IsAutoRunEnabled );
+			var newState = EditorGUILayout.Toggle(
+				"Auto Run Tests",
+				IsAutoRunEnabled );
 
 			if ( EditorGUI.EndChangeCheck() )
 			{
@@ -119,7 +121,7 @@ namespace Bezoro.Framework.Unity.Editor.Tools
 
 	public class AutoTestRunnerEditorWindowLogic
 	{
-		private const string AutoRunKey = "AutoRunTests_Enabled";
+		private const    string           AutoRunKey = "AutoRunTests_Enabled";
 		private readonly ISettingsStorage _settingsStorage;
 
 		public AutoTestRunnerEditorWindowLogic( ISettingsStorage settingsStorage )
@@ -133,18 +135,22 @@ namespace Bezoro.Framework.Unity.Editor.Tools
 		public void SetAutoRun( bool value )
 		{
 			AutoRun = value;
-			_settingsStorage.SetBool( AutoRunKey, value );
+			_settingsStorage.SetBool(
+				AutoRunKey,
+				value );
 		}
 
-		public bool ShouldRunTests() => AutoRun;
+		public bool ShouldRunTests()
+		{
+			return AutoRun;
+		}
 
 		private void LoadSettings()
 		{
 			try
 			{
 				AutoRun = _settingsStorage.GetBool( AutoRunKey );
-			}
-			catch ( Exception )
+			} catch ( Exception )
 			{
 				AutoRun = false; // Default to false if there's an exception
 			}

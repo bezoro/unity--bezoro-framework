@@ -10,7 +10,7 @@ namespace SymlinkUtility.Editor
 {
 	/**
 	 * An editor utility for easily creating symlinks in your project.
-	 *
+	 * 
 	 * Adds a Menu item under `Assets/Create/Folder (Symlink)`, and
 	 * draws a small indicator in the Project view for folders that are
 	 * symlinks.
@@ -18,29 +18,12 @@ namespace SymlinkUtility.Editor
 	[InitializeOnLoad]
 	public static class SymlinkUtility
 	{
-		private enum SymlinkType
-		{
-			Junction,
-			Absolute,
-			Relative
-		}
-
 		// FileAttributes that match a junction folder.
-		private const FileAttributes FOLDER_SYMLINK_ATTRIBS =
+		private const FileAttributes _FOLDER_SYMLINK_ATTRIBS =
 			FileAttributes.Directory | FileAttributes.ReparsePoint;
 
 		// Style used to draw the symlink indicator in the project view.
-		private static GUIStyle _symlinkMarkerStyle;
-
-		private static GUIStyle SymlinkMarkerStyle =>
-			_symlinkMarkerStyle ??= new(EditorStyles.label)
-			{
-				normal =
-				{
-					textColor = new(.2f, .8f, .2f, .8f)
-				},
-				alignment = TextAnchor.MiddleRight
-			};
+		private static GUIStyle _Symlink_Marker_Style;
 
 		/**
 		 * Static constructor subscribes to projectWindowItemOnGUI delegate.
@@ -49,6 +32,20 @@ namespace SymlinkUtility.Editor
 		{
 			EditorApplication.projectWindowItemOnGUI += OnProjectWindowItemGUI;
 		}
+
+		private static GUIStyle SymlinkMarkerStyle =>
+			_Symlink_Marker_Style ??= new( EditorStyles.label )
+			{
+				normal =
+				{
+					textColor = new(
+						.2f,
+						.8f,
+						.2f,
+						.8f )
+				},
+				alignment = TextAnchor.MiddleRight
+			};
 
 		/**
 		 * Draw a little indicator if folder is a symlink
@@ -59,19 +56,18 @@ namespace SymlinkUtility.Editor
 			{
 				var path = AssetDatabase.GUIDToAssetPath( guid );
 
-				if ( string.IsNullOrEmpty( path ) )
-				{
-					return;
-				}
+				if ( string.IsNullOrEmpty( path ) ) return;
 
 				var attributes = File.GetAttributes( path );
 
-				if ( ( attributes & FOLDER_SYMLINK_ATTRIBS ) == FOLDER_SYMLINK_ATTRIBS )
+				if ( ( attributes & _FOLDER_SYMLINK_ATTRIBS ) == _FOLDER_SYMLINK_ATTRIBS )
 				{
-					GUI.Label( r, "<=>", SymlinkMarkerStyle );
+					GUI.Label(
+						r,
+						"<=>",
+						SymlinkMarkerStyle );
 				}
-			}
-			catch
+			} catch
 			{
 				// ignored
 			}
@@ -82,43 +78,54 @@ namespace SymlinkUtility.Editor
 		 */
 #if UNITY_EDITOR_WIN
 		// Create an absolute junction
-		[MenuItem( "Assets/Create/Folder (Junction)", false, 20 )]
+		[MenuItem(
+			"Assets/Create/Folder (Junction)",
+			false,
+			20 )]
 		private static void Junction() => Symlink( SymlinkType.Junction );
 #endif
 
 		// Create an absolute symbolic link
-		[MenuItem( "Assets/Create/Folder (Absolute Symlink)", false, 21 )]
+		[MenuItem(
+			"Assets/Create/Folder (Absolute Symlink)",
+			false,
+			21 )]
 		private static void SymlinkAbsolute()
 		{
 			Symlink( SymlinkType.Absolute );
 		}
 
 		// Create a relative symbolic link
-		[MenuItem( "Assets/Create/Folder (Relative Symlink)", false, 22 )]
+		[MenuItem(
+			"Assets/Create/Folder (Relative Symlink)",
+			false,
+			22 )]
 		private static void SymlinkRelative()
 		{
 			Symlink( SymlinkType.Relative );
 		}
 
-		private static void Symlink( SymlinkType linkType )
+		private static void Symlink( SymlinkType link_type )
 		{
-			var sourceFolderPath = EditorUtility.OpenFolderPanel( "Select Folder Source", "", "" );
+			var source_folder_path = EditorUtility.OpenFolderPanel(
+				"Select Folder Source",
+				"",
+				"" );
 
 			// Cancelled dialog
-			if ( string.IsNullOrEmpty( sourceFolderPath ) )
-			{
-				return;
-			}
+			if ( string.IsNullOrEmpty( source_folder_path ) ) return;
 
-			if ( sourceFolderPath.Contains( Application.dataPath ) )
+			if ( source_folder_path.Contains( Application.dataPath ) )
 			{
 				Debug.LogWarning( "Cannot create a symlink to folder in your project!" );
 				return;
 			}
 
-			var sourceFolderName = sourceFolderPath.Split( '/', '\\' ).LastOrDefault();
+			var source_folder_name = source_folder_path.Split(
+				'/',
+				'\\' ).LastOrDefault();
 
-			if ( string.IsNullOrEmpty( sourceFolderName ) )
+			if ( string.IsNullOrEmpty( source_folder_name ) )
 			{
 				Debug.LogWarning( "Couldn't deduce the folder name?" );
 				return;
@@ -126,45 +133,42 @@ namespace SymlinkUtility.Editor
 
 			var uobject = Selection.activeObject;
 
-			var targetPath = uobject != null ? AssetDatabase.GetAssetPath( uobject ) : null;
+			var target_path = uobject != null ? AssetDatabase.GetAssetPath( uobject ) : null;
 
-			if ( string.IsNullOrEmpty( targetPath ) )
-			{
-				targetPath = "Assets";
-			}
+			if ( string.IsNullOrEmpty( target_path ) ) target_path = "Assets";
 
-			var attributes = File.GetAttributes( targetPath );
+			var attributes = File.GetAttributes( target_path );
 
 			if ( ( attributes & FileAttributes.Directory ) != FileAttributes.Directory )
-			{
-				targetPath = Path.GetDirectoryName( targetPath );
-			}
+				target_path = Path.GetDirectoryName( target_path );
 
 			// Get path to project.
-			var pathToProject = Application.dataPath.Split( new[] { "/Assets" }, StringSplitOptions.None )[0];
+			var path_to_project = Application.dataPath.Split(
+				new[] { "/Assets" },
+				StringSplitOptions.None )[ 0 ];
 
-			targetPath = $"{pathToProject}/{targetPath}/{sourceFolderName}";
+			target_path = $"{path_to_project}/{target_path}/{source_folder_name}";
 
-			if ( Directory.Exists( targetPath ) )
+			if ( Directory.Exists( target_path ) )
 			{
 				Debug.LogWarning
 				(
-					$"A folder already exists at this location, aborting link.\n{sourceFolderPath} -> {targetPath}"
+					$"A folder already exists at this location, aborting link.\n{source_folder_path} -> {target_path}"
 				);
 
 				return;
 			}
 
 			// Use absolute path or relative path?
-			var sourcePath = linkType == SymlinkType.Relative
-				? GetRelativePath( sourceFolderPath, targetPath )
-				: sourceFolderPath;
+			var source_path = link_type == SymlinkType.Relative
+				? GetRelativePath( source_folder_path, target_path )
+				: source_folder_path;
 #if UNITY_EDITOR_WIN
-			var linkOption = linkType == SymlinkType.Junction ? "/J" : "/D";
-			var command = $"mklink {linkOption} \"{targetPath}\" \"{sourcePath}\"";
+			var link_option = link_type == SymlinkType.Junction ? "/J" : "/D";
+			var command     = $"mklink {link_option} \"{target_path}\" \"{source_path}\"";
 			ExecuteCmdCommand(
 				command,
-				linkType != SymlinkType.Junction
+				link_type != SymlinkType.Junction
 			); // Symlinks require admin privilege on windows, junctions do not.
 #elif UNITY_EDITOR_OSX
             // For some reason, OSX doesn't want to create a symlink with quotes around the paths, so escape the spaces instead.
@@ -179,84 +183,69 @@ namespace SymlinkUtility.Editor
 			AssetDatabase.Refresh( ImportAssetOptions.ForceUpdate );
 		}
 
-		private static string GetRelativePath( string sourcePath, string outputPath )
+		private static string GetRelativePath( string source_path, string output_path )
 		{
-			if ( string.IsNullOrEmpty( outputPath ) )
-			{
-				return sourcePath;
-			}
+			if ( string.IsNullOrEmpty( output_path ) ) return source_path;
 
-			if ( sourcePath == null )
-			{
-				sourcePath = string.Empty;
-			}
+			source_path ??= string.Empty;
 
-			var splitOutput = outputPath.Split( new[] { '/' }, StringSplitOptions.RemoveEmptyEntries );
+			var split_output = output_path.Split( new[] { '/' }, StringSplitOptions.RemoveEmptyEntries );
+			var split_source = source_path.Split( new[] { '/' }, StringSplitOptions.RemoveEmptyEntries );
 
-			var splitSource = sourcePath.Split( new[] { '/' }, StringSplitOptions.RemoveEmptyEntries );
+			var max = Mathf.Min( split_output.Length, split_source.Length );
 
-			var max = Mathf.Min( splitOutput.Length, splitSource.Length );
 			var i = 0;
-			while (i < max)
+
+			while ( i < max )
 			{
-				if ( splitOutput[i] != splitSource[i] )
-				{
-					break;
-				}
+				if ( split_output[ i ] != split_source[ i ] ) break;
 
 				++i;
 			}
 
-			var hopUpCount = splitOutput.Length                 - i - 1;
-			var newSplitCount = hopUpCount + splitSource.Length - i;
-			var newSplitTarget = new string[newSplitCount];
-			var j = 0;
-			for ( ; j < hopUpCount ; ++j )
-			{
-				newSplitTarget[j] = "..";
-			}
+			var hop_up_count     = split_output.Length - i - 1;
+			var new_split_count  = hop_up_count + split_source.Length - i;
+			var new_split_target = new string[new_split_count];
+			var j                = 0;
 
-			for ( max = newSplitTarget.Length ; j < max ; ++j, ++i )
-			{
-				newSplitTarget[j] = splitSource[i];
-			}
+			for ( ; j < hop_up_count ; ++j ) new_split_target[ j ] = "..";
 
-			return string.Join( Path.DirectorySeparatorChar.ToString(), newSplitTarget );
+			for ( max = new_split_target.Length ; j < max ; ++j, ++i ) new_split_target[ j ] = split_source[ i ];
+
+			return string.Join(
+				Path.DirectorySeparatorChar.ToString(),
+				new_split_target );
 		}
 
-		private static void ExecuteCmdCommand( string command, bool asAdmin )
+		private static void ExecuteCmdCommand( string command, bool as_admin )
 		{
-			var startInfo = new ProcessStartInfo
+			var start_info = new ProcessStartInfo
 			{
 				FileName              = "CMD.exe",
 				Arguments             = "/C " + command,
-				UseShellExecute       = asAdmin,
-				RedirectStandardError = !asAdmin,
+				UseShellExecute       = as_admin,
+				RedirectStandardError = !as_admin,
 				CreateNoWindow        = true
 			};
 
-			if ( asAdmin )
-			{
-				startInfo.Verb = "runas";
-			}
+			if ( as_admin ) start_info.Verb = "runas";
 
-			var proc = new Process { StartInfo = startInfo };
+			var proc = new Process { StartInfo = start_info };
 
 			using ( proc )
 			{
 				proc.Start();
 				proc.WaitForExit();
 
-				if ( !asAdmin && !proc.StandardError.EndOfStream )
-				{
-					Debug.LogError( proc.StandardError.ReadToEnd() );
-				}
+				if ( !as_admin && !proc.StandardError.EndOfStream ) Debug.LogError( proc.StandardError.ReadToEnd() );
 			}
 		}
 
 		private static void ExecuteBashCommand( string command )
 		{
-			command = command.Replace( "\"", "\"\"" );
+			command = command.Replace(
+				"\"",
+				"\"\"" );
 
 			var proc = new Process
 			{
@@ -276,11 +265,15 @@ namespace SymlinkUtility.Editor
 				proc.Start();
 				proc.WaitForExit();
 
-				if ( !proc.StandardError.EndOfStream )
-				{
-					Debug.LogError( proc.StandardError.ReadToEnd() );
-				}
+				if ( !proc.StandardError.EndOfStream ) Debug.LogError( proc.StandardError.ReadToEnd() );
 			}
+		}
+
+		private enum SymlinkType
+		{
+			Junction,
+			Absolute,
+			Relative
 		}
 	}
 }

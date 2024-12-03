@@ -5,9 +5,8 @@ namespace Bezoro.Framework.Unity
 {
 	public abstract class ObservableProperty<T>
 	{
-		private T _currentValue;
 		private readonly object _lock = new();
-		public event Action<T> OnValueChanged;
+		private          T      _currentValue;
 
 		public T Value
 		{
@@ -15,9 +14,11 @@ namespace Bezoro.Framework.Unity
 			set => SetLockedValue( value );
 		}
 
+		public event Action<T> OnValueChanged;
+
 		private T GetLockedValue()
 		{
-			lock (_lock)
+			lock ( _lock )
 			{
 				return _currentValue;
 			}
@@ -25,9 +26,11 @@ namespace Bezoro.Framework.Unity
 
 		private void SetLockedValue( T value )
 		{
-			lock (_lock)
+			lock ( _lock )
 			{
-				if ( EqualityComparer<T>.Default.Equals( _currentValue, value ) )
+				if ( EqualityComparer<T>.Default.Equals(
+						_currentValue,
+						value ) )
 				{
 					return;
 				}
@@ -39,7 +42,7 @@ namespace Bezoro.Framework.Unity
 
 		public void Subscribe( Action<T> handler )
 		{
-			lock (_lock)
+			lock ( _lock )
 			{
 				OnValueChanged += handler;
 			}
@@ -47,7 +50,7 @@ namespace Bezoro.Framework.Unity
 
 		public void Unsubscribe( Action<T> handler )
 		{
-			lock (_lock)
+			lock ( _lock )
 			{
 				OnValueChanged -= handler;
 			}

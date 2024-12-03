@@ -3,26 +3,28 @@ using System.Collections.Generic;
 
 namespace Bezoro.Framework.Unity
 {
-	public abstract class ObservableValueProperty<T> where T : struct
+	public abstract class ObservableValueProperty<T>
+	where T : struct
 	{
-		private T _currentValue;
 		private readonly object _lock = new();
-		public event Action<T> OnValueChanged;
+		private          T      _currentValue;
 
 		public T Value
 		{
 			get
 			{
-				lock (_lock)
+				lock ( _lock )
 				{
 					return _currentValue;
 				}
 			}
 			set
 			{
-				lock (_lock)
+				lock ( _lock )
 				{
-					if ( EqualityComparer<T>.Default.Equals( _currentValue, value ) )
+					if ( EqualityComparer<T>.Default.Equals(
+							_currentValue,
+							value ) )
 					{
 						return;
 					}
@@ -33,9 +35,11 @@ namespace Bezoro.Framework.Unity
 			}
 		}
 
+		public event Action<T> OnValueChanged;
+
 		public void Subscribe( Action<T> handler )
 		{
-			lock (_lock)
+			lock ( _lock )
 			{
 				OnValueChanged += handler;
 			}
@@ -43,7 +47,7 @@ namespace Bezoro.Framework.Unity
 
 		public void Unsubscribe( Action<T> handler )
 		{
-			lock (_lock)
+			lock ( _lock )
 			{
 				OnValueChanged -= handler;
 			}

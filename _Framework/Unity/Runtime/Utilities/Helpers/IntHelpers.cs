@@ -32,7 +32,7 @@ namespace Bezoro.Framework.Unity.Utilities
 			if ( i < 0 )
 			{
 				throw new ArgumentOutOfRangeException(
-					nameof(i),
+					nameof( i ),
 					"Rank must be non-negative."
 				);
 			}
@@ -40,7 +40,7 @@ namespace Bezoro.Framework.Unity.Utilities
 			if ( i > 25 )
 			{
 				throw new ArgumentOutOfRangeException(
-					nameof(i),
+					nameof( i ),
 					"Rank must be less than 26 to fit within a-z range."
 				);
 			}
@@ -61,7 +61,7 @@ namespace Bezoro.Framework.Unity.Utilities
 			if ( i < 0 )
 			{
 				throw new ArgumentOutOfRangeException(
-					nameof(i),
+					nameof( i ),
 					"File must be non-negative."
 				);
 			}
@@ -69,7 +69,7 @@ namespace Bezoro.Framework.Unity.Utilities
 			if ( i > 25 )
 			{
 				throw new ArgumentOutOfRangeException(
-					nameof(i),
+					nameof( i ),
 					"File must be less than 26 to fit within a-z range."
 				);
 			}
@@ -89,7 +89,9 @@ namespace Bezoro.Framework.Unity.Utilities
 		{
 			if ( !( value >= min && value <= max ) )
 			{
-				throw new ArgumentOutOfRangeException( nameof(value), $"Value must be between {min} and {max}." );
+				throw new ArgumentOutOfRangeException(
+					nameof( value ),
+					$"Value must be between {min} and {max}." );
 			}
 		}
 	}

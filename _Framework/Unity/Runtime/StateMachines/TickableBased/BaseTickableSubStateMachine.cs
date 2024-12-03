@@ -4,8 +4,15 @@ using UnityEngine;
 namespace Bezoro.Framework.Unity.StateMachines.TickableBased
 {
 	public abstract class BaseTickableSubStateMachine :
-		ITickableStateMachine, ITickableState
+		ITickableStateMachine,
+		ITickableState
 	{
+		private TickableStateMachineOwner _owner;
+		private ITickableStateMachine     _owningStateMachine;
+		private TickTransition[]          _transitions = new TickTransition[4];
+
+		public MonoBehaviour Owner => _owner;
+
 		public void Init( TickableStateMachineOwner owner, ITickableStateMachine owningStateMachine )
 		{
 			_owner              = owner;
@@ -15,63 +22,57 @@ namespace Bezoro.Framework.Unity.StateMachines.TickableBased
 			OnInit();
 		}
 
-		public MonoBehaviour Owner => _owner;
-
-		public ITickableState CurrentState => _currentState;
-
-		public ITickableState LastState => _lastState;
-
 		public TickTransition[] Transitions => _transitions;
 
 		public void Enable()
 		{
 			OnEnable();
 			AllTransitionsBecomeRelevant();
-			_currentState.Enable();
+			CurrentState.Enable();
 		}
 
 		public void Enter()
 		{
 			OnEnter();
 			AllTransitionsBecomeRelevant();
-			_currentState = ResolveStartState();
-			_currentState.Enter();
+			CurrentState = ResolveStartState();
+			CurrentState.Enter();
 		}
 
 		public void EarlyTick()
 		{
 			OnEarlyTick();
-			_currentState.EarlyTick();
+			CurrentState.EarlyTick();
 		}
 
 		public void Tick()
 		{
 			OnTick();
-			_currentState.Tick();
+			CurrentState.Tick();
 		}
 
 		public void FixedTick()
 		{
 			OnFixedTick();
-			_currentState.FixedTick();
+			CurrentState.FixedTick();
 		}
 
 		public void LateTick()
 		{
 			OnLateTick();
-			_currentState.LateTick();
+			CurrentState.LateTick();
 			AllTransitionsTick();
 
 			void AllTransitionsTick()
 			{
 				for ( var i = 0 ; i < _transitions.Length ; i++ )
 				{
-					if ( _transitions[i] == null )
+					if ( _transitions[ i ] == null )
 					{
 						continue;
 					}
 
-					_transitions[i].Tick();
+					_transitions[ i ].Tick();
 				}
 			}
 		}
@@ -85,119 +86,57 @@ namespace Bezoro.Framework.Unity.StateMachines.TickableBased
 		{
 			OnExit();
 			AllTransitionsCeaseRelevant();
-			_currentState.Exit();
+			CurrentState.Exit();
 		}
 
 		public void Disable()
 		{
 			OnDisable();
 			AllTransitionsCeaseRelevant();
-			_currentState.Disable();
+			CurrentState.Disable();
 		}
 
 		public void Destroy()
 		{
 			OnDestroy();
 			AllTransitionsCeaseRelevant();
-			_currentState.Destroy();
+			CurrentState.Destroy();
+		}
+
+		public ITickableState CurrentState { get; private set; }
+
+		public ITickableState LastState { get; private set; }
+
+		public void DoTransition( ITickableState toState )
+		{
+			CurrentState.Exit();
+			LastState    = CurrentState;
+			CurrentState = toState;
+			CurrentState.Enter();
 		}
 
 		public TickTransition TransitionsTo( ITickableState toState )
 		{
 			var newTransition = new TickTransition();
-			newTransition.Init( this, toState, _owner );
-			Array_Helpers.Add( ref _transitions, newTransition );
+			newTransition.Init(
+				this,
+				toState,
+				_owner );
+
+			Array_Helpers.Add(
+				ref _transitions,
+				newTransition );
 
 			return newTransition;
 		}
-
-		public void DoTransition( ITickableState toState )
-		{
-			_currentState.Exit();
-			_lastState    = _currentState;
-			_currentState = toState;
-			_currentState.Enter();
-		}
-
-	#region Abstract Methods
-
-		/// <summary>
-		///    Called once in the lifetime of the object, when it is created.
-		///    Use it to register all <b>States</b> needed for the <b>SubStateMachine</b> to work.
-		/// </summary>
-		protected abstract void RegisterStates();
-
-		/// <summary>
-		///    Called once in the lifetime of the object, when it is created.
-		///    Use it to set up all of the <b>States</b> <b>Transitions</b>.
-		/// </summary>
-		protected abstract void SetUpTransitions();
-
-		/// <summary>
-		///    Called once in the lifetime of the object, when it is created.
-		///    Use it like <b>Awake</b> in a <b>MonoBehaviour</b>.
-		/// </summary>
-		protected abstract void OnInit();
-
-		/// <summary>
-		///    Called when the <b>SubStateMachine</b> is <b>Entered</b>.
-		///    Use it to decide which should be the <b>Start</b> <b>State</b>, then return it.
-		/// </summary>
-		protected abstract ITickableState ResolveStartState();
-
-		/// <summary>
-		///    Called when the <b>Owner</b> gets <i>Enabled</i> and was previously <i>Disabled</i>,
-		///    while this object is still being executed.
-		/// </summary>
-		protected abstract void OnEnable();
-
-		/// <summary>
-		///    Called when the <b>SubStateMachine</b> is <i>Entered</i>.
-		/// </summary>
-		protected abstract void OnEnter();
-
-		/// <summary>
-		///    Called every frame, before <b>OnTick</b>.
-		/// </summary>
-		protected abstract void OnEarlyTick();
-
-		/// <summary>
-		///    Called every frame.
-		/// </summary>
-		protected abstract void OnTick();
-
-		/// <summary>
-		///    Called at the same rate as <b>FixedUpdate</b>.
-		/// </summary>
-		protected abstract void OnFixedTick();
-
-		/// <summary>
-		///    Called every frame after <b>OnTick</b>.
-		/// </summary>
-		protected abstract void OnLateTick();
-
-		/// <summary>
-		///    Called when the <b>SubStateMachine</b> is <i>Exited</i>.
-		/// </summary>
-		protected abstract void OnExit();
-
-		/// <summary>
-		///    Called when the <b>Owner</b> is <i>Disabled</i> while this object is still being executed.
-		/// </summary>
-		protected abstract void OnDisable();
-
-		/// <summary>
-		///    Called when the <b>Owner</b> is <i>Destroyed</i> while this object is still being executed.
-		/// </summary>
-		protected abstract void OnDestroy();
-
-	#endregion
 
 		protected T RegisterState<T>()
 		where T : class, ITickableState, new()
 		{
 			var newState = new T();
-			newState.Init( _owner, this );
+			newState.Init(
+				_owner,
+				this );
 
 			return newState;
 		}
@@ -206,12 +145,12 @@ namespace Bezoro.Framework.Unity.StateMachines.TickableBased
 		{
 			for ( var i = 0 ; i < _transitions.Length ; i++ )
 			{
-				if ( _transitions[i] == null )
+				if ( _transitions[ i ] == null )
 				{
 					continue;
 				}
 
-				_transitions[i].BecomeRelevant();
+				_transitions[ i ].BecomeRelevant();
 			}
 		}
 
@@ -219,19 +158,87 @@ namespace Bezoro.Framework.Unity.StateMachines.TickableBased
 		{
 			for ( var i = 0 ; i < _transitions.Length ; i++ )
 			{
-				if ( _transitions[i] == null )
+				if ( _transitions[ i ] == null )
 				{
 					continue;
 				}
 
-				_transitions[i].CeaseRelevant();
+				_transitions[ i ].CeaseRelevant();
 			}
 		}
 
-		private TickableStateMachineOwner _owner;
-		private ITickableStateMachine     _owningStateMachine;
-		private ITickableState            _currentState;
-		private ITickableState            _lastState;
-		private TickTransition[]          _transitions = new TickTransition[4];
+	#region Abstract Methods
+
+		/// <summary>
+		///     Called once in the lifetime of the object, when it is created.
+		///     Use it to register all <b>States</b> needed for the <b>SubStateMachine</b> to work.
+		/// </summary>
+		protected abstract void RegisterStates();
+
+		/// <summary>
+		///     Called once in the lifetime of the object, when it is created.
+		///     Use it to set up all of the <b>States</b> <b>Transitions</b>.
+		/// </summary>
+		protected abstract void SetUpTransitions();
+
+		/// <summary>
+		///     Called once in the lifetime of the object, when it is created.
+		///     Use it like <b>Awake</b> in a <b>MonoBehaviour</b>.
+		/// </summary>
+		protected abstract void OnInit();
+
+		/// <summary>
+		///     Called when the <b>SubStateMachine</b> is <b>Entered</b>.
+		///     Use it to decide which should be the <b>Start</b> <b>State</b>, then return it.
+		/// </summary>
+		protected abstract ITickableState ResolveStartState();
+
+		/// <summary>
+		///     Called when the <b>Owner</b> gets <i>Enabled</i> and was previously <i>Disabled</i>,
+		///     while this object is still being executed.
+		/// </summary>
+		protected abstract void OnEnable();
+
+		/// <summary>
+		///     Called when the <b>SubStateMachine</b> is <i>Entered</i>.
+		/// </summary>
+		protected abstract void OnEnter();
+
+		/// <summary>
+		///     Called every frame, before <b>OnTick</b>.
+		/// </summary>
+		protected abstract void OnEarlyTick();
+
+		/// <summary>
+		///     Called every frame.
+		/// </summary>
+		protected abstract void OnTick();
+
+		/// <summary>
+		///     Called at the same rate as <b>FixedUpdate</b>.
+		/// </summary>
+		protected abstract void OnFixedTick();
+
+		/// <summary>
+		///     Called every frame after <b>OnTick</b>.
+		/// </summary>
+		protected abstract void OnLateTick();
+
+		/// <summary>
+		///     Called when the <b>SubStateMachine</b> is <i>Exited</i>.
+		/// </summary>
+		protected abstract void OnExit();
+
+		/// <summary>
+		///     Called when the <b>Owner</b> is <i>Disabled</i> while this object is still being executed.
+		/// </summary>
+		protected abstract void OnDisable();
+
+		/// <summary>
+		///     Called when the <b>Owner</b> is <i>Destroyed</i> while this object is still being executed.
+		/// </summary>
+		protected abstract void OnDestroy();
+
+	#endregion
 	}
 }

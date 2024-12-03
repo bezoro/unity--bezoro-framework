@@ -6,6 +6,23 @@ namespace Bezoro.Framework.Unity.StateMachines.KCCBased
 	public abstract class BaseKCCStateMachine : ScriptableObject,
 		IKCCStateMachine
 	{
+		[field: SerializeField] public DisableMethod DisableMethod { get; private set; }
+
+		private KCCStateMachineOwner _owner;
+		private bool                 _wasDisabled;
+
+		public IKCCState CurrentState { get; private set; }
+
+		public IKCCState LastState { get; private set; }
+
+		public void DoTransition( IKCCState toState )
+		{
+			CurrentState.Exit();
+			LastState    = CurrentState;
+			CurrentState = toState;
+			CurrentState.Enter();
+		}
+
 		public void Init( KCCStateMachineOwner owner )
 		{
 			_owner = owner;
@@ -14,18 +31,11 @@ namespace Bezoro.Framework.Unity.StateMachines.KCCBased
 			OnInit();
 		}
 
-		public IKCCState CurrentState => _currentState;
-
-		public IKCCState LastState => _lastState;
-
-		[field: SerializeField]
-		public DisableMethod DisableMethod { get; private set; }
-
 		public void Start()
 		{
 			OnStart();
-			_currentState = ResolveStartState();
-			_currentState.Enter();
+			CurrentState = ResolveStartState();
+			CurrentState.Enter();
 		}
 
 		public void Enable()
@@ -33,64 +43,99 @@ namespace Bezoro.Framework.Unity.StateMachines.KCCBased
 			if ( _wasDisabled && DisableMethod is DisableMethod.Restart )
 			{
 				OnEnabled();
-				_currentState.Enable();
-				_currentState = ResolveStartState();
-				_currentState.Enter();
+				CurrentState.Enable();
+				CurrentState = ResolveStartState();
+				CurrentState.Enter();
 				_wasDisabled = false;
 			}
 			else if ( _wasDisabled )
 			{
 				OnEnabled();
-				_currentState.Enable();
+				CurrentState.Enable();
 				_wasDisabled = false;
 			}
 		}
 
 		public void EarlyTick()
 		{
-			_currentState.EarlyTick();
+			CurrentState.EarlyTick();
 		}
 
 		public void Tick()
 		{
-			_currentState.Tick();
+			CurrentState.Tick();
 		}
 
 		public void FixedTick()
 		{
-			_currentState.FixedTick();
+			CurrentState.FixedTick();
 		}
 
 		public void LateTick()
 		{
-			_currentState.LateTick();
+			CurrentState.LateTick();
+		}
+
+		public void Exit()
+		{
+			OnExit();
+			CurrentState.Exit();
+		}
+
+		public void Disable()
+		{
+			OnDisabled();
+			CurrentState.Disable();
+			_wasDisabled = true;
+		}
+
+		public void Destroy()
+		{
+			OnDestroyed();
+			CurrentState.Destroy();
+		}
+
+		protected T RegisterState<T>()
+		where T : class, IKCCState, new()
+		{
+			var newState = new T();
+			newState.Init(
+				_owner,
+				this,
+				_owner.Motor );
+
+			return newState;
 		}
 
 	#region KCC Methods
 
 		public void UpdateRotation( ref Quaternion currentRotation, float deltaTime )
 		{
-			_currentState.UpdateRotation( ref currentRotation, deltaTime );
+			CurrentState.UpdateRotation(
+				ref currentRotation,
+				deltaTime );
 		}
 
 		public void UpdateVelocity( ref Vector3 currentVelocity, float deltaTime )
 		{
-			_currentState.UpdateVelocity( ref currentVelocity, deltaTime );
+			CurrentState.UpdateVelocity(
+				ref currentVelocity,
+				deltaTime );
 		}
 
 		public void BeforeCharacterUpdate( float deltaTime )
 		{
-			_currentState.BeforeCharacterUpdate( deltaTime );
+			CurrentState.BeforeCharacterUpdate( deltaTime );
 		}
 
 		public void PostGroundingUpdate( float deltaTime )
 		{
-			_currentState.PostGroundingUpdate( deltaTime );
+			CurrentState.PostGroundingUpdate( deltaTime );
 		}
 
 		public void AfterCharacterUpdate( float deltaTime )
 		{
-			_currentState.AfterCharacterUpdate( deltaTime );
+			CurrentState.AfterCharacterUpdate( deltaTime );
 		}
 
 		public bool IsColliderValidForCollisions( Collider coll )
@@ -99,18 +144,19 @@ namespace Bezoro.Framework.Unity.StateMachines.KCCBased
 
 			bool CheckForMonoBehaviourToIgnoreCollisionsWith()
 			{
-				if ( CheckInState( _currentState ) )
+				if ( CheckInState( CurrentState ) )
 				{
 					return true;
 				}
 
-				if ( !_currentState.IsSubStateMachine( out var rootSubStateMachine ) )
+				if ( !CurrentState.IsSubStateMachine( out var rootSubStateMachine ) )
 				{
 					return false;
 				}
 
 				var currentState = rootSubStateMachine.CurrentState;
-				while (true)
+
+				while ( true )
 				{
 					if ( CheckInState( currentState ) )
 					{
@@ -130,7 +176,9 @@ namespace Bezoro.Framework.Unity.StateMachines.KCCBased
 					foreach ( var monoBehaviour in
 							 state.MonoBehaviourTypesToIgnoreCollisionsWith )
 					{
-						if ( coll.TryGetComponent( monoBehaviour, out _ ) )
+						if ( coll.TryGetComponent(
+								monoBehaviour,
+								out _ ) )
 						{
 							return true;
 						}
@@ -141,30 +189,35 @@ namespace Bezoro.Framework.Unity.StateMachines.KCCBased
 			}
 		}
 
-		public void OnGroundHit
-		(
+		public void OnGroundHit(
 			Collider hitCollider,
 			Vector3 hitNormal,
 			Vector3 hitPoint,
 			ref HitStabilityReport hitStabilityReport
 		)
 		{
-			_currentState.GroundHit( hitCollider, hitNormal, hitPoint, ref hitStabilityReport );
+			CurrentState.GroundHit(
+				hitCollider,
+				hitNormal,
+				hitPoint,
+				ref hitStabilityReport );
 		}
 
-		public void OnMovementHit
-		(
+		public void OnMovementHit(
 			Collider hitCollider,
 			Vector3 hitNormal,
 			Vector3 hitPoint,
 			ref HitStabilityReport hitStabilityReport
 		)
 		{
-			_currentState.MovementHit( hitCollider, hitNormal, hitPoint, ref hitStabilityReport );
+			CurrentState.MovementHit(
+				hitCollider,
+				hitNormal,
+				hitPoint,
+				ref hitStabilityReport );
 		}
 
-		public void ProcessHitStabilityReport
-		(
+		public void ProcessHitStabilityReport(
 			Collider hitCollider,
 			Vector3 hitNormal,
 			Vector3 hitPoint,
@@ -173,7 +226,7 @@ namespace Bezoro.Framework.Unity.StateMachines.KCCBased
 			ref HitStabilityReport hitStabilityReport
 		)
 		{
-			_currentState.ProcessHitStabilityReport(
+			CurrentState.ProcessHitStabilityReport(
 				hitCollider,
 				hitNormal,
 				hitPoint,
@@ -185,37 +238,10 @@ namespace Bezoro.Framework.Unity.StateMachines.KCCBased
 
 		public void OnDiscreteCollisionDetected( Collider hitCollider )
 		{
-			_currentState.DiscreteCollisionDetected( hitCollider );
+			CurrentState.DiscreteCollisionDetected( hitCollider );
 		}
 
 	#endregion
-
-		public void Exit()
-		{
-			OnExit();
-			_currentState.Exit();
-		}
-
-		public void Disable()
-		{
-			OnDisabled();
-			_currentState.Disable();
-			_wasDisabled = true;
-		}
-
-		public void Destroy()
-		{
-			OnDestroyed();
-			_currentState.Destroy();
-		}
-
-		public void DoTransition( IKCCState toState )
-		{
-			_currentState.Exit();
-			_lastState    = _currentState;
-			_currentState = toState;
-			_currentState.Enter();
-		}
 
 	#region Abstract Methods
 
@@ -274,19 +300,5 @@ namespace Bezoro.Framework.Unity.StateMachines.KCCBased
 		protected abstract void OnDestroyed();
 
 	#endregion
-
-		protected T RegisterState<T>()
-		where T : class, IKCCState, new()
-		{
-			var newState = new T();
-			newState.Init( _owner, this, _owner.Motor );
-
-			return newState;
-		}
-
-		private KCCStateMachineOwner _owner;
-		private IKCCState _currentState;
-		private IKCCState _lastState;
-		private bool _wasDisabled;
 	}
 }

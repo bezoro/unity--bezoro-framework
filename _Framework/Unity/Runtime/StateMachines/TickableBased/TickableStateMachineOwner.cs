@@ -6,14 +6,12 @@ namespace Bezoro.Framework.Unity.StateMachines.TickableBased
 	[DisallowMultipleComponent]
 	public sealed class TickableStateMachineOwner : Tickable
 	{
-		public BaseTickableStateMachine StateMachine => stateMachine;
-
-		[SerializeField]
-		private BaseTickableStateMachine stateMachine;
+		[SerializeField] private BaseTickableStateMachine stateMachine;
+		public                   BaseTickableStateMachine StateMachine => stateMachine;
 
 		private void Awake()
 		{
-			var type = stateMachine.GetType();
+			var type                    = stateMachine.GetType();
 			var newStateMachineInstance = ScriptableObject.CreateInstance( type );
 			stateMachine = newStateMachineInstance as BaseTickableStateMachine;
 			stateMachine.Init( this );
@@ -30,23 +28,6 @@ namespace Bezoro.Framework.Unity.StateMachines.TickableBased
 			stateMachine.Enable();
 		}
 
-		public override void EarlyTick()
-		{
-			stateMachine.EarlyTick();
-		}
-
-		public override void Tick() { stateMachine.Tick(); }
-
-		public override void FixedTick()
-		{
-			stateMachine.FixedTick();
-		}
-
-		public override void LateTick()
-		{
-			stateMachine.LateTick();
-		}
-
 		protected override void OnDisable()
 		{
 			base.OnDisable();
@@ -56,6 +37,26 @@ namespace Bezoro.Framework.Unity.StateMachines.TickableBased
 		private void OnDestroy()
 		{
 			stateMachine.Destroy();
+		}
+
+		public override void EarlyTick()
+		{
+			stateMachine.EarlyTick();
+		}
+
+		public override void Tick()
+		{
+			stateMachine.Tick();
+		}
+
+		public override void FixedTick()
+		{
+			stateMachine.FixedTick();
+		}
+
+		public override void LateTick()
+		{
+			stateMachine.LateTick();
 		}
 
 		public bool TryFindStateInCurrentHierarchy<T>( out T outState )

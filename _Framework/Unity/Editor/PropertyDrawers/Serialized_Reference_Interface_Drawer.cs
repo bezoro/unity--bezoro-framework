@@ -9,14 +9,20 @@ namespace Bezoro.Framework.Unity.Editor.PropertyDrawers
 	{
 		public override void OnGUI( Rect position, SerializedProperty property, GUIContent label )
 		{
-			EditorGUI.BeginProperty( position, label, property );
+			EditorGUI.BeginProperty(
+				position,
+				label,
+				property );
+
 			var type = fieldInfo.FieldType;
+
 			if ( property.propertyType == SerializedPropertyType.ManagedReference )
 			{
-				var targetType = type.GetGenericArguments()[0];
+				var targetType = type.GetGenericArguments()[ 0 ];
+
 				if ( targetType.IsInterface
-				  && property.managedReferenceValue != null
-				  && targetType.IsAssignableFrom( property.managedReferenceValue.GetType() ) )
+					 && property.managedReferenceValue != null
+					 && targetType.IsAssignableFrom( property.managedReferenceValue.GetType() ) )
 				{
 					property.managedReferenceValue =
 						EditorGUI.ObjectField(
@@ -28,9 +34,13 @@ namespace Bezoro.Framework.Unity.Editor.PropertyDrawers
 				}
 				else
 				{
-					EditorGUI.LabelField( position, label.text, "Type not supported." );
+					EditorGUI.LabelField(
+						position,
+						label.text,
+						"Type not supported." );
 				}
 			}
+
 			EditorGUI.EndProperty();
 		}
 	}

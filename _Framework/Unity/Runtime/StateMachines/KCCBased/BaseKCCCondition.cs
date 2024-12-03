@@ -4,23 +4,26 @@ namespace Bezoro.Framework.Unity.StateMachines.KCCBased
 {
 	public abstract class BaseKCCCondition
 	{
+		public MonoBehaviour StateMachine { get; private set; }
+
+		public bool Inverted { get; private set; }
+
 		public void Init( MonoBehaviour stateMachine, bool inverted = false )
 		{
-			_stateMachine = stateMachine;
-			_inverted     = inverted;
+			StateMachine = stateMachine;
+			Inverted     = inverted;
 			OnInit();
 		}
-
-		public MonoBehaviour StateMachine => _stateMachine;
-
-		public bool Inverted => _inverted;
 
 		public void BecomeRelevant()
 		{
 			OnBecomeRelevant();
 		}
 
-		public bool Tick() => _inverted ? !OnTick() : OnTick();
+		public bool Tick()
+		{
+			return Inverted ? !OnTick() : OnTick();
+		}
 
 		public void CeaseRelevant()
 		{
@@ -48,8 +51,5 @@ namespace Bezoro.Framework.Unity.StateMachines.KCCBased
 		protected abstract void OnCeaseRelevant();
 
 	#endregion
-
-		private MonoBehaviour _stateMachine;
-		private bool _inverted;
 	}
 }

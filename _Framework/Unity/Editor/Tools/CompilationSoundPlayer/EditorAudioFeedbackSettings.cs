@@ -4,12 +4,43 @@ using UnityEngine;
 
 namespace Bezoro.Framework.Unity.Editor.Tools
 {
-	[CreateAssetMenu( fileName = "EditorAudioFeedbackSettings", menuName = "Bezoro/Editor/Compilation Sound Settings" )]
-	public class EditorAudioFeedbackSettings : UnityEditor.ScriptableSingleton<EditorAudioFeedbackSettings>
+	[CreateAssetMenu(
+		fileName = "EditorAudioFeedbackSettings",
+		menuName = "Bezoro/Editor/Compilation Sound Settings" )]
+	public class EditorAudioFeedbackSettings : ScriptableSingleton<EditorAudioFeedbackSettings>
 	{
+	#region Singleton Check
+
+		/// <summary>
+		///     Checks if the current instance is part of the asset database.
+		/// </summary>
+		public static bool IsAssetInstance()
+		{
+			return AssetDatabase.Contains( instance );
+		}
+
+	#endregion
+
+	#region Utility Methods
+
+		/// <summary>
+		///     Plays the specified audio clip if not null.
+		/// </summary>
+		/// <param name="clip">The audio clip to play.</param>
+		private static void PlayAudioClip( AudioClip clip )
+		{
+			if ( clip != null )
+			{
+				EditorAudioManager.PlayClip( clip );
+			}
+		}
+
+	#endregion
+
 	#region Serialized Fields
 
-		[SerializeField] [Tooltip( "Enable or disable audio feedback during editor events" )]
+		[SerializeField]
+		[Tooltip( "Enable or disable audio feedback during editor events" )]
 		private bool play = true;
 
 		[Tooltip( "Audio clip to play at the start of compilation" )]
@@ -35,20 +66,12 @@ namespace Bezoro.Framework.Unity.Editor.Tools
 
 	#endregion
 
-	#region Singleton Check
-
-		/// <summary>
-		///     Checks if the current instance is part of the asset database.
-		/// </summary>
-		public static bool IsAssetInstance() => AssetDatabase.Contains( instance );
-
-	#endregion
-
 	#region Unity Lifecycle
 
 		private void OnEnable()
 		{
 			if ( !play ) { return; }
+
 			SubscribeToEditorEvents();
 		}
 
@@ -112,42 +135,41 @@ namespace Bezoro.Framework.Unity.Editor.Tools
 		/// <summary>
 		///     Handles the event when compilation starts.
 		/// </summary>
-		private void OnCompilationStarted() => PlayAudioClip( compilationStartClip );
+		private void OnCompilationStarted()
+		{
+			PlayAudioClip( compilationStartClip );
+		}
 
 		/// <summary>
 		///     Handles the event when compilation finishes.
 		/// </summary>
-		private void OnCompilationFinished() => PlayAudioClip( compilationEndClip );
+		private void OnCompilationFinished()
+		{
+			PlayAudioClip( compilationEndClip );
+		}
 
 		/// <summary>
 		///     Handles the event when a build finishes.
 		/// </summary>
-		private void OnBuildFinishedSuccessfully() => PlayAudioClip( buildCompletedSuccessfullyClip );
+		private void OnBuildFinishedSuccessfully()
+		{
+			PlayAudioClip( buildCompletedSuccessfullyClip );
+		}
 
 		/// <summary>
 		///     Handles the event when a test run starts.
 		/// </summary>
-		private void OnTestRunStarted() => PlayAudioClip( testStartClip );
+		private void OnTestRunStarted()
+		{
+			PlayAudioClip( testStartClip );
+		}
 
 		/// <summary>
 		///     Handles the event when a test run finishes.
 		/// </summary>
-		private void OnTestRunFinished() => PlayAudioClip( testEndClip );
-
-	#endregion
-
-	#region Utility Methods
-
-		/// <summary>
-		///     Plays the specified audio clip if not null.
-		/// </summary>
-		/// <param name="clip">The audio clip to play.</param>
-		private static void PlayAudioClip( AudioClip clip )
+		private void OnTestRunFinished()
 		{
-			if ( clip != null )
-			{
-				EditorAudioManager.PlayClip( clip );
-			}
+			PlayAudioClip( testEndClip );
 		}
 
 	#endregion

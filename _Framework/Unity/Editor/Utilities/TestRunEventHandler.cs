@@ -8,25 +8,22 @@ namespace Bezoro.Framework.Unity.Editor.Utilities
 	[InitializeOnLoad]
 	public sealed class TestRunEventHandler : ICallbacks
 	{
-		public static event Action TestRunStarted;
-		public static event Action TestRunFinished;
-
 		private static int _isTestRunInProgress;
-
-		public static bool IsTestRunInProgress
-		{
-			get => Interlocked.CompareExchange( ref _isTestRunInProgress, 0, 0 ) == 1;
-			private set => Interlocked.Exchange( ref _isTestRunInProgress, value ? 1 : 0 );
-		}
 
 		static TestRunEventHandler()
 		{
 			Initialize();
 		}
 
-		public static void Initialize()
+		public static bool IsTestRunInProgress
 		{
-			IsTestRunInProgress = false;
+			get => Interlocked.CompareExchange(
+				ref _isTestRunInProgress,
+				0,
+				0 ) == 1;
+			private set => Interlocked.Exchange(
+				ref _isTestRunInProgress,
+				value ? 1 : 0 );
 		}
 
 		public void RunStarted( ITestAdaptor testsToRun )
@@ -41,9 +38,21 @@ namespace Bezoro.Framework.Unity.Editor.Utilities
 			RaiseEvent( TestRunFinished );
 		}
 
-		public void TestStarted( ITestAdaptor test ) {}
+		public void TestStarted( ITestAdaptor test )
+		{
+		}
 
-		public void TestFinished( ITestResultAdaptor result ) {}
+		public void TestFinished( ITestResultAdaptor result )
+		{
+		}
+
+		public static event Action TestRunStarted;
+		public static event Action TestRunFinished;
+
+		public static void Initialize()
+		{
+			IsTestRunInProgress = false;
+		}
 
 		private static void RaiseEvent( Action eventAction )
 		{

@@ -11,15 +11,14 @@ namespace Bezoro.Framework.Unity.Editor.Utilities
 		{
 			if ( clip == null )
 			{
-				throw new ArgumentNullException( nameof(clip) );
+				throw new ArgumentNullException( nameof( clip ) );
 			}
 
 			try
 			{
 				StopAllPreviewClips();
 				InvokePlayPreviewClip( clip );
-			}
-			catch ( Exception ex )
+			} catch ( Exception ex )
 			{
 				Debug.LogError( $"Error playing compilation sound: {ex.Message}" );
 			}
@@ -28,27 +27,32 @@ namespace Bezoro.Framework.Unity.Editor.Utilities
 		private static void StopAllPreviewClips()
 		{
 			var stopMethod = GetAudioUtilMethod( "StopAllPreviewClips" );
-			stopMethod?.Invoke( null, null );
+			stopMethod?.Invoke(
+				null,
+				null );
 		}
 
 		private static void InvokePlayPreviewClip( AudioClip clip )
 		{
 			var method = GetAudioUtilMethod( "PlayPreviewClip" );
-			method?.Invoke( null, new object[] { clip, 0, false } );
+			method?.Invoke(
+				null,
+				new object[] { clip, 0, false } );
 		}
 
 		private static MethodInfo GetAudioUtilMethod( string methodName )
 		{
-			const string audioUtilClassName = "UnityEditor.AudioUtil";
-			var unityEditorAssembly = typeof(AudioImporter).Assembly;
+			const string audioUtilClassName  = "UnityEditor.AudioUtil";
+			var          unityEditorAssembly = typeof( AudioImporter ).Assembly;
 
 			try
 			{
-				var audioUtilClass = unityEditorAssembly.GetType( audioUtilClassName );
-				const BindingFlags flags = BindingFlags.Static | BindingFlags.Public;
-				return audioUtilClass?.GetMethod( methodName, flags );
-			}
-			catch ( Exception ex )
+				var                audioUtilClass = unityEditorAssembly.GetType( audioUtilClassName );
+				const BindingFlags flags          = BindingFlags.Static | BindingFlags.Public;
+				return audioUtilClass?.GetMethod(
+					methodName,
+					flags );
+			} catch ( Exception ex )
 			{
 				Debug.LogError( $"Error retrieving method {methodName} from {audioUtilClassName}: {ex.Message}" );
 				return null;

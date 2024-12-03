@@ -2,8 +2,9 @@
 
 namespace Bezoro.Framework.Unity.StateMachines
 {
-	public interface IEventState : IState, IHasTransitions<EventTransition, IEventState>
+	public interface IEventState : IState,
+		IHasTransitions<EventTransition, IEventState>
 	{
-		void Init( EventStateMachineOwner owner, IEventStateMachine owningStateMachine );
+		public void Init( EventStateMachineOwner owner, IEventStateMachine owningStateMachine );
 	}
 }

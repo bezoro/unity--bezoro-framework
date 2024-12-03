@@ -6,8 +6,8 @@ namespace Bezoro.Framework.Unity.Utilities
 	{
 		public static (int fileIndex, int rankIndex) ChessNotationToIndices( string notation )
 		{
-			var file = notation[..1];
-			var rank = notation[1..];
+			var file = notation[ ..1 ];
+			var rank = notation[ 1.. ];
 
 			return ( ChessNotationFileToInt( file ), ChessNotationRankToInt( rank ) );
 		}
@@ -22,18 +22,20 @@ namespace Bezoro.Framework.Unity.Utilities
 		/// </exception>
 		public static int ChessNotationRankToInt( string rank )
 		{
-			if ( !int.TryParse( rank, out var result ) )
+			if ( !int.TryParse(
+					rank,
+					out var result ) )
 			{
 				throw new ArgumentException(
 					"Rank must be a valid integer.",
-					nameof(rank)
+					nameof( rank )
 				);
 			}
 
 			if ( result < 1 || result > 26 )
 			{
 				throw new ArgumentOutOfRangeException(
-					nameof(rank),
+					nameof( rank ),
 					"Rank must be between 1 and 26."
 				);
 			}
@@ -58,16 +60,16 @@ namespace Bezoro.Framework.Unity.Utilities
 			{
 				throw new ArgumentException(
 					"File must be a single letter.",
-					nameof(file)
+					nameof( file )
 				);
 			}
 
-			var fileChar = char.ToUpper( file[0] );
+			var fileChar = char.ToUpper( file[ 0 ] );
 
 			if ( fileChar < 'A' || fileChar > 'Z' )
 			{
 				throw new ArgumentOutOfRangeException(
-					nameof(file),
+					nameof( file ),
 					"File must be a letter between A and Z."
 				);
 			}

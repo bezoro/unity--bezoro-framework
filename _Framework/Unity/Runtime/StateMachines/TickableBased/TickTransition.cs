@@ -4,9 +4,16 @@ namespace Bezoro.Framework.Unity.StateMachines.TickableBased
 {
 	public class TickTransition : ITransition
 	{
+		private BaseTickCondition[] _conditions         = new BaseTickCondition[4];
+		private ConditionsCriteria  _conditionsCriteria = ConditionsCriteria.AnyTrue;
+		private ITickableState      _fromState;
+
+		private TickableStateMachineOwner _owner;
+		private ITickableState            _toState;
+
 		public void Init(
-			ITickableState            fromState,
-			ITickableState            toState,
+			ITickableState fromState,
+			ITickableState toState,
 			TickableStateMachineOwner owner
 		)
 		{
@@ -23,12 +30,12 @@ namespace Bezoro.Framework.Unity.StateMachines.TickableBased
 			{
 				for ( var i = 0 ; i < _conditions.Length ; i++ )
 				{
-					if ( _conditions[i] == null )
+					if ( _conditions[ i ] == null )
 					{
 						continue;
 					}
 
-					_conditions[i].BecomeRelevant();
+					_conditions[ i ].BecomeRelevant();
 				}
 			}
 		}
@@ -53,12 +60,12 @@ namespace Bezoro.Framework.Unity.StateMachines.TickableBased
 				{
 					for ( var i = 0 ; i < _conditions.Length ; i++ )
 					{
-						if ( _conditions[i] == null )
+						if ( _conditions[ i ] == null )
 						{
 							continue;
 						}
 
-						if ( _conditions[i].Tick() )
+						if ( _conditions[ i ].Tick() )
 						{
 							_fromState.OnTransitionRaised( _toState );
 						}
@@ -69,12 +76,12 @@ namespace Bezoro.Framework.Unity.StateMachines.TickableBased
 				{
 					for ( var i = 0 ; i < _conditions.Length ; i++ )
 					{
-						if ( _conditions[i] == null )
+						if ( _conditions[ i ] == null )
 						{
 							continue;
 						}
 
-						if ( !_conditions[i].Tick() )
+						if ( !_conditions[ i ].Tick() )
 						{
 							return;
 						}
@@ -93,12 +100,12 @@ namespace Bezoro.Framework.Unity.StateMachines.TickableBased
 			{
 				for ( var i = 0 ; i < _conditions.Length ; i++ )
 				{
-					if ( _conditions[i] == null )
+					if ( _conditions[ i ] == null )
 					{
 						continue;
 					}
 
-					_conditions[i].CeaseRelevant();
+					_conditions[ i ].CeaseRelevant();
 				}
 			}
 		}
@@ -107,58 +114,82 @@ namespace Bezoro.Framework.Unity.StateMachines.TickableBased
 		where T : BaseTickCondition, new()
 		{
 			var newCondition = new T();
-			newCondition.Init( _owner, inverted );
-			Array_Helpers.Add( ref _conditions, newCondition );
+			newCondition.Init(
+				_owner,
+				inverted );
+
+			Array_Helpers.Add(
+				ref _conditions,
+				newCondition );
 		}
 
 		public void WithConditions<T0, T1>(
 			ConditionsCriteria conditionsCriteria = ConditionsCriteria.AnyTrue,
-			bool               inverted0          = false,
-			bool               inverted1          = false
+			bool inverted0 = false,
+			bool inverted1 = false
 		)
 		where T0 : BaseTickCondition, new()
 		where T1 : BaseTickCondition, new()
 		{
 			var newCondition0 = new T0();
-			newCondition0.Init( _owner, inverted0 );
-			Array_Helpers.Add( ref _conditions, newCondition0 );
+			newCondition0.Init(
+				_owner,
+				inverted0 );
+
+			Array_Helpers.Add(
+				ref _conditions,
+				newCondition0 );
 
 			var newCondition1 = new T1();
-			newCondition1.Init( _owner, inverted1 );
-			Array_Helpers.Add( ref _conditions, newCondition1 );
+			newCondition1.Init(
+				_owner,
+				inverted1 );
+
+			Array_Helpers.Add(
+				ref _conditions,
+				newCondition1 );
 
 			_conditionsCriteria = conditionsCriteria;
 		}
 
 		public void WithConditions<T0, T1, T2>(
 			ConditionsCriteria conditionsCriteria = ConditionsCriteria.AnyTrue,
-			bool               inverted0          = false,
-			bool               inverted1          = false,
-			bool               inverted2          = false
+			bool inverted0 = false,
+			bool inverted1 = false,
+			bool inverted2 = false
 		)
 		where T0 : BaseTickCondition, new()
 		where T1 : BaseTickCondition, new()
 		where T2 : BaseTickCondition, new()
 		{
 			var newCondition0 = new T0();
-			newCondition0.Init( _owner, inverted0 );
-			Array_Helpers.Add( ref _conditions, newCondition0 );
+			newCondition0.Init(
+				_owner,
+				inverted0 );
+
+			Array_Helpers.Add(
+				ref _conditions,
+				newCondition0 );
 
 			var newCondition1 = new T1();
-			newCondition1.Init( _owner, inverted1 );
-			Array_Helpers.Add( ref _conditions, newCondition1 );
+			newCondition1.Init(
+				_owner,
+				inverted1 );
+
+			Array_Helpers.Add(
+				ref _conditions,
+				newCondition1 );
 
 			var newCondition2 = new T2();
-			newCondition2.Init( _owner, inverted2 );
-			Array_Helpers.Add( ref _conditions, newCondition2 );
+			newCondition2.Init(
+				_owner,
+				inverted2 );
+
+			Array_Helpers.Add(
+				ref _conditions,
+				newCondition2 );
 
 			_conditionsCriteria = conditionsCriteria;
 		}
-
-		private TickableStateMachineOwner _owner;
-		private ITickableState            _fromState;
-		private ITickableState            _toState;
-		private BaseTickCondition[]       _conditions         = new BaseTickCondition[4];
-		private ConditionsCriteria        _conditionsCriteria = ConditionsCriteria.AnyTrue;
 	}
 }

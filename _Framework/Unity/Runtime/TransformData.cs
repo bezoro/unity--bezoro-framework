@@ -10,15 +10,15 @@ namespace Bezoro.Framework.Unity
 		public Transform  Parent   { get; set; }
 
 		public TransformData(
-			Vector3    position = default,
+			Vector3 position = default,
 			Quaternion rotation = default,
-			Vector3    scale    = default,
-			Transform  parent   = null
+			Vector3 scale = default,
+			Transform parent = null
 		)
 		{
-			Position = position == default(Vector3) ? Vector3.zero : position;
-			Rotation = rotation == default(Quaternion) ? Quaternion.identity : rotation;
-			Scale    = scale    == default(Vector3) ? Vector3.one : scale;
+			Position = position == default ? Vector3.zero : position;
+			Rotation = rotation == default ? Quaternion.identity : rotation;
+			Scale    = scale == default ? Vector3.one : scale;
 			Parent   = parent;
 		}
 	}

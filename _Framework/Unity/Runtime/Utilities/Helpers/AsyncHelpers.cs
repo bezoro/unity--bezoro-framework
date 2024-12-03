@@ -6,14 +6,15 @@ namespace Bezoro.Framework.Unity.Utilities
 {
 	public static class AsyncHelpers
 	{
-		public static async UniTask DelayedAction
-		(
+		public static async UniTask DelayedAction(
 			Action action,
 			float delayInSeconds,
 			CancellationToken cancellationToken = default
 		)
 		{
-			await UniTask.Delay( TimeSpan.FromSeconds( delayInSeconds ), cancellationToken: cancellationToken );
+			await UniTask.Delay(
+				TimeSpan.FromSeconds( delayInSeconds ),
+				cancellationToken: cancellationToken );
 
 			if ( !cancellationToken.IsCancellationRequested )
 			{
@@ -21,17 +22,18 @@ namespace Bezoro.Framework.Unity.Utilities
 			}
 		}
 
-		public static async UniTask RepeatActionAsync
-		(
+		public static async UniTask RepeatActionAsync(
 			Func<UniTask> action,
 			float intervalInSeconds,
 			CancellationToken cancellationToken = default
 		)
 		{
-			while (!cancellationToken.IsCancellationRequested)
+			while ( !cancellationToken.IsCancellationRequested )
 			{
 				await action();
-				await UniTask.Delay( TimeSpan.FromSeconds( intervalInSeconds ), cancellationToken: cancellationToken );
+				await UniTask.Delay(
+					TimeSpan.FromSeconds( intervalInSeconds ),
+					cancellationToken: cancellationToken );
 			}
 		}
 	}

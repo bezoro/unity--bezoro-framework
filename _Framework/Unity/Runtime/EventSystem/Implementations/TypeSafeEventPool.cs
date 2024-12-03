@@ -3,11 +3,12 @@ using System.Collections.Concurrent;
 
 namespace Bezoro.Framework.Unity.EventSystem
 {
-	public class TypeSafeEventPool<T> where T : IEvent
+	public class TypeSafeEventPool<T>
+	where T : IEvent
 	{
+		private readonly Func<T>          _factory;
+		private readonly int              _maxPoolSize;
 		private readonly ConcurrentBag<T> _pool = new();
-		private readonly int _maxPoolSize;
-		private readonly Func<T> _factory;
 
 		public TypeSafeEventPool( int maxPoolSize, Func<T> factory )
 		{
@@ -15,7 +16,10 @@ namespace Bezoro.Framework.Unity.EventSystem
 			_factory     = factory;
 		}
 
-		public T Get() => _pool.TryTake( out var item ) ? item : _factory();
+		public T Get()
+		{
+			return _pool.TryTake( out var item ) ? item : _factory();
+		}
 
 		public void Return( T item )
 		{

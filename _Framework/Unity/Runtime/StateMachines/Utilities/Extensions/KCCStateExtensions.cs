@@ -7,7 +7,7 @@ namespace Bezoro.Framework.Unity.StateMachines.Utilities
 		public static void AddMonoBehaviourToIgnoreCollisionsWith<T>( this IKCCState state )
 		where T : MonoBehaviour
 		{
-			state.MonoBehaviourTypesToIgnoreCollisionsWith.Add( typeof(T) );
+			state.MonoBehaviourTypesToIgnoreCollisionsWith.Add( typeof( T ) );
 		}
 	}
 }

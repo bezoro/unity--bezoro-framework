@@ -7,19 +7,19 @@ namespace Bezoro.Framework.Unity.Jobs
 {
 	public class RaycastCommandRaycaster : IDisposable
 	{
+		private NativeArray<RaycastCommand> _commands;
+		private NativeArray<RaycastHit>     _results;
+
 		public RaycastCommandRaycaster( int bufferSize )
 		{
-			_commands = new(bufferSize, Allocator.Persistent);
-			_results  = new(bufferSize, Allocator.Persistent);
-		}
+			_commands = new(
+				bufferSize,
+				Allocator.Persistent );
 
-		public void AddRaycastCommand( Ray ray, float distance, int index )
-		{
-			_commands[index] =
-				new(ray.origin, ray.direction, QueryParameters.Default);
+			_results = new(
+				bufferSize,
+				Allocator.Persistent );
 		}
-
-		public JobHandle ScheduleRaycastCommands() => RaycastCommand.ScheduleBatch( _commands, _results, 1 );
 
 		public void Dispose()
 		{
@@ -27,7 +27,21 @@ namespace Bezoro.Framework.Unity.Jobs
 			_results.Dispose();
 		}
 
-		private NativeArray<RaycastCommand> _commands;
-		private NativeArray<RaycastHit> _results;
+		public void AddRaycastCommand( Ray ray, float distance, int index )
+		{
+			_commands[ index ] =
+				new(
+					ray.origin,
+					ray.direction,
+					QueryParameters.Default );
+		}
+
+		public JobHandle ScheduleRaycastCommands()
+		{
+			return RaycastCommand.ScheduleBatch(
+				_commands,
+				_results,
+				1 );
+		}
 	}
 }

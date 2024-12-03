@@ -6,26 +6,32 @@ namespace Bezoro.Framework.Unity.ReflectionProbeManager
 {
 	public sealed class ReflectionProbeManager : MonoBehaviour
 	{
-		[UsedImplicitly]
-		public static ReflectionProbeManager Instance { get; private set; }
-		public float TickFrequency => 1f;
-		public double Time => _customFixedTick.FixedTime;
-		public float DeltaTime => _customFixedTick.CustomFixedDeltaTime;
+		private static ReflectionProbeManager _instance;
 
-		[RuntimeInitializeOnLoadMethod( RuntimeInitializeLoadType.SubsystemRegistration )]
-		private static void Init()
-		{
-			Instance = null;
-		}
+		private readonly List<ReflectionProbe> _reflectionProbes = new( 128 );
+
+		private                        CustomFixedTick        _customFixedTick;
+		[UsedImplicitly] public static ReflectionProbeManager Instance      { get; private set; }
+		public                         float                  TickFrequency => 1f;
+		public                         double                 Time          => _customFixedTick.FixedTime;
+		public                         float                  DeltaTime     => _customFixedTick.CustomFixedDeltaTime;
 
 		private void Awake()
 		{
-			_customFixedTick = new(TickFrequency, RenderAllProbes);
+			_customFixedTick = new(
+				TickFrequency,
+				RenderAllProbes );
 		}
 
 		private void Update()
 		{
 			_customFixedTick.Tick( UnityEngine.Time.deltaTime );
+		}
+
+		[RuntimeInitializeOnLoadMethod( RuntimeInitializeLoadType.SubsystemRegistration )]
+		private static void Init()
+		{
+			Instance = null;
 		}
 
 		public void AddUnique( ReflectionProbe reflectionProbe )
@@ -47,14 +53,8 @@ namespace Bezoro.Framework.Unity.ReflectionProbeManager
 		{
 			for ( var i = 0 ; i < _reflectionProbes.Count ; i++ )
 			{
-				_reflectionProbes[i].RenderProbe();
+				_reflectionProbes[ i ].RenderProbe();
 			}
 		}
-
-		private static ReflectionProbeManager _instance;
-
-		private CustomFixedTick _customFixedTick;
-
-		private readonly List<ReflectionProbe> _reflectionProbes = new(128);
 	}
 }

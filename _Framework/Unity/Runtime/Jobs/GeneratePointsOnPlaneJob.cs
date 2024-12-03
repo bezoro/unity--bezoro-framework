@@ -13,40 +13,39 @@ namespace Bezoro.Framework.Unity.Jobs
 		/// <summary>
 		///     The plane's center.
 		/// </summary>
-		[ReadOnly]
-		public float3 Center;
+		[ReadOnly] public float3 Center;
+
 		/// <summary>
 		///     The plane's width.
 		/// </summary>
-		[ReadOnly]
-		public float Width;
+		[ReadOnly] public float Width;
+
 		/// <summary>
 		///     The plane's height.
 		/// </summary>
-		[ReadOnly]
-		public float Height;
+		[ReadOnly] public float Height;
+
 		/// <summary>
 		///     The number of points along the plane's width.
 		/// </summary>
-		[ReadOnly]
-		public int NumPointsWidth;
+		[ReadOnly] public int NumPointsWidth;
+
 		/// <summary>
 		///     The number of points along the plane's height.
 		/// </summary>
-		[ReadOnly]
-		public int NumPointsHeight;
+		[ReadOnly] public int NumPointsHeight;
+
 		/// <summary>
 		///     The plane's right axis.
 		///     <para>Make sure its normalized.</para>
 		/// </summary>
-		[ReadOnly]
-		public float3 RightAxis;
+		[ReadOnly] public float3 RightAxis;
+
 		/// <summary>
 		///     The plane's up axis.
 		///     <para>Make sure its normalized.</para>
 		/// </summary>
-		[ReadOnly]
-		public float3 UpAxis;
+		[ReadOnly] public float3 UpAxis;
 
 	#endregion
 
@@ -55,8 +54,7 @@ namespace Bezoro.Framework.Unity.Jobs
 		/// <summary>
 		///     The resulting points generated on the plane.
 		/// </summary>
-		[WriteOnly]
-		public NativeArray<float3> ResultPoints;
+		[WriteOnly] public NativeArray<float3> ResultPoints;
 
 	#endregion
 
@@ -67,17 +65,17 @@ namespace Bezoro.Framework.Unity.Jobs
 				return;
 			}
 
-			var row = index    / NumPointsWidth;
+			var row    = index / NumPointsWidth;
 			var column = index % NumPointsWidth;
 
-			var stepSizeX = Width  / ( NumPointsWidth  - 1 );
+			var stepSizeX = Width / ( NumPointsWidth - 1 );
 			var stepSizeY = Height / ( NumPointsHeight - 1 );
 
 			var point = Center
-					  + ( Width  * 0.5f - column * stepSizeX ) * RightAxis
-					  + ( Height * 0.5f - row    * stepSizeY ) * UpAxis;
+						+ ( Width * 0.5f - column * stepSizeX ) * RightAxis
+						+ ( Height * 0.5f - row * stepSizeY ) * UpAxis;
 
-			ResultPoints[index] = point;
+			ResultPoints[ index ] = point;
 		}
 	}
 }
