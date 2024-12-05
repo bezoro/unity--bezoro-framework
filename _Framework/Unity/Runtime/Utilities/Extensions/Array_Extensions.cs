@@ -638,8 +638,8 @@ namespace Bezoro.Framework.Unity.Utilities
 
 		public static T[] Add<T>( this T[] array, T item )
 		{
-			ValidationHelpers.Validate_Object_Not_Null( array );
-			ValidationHelpers.Validate_Object_Not_Null( item );
+			Validation_Helpers.Validate_Object_Not_Null( array );
+			Validation_Helpers.Validate_Object_Not_Null( item );
 
 			var currentLength = array.Length;
 
@@ -692,8 +692,8 @@ namespace Bezoro.Framework.Unity.Utilities
 		/// <returns>A new array with the item removed.</returns>
 		public static T[] Remove<T>( this T[] array, T item )
 		{
-			ValidationHelpers.Validate_Object_Not_Null( array );
-			ValidationHelpers.Validate_Object_Not_Null( item );
+			Validation_Helpers.Validate_Object_Not_Null( array );
+			Validation_Helpers.Validate_Object_Not_Null( item );
 
 			var currentLength = array.Length;
 			var newArray      = new T[currentLength - 1];

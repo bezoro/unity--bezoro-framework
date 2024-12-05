@@ -3,13 +3,13 @@ using System.Collections.Generic;
 
 namespace Bezoro.Framework.Unity.Utilities
 {
-	public static class ValidationHelpers
+	public static class Validation_Helpers
 	{
 		public static void Validate_Is_Subclass_Of<T>( object caller, string methodName, Type type )
 		{
 			if ( !type.IsSubclassOf( typeof( T ) ) )
 			{
-				ExceptionHelpers.ThrowExceptionEditorOnly<ArgumentNullException>(
+				Exception_Helpers.Throw_Exception_Editor_Only<ArgumentNullException>(
 					caller,
 					methodName,
 					$"Type {type} is not a Component"
@@ -17,15 +17,15 @@ namespace Bezoro.Framework.Unity.Utilities
 			}
 		}
 
-		public static void ValidatePositiveValue( float value )
+		public static void Validate_Positive_Value( float value )
 		{
-			ValidatePositiveValue(
+			Validate_Positive_Value(
 				null,
 				"",
 				value );
 		}
 
-		public static void ValidatePositiveValue(
+		public static void Validate_Positive_Value(
 			object caller,
 			string methodName,
 			float value
@@ -33,7 +33,7 @@ namespace Bezoro.Framework.Unity.Utilities
 		{
 			if ( value <= 0 )
 			{
-				ExceptionHelpers.ThrowExceptionEditorOnly<ArgumentException>(
+				Exception_Helpers.Throw_Exception_Editor_Only<ArgumentException>(
 					caller,
 					methodName,
 					$"Value must be positive. Received: {value}"
@@ -41,7 +41,7 @@ namespace Bezoro.Framework.Unity.Utilities
 			}
 		}
 
-		public static void ValidateValueNotAboveMax(
+		public static void Validate_Value_Not_Above_Max(
 			object caller,
 			string methodName,
 			int value,
@@ -50,7 +50,7 @@ namespace Bezoro.Framework.Unity.Utilities
 		{
 			if ( value > max )
 			{
-				ExceptionHelpers.ThrowExceptionEditorOnly<ArgumentException>(
+				Exception_Helpers.Throw_Exception_Editor_Only<ArgumentException>(
 					caller,
 					methodName,
 					$"{nameof( value )} cannot be greater than {nameof( max )}. Received: {value}, Max: {max}"
@@ -66,7 +66,7 @@ namespace Bezoro.Framework.Unity.Utilities
 		{
 			if ( list.Is_Null_Or_Empty() )
 			{
-				ExceptionHelpers.ThrowExceptionEditorOnly<ArgumentException>(
+				Exception_Helpers.Throw_Exception_Editor_Only<ArgumentException>(
 					caller,
 					methodName,
 					$"{nameof( list )} is null or empty"
@@ -86,7 +86,7 @@ namespace Bezoro.Framework.Unity.Utilities
 		{
 			if ( condition )
 			{
-				ExceptionHelpers.ThrowExceptionEditorOnly<TException>( errorMessage );
+				Exception_Helpers.Throw_Exception_Editor_Only<TException>( errorMessage );
 			}
 		}
 
@@ -122,7 +122,7 @@ namespace Bezoro.Framework.Unity.Utilities
 
 			errorMessage = $"{nameof( objectToValidate )} is null; {errorMessage}";
 
-			ExceptionHelpers.ThrowExceptionEditorOnly<ArgumentNullException>(
+			Exception_Helpers.Throw_Exception_Editor_Only<ArgumentNullException>(
 				callingObject,
 				callingMethodName,
 				errorMessage
@@ -141,7 +141,7 @@ namespace Bezoro.Framework.Unity.Utilities
 		{
 			if ( string.IsNullOrWhiteSpace( value ) )
 			{
-				ExceptionHelpers.ThrowExceptionEditorOnly<ArgumentException>(
+				Exception_Helpers.Throw_Exception_Editor_Only<ArgumentException>(
 					caller,
 					methodName,
 					$"{nameof( value )} is null or empty"
@@ -153,7 +153,7 @@ namespace Bezoro.Framework.Unity.Utilities
 		{
 			if ( !condition )
 			{
-				ExceptionHelpers.ThrowExceptionEditorOnly<InvalidOperationException>(
+				Exception_Helpers.Throw_Exception_Editor_Only<InvalidOperationException>(
 					null,
 					"",
 					errorMessage

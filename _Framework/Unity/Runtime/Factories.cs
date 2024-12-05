@@ -37,7 +37,7 @@ namespace Bezoro.Framework.Unity
 				params Type[] componentTypes
 			)
 			{
-				ValidationHelpers.ValidateString( objectName );
+				Validation_Helpers.ValidateString( objectName );
 				var gameObject = CreateInternal(
 					objectName,
 					transformData );

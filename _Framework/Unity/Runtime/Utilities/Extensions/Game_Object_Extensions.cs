@@ -152,8 +152,8 @@ namespace Bezoro.Framework.Unity.Utilities
 				UniTask.ReturnToMainThread();
 			}
 
-			ValidationHelpers.Validate_Object_Not_Null( go );
-			ValidationHelpers.Validate_Object_Not_Null( component_types );
+			Validation_Helpers.Validate_Object_Not_Null( go );
+			Validation_Helpers.Validate_Object_Not_Null( component_types );
 
 			var added_components = new Component[component_types.Length];
 			var behaviours       = new Behaviour[component_types.Length];
@@ -166,7 +166,7 @@ namespace Bezoro.Framework.Unity.Utilities
 					continue;
 				}
 
-				ValidationHelpers.Validate_Is_Subclass_Of<Component>(
+				Validation_Helpers.Validate_Is_Subclass_Of<Component>(
 					go, nameof( Add_Components_Async ), component_type );
 
 				BDebug.Log( go, $"Added component: {component_type.Name}", go );
@@ -206,7 +206,7 @@ namespace Bezoro.Framework.Unity.Utilities
 
 		private static async UniTask Enable_Behaviours_Internal( this Behaviour[] behaviours, bool use_async = false )
 		{
-			ValidationHelpers.Validate_Object_Not_Null( behaviours );
+			Validation_Helpers.Validate_Object_Not_Null( behaviours );
 
 			foreach ( var behaviour in behaviours )
 			{
