@@ -419,48 +419,51 @@ namespace Bezoro.Framework.Unity.Utilities
 
 		public static IEnumerable<(Transform transform, Component[] components)> Get_Hierarchy_Components(
 			this GameObject root,
-			int initial_capacity = 16,
-			bool trim = false
+			int initial_capacity = 16
 		)
 		{
-			var transforms = root.GetComponentsInChildren<Transform>( true );
-			var length     = transforms.Length;
-			var result     = new (Transform transform, Component[] components)[length];
+			var child_transforms = root.GetComponentsInChildren<Transform>( true );
+			var transform_count  = child_transforms.Length;
+			var result           = new (Transform transform, Component[] components)[transform_count];
 
 			var component_list         = new List<Component>( initial_capacity );
-			var filtered_array         = new Component[initial_capacity];
 			var enabled_property_cache = new Dictionary<Type, bool>( initial_capacity );
+			var filtered_array         = new List<Component>( initial_capacity );
 
-			for ( var i = 0 ; i < length ; i++ )
+			for ( var i = 0 ; i < transform_count ; i++ )
 			{
-				var transform = transforms[ i ];
+				var transform = child_transforms[ i ];
 				component_list.Clear();
 				filtered_array.Clear();
 				transform.GetComponents( component_list );
 
 				foreach ( var component in component_list )
 				{
-					if ( component is Behaviour )
+					if ( component is Behaviour || IsComponentEnabled( component, enabled_property_cache ) )
 					{
 						filtered_array.Add( component );
-						continue;
 					}
-
-					var component_type = component.GetType();
-
-					if ( !enabled_property_cache.TryGetValue( component_type, out var has_enabled ) )
-					{
-						has_enabled                              = component_type.GetProperty( "enabled" ) != null;
-						enabled_property_cache[ component_type ] = has_enabled;
-					}
-
-					if ( has_enabled ) filtered_array.Add( component );
 				}
 
-				result[ i ] = ( transform, trim ? filtered_array.Trim() : filtered_array );
+				result[ i ] = ( transform, filtered_array.ToArray() );
 			}
 
 			return result;
+		}
+
+		private static bool IsComponentEnabled( Component component, Dictionary<Type, bool> cache )
+		{
+			if ( component == null ) return false;
+			if ( cache == null ) return false;
+
+			var component_type = component.GetType();
+
+			if ( cache.TryGetValue( component_type, out var has_enabled ) )
+				return has_enabled;
+
+			has_enabled             = component_type.GetProperty( "enabled" ) != null;
+			cache[ component_type ] = has_enabled;
+			return has_enabled;
 		}
 	}
 
