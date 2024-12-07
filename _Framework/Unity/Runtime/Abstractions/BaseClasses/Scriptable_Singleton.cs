@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Linq;
 using Bezoro.Framework.Unity.Attributes;
 using Bezoro.Framework.Unity.Utilities;
 using UnityEngine;
@@ -67,10 +68,15 @@ namespace Bezoro.Framework.Unity
 
 			lock ( _lock )
 			{
-				var async_operation = Addressables.LoadAssetAsync<Scriptable_Singleton<T>>( nameof( T ) );
+				if ( Addressables.ResourceLocators.Any(
+						locator => locator.Locate( typeof( T ).Name, typeof( T ), out _ )
+					) )
+				{
+					var async_operation = Addressables.LoadAssetAsync<Scriptable_Singleton<T>>( nameof( T ) );
 
-				if ( async_operation.IsValid() )
-					_Instance = async_operation.WaitForCompletion();
+					if ( async_operation.IsValid() )
+						_Instance = async_operation.WaitForCompletion();
+				}
 
 				if ( _Instance == null )
 					_Instance = Resources.LoadAll<Scriptable_Singleton<T>>( "" )[ 0 ];
