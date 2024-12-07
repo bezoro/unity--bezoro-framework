@@ -21,16 +21,17 @@ namespace Bezoro.Framework.Unity
 				params Type[] component_types
 			)
 			{
-				return CreateAsync(
+				return Create_Async(
 						   object_name,
 						   transform_data,
 						   activation_condition,
-						   component_types )
+						   component_types
+					   )
 					   .GetAwaiter()
 					   .GetResult();
 			}
 
-			public static async UniTask<GameObject> CreateAsync(
+			public static async UniTask<GameObject> Create_Async(
 				string objectName = DEFAULT_OBJECT_NAME,
 				TransformData transformData = default,
 				Func<bool> enableCondition = null,
@@ -40,7 +41,8 @@ namespace Bezoro.Framework.Unity
 				Validation_Helpers.ValidateString( objectName );
 				var gameObject = CreateInternal(
 					objectName,
-					transformData );
+					transformData
+				);
 
 				if ( enableCondition == null )
 				{
@@ -81,7 +83,8 @@ namespace Bezoro.Framework.Unity
 
 				BDebug.Log(
 					$"Created GameObject: {name}",
-					go );
+					go
+				);
 
 				if ( transformData.Parent != null ) { go.transform.SetParent( transformData.Parent ); }
 
@@ -99,7 +102,7 @@ namespace Bezoro.Framework.Unity
 
 				foreach ( var (name, components) in objectSpecs )
 				{
-					var go = await CreateAsync(
+					var go = await Create_Async(
 						name,
 						transformData,
 						enableCondition,
@@ -134,7 +137,8 @@ namespace Bezoro.Framework.Unity
 						BDebug.Log( $"Enabled GameObject: {gameObject.name}" );
 						gameObject.SetActive( true );
 					}
-				} catch ( Exception exception )
+				}
+				catch ( Exception exception )
 				{
 					BDebug.Log_Exception( exception.Message );
 					throw;
