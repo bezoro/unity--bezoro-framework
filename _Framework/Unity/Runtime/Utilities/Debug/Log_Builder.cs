@@ -12,7 +12,7 @@ namespace Bezoro.Framework.Unity.Utilities
 		private readonly StringBuilder _format_builder = new();
 		private readonly object        _message;
 		private          string        _caller_name;
-		private          string        _category  = DebugSettings.DEFAULT_CATEGORY;
+		private          string        _category  = Debug_Settings.DEFAULT_CATEGORY;
 		private          string        _color_tag = string.Empty;
 		private          Object        _context;
 		private          bool          _has_been_sent;
@@ -37,7 +37,7 @@ namespace Bezoro.Framework.Unity.Utilities
 
 		public string Category
 		{
-			set => _category = value.IsNullOrEmpty() ? DebugSettings.DEFAULT_CATEGORY : value;
+			set => _category = value.IsNullOrEmpty() ? Debug_Settings.DEFAULT_CATEGORY : value;
 		}
 
 		public Color Colour
@@ -94,7 +94,7 @@ namespace Bezoro.Framework.Unity.Utilities
 		[Conditional( "DEVELOPMENT_BUILD" )]
 		public void Send()
 		{
-			if ( !DebugSettings.Instance.enableLogging )
+			if ( !Debug_Settings.Instance.enableLogging )
 			{
 				return;
 			}
@@ -111,7 +111,7 @@ namespace Bezoro.Framework.Unity.Utilities
 			SendToUnityConsole( message );
 		}
 
-		private string BuildAndSendMessage( DebugSettings.DebugCategory category )
+		private string BuildAndSendMessage( Debug_Settings.DebugCategory category )
 		{
 			var prefix = $"[{category.name}]: ".Color( category.categoryColor );
 			var content = _format_builder.Length > 0
@@ -132,35 +132,40 @@ namespace Bezoro.Framework.Unity.Utilities
 				case LogType.Log:
 					Debug.Log(
 						finalMessage,
-						_context );
+						_context
+					);
 
 					break;
 
 				case LogType.Warning:
 					Debug.LogWarning(
 						finalMessage,
-						_context );
+						_context
+					);
 
 					break;
 
 				case LogType.Error:
 					Debug.LogError(
 						finalMessage,
-						_context );
+						_context
+					);
 
 					break;
 
 				case LogType.Exception:
 					Debug.LogException(
 						_message as Exception ?? new Exception( finalMessage ),
-						_context );
+						_context
+					);
 
 					break;
 
 				default:
 					Debug.LogError(
 						$"Unknown log type: {_log_type}",
-						_context );
+						_context
+					);
 
 					break;
 			}
@@ -168,22 +173,14 @@ namespace Bezoro.Framework.Unity.Utilities
 
 		public Log_Builder Caller( object caller )
 		{
-			_caller_name = caller.GetType().Name.Bold().Color(
-				new Color(
-					0.2f,
-					0.4f,
-					1f ) );
+			_caller_name = caller.GetType().Name.Bold().Color( (Color)new( 0.2f, 0.4f, 1f ) );
 
 			return this;
 		}
 
 		public Log_Builder Method( string methodName )
 		{
-			_method_name = methodName.Bold().Color(
-				new Color(
-					0.2f,
-					0.4f,
-					1f ) );
+			_method_name = methodName.Bold().Color( (Color)new( 0.2f, 0.4f, 1f ) );
 
 			return this;
 		}
