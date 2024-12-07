@@ -4,13 +4,13 @@ using UnityEngine;
 namespace Bezoro.Framework.Unity.Serializable2DArray
 {
 	[Serializable]
-	public class Serializable2DArray<T>
+	public class Serializable_2D_Array<T>
 	{
 		[SerializeField] private T[] data;
 		[SerializeField] private int width;
 		[SerializeField] private int height;
 
-		public Serializable2DArray( int width, int height )
+		public Serializable_2D_Array( int width, int height )
 		{
 			if ( width <= 0 || height <= 0 )
 			{
@@ -21,13 +21,14 @@ namespace Bezoro.Framework.Unity.Serializable2DArray
 			this.height = height;
 		}
 
-		public Serializable2DArray( T[,] array2D )
+		public Serializable_2D_Array( T[,] array2D )
 		{
 			if ( array2D == null )
 			{
 				throw new ArgumentNullException(
 					nameof( array2D ),
-					"Input array cannot be null." );
+					"Input array cannot be null."
+				);
 			}
 
 			var newWidth  = array2D.GetLength( 0 );
@@ -43,13 +44,14 @@ namespace Bezoro.Framework.Unity.Serializable2DArray
 			FromArray2D( array2D );
 		}
 
-		public Serializable2DArray( T[] array1D, int width, int height )
+		public Serializable_2D_Array( T[] array1D, int width, int height )
 		{
 			if ( array1D == null )
 			{
 				throw new ArgumentNullException(
 					nameof( array1D ),
-					"Input array cannot be null." );
+					"Input array cannot be null."
+				);
 			}
 
 			if ( width <= 0 || height <= 0 )
@@ -68,7 +70,8 @@ namespace Bezoro.Framework.Unity.Serializable2DArray
 			SetData(
 				array1D,
 				width,
-				height );
+				height
+			);
 		}
 
 		public int Width => width;
@@ -114,11 +117,13 @@ namespace Bezoro.Framework.Unity.Serializable2DArray
 			var newData = new T[newWidth * newHeight];
 			var minWidth = Math.Min(
 				width,
-				newWidth );
+				newWidth
+			);
 
 			var minHeight = Math.Min(
 				height,
-				newHeight );
+				newHeight
+			);
 
 			for ( var y = 0 ; y < minHeight ; y++ )
 			{
@@ -127,7 +132,8 @@ namespace Bezoro.Framework.Unity.Serializable2DArray
 					y * width,
 					newData,
 					y * newWidth,
-					minWidth );
+					minWidth
+				);
 			}
 
 			data   = newData;
@@ -165,7 +171,8 @@ namespace Bezoro.Framework.Unity.Serializable2DArray
 			Array.Copy(
 				newData,
 				data,
-				newData.Length );
+				newData.Length
+			);
 		}
 
 		private void FromArray2D( T[,] array2D )
@@ -184,12 +191,12 @@ namespace Bezoro.Framework.Unity.Serializable2DArray
 			}
 		}
 
-		public static implicit operator T[]( Serializable2DArray<T> array )
+		public static implicit operator T[]( Serializable_2D_Array<T> array )
 		{
 			return array.data;
 		}
 
-		public static implicit operator Serializable2DArray<T>( T[] array1D )
+		public static implicit operator Serializable_2D_Array<T>( T[] array1D )
 		{
 			var size = (int)Math.Sqrt( array1D.Length );
 
@@ -201,15 +208,16 @@ namespace Bezoro.Framework.Unity.Serializable2DArray
 			return new(
 				array1D,
 				size,
-				size );
+				size
+			);
 		}
 
-		public static implicit operator Serializable2DArray<T>( T[,] array2D )
+		public static implicit operator Serializable_2D_Array<T>( T[,] array2D )
 		{
 			return new( array2D );
 		}
 
-		public static explicit operator T[,]( Serializable2DArray<T> serializable2DArray )
+		public static explicit operator T[,]( Serializable_2D_Array<T> serializable2DArray )
 		{
 			return serializable2DArray.To2DArray();
 		}
