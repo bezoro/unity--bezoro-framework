@@ -32,8 +32,6 @@ namespace Bezoro.Framework.Unity
 			}
 		}
 
-		protected abstract string Adressables_Key { get; }
-
 		protected virtual void Awake()
 		{
 			_Instance = this;
@@ -66,9 +64,10 @@ namespace Bezoro.Framework.Unity
 		private static void Initialize()
 		{
 			if ( _Instance != null ) return;
+
 			lock ( _lock )
 			{
-				var async_operation = Addressables.LoadAssetAsync<Scriptable_Singleton<T>>( _Instance.Adressables_Key );
+				var async_operation = Addressables.LoadAssetAsync<Scriptable_Singleton<T>>( nameof( T ) );
 
 				if ( async_operation.IsValid() )
 					_Instance = async_operation.WaitForCompletion();
