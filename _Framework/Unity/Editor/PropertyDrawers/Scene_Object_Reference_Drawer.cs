@@ -9,8 +9,8 @@ using UnityEngine.UIElements;
 [CustomPropertyDrawer( typeof( Scene_Object_Reference ) )]
 public class Scene_Object_Reference_Drawer : PropertyDrawer
 {
-	private const string NO_COMPONENT_ERROR     = "Selected object must have an <b>Object_UID</b> component.";
-	private const string NOT_SCENE_OBJECT_ERROR = "Selected object must be a <b>scene object</b>.";
+	private const string _NO_COMPONENT_ERROR     = "Selected object must have an <b>Object_UID</b> component.";
+	private const string _NOT_SCENE_OBJECT_ERROR = "Selected object must be a <b>scene object</b>.";
 
 	public override VisualElement CreatePropertyGUI( SerializedProperty property )
 	{
@@ -58,14 +58,14 @@ public class Scene_Object_Reference_Drawer : PropertyDrawer
 
 				if ( object_uid == null )
 				{
-					error_message.text    = NO_COMPONENT_ERROR;
+					error_message.text    = _NO_COMPONENT_ERROR;
 					error_message.visible = true;
 					return;
 				}
 
 				if ( EditorUtility.IsPersistent( object_uid.gameObject ) )
 				{
-					error_message.text    = NOT_SCENE_OBJECT_ERROR;
+					error_message.text    = _NOT_SCENE_OBJECT_ERROR;
 					error_message.visible = true;
 					return;
 				}
@@ -77,7 +77,8 @@ public class Scene_Object_Reference_Drawer : PropertyDrawer
 				}
 
 				error_message.visible = false;
-			} );
+			}
+		);
 
 		return root;
 	}
