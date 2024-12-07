@@ -69,22 +69,22 @@ namespace Bezoro.Framework.Unity
 			lock ( _lock )
 			{
 				if ( Addressables.ResourceLocators.Any(
-						locator => locator.Locate( typeof( T ).Name, typeof( T ), out _ )
+						locator => locator.Locate( typeof(T).Name, typeof(T), out _ )
 					) )
 				{
-					var async_operation = Addressables.LoadAssetAsync<Scriptable_Singleton<T>>( nameof( T ) );
+					var async_operation = Addressables.LoadAssetAsync<Scriptable_Singleton<T>>( nameof(T) );
 
 					if ( async_operation.IsValid() )
 						_Instance = async_operation.WaitForCompletion();
 				}
 
 				if ( _Instance == null )
-					_Instance = Resources.LoadAll<Scriptable_Singleton<T>>( "" )[ 0 ];
+					_Instance = Resources.LoadAll<Scriptable_Singleton<T>>( "" )[0];
 
 				_Instance.serialized_Instance = _Instance as T;
 			}
 
-			BDebug.Log( $"Singleton<{typeof( T ).Name}> initialized." );
+			BDebug.Log( $"Singleton<{typeof(T).Name}> initialized." );
 		}
 	}
 }
