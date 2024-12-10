@@ -60,7 +60,8 @@ namespace Bezoro.Framework.Core
 			if ( !EqualityComparer<T>.Default.Equals( expected, actual ) )
 			{
 				throw new Assertion_Exception(
-					message ?? $"Assertion failed: Expected '{expected}', but got '{actual}'." );
+					message ?? $"Assertion failed: Expected '{expected}', but got '{actual}'."
+				);
 			}
 		}
 
@@ -70,7 +71,8 @@ namespace Bezoro.Framework.Core
 			if ( EqualityComparer<T>.Default.Equals( notExpected, actual ) )
 			{
 				throw new Assertion_Exception(
-					message ?? $"Assertion failed: Did not expect '{notExpected}', but got '{actual}'." );
+					message ?? $"Assertion failed: Did not expect '{notExpected}', but got '{actual}'."
+				);
 			}
 		}
 
@@ -81,7 +83,8 @@ namespace Bezoro.Framework.Core
 			if ( left.CompareTo( right ) <= 0 )
 			{
 				throw new Assertion_Exception(
-					message ?? $"Assertion failed: Expected '{left}' to be greater than '{right}'." );
+					message ?? $"Assertion failed: Expected '{left}' to be greater than '{right}'."
+				);
 			}
 		}
 
@@ -92,7 +95,8 @@ namespace Bezoro.Framework.Core
 			if ( left.CompareTo( right ) >= 0 )
 			{
 				throw new Assertion_Exception(
-					message ?? $"Assertion failed: Expected '{left}' to be less than '{right}'." );
+					message ?? $"Assertion failed: Expected '{left}' to be less than '{right}'."
+				);
 			}
 		}
 
@@ -103,7 +107,8 @@ namespace Bezoro.Framework.Core
 			if ( left.CompareTo( right ) < 0 )
 			{
 				throw new Assertion_Exception(
-					message ?? $"Assertion failed: Expected '{left}' to be greater than or equal to '{right}'." );
+					message ?? $"Assertion failed: Expected '{left}' to be greater than or equal to '{right}'."
+				);
 			}
 		}
 
@@ -114,7 +119,8 @@ namespace Bezoro.Framework.Core
 			if ( left.CompareTo( right ) > 0 )
 			{
 				throw new Assertion_Exception(
-					message ?? $"Assertion failed: Expected '{left}' to be less than or equal to '{right}'." );
+					message ?? $"Assertion failed: Expected '{left}' to be less than or equal to '{right}'."
+				);
 			}
 		}
 
@@ -131,7 +137,8 @@ namespace Bezoro.Framework.Core
 			if ( string.IsNullOrEmpty( str ) )
 			{
 				throw new Assertion_Exception(
-					message ?? "Assertion failed: Expected string to not be null or empty." );
+					message ?? "Assertion failed: Expected string to not be null or empty."
+				);
 			}
 		}
 
@@ -142,7 +149,8 @@ namespace Bezoro.Framework.Core
 			if ( collection != null && collection.Count != 0 )
 			{
 				throw new Assertion_Exception(
-					message ?? "Assertion failed: Expected collection to be null or empty." );
+					message ?? "Assertion failed: Expected collection to be null or empty."
+				);
 			}
 		}
 
@@ -153,8 +161,23 @@ namespace Bezoro.Framework.Core
 			if ( collection == null || collection.Count == 0 )
 			{
 				throw new Assertion_Exception(
-					message ?? "Assertion failed: Expected collection to not be null or empty." );
+					message ?? "Assertion failed: Expected collection to not be null or empty."
+				);
 			}
+		}
+
+		[Conditional( "UNITY_EDITOR" )]
+		public static void Is_Not_Null_Or_Empty<T>( T[,] array2D )
+		{
+			if ( array2D == null || array2D.GetLength( 0 ) == 0 || array2D.GetLength( 1 ) == 0 )
+				throw new Assertion_Exception( "Assertion failed: Expected array2D to not be null or empty." );
+		}
+
+		[Conditional( "UNITY_EDITOR" )]
+		public static void Is_Null_Or_Empty<T>( T[,] array2D )
+		{
+			if ( array2D != null && array2D.GetLength( 0 ) != 0 && array2D.GetLength( 1 ) != 0 )
+				throw new Assertion_Exception( "Assertion failed: Expected array2D to be null or empty." );
 		}
 	}
 }
