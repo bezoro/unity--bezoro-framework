@@ -5,79 +5,35 @@ using UnityEngine;
 
 namespace Bezoro.Framework.Unity
 {
-	/// <summary>
-	///     Static class for registering and managing scene objects via their GUIDs.
-	/// </summary>
 	public static class Scene_Object_Registry
 	{
-		private static readonly Dictionary<string, GameObject> GUID_To_Object_Map = new();
-		private static readonly object                         Lock_Obj           = new();
+		private static readonly Dictionary<string, GameObject> _GUID_To_GameObject_Map = new();
+		private static readonly object                         _Lock                   = new();
 
-		/// <summary>
-		///     Registers an object with a valid UID.
-		/// </summary>
-		/// <param name="object_uid">The object UID component.</param>
-		public static void Register_Object_By_UID( Object_UID object_uid )
+		public static void Register( GameObject gameObject )
 		{
-			lock ( Lock_Obj )
-			{
-				if ( !Is_Object_UID_Valid( object_uid ) ) { return; }
-
-				if ( Is_Object_Registered( object_uid ) ) { return; }
-
-				GUID_To_Object_Map[ object_uid.UID ] = object_uid.gameObject;
-				Debug.Log( $"Registered Object: {object_uid.gameObject.name} with GUID: {object_uid.UID}" );
-			}
+			// Assert.Is_Not_Null( gameObject );
+			//
+			// lock ( _Lock )
+			// {
+			// 	var guid = gameObject.Serializable_GUID.Value;
+			// 	if ( !GUID_Utils.Check_GUID_Validity( guid ) ) return;
+			// 	if ( Is_GUID_Registered( guid ) ) return;
+			//
+			// 	_GUID_To_GameObject_Map.Add( guid, gameObject.GameObject );
+			// 	BDebug.Log( $"Registered Object: {gameObject.GameObject.name} with GUID: {guid}" );
+			// }
 		}
 
-		/// <summary>
-		///     Checks if the given Object_UID's GUID is registered with a different object.
-		/// </summary>
-		/// <param name="object_uid">The object UID component.</param>
-		/// <returns>True if registered with a different object; otherwise, False.</returns>
-		public static bool Is_GUID_Registered_With_Different_Object( Object_UID object_uid )
+		public static void Unregister( string guid )
 		{
-			lock ( Lock_Obj )
+			lock ( _Lock )
 			{
-				if ( !Is_Object_UID_Valid( object_uid ) ) { return false; }
+				if ( !GUID_Utils.Check_GUID_Validity( guid ) ) return;
+				if ( !Is_GUID_Registered( guid ) ) return;
 
-				if ( !GUID_To_Object_Map.TryGetValue(
-						object_uid.UID,
-						out var registered_object ) ) { return false; }
-
-				if ( registered_object == null )
-				{
-					GUID_To_Object_Map.Remove( object_uid.UID );
-					return false;
-				}
-
-				var isDifferentObject = registered_object != object_uid.gameObject;
-
-				if ( isDifferentObject )
-				{
-					BDebug.Log_Warning(
-						$"GUID {object_uid.UID} is already registered with a different object: {registered_object.name}" );
-				}
-
-				return isDifferentObject;
-			}
-		}
-
-		/// <summary>
-		///     Checks if the object with the given UID is registered.
-		/// </summary>
-		/// <param name="object_uid">The object UID component.</param>
-		/// <returns>True if registered; otherwise, False.</returns>
-		public static bool Is_Object_Registered( Object_UID object_uid )
-		{
-			lock ( Lock_Obj )
-			{
-				if ( !Is_Object_UID_Valid( object_uid ) ) { return false; }
-
-				if ( GUID_To_Object_Map.ContainsKey( object_uid.UID ) ) { return true; }
-
-				BDebug.Log( $"Object_UID {object_uid.UID} is not registered." );
-				return false;
+				_GUID_To_GameObject_Map.Remove( guid );
+				BDebug.Log( $"Unregistered GUID: {guid.Bold()}" );
 			}
 		}
 
@@ -88,44 +44,69 @@ namespace Bezoro.Framework.Unity
 		/// <returns>The associated GameObject if found; otherwise, Null.</returns>
 		public static GameObject Get_Object_By_GUID( string guid )
 		{
-			if ( string.IsNullOrEmpty( guid ) )
+			lock ( _Lock )
 			{
-				BDebug.Log_Error( "GUID is empty" );
-				return null;
-			}
+				if ( !GUID_Utils.Check_GUID_Validity( guid ) )
+				{
+					BDebug.Log_Warning(
+						$"Couldn't find the GameObject by its GUID because the GUID ({guid}) is not valid."
+					);
 
-			lock ( Lock_Obj ) { return GUID_To_Object_Map.GetValueOrDefault( guid ); }
-		}
+					return null;
+				}
 
-		/// <summary>
-		///     Unregisters the object with the given UID component.
-		/// </summary>
-		/// <param name="object_uid">The object UID component.</param>
-		public static void Unregister_Object_By_UID( Object_UID object_uid )
-		{
-			lock ( Lock_Obj )
-			{
-				if ( !Is_Object_UID_Valid( object_uid ) ) { return; }
-
-				if ( !Is_Object_Registered( object_uid ) ) { return; }
-
-				GUID_To_Object_Map.Remove( object_uid.UID );
-				BDebug.Log( $"Unregistered Object: {object_uid.gameObject.name} with GUID: {object_uid.UID}" );
+				var go = _GUID_To_GameObject_Map.GetValueOrDefault( guid );
+				BDebug.Log_Success( $"Found the GameObject {go.name} by its GUID: {guid}" );
+				return go;
 			}
 		}
 
-		/// <summary>
-		///     Validates the UID of the given object.
-		/// </summary>
-		/// <param name="object_uid">The object UID component.</param>
-		/// <returns>True if valid; otherwise, False.</returns>
-		private static bool Is_Object_UID_Valid( Object_UID object_uid )
+		public static bool Is_GUID_Registered( string guid )
 		{
-			if ( object_uid != null && !string.IsNullOrEmpty( object_uid.UID ) ) { return true; }
+			lock ( _Lock )
+			{
+				if ( !GUID_Utils.Check_GUID_Validity( guid ) ) return false;
+				if ( !_GUID_To_GameObject_Map.ContainsKey( guid ) )
+				{
+					BDebug.Log( $"Serializable_GUID {guid} is not registered." );
+					return false;
+				}
 
-			BDebug.Log_Error( "Invalid Object_UID" );
-			return false;
+				BDebug.Log( $"Serializable_GUID {guid} is registered." );
+				return true;
+			}
 		}
+
+		// public static bool Is_GUID_Registered_With_Different_Object( GUID_GameObject_Pair guidGameObjectPair )
+		// {
+		// 	lock ( _Lock )
+		// 	{
+		// 		var guid        = guidGameObjectPair.Serializable_GUID.Value;
+		// 		var game_object = guidGameObjectPair.GameObject;
+		//
+		// 		if ( !GUID_Utils.Check_GUID_Validity( guid ) ) return false;
+		// 		if ( !_GUID_To_GameObject_Map.TryGetValue( guid, out var registered_object ) ) return false;
+		// 		if ( registered_object == null )
+		// 		{
+		// 			_GUID_To_GameObject_Map.Remove( guid );
+		// 			BDebug.Log_Warning( $"GUID {guid} is registered but the object is Null." );
+		// 			return false;
+		// 		}
+		//
+		// 		var is_different_object = registered_object != game_object;
+		// 		if ( !is_different_object )
+		// 		{
+		// 			BDebug.Log(
+		// 				$"GUID {guid} is already registered with the same object: {registered_object.name}"
+		// 			);
+		//
+		// 			return false;
+		// 		}
+		//
+		// 		BDebug.Log( $"GUID {guid} is registered with a different object." );
+		// 		return true;
+		// 	}
+		// }
 
 #if UNITY_EDITOR
 		/// <summary>
@@ -136,7 +117,7 @@ namespace Bezoro.Framework.Unity
 		{
 			EditorApplication.playModeStateChanged -= On_Play_Mode_State_Changed;
 			EditorApplication.playModeStateChanged += On_Play_Mode_State_Changed;
-			Refresh_Registry();
+			// Refresh_Registry();
 		}
 
 		/// <summary>
@@ -148,7 +129,7 @@ namespace Bezoro.Framework.Unity
 			switch ( state )
 			{
 				case PlayModeStateChange.EnteredPlayMode or PlayModeStateChange.ExitingEditMode:
-					Refresh_Registry();
+					// Refresh_Registry();
 					break;
 
 				case PlayModeStateChange.ExitingPlayMode:
@@ -157,23 +138,24 @@ namespace Bezoro.Framework.Unity
 			}
 		}
 
-		/// <summary>
-		///     Scans the scene for objects with UIDs and registers them.
-		/// </summary>
-		private static void Refresh_Registry()
-		{
-			lock ( Lock_Obj )
-			{
-				GUID_To_Object_Map.Clear();
-
-				foreach ( var object_uid in Resources.FindObjectsOfTypeAll<Object_UID>() )
-				{
-					if ( EditorUtility.IsPersistent( object_uid ) ) { continue; }
-
-					Register_Object_By_UID( object_uid );
-				}
-			}
-		}
+		// /// <summary>
+		// ///     Scans the scene for objects with UIDs and registers them.
+		// /// </summary>
+		// private static void Refresh_Registry()
+		// {
+		// 	lock ( _Lock )
+		// 	{
+		// 		_GUID_To_GameObject_Map.Clear();
+		//
+		// 		foreach ( var object_uid in Resources.FindObjectsOfTypeAll<GameObject>()
+		// 											 .SelectMany( go => go.GetComponents<I_Behaviour>() ) )
+		// 		{
+		// 			if ( EditorUtility.IsPersistent( object_uid.GameObject ) ) continue;
+		//
+		// 			Register( object_uid );
+		// 		}
+		// 	}
+		// }
 #endif
 	}
 }
