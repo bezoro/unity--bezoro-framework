@@ -9,17 +9,68 @@ namespace Bezoro.Framework.Unity.StateMachines.TickableBased
 		[SerializeField] private BaseTickableStateMachine stateMachine;
 		public                   BaseTickableStateMachine StateMachine => stateMachine;
 
+		public override void Early_Tick()
+		{
+			stateMachine.EarlyTick();
+		}
+
+		public override void Tick()
+		{
+			stateMachine.Tick();
+		}
+
+		public override void Fixed_Tick()
+		{
+			stateMachine.FixedTick();
+		}
+
+		public override void Late_Tick()
+		{
+			stateMachine.LateTick();
+		}
+
+		public bool TryFindStateInCurrentHierarchy<T>(out T outState)
+		where T : class, IState
+		{
+			var boolean = StateMachine.TryFindStateInCurrentHierarchy(out T state);
+			outState = state;
+
+			return boolean;
+		}
+
+		public bool TryFindStateInLastHierarchy<T>(out T outState)
+		where T : class, IState
+		{
+			var boolean = StateMachine.TryFindStateInLastHierarchy(out T state);
+			outState = state;
+
+			return boolean;
+		}
+
+		public void SetStateMachine(BaseTickableStateMachine stateMachine)
+		{
+			this.stateMachine.Exit();
+			this.stateMachine = stateMachine;
+			this.stateMachine.Init(this);
+			this.stateMachine.Start();
+		}
+
 		private void Awake()
 		{
 			var type                    = stateMachine.GetType();
-			var newStateMachineInstance = ScriptableObject.CreateInstance( type );
+			var newStateMachineInstance = ScriptableObject.CreateInstance(type);
 			stateMachine = newStateMachineInstance as BaseTickableStateMachine;
-			stateMachine.Init( this );
+			stateMachine.Init(this);
 		}
 
 		private void Start()
 		{
 			stateMachine.Start();
+		}
+
+		private void OnDestroy()
+		{
+			stateMachine.Destroy();
 		}
 
 		protected override void OnEnable()
@@ -32,57 +83,6 @@ namespace Bezoro.Framework.Unity.StateMachines.TickableBased
 		{
 			base.OnDisable();
 			stateMachine.Disable();
-		}
-
-		private void OnDestroy()
-		{
-			stateMachine.Destroy();
-		}
-
-		public override void EarlyTick()
-		{
-			stateMachine.EarlyTick();
-		}
-
-		public override void Tick()
-		{
-			stateMachine.Tick();
-		}
-
-		public override void FixedTick()
-		{
-			stateMachine.FixedTick();
-		}
-
-		public override void LateTick()
-		{
-			stateMachine.LateTick();
-		}
-
-		public bool TryFindStateInCurrentHierarchy<T>( out T outState )
-		where T : class, IState
-		{
-			var boolean = StateMachine.TryFindStateInCurrentHierarchy( out T state );
-			outState = state;
-
-			return boolean;
-		}
-
-		public bool TryFindStateInLastHierarchy<T>( out T outState )
-		where T : class, IState
-		{
-			var boolean = StateMachine.TryFindStateInLastHierarchy( out T state );
-			outState = state;
-
-			return boolean;
-		}
-
-		public void SetStateMachine( BaseTickableStateMachine stateMachine )
-		{
-			this.stateMachine.Exit();
-			this.stateMachine = stateMachine;
-			this.stateMachine.Init( this );
-			this.stateMachine.Start();
 		}
 	}
 }

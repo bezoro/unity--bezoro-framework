@@ -1,34 +1,35 @@
-﻿using Bezoro.Framework.Core;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.SceneManagement;
 
 namespace Bezoro.Framework.Unity.Utilities
 {
 	public static class Scene_Helpers
 	{
-		public static void GetAllRootGameObjectsNonAlloc( ref GameObject[] results )
+		public static void GetAllRootGameObjectsNonAlloc(ref GameObject[] results)
 		{
-			if ( SceneManager.sceneCount == 1 )
+			if (SceneManager.sceneCount == 1)
 			{
 				results = SceneManager.GetActiveScene().GetRootGameObjects();
 			}
 
-			for ( var i = 0 ; i < SceneManager.sceneCount ; i++ )
+			for (var i = 0 ; i < SceneManager.sceneCount ; i++)
 			{
-				var scene = SceneManager.GetSceneAt( i );
-				Array_Helpers.Merge(
+				var scene = SceneManager.GetSceneAt(i);
+
+				Core.Array_Helpers.Merge(
 					scene.GetRootGameObjects(),
-					ref results );
+					ref results
+				);
 			}
 		}
 
-		public static bool IsSceneAlreadyOpenByPath( string path, out Scene scene, out int index )
+		public static bool IsSceneAlreadyOpenByPath(string path, out Scene scene, out int index)
 		{
-			for ( var i = 0 ; i < SceneManager.sceneCount ; i++ )
+			for (var i = 0 ; i < SceneManager.sceneCount ; i++)
 			{
-				var sc = SceneManager.GetSceneAt( i );
+				var sc = SceneManager.GetSceneAt(i);
 
-				if ( sc.path != path )
+				if (sc.path != path)
 				{
 					continue;
 				}
@@ -45,13 +46,13 @@ namespace Bezoro.Framework.Unity.Utilities
 			return false;
 		}
 
-		public static bool IsSceneAlreadyOpenByName( string name, out Scene scene, out int index )
+		public static bool IsSceneAlreadyOpenByName(string name, out Scene scene, out int index)
 		{
-			for ( var i = 0 ; i < SceneManager.sceneCount ; i++ )
+			for (var i = 0 ; i < SceneManager.sceneCount ; i++)
 			{
-				var sc = SceneManager.GetSceneAt( i );
+				var sc = SceneManager.GetSceneAt(i);
 
-				if ( sc.name != name )
+				if (sc.name != name)
 				{
 					continue;
 				}

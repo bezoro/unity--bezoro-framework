@@ -6,12 +6,12 @@ namespace Bezoro.Framework.Unity.Utilities
 {
 	public static class Enumerable_Extensions
 	{
-		public static bool Is_Empty<T>( this IEnumerable<T> source )
+		public static bool Is_Empty<T>(this IEnumerable<T> source)
 		{
 			return !source.Any();
 		}
 
-		public static bool Is_Null<T>( this IEnumerable<T> source )
+		public static bool Is_Null<T>(this IEnumerable<T> source)
 		{
 			return source == null;
 		}
@@ -22,9 +22,9 @@ namespace Bezoro.Framework.Unity.Utilities
 		/// <typeparam name="T">The type of the elements of source.</typeparam>
 		/// <param name="source">The IEnumerable<T> to check.</param>
 		/// <returns>true if the source sequence is null or empty; otherwise, false.</returns>
-		public static bool IsNullOrEmpty<T>( this IEnumerable<T> source )
+		public static bool Is_Null_Or_Empty<T>(this IEnumerable<T> source)
 		{
-			if ( source == null ) return true;
+			if (source == null) return true;
 
 			return !source.Any();
 		}
@@ -35,7 +35,7 @@ namespace Bezoro.Framework.Unity.Utilities
 		/// <typeparam name="T">The type of the elements of source.</typeparam>
 		/// <param name="source">The IEnumerable<T> to return the first element of.</param>
 		/// <returns>The first element in the sequence, or default(T) if the sequence is empty.</returns>
-		public static T First_Or_Default_Safe<T>( this IEnumerable<T> source )
+		public static T First_Or_Default_Safe<T>(this IEnumerable<T> source)
 		{
 			var array = source as T[] ?? source.ToArray();
 			return array.Is_Null_Or_Empty() ? default : array.First();
@@ -47,9 +47,9 @@ namespace Bezoro.Framework.Unity.Utilities
 		/// <typeparam name="T">The type of the elements of source.</typeparam>
 		/// <param name="source">The IEnumerable<T> to return the last element of.</param>
 		/// <returns>The last element in the sequence, or default(T) if the sequence is empty.</returns>
-		public static T LastOrDefaultSafe<T>( this IEnumerable<T> source )
+		public static T LastOrDefaultSafe<T>(this IEnumerable<T> source)
 		{
-			if ( source.IsNullOrEmpty() )
+			if (source.Is_Null_Or_Empty())
 			{
 				return default;
 			}
@@ -70,9 +70,9 @@ namespace Bezoro.Framework.Unity.Utilities
 		///         predicate
 		///         is null.
 		/// </returns>
-		public static IEnumerable<T> Where_If_Not_Null<T>( this IEnumerable<T> source, Func<T, bool> predicate )
+		public static IEnumerable<T> Where_If_Not_Null<T>(this IEnumerable<T> source, Func<T, bool> predicate)
 		{
-			return predicate == null ? source : source.Where( predicate );
+			return predicate == null ? source : source.Where(predicate);
 		}
 
 		/// <summary>
@@ -81,16 +81,16 @@ namespace Bezoro.Framework.Unity.Utilities
 		/// <typeparam name="T">The type of the elements of source.</typeparam>
 		/// <param name="source">The IEnumerable<T> to iterate over.</param>
 		/// <param name="action">The action to execute on each element.</param>
-		public static void ForEachIfNotNull<T>( this IEnumerable<T> source, Action<T> action )
+		public static void ForEachIfNotNull<T>(this IEnumerable<T> source, Action<T> action)
 		{
-			if ( action == null )
+			if (action == null)
 			{
 				return;
 			}
 
 			foreach ( var item in source )
 			{
-				action( item );
+				action(item);
 			}
 		}
 
@@ -100,7 +100,7 @@ namespace Bezoro.Framework.Unity.Utilities
 		/// <typeparam name="T">The type of the elements of source.</typeparam>
 		/// <param name="source">The IEnumerable<T> to convert to a HashSet<T>.</param>
 		/// <returns>A HashSet<T> that contains elements from the input sequence.</returns>
-		public static HashSet<T> ToHashSet<T>( this IEnumerable<T> source )
+		public static HashSet<T> ToHashSet<T>(this IEnumerable<T> source)
 		{
 			return new( source );
 		}
@@ -111,16 +111,16 @@ namespace Bezoro.Framework.Unity.Utilities
 		/// <typeparam name="T">The type of the elements of source.</typeparam>
 		/// <param name="source">The IEnumerable<T> to return a random element from.</param>
 		/// <returns>A random element from the sequence, or default(T) if the sequence is empty.</returns>
-		public static T RandomElement<T>( this IEnumerable<T> source )
+		public static T RandomElement<T>(this IEnumerable<T> source)
 		{
-			if ( source.IsNullOrEmpty() )
+			if (source.Is_Null_Or_Empty())
 			{
 				return default;
 			}
 
 			var random = new Random();
 
-			return source.ElementAt( random.Next( source.Count() ) );
+			return source.ElementAt(random.Next(source.Count()));
 		}
 
 		/// <summary>
@@ -147,7 +147,8 @@ namespace Bezoro.Framework.Unity.Utilities
 		{
 			return source.GroupBy(
 				keySelector,
-				elementSelector );
+				elementSelector
+			);
 		}
 
 		/// <summary>
@@ -160,11 +161,12 @@ namespace Bezoro.Framework.Unity.Utilities
 		///     A string that consists of the members of values delimited by the separator string. If values has no members, the
 		///     method returns String.Empty.
 		/// </returns>
-		public static string JoinToString<T>( this IEnumerable<T> values, string separator )
+		public static string JoinToString<T>(this IEnumerable<T> values, string separator)
 		{
 			return string.Join(
 				separator,
-				values );
+				values
+			);
 		}
 
 		/// <summary>
@@ -173,9 +175,9 @@ namespace Bezoro.Framework.Unity.Utilities
 		/// <typeparam name="T">The type of the elements of source.</typeparam>
 		/// <param name="source">A sequence of values to determine the maximum value of.</param>
 		/// <returns>The maximum value in the sequence, or default(T) if the sequence is empty.</returns>
-		public static T MaxOrDefault<T>( this IEnumerable<T> source )
+		public static T MaxOrDefault<T>(this IEnumerable<T> source)
 		{
-			if ( source.IsNullOrEmpty() )
+			if (source.Is_Null_Or_Empty())
 			{
 				return default;
 			}
@@ -189,9 +191,9 @@ namespace Bezoro.Framework.Unity.Utilities
 		/// <typeparam name="T">The type of the elements of source.</typeparam>
 		/// <param name="source">A sequence of values to determine the minimum value of.</param>
 		/// <returns>The minimum value in the sequence, or default(T) if the sequence is empty.</returns>
-		public static T MinOrDefault<T>( this IEnumerable<T> source )
+		public static T MinOrDefault<T>(this IEnumerable<T> source)
 		{
-			if ( source.IsNullOrEmpty() )
+			if (source.Is_Null_Or_Empty())
 			{
 				return default;
 			}
@@ -209,14 +211,14 @@ namespace Bezoro.Framework.Unity.Utilities
 		///     true if every element of the source sequence passes the test in the specified predicate, or if the sequence is
 		///     empty; otherwise, false.
 		/// </returns>
-		public static bool AllSafe<T>( this IEnumerable<T> source, Func<T, bool> predicate )
+		public static bool AllSafe<T>(this IEnumerable<T> source, Func<T, bool> predicate)
 		{
-			if ( source.IsNullOrEmpty() )
+			if (source.Is_Null_Or_Empty())
 			{
 				return true;
 			}
 
-			return source.All( predicate );
+			return source.All(predicate);
 		}
 
 		/// <summary>
@@ -226,14 +228,14 @@ namespace Bezoro.Framework.Unity.Utilities
 		/// <param name="source">An IEnumerable<T> that contains the elements to apply the predicate to.</param>
 		/// <param name="predicate">A function to test each element for a condition.</param>
 		/// <returns>true if any elements in the source sequence pass the test in the specified predicate; otherwise, false.</returns>
-		public static bool AnySafe<T>( this IEnumerable<T> source, Func<T, bool> predicate )
+		public static bool AnySafe<T>(this IEnumerable<T> source, Func<T, bool> predicate)
 		{
-			if ( source.IsNullOrEmpty() )
+			if (source.Is_Null_Or_Empty())
 			{
 				return false;
 			}
 
-			return source.Any( predicate );
+			return source.Any(predicate);
 		}
 
 		/// <summary>
@@ -245,14 +247,14 @@ namespace Bezoro.Framework.Unity.Utilities
 		/// <returns>
 		///     An IEnumerable<T> that contains the specified number of elements from the start of the input sequence.
 		/// </returns>
-		public static IEnumerable<T> TakeSafe<T>( this IEnumerable<T> source, int count )
+		public static IEnumerable<T> TakeSafe<T>(this IEnumerable<T> source, int count)
 		{
-			if ( source.IsNullOrEmpty() )
+			if (source.Is_Null_Or_Empty())
 			{
 				return Enumerable.Empty<T>();
 			}
 
-			return source.Take( count );
+			return source.Take(count);
 		}
 
 		/// <summary>
@@ -264,14 +266,14 @@ namespace Bezoro.Framework.Unity.Utilities
 		/// <returns>
 		///     An IEnumerable<T> that contains the elements that occur after the specified index in the input sequence.
 		/// </returns>
-		public static IEnumerable<T> SkipSafe<T>( this IEnumerable<T> source, int count )
+		public static IEnumerable<T> SkipSafe<T>(this IEnumerable<T> source, int count)
 		{
-			if ( source.IsNullOrEmpty() )
+			if (source.Is_Null_Or_Empty())
 			{
 				return Enumerable.Empty<T>();
 			}
 
-			return source.Skip( count );
+			return source.Skip(count);
 		}
 
 		/// <summary>
@@ -281,14 +283,14 @@ namespace Bezoro.Framework.Unity.Utilities
 		/// <param name="source">The IEnumerable<T> to remove duplicate elements from.</param>
 		/// <param name="comparer">An IEqualityComparer<T> to compare values.</param>
 		/// <returns>An IEnumerable<T> that contains distinct elements from the source sequence.</returns>
-		public static IEnumerable<T> Distinct<T>( this IEnumerable<T> source, IEqualityComparer<T> comparer )
+		public static IEnumerable<T> Distinct<T>(this IEnumerable<T> source, IEqualityComparer<T> comparer)
 		{
-			if ( source.IsNullOrEmpty() )
+			if (source.Is_Null_Or_Empty())
 			{
 				return Enumerable.Empty<T>();
 			}
 
-			return source.Distinct( comparer );
+			return source.Distinct(comparer);
 		}
 
 		/// <summary>
@@ -298,14 +300,14 @@ namespace Bezoro.Framework.Unity.Utilities
 		/// <param name="source">The IEnumerable<T> to return the element from.</param>
 		/// <param name="index">The zero-based index of the element to retrieve.</param>
 		/// <returns>The element at the specified position in the source sequence, or default(T) if the index is out of range.</returns>
-		public static T ElementAtOrDefaultSafe<T>( this IEnumerable<T> source, int index )
+		public static T ElementAtOrDefaultSafe<T>(this IEnumerable<T> source, int index)
 		{
-			if ( source.IsNullOrEmpty() || index < 0 || index >= source.Count() )
+			if (source.Is_Null_Or_Empty() || index < 0 || index >= source.Count())
 			{
 				return default;
 			}
 
-			return source.ElementAt( index );
+			return source.ElementAt(index);
 		}
 
 		/// <summary>
@@ -321,12 +323,12 @@ namespace Bezoro.Framework.Unity.Utilities
 			Func<T, TKey> keySelector
 		)
 		{
-			if ( source.IsNullOrEmpty() )
+			if (source.Is_Null_Or_Empty())
 			{
-				return Enumerable.Empty<T>().OrderBy( keySelector );
+				return Enumerable.Empty<T>().OrderBy(keySelector);
 			}
 
-			return source.OrderBy( keySelector );
+			return source.OrderBy(keySelector);
 		}
 
 		/// <summary>
@@ -342,12 +344,12 @@ namespace Bezoro.Framework.Unity.Utilities
 			Func<T, TKey> keySelector
 		)
 		{
-			if ( source.IsNullOrEmpty() )
+			if (source.Is_Null_Or_Empty())
 			{
-				return Enumerable.Empty<T>().OrderByDescending( keySelector );
+				return Enumerable.Empty<T>().OrderByDescending(keySelector);
 			}
 
-			return source.OrderByDescending( keySelector );
+			return source.OrderByDescending(keySelector);
 		}
 
 		/// <summary>
@@ -365,12 +367,12 @@ namespace Bezoro.Framework.Unity.Utilities
 			Func<TSource, TResult> selector
 		)
 		{
-			if ( source.IsNullOrEmpty() )
+			if (source.Is_Null_Or_Empty())
 			{
 				return Enumerable.Empty<TResult>();
 			}
 
-			return source.Select( selector );
+			return source.Select(selector);
 		}
 
 		/// <summary>
@@ -398,14 +400,15 @@ namespace Bezoro.Framework.Unity.Utilities
 			Func<TSource, TCollection, TResult> resultSelector
 		)
 		{
-			if ( source.IsNullOrEmpty() )
+			if (source.Is_Null_Or_Empty())
 			{
 				return Enumerable.Empty<TResult>();
 			}
 
 			return source.SelectMany(
 				collectionSelector,
-				resultSelector );
+				resultSelector
+			);
 		}
 
 		/// <summary>
@@ -417,14 +420,14 @@ namespace Bezoro.Framework.Unity.Utilities
 		/// <param name="source">A sequence of values that are used to calculate a sum.</param>
 		/// <param name="selector">A transform function to apply to each element.</param>
 		/// <returns>The sum of the projected values.</returns>
-		public static decimal? SumSafe<TSource>( this IEnumerable<TSource> source, Func<TSource, decimal?> selector )
+		public static decimal? SumSafe<TSource>(this IEnumerable<TSource> source, Func<TSource, decimal?> selector)
 		{
-			if ( source.IsNullOrEmpty() )
+			if (source.Is_Null_Or_Empty())
 			{
 				return null;
 			}
 
-			return source.Sum( selector );
+			return source.Sum(selector);
 		}
 
 		/// <summary>
@@ -444,12 +447,12 @@ namespace Bezoro.Framework.Unity.Utilities
 			Func<TSource, decimal?> selector
 		)
 		{
-			if ( source.IsNullOrEmpty() )
+			if (source.Is_Null_Or_Empty())
 			{
 				return null;
 			}
 
-			return source.Average( selector );
+			return source.Average(selector);
 		}
 
 		/// <summary>
@@ -458,9 +461,9 @@ namespace Bezoro.Framework.Unity.Utilities
 		/// <typeparam name="T">The type of the elements of source.</typeparam>
 		/// <param name="source">The IEnumerable<T> that contains the elements to be counted.</param>
 		/// <returns>The number of elements in the input sequence.</returns>
-		public static int CountSafe<T>( this IEnumerable<T> source )
+		public static int CountSafe<T>(this IEnumerable<T> source)
 		{
-			if ( source.IsNullOrEmpty() )
+			if (source.Is_Null_Or_Empty())
 			{
 				return 0;
 			}
@@ -475,14 +478,14 @@ namespace Bezoro.Framework.Unity.Utilities
 		/// <param name="source">An IEnumerable<T> that contains the elements to be counted.</param>
 		/// <param name="predicate">A function to test each element for a condition.</param>
 		/// <returns>The number of elements in the sequence that satisfy the condition in the predicate function.</returns>
-		public static int CountSafe<T>( this IEnumerable<T> source, Func<T, bool> predicate )
+		public static int CountSafe<T>(this IEnumerable<T> source, Func<T, bool> predicate)
 		{
-			if ( source.IsNullOrEmpty() )
+			if (source.Is_Null_Or_Empty())
 			{
 				return 0;
 			}
 
-			return source.Count( predicate );
+			return source.Count(predicate);
 		}
 
 		/// <summary>
@@ -493,9 +496,9 @@ namespace Bezoro.Framework.Unity.Utilities
 		/// <typeparam name="T">The type of the elements of source.</typeparam>
 		/// <param name="source">The IEnumerable<T> to return a default value for if empty.</param>
 		/// <returns>An IEnumerable<T> that contains default(T) if source is empty; otherwise, source.</returns>
-		public static IEnumerable<T> DefaultIfEmptySafe<T>( this IEnumerable<T> source )
+		public static IEnumerable<T> DefaultIfEmptySafe<T>(this IEnumerable<T> source)
 		{
-			if ( source.IsNullOrEmpty() )
+			if (source.Is_Null_Or_Empty())
 			{
 				return new List<T>
 				{
@@ -514,9 +517,9 @@ namespace Bezoro.Framework.Unity.Utilities
 		/// <param name="source">The IEnumerable<T> to return a default value for if empty.</param>
 		/// <param name="defaultValue">The value to return if the sequence is empty.</param>
 		/// <returns>An IEnumerable<T> that contains defaultValue if source is empty; otherwise, source.</returns>
-		public static IEnumerable<T> DefaultIfEmptySafe<T>( this IEnumerable<T> source, T defaultValue )
+		public static IEnumerable<T> DefaultIfEmptySafe<T>(this IEnumerable<T> source, T defaultValue)
 		{
-			if ( source.IsNullOrEmpty() )
+			if (source.Is_Null_Or_Empty())
 			{
 				return new List<T> { defaultValue };
 			}
@@ -531,9 +534,9 @@ namespace Bezoro.Framework.Unity.Utilities
 		/// <param name="source">The IEnumerable<T> to return the first element of.</param>
 		/// <param name="defaultValue">The default value to return if the sequence is empty.</param>
 		/// <returns>The first element in the sequence, or defaultValue if the sequence is empty.</returns>
-		public static T First_Or_Default_Safe<T>( this IEnumerable<T> source, T defaultValue )
+		public static T First_Or_Default_Safe<T>(this IEnumerable<T> source, T defaultValue)
 		{
-			if ( source.IsNullOrEmpty() )
+			if (source.Is_Null_Or_Empty())
 			{
 				return defaultValue;
 			}
@@ -548,9 +551,9 @@ namespace Bezoro.Framework.Unity.Utilities
 		/// <param name="source">The IEnumerable<T> to return the last element of.</param>
 		/// <param name="defaultValue">The default value to return if the sequence is empty.</param>
 		/// <returns>The last element in the sequence, or defaultValue if the sequence is empty.</returns>
-		public static T LastOrDefaultSafe<T>( this IEnumerable<T> source, T defaultValue )
+		public static T LastOrDefaultSafe<T>(this IEnumerable<T> source, T defaultValue)
 		{
-			if ( source.IsNullOrEmpty() )
+			if (source.Is_Null_Or_Empty())
 			{
 				return defaultValue;
 			}

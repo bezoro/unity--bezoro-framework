@@ -10,7 +10,7 @@ namespace Bezoro.Framework.Unity.StateMachines.EventBased
 		private EventStateMachineOwner _owner;
 		private IEventState            _toState;
 
-		public void Init( IEventState fromState, IEventState toState, EventStateMachineOwner owner )
+		public void Init(IEventState fromState, IEventState toState, EventStateMachineOwner owner)
 		{
 			_fromState = fromState;
 			_toState   = toState;
@@ -23,21 +23,21 @@ namespace Bezoro.Framework.Unity.StateMachines.EventBased
 
 			void AllConditionsBecomeRelevant()
 			{
-				for ( var i = 0 ; i < _conditions.Length ; i++ )
+				for (var i = 0 ; i < _conditions.Length ; i++)
 				{
-					if ( _conditions[ i ] == null )
+					if (_conditions[i] == null)
 					{
 						continue;
 					}
 
-					_conditions[ i ].BecomeRelevant();
+					_conditions[i].BecomeRelevant();
 				}
 			}
 		}
 
 		public void OnConditionRaised()
 		{
-			_fromState.OnTransitionRaised( _toState );
+			_fromState.OnTransitionRaised(_toState);
 		}
 
 		public void CeaseRelevant()
@@ -46,14 +46,14 @@ namespace Bezoro.Framework.Unity.StateMachines.EventBased
 
 			void AllConditionsCeaseRelevant()
 			{
-				for ( var i = 0 ; i < _conditions.Length ; i++ )
+				for (var i = 0 ; i < _conditions.Length ; i++)
 				{
-					if ( _conditions[ i ] == null )
+					if (_conditions[i] == null)
 					{
 						continue;
 					}
 
-					_conditions[ i ].CeaseRelevant();
+					_conditions[i].CeaseRelevant();
 				}
 			}
 		}
@@ -61,37 +61,22 @@ namespace Bezoro.Framework.Unity.StateMachines.EventBased
 		public void WithCondition<T>()
 		where T : BaseEventCondition, new()
 		{
-			var newCondition = new T();
-			newCondition.Init(
-				_owner,
-				this );
-
-			Array_Helpers.Add(
-				ref _conditions,
-				newCondition );
+			var new_condition = new T();
+			new_condition.Init(_owner, this);
+			Array_Helpers.Add(ref _conditions, new_condition);
 		}
 
 		public void WithConditions<T0, T1>()
 		where T0 : BaseEventCondition, new()
 		where T1 : BaseEventCondition, new()
 		{
-			var newCondition0 = new T0();
-			newCondition0.Init(
-				_owner,
-				this );
+			var condition_1 = new T0();
+			condition_1.Init(_owner, this);
+			Array_Helpers.Add(ref _conditions, condition_1);
 
-			Array_Helpers.Add(
-				ref _conditions,
-				newCondition0 );
-
-			var newCondition1 = new T1();
-			newCondition1.Init(
-				_owner,
-				this );
-
-			Array_Helpers.Add(
-				ref _conditions,
-				newCondition1 );
+			var condition_2 = new T1();
+			condition_2.Init(_owner, this);
+			Array_Helpers.Add(ref _conditions, condition_2);
 		}
 
 		public void WithConditions<T0, T1, T2>()
@@ -99,32 +84,17 @@ namespace Bezoro.Framework.Unity.StateMachines.EventBased
 		where T1 : BaseEventCondition, new()
 		where T2 : BaseEventCondition, new()
 		{
-			var newCondition0 = new T0();
-			newCondition0.Init(
-				_owner,
-				this );
+			var condition_1 = new T0();
+			condition_1.Init(_owner, this);
+			Array_Helpers.Add(ref _conditions, condition_1);
 
-			Array_Helpers.Add(
-				ref _conditions,
-				newCondition0 );
+			var condition_2 = new T1();
+			condition_2.Init(_owner, this);
+			Array_Helpers.Add(ref _conditions, condition_2);
 
-			var newCondition1 = new T1();
-			newCondition1.Init(
-				_owner,
-				this );
-
-			Array_Helpers.Add(
-				ref _conditions,
-				newCondition1 );
-
-			var newCondition2 = new T2();
-			newCondition2.Init(
-				_owner,
-				this );
-
-			Array_Helpers.Add(
-				ref _conditions,
-				newCondition2 );
+			var condition_3 = new T2();
+			condition_3.Init(_owner, this);
+			Array_Helpers.Add(ref _conditions, condition_3);
 		}
 	}
 }

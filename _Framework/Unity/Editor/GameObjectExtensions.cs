@@ -7,73 +7,78 @@ namespace Bezoro.Framework.Unity.Editor
 {
 	public static class GameObjectExtensions
 	{
-		public static bool IsPrefabAsset( this GameObject go )
+		public static bool Is(this GameObject obj, GameObject gameObject)
 		{
-			return !go.gameObject.scene.IsValid()
-				   && ( PrefabUtility.IsPartOfPrefabAsset( go.gameObject )
-						|| PrefabUtility.IsPartOfVariantPrefab( go.gameObject ) );
+			return obj == gameObject;
 		}
 
-		public static string TryGetAssetGUID( this GameObject gameObject )
+		public static bool IsPrefabAsset(this GameObject go)
 		{
-			var path = AssetDatabase.GetAssetPath( gameObject );
+			return !go.gameObject.scene.IsValid()
+				   && ( PrefabUtility.IsPartOfPrefabAsset(go.gameObject)
+						|| PrefabUtility.IsPartOfVariantPrefab(go.gameObject) );
+		}
 
-			if ( !string.IsNullOrEmpty( path ) )
+		public static string TryGetAssetGUID(this GameObject gameObject)
+		{
+			var path = AssetDatabase.GetAssetPath(gameObject);
+
+			if (!string.IsNullOrEmpty(path))
 			{
-				return AssetDatabase.AssetPathToGUID( path );
+				return AssetDatabase.AssetPathToGUID(path);
 			}
 
-			BDebug.Log_Error( "GameObject is not an asset or is not part of the project." );
+			BDebug.Log_Error("GameObject is not an asset or is not part of the project.");
 
 			return null;
 		}
 
-		public static bool IsPrefabVariant( this GameObject gameObject )
+		public static bool IsPrefabVariant(this GameObject gameObject)
 		{
-			return PrefabUtility.GetPrefabAssetType( gameObject ) == PrefabAssetType.Variant;
+			return PrefabUtility.GetPrefabAssetType(gameObject) == PrefabAssetType.Variant;
 		}
 
-		public static bool IsNotPrefabVariant( this GameObject gameObject )
+		public static bool IsNotPrefabVariant(this GameObject gameObject)
 		{
-			return PrefabUtility.GetPrefabAssetType( gameObject ) != PrefabAssetType.Variant;
+			return PrefabUtility.GetPrefabAssetType(gameObject) != PrefabAssetType.Variant;
 		}
 
-		public static bool IsPrefab( this GameObject gameObject )
+		public static bool IsPrefab(this GameObject gameObject)
 		{
-			return PrefabUtility.GetPrefabAssetType( gameObject ) != PrefabAssetType.NotAPrefab;
+			return PrefabUtility.GetPrefabAssetType(gameObject) != PrefabAssetType.NotAPrefab;
 		}
 
-		public static bool IsNotPrefab( this GameObject gameObject )
+		public static bool IsNotPrefab(this GameObject gameObject)
 		{
-			return PrefabUtility.GetPrefabAssetType( gameObject ) == PrefabAssetType.NotAPrefab;
+			return PrefabUtility.GetPrefabAssetType(gameObject) == PrefabAssetType.NotAPrefab;
 		}
 
-		public static void SetLayerRecursively( this GameObject gameObject, int layer )
+		public static void SetLayerRecursively(this GameObject gameObject, int layer)
 		{
 			gameObject.layer = layer;
 
 			foreach ( Transform child in gameObject.transform )
 			{
-				child.gameObject.SetLayerRecursively( layer );
+				child.gameObject.SetLayerRecursively(layer);
 			}
 		}
 
-		public static void SetActiveChildren( this GameObject gameObject, bool isActive )
+		public static void SetActiveChildren(this GameObject gameObject, bool isActive)
 		{
 			foreach ( Transform child in gameObject.transform )
 			{
-				child.gameObject.SetActive( isActive );
+				child.gameObject.SetActive(isActive);
 			}
 		}
 
-		public static T GetComponentInChildrenIncludingInactive<T>( this GameObject gameObject )
+		public static T GetComponentInChildrenIncludingInactive<T>(this GameObject gameObject)
 		where T : Component
 		{
-			foreach ( var childTransform in gameObject.GetComponentsInChildren<Transform>( true ) )
+			foreach ( var childTransform in gameObject.GetComponentsInChildren<Transform>(true) )
 			{
 				var component = childTransform.GetComponent<T>();
 
-				if ( component != null )
+				if (component != null)
 				{
 					return component;
 				}
@@ -82,15 +87,15 @@ namespace Bezoro.Framework.Unity.Editor
 			return null;
 		}
 
-		public static void DestroyChildren( this GameObject gameObject )
+		public static void DestroyChildren(this GameObject gameObject)
 		{
 			foreach ( Transform child in gameObject.transform )
 			{
-				Object.Destroy( child.gameObject );
+				Object.Destroy(child.gameObject);
 			}
 		}
 
-		public static void ResetTransform( this GameObject gameObject )
+		public static void ResetTransform(this GameObject gameObject)
 		{
 			var transform = gameObject.transform;
 			transform.position   = Vector3.zero;
@@ -98,38 +103,39 @@ namespace Bezoro.Framework.Unity.Editor
 			transform.localScale = Vector3.one;
 		}
 
-		public static bool HasComponent<T>( this GameObject gameObject )
+		public static bool HasComponent<T>(this GameObject gameObject)
 		where T : Component
 		{
 			return gameObject.GetComponent<T>() != null;
 		}
 
-		public static void CopyComponentsFrom( this GameObject destination, GameObject source )
+		public static void CopyComponentsFrom(this GameObject destination, GameObject source)
 		{
 			foreach ( var sourceComponent in source.GetComponents<Component>() )
 			{
-				if ( sourceComponent is Transform )
+				if (sourceComponent is Transform)
 				{
 					continue;
 				}
 
-				var destinationComponent = destination.GetComponent( sourceComponent.GetType() );
+				var destinationComponent = destination.GetComponent(sourceComponent.GetType());
 
-				if ( !destinationComponent )
+				if (!destinationComponent)
 				{
-					destinationComponent = destination.AddComponent( sourceComponent.GetType() );
+					destinationComponent = destination.AddComponent(sourceComponent.GetType());
 				}
 
 				foreach ( var field in sourceComponent.GetType()
-													  .GetFields(
-														  BindingFlags.Public
-														  | BindingFlags.NonPublic
-														  | BindingFlags.Instance
-													  ) )
+							 .GetFields(
+								 BindingFlags.Public
+								 | BindingFlags.NonPublic
+								 | BindingFlags.Instance
+							 ) )
 				{
 					field.SetValue(
 						destinationComponent,
-						field.GetValue( sourceComponent ) );
+						field.GetValue(sourceComponent)
+					);
 				}
 
 				foreach ( var prop in sourceComponent.GetType().GetProperties(
@@ -137,22 +143,24 @@ namespace Bezoro.Framework.Unity.Editor
 												 | BindingFlags.Instance
 						 ) )
 				{
-					if ( prop.CanWrite )
+					if (prop.CanWrite)
 					{
 						prop.SetValue(
 							destinationComponent,
 							prop.GetValue(
 								sourceComponent,
-								null ),
-							null );
+								null
+							),
+							null
+						);
 					}
 				}
 			}
 		}
 
-		public static void SetParentAndReset( this GameObject child, GameObject parent )
+		public static void SetParentAndReset(this GameObject child, GameObject parent)
 		{
-			child.transform.SetParent( parent.transform );
+			child.transform.SetParent(parent.transform);
 			child.transform.localPosition = Vector3.zero;
 			child.transform.localRotation = Quaternion.identity;
 			child.transform.localScale    = Vector3.one;

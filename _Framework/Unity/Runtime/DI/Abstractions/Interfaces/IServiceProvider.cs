@@ -1,12 +1,12 @@
 ﻿namespace Bezoro.Framework.Unity.DI
 {
 	public interface IServiceProvider<TService>
-	where TService : IService
+	where TService : I_Service
 	{
-		public bool IsServiceRegistered<T>()
+		public T GetService<T>()
 		where T : TService;
 
-		public T GetService<T>()
+		public bool IsServiceRegistered<T>()
 		where T : TService;
 	}
 }

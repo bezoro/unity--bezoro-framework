@@ -13,7 +13,7 @@ namespace Bezoro.Framework.Unity.StateMachines.TickableBased
 
 		public MonoBehaviour Owner => _owner;
 
-		public void Init( TickableStateMachineOwner owner, ITickableStateMachine owningStateMachine )
+		public void Init(TickableStateMachineOwner owner, ITickableStateMachine owningStateMachine)
 		{
 			_owner              = owner;
 			_owningStateMachine = owningStateMachine;
@@ -21,8 +21,6 @@ namespace Bezoro.Framework.Unity.StateMachines.TickableBased
 			SetUpTransitions();
 			OnInit();
 		}
-
-		public TickTransition[] Transitions => _transitions;
 
 		public void Enable()
 		{
@@ -65,21 +63,21 @@ namespace Bezoro.Framework.Unity.StateMachines.TickableBased
 
 			void AllTransitionsTick()
 			{
-				for ( var i = 0 ; i < _transitions.Length ; i++ )
+				for (var i = 0 ; i < _transitions.Length ; i++)
 				{
-					if ( _transitions[ i ] == null )
+					if (_transitions[i] == null)
 					{
 						continue;
 					}
 
-					_transitions[ i ].Tick();
+					_transitions[i].Tick();
 				}
 			}
 		}
 
-		public void OnTransitionRaised( ITickableState toState )
+		public void OnTransitionRaised(ITickableState toState)
 		{
-			_owningStateMachine.DoTransition( toState );
+			_owningStateMachine.DoTransition(toState);
 		}
 
 		public void Exit()
@@ -103,11 +101,7 @@ namespace Bezoro.Framework.Unity.StateMachines.TickableBased
 			CurrentState.Destroy();
 		}
 
-		public ITickableState CurrentState { get; private set; }
-
-		public ITickableState LastState { get; private set; }
-
-		public void DoTransition( ITickableState toState )
+		public void DoTransition(ITickableState toState)
 		{
 			CurrentState.Exit();
 			LastState    = CurrentState;
@@ -115,56 +109,52 @@ namespace Bezoro.Framework.Unity.StateMachines.TickableBased
 			CurrentState.Enter();
 		}
 
-		public TickTransition TransitionsTo( ITickableState toState )
+		public TickTransition TransitionsTo(ITickableState toState)
 		{
-			var newTransition = new TickTransition();
-			newTransition.Init(
-				this,
-				toState,
-				_owner );
-
-			Array_Helpers.Add(
-				ref _transitions,
-				newTransition );
-
-			return newTransition;
+			var new_transition = new TickTransition();
+			new_transition.Init(this, toState, _owner);
+			Array_Helpers.Add(ref _transitions, new_transition);
+			return new_transition;
 		}
 
-		protected T RegisterState<T>()
-		where T : class, ITickableState, new()
-		{
-			var newState = new T();
-			newState.Init(
-				_owner,
-				this );
+		public TickTransition[] Transitions => _transitions;
 
-			return newState;
-		}
+		public ITickableState CurrentState { get; private set; }
+
+		public ITickableState LastState { get; private set; }
 
 		private void AllTransitionsBecomeRelevant()
 		{
-			for ( var i = 0 ; i < _transitions.Length ; i++ )
+			for (var i = 0 ; i < _transitions.Length ; i++)
 			{
-				if ( _transitions[ i ] == null )
+				if (_transitions[i] == null)
 				{
 					continue;
 				}
 
-				_transitions[ i ].BecomeRelevant();
+				_transitions[i].BecomeRelevant();
 			}
 		}
 
 		private void AllTransitionsCeaseRelevant()
 		{
-			for ( var i = 0 ; i < _transitions.Length ; i++ )
+			for (var i = 0 ; i < _transitions.Length ; i++)
 			{
-				if ( _transitions[ i ] == null )
+				if (_transitions[i] == null)
 				{
 					continue;
 				}
 
-				_transitions[ i ].CeaseRelevant();
+				_transitions[i].CeaseRelevant();
 			}
+		}
+
+		protected T RegisterState<T>()
+		where T : class, ITickableState, new()
+		{
+			var new_state = new T();
+			new_state.Init(_owner, this);
+			return new_state;
 		}
 
 	#region Abstract Methods

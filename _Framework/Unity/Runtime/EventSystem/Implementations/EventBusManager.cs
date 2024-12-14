@@ -3,62 +3,63 @@ using Bezoro.Framework.Core;
 using Bezoro.Framework.Unity;
 using Bezoro.Framework.Unity.EventSystem;
 
-public sealed class EventBusManager : BaseSingleton<EventBusManager>
+public sealed class EventBusManager : Base_Singleton<EventBusManager>
 {
-	private readonly ConcurrentDictionary<string, I_Event_Bus> _eventBuses;
-
 	private EventBusManager()
 	{
 		_eventBuses = new();
 	}
 
-	protected override void OnInitialize()
-	{
-	}
+	private readonly ConcurrentDictionary<string, I_Event_Bus> _eventBuses;
 
-	protected override void DisposeManagedResources()
+	public I_Event_Bus GetOrCreateEventBus(string context)
 	{
-		ClearAll();
-	}
-
-	public I_Event_Bus GetOrCreateEventBus( string context )
-	{
-		Assert.Is_Not_Null_Or_Empty( context );
-		Assert.Is_Not_Null( _eventBuses );
+		Assert.Is_Not_Null_Or_Empty(context);
+		Assert.Is_Not_Null(_eventBuses);
 
 		return _eventBuses.GetOrAdd(
 			context,
-			_ => new EventBus() );
+			_ => new EventBus()
+		);
 	}
 
-	public bool TryGetEventBus( string context, out I_Event_Bus eventBus )
+	public bool TryGetEventBus(string context, out I_Event_Bus eventBus)
 	{
-		Assert.Is_Not_Null_Or_Empty( context );
-		Assert.Is_Not_Null( _eventBuses );
+		Assert.Is_Not_Null_Or_Empty(context);
+		Assert.Is_Not_Null(_eventBuses);
 
 		return _eventBuses.TryGetValue(
 			context,
-			out eventBus );
+			out eventBus
+		);
 	}
 
-	public bool RemoveEventBus( string context )
+	public bool RemoveEventBus(string context)
 	{
-		Assert.Is_Not_Null_Or_Empty( context );
-		Assert.Is_Not_Null( _eventBuses );
+		Assert.Is_Not_Null_Or_Empty(context);
+		Assert.Is_Not_Null(_eventBuses);
 
 		return _eventBuses.TryRemove(
 			context,
-			out _ );
+			out _
+		);
 	}
 
 	public void ClearAll()
 	{
-		Assert.Is_Not_Null( _eventBuses );
+		Assert.Is_Not_Null(_eventBuses);
 
 		_eventBuses.Clear();
 	}
 
-	protected override void OnReset()
+	protected override void On_Initialize() { }
+
+	protected override void Dispose_Managed_Resources()
+	{
+		ClearAll();
+	}
+
+	protected override void On_Reset()
 	{
 		ClearAll();
 	}

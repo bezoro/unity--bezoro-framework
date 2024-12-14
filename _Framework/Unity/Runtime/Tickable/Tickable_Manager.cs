@@ -4,117 +4,77 @@ namespace Bezoro.Framework.Unity
 {
 	public sealed class Tickable_Manager : Singleton_MonoBehaviour<Tickable_Manager>
 	{
-		private Tickable[] _earlyTickables = new Tickable[128];
-		private int        _earlyTickablesCount;
+		private Tickable[] _early_tickables = new Tickable[128];
+		private int        _early_tickables_count;
 
-		private Tickable[] _fixedTickables = new Tickable[128];
-		private int        _fixedTickablesCount;
+		private Tickable[] _fixed_tickables = new Tickable[128];
+		private int        _fixed_tickables_count;
 
-		private Tickable[] _lateTickables = new Tickable[128];
-		private int        _lateTickablesCount;
+		private Tickable[] _late_tickables = new Tickable[128];
+		private int        _late_tickables_count;
 
 		private Tickable[] _tickables = new Tickable[128];
-		private int        _tickablesCount;
+		private int        _tickables_count;
+
+		public void AddUniqueEarlyTickable(Tickable tickable)
+		{
+			Array_Helpers.Add_Unique(ref _early_tickables, tickable);
+		}
+
+		public void AddUniqueTickable(Tickable tickable)
+		{
+			Array_Helpers.Add_Unique(ref _tickables, tickable);
+		}
+
+		public void AddUniqueFixedTickable(Tickable tickable)
+		{
+			Array_Helpers.Add_Unique(ref _fixed_tickables, tickable);
+		}
+
+		public void AddUniqueLateTickable(Tickable tickable)
+		{
+			Array_Helpers.Add_Unique(ref _late_tickables, tickable);
+		}
+
+		public void RemoveEarlyTickable(Tickable tickable)
+		{
+			Array_Helpers.Remove_Element(ref _early_tickables, tickable);
+		}
+
+		public void RemoveTickable(Tickable tickable)
+		{
+			Array_Helpers.Remove_Element(ref _tickables, tickable);
+		}
+
+		public void RemoveFixedTickable(Tickable tickable)
+		{
+			Array_Helpers.Remove_Element(ref _fixed_tickables, tickable);
+		}
+
+		public void RemoveLateTickable(Tickable tickable)
+		{
+			Array_Helpers.Remove_Element(ref _late_tickables, tickable);
+		}
 
 		private void Update()
 		{
-			for ( var i = 0 ; i < _earlyTickablesCount ; i++ )
-			{
-				_earlyTickables[ i ].EarlyTick();
-			}
+			for (var i = 0 ; i < _early_tickables_count ; i++)
+				_early_tickables[i].Early_Tick();
 
-			for ( var i = 0 ; i < _tickablesCount ; i++ )
-			{
-				_tickables[ i ].Tick();
-			}
+			for (var i = 0 ; i < _tickables_count ; i++)
+				_tickables[i].Tick();
 		}
 
 		private void FixedUpdate()
 		{
-			for ( var i = 0 ; i < _fixedTickablesCount ; i++ )
-			{
-				_fixedTickables[ i ].FixedTick();
-			}
+			for (var i = 0 ; i < _fixed_tickables_count ; i++)
+				_fixed_tickables[i].Fixed_Tick();
 		}
 
 		private void LateUpdate()
 		{
-			for ( var i = 0 ; i < _lateTickablesCount ; i++ )
-			{
-				_lateTickables[ i ].LateTick();
-			}
-		}
-
-		public void AddUniqueEarlyTickable( Tickable tickable )
-		{
-			Array_Helpers.AddUnique(
-				ref _earlyTickables,
-				tickable,
-				ref _earlyTickablesCount,
-				out _ );
-		}
-
-		public void AddUniqueTickable( Tickable tickable )
-		{
-			Array_Helpers.AddUnique(
-				ref _tickables,
-				tickable,
-				ref _tickablesCount,
-				out _ );
-		}
-
-		public void AddUniqueFixedTickable( Tickable tickable )
-		{
-			Array_Helpers.AddUnique(
-				ref _fixedTickables,
-				tickable,
-				ref _fixedTickablesCount,
-				out _ );
-		}
-
-		public void AddUniqueLateTickable( Tickable tickable )
-		{
-			Array_Helpers.AddUnique(
-				ref _lateTickables,
-				tickable,
-				ref _lateTickablesCount,
-				out _ );
-		}
-
-		public void RemoveEarlyTickable( Tickable tickable )
-		{
-			Array_Helpers.TryRemoveElement(
-				ref _earlyTickables,
-				tickable,
-				ref _earlyTickablesCount,
-				out _ );
-		}
-
-		public void RemoveTickable( Tickable tickable )
-		{
-			Array_Helpers.TryRemoveElement(
-				ref _tickables,
-				tickable,
-				ref _tickablesCount,
-				out _ );
-		}
-
-		public void RemoveFixedTickable( Tickable tickable )
-		{
-			Array_Helpers.TryRemoveElement(
-				ref _fixedTickables,
-				tickable,
-				ref _fixedTickablesCount,
-				out _ );
-		}
-
-		public void RemoveLateTickable( Tickable tickable )
-		{
-			Array_Helpers.TryRemoveElement(
-				ref _lateTickables,
-				tickable,
-				ref _lateTickablesCount,
-				out _ );
+			for (var i = 0 ; i < _late_tickables_count ; i++)
+				_late_tickables[i].Late_Tick();
 		}
 	}
 }

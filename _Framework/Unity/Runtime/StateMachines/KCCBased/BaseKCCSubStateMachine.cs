@@ -33,10 +33,6 @@ namespace Bezoro.Framework.Unity.StateMachines.KCCBased
 			OnInit();
 		}
 
-		public KCCTransition[] Transitions => _transitions;
-
-		public List<Type> MonoBehaviourTypesToIgnoreCollisionsWith { get; } = new( 12 );
-
 		public void Enable()
 		{
 			OnEnable();
@@ -76,9 +72,9 @@ namespace Bezoro.Framework.Unity.StateMachines.KCCBased
 			CurrentState.LateTick();
 		}
 
-		public void OnTransitionRaised( IKCCState toState )
+		public void OnTransitionRaised(IKCCState toState)
 		{
-			_owningStateMachine.DoTransition( toState );
+			_owningStateMachine.DoTransition(toState);
 		}
 
 		public void Exit()
@@ -102,18 +98,14 @@ namespace Bezoro.Framework.Unity.StateMachines.KCCBased
 			CurrentState.Destroy();
 		}
 
-		public bool IsSubStateMachine( out IKCCStateMachine outStateMachine )
+		public bool IsSubStateMachine(out IKCCStateMachine outStateMachine)
 		{
 			outStateMachine = this;
 
 			return true;
 		}
 
-		public IKCCState CurrentState { get; private set; }
-
-		public IKCCState LastState { get; private set; }
-
-		public void DoTransition( IKCCState toState )
+		public void DoTransition(IKCCState toState)
 		{
 			CurrentState.Exit();
 			LastState    = CurrentState;
@@ -121,117 +113,124 @@ namespace Bezoro.Framework.Unity.StateMachines.KCCBased
 			CurrentState.Enter();
 		}
 
-		public KCCTransition TransitionsTo( IKCCState toState )
+		public KCCTransition TransitionsTo(IKCCState toState)
 		{
-			var newTransition = new KCCTransition();
-			newTransition.Init(
-				this,
-				toState,
-				_owner );
-
-			Array_Helpers.Add(
-				ref _transitions,
-				newTransition );
-
-			return newTransition;
+			var new_transition = new KCCTransition();
+			new_transition.Init(this, toState, _owner);
+			Array_Helpers.Add(ref _transitions, new_transition);
+			return new_transition;
 		}
 
 		public void AddMonoBehaviourToIgnoreCollisionsWith<T>()
 		where T : MonoBehaviour
 		{
-			KCCStateExtensions.AddMonoBehaviourToIgnoreCollisionsWith<T>( this );
+			KCCStateExtensions.AddMonoBehaviourToIgnoreCollisionsWith<T>(this);
+		}
+
+		public KCCTransition[] Transitions => _transitions;
+
+		public List<Type> MonoBehaviourTypesToIgnoreCollisionsWith { get; } = new( 12 );
+
+		public IKCCState CurrentState { get; private set; }
+
+		public IKCCState LastState { get; private set; }
+
+		private void AllTransitionsBecomeRelevant()
+		{
+			for (var i = 0 ; i < _transitions.Length ; i++)
+			{
+				if (_transitions[i] == null)
+				{
+					continue;
+				}
+
+				_transitions[i].BecomeRelevant();
+			}
+		}
+
+		private void AllTransitionsCeaseRelevant()
+		{
+			for (var i = 0 ; i < _transitions.Length ; i++)
+			{
+				if (_transitions[i] == null)
+				{
+					continue;
+				}
+
+				_transitions[i].CeaseRelevant();
+			}
 		}
 
 		protected T RegisterState<T>()
 		where T : class, IKCCState, new()
 		{
 			var newState = new T();
+
 			newState.Init(
 				_owner,
 				this,
-				Motor );
+				Motor
+			);
 
 			return newState;
 		}
 
-		private void AllTransitionsBecomeRelevant()
-		{
-			for ( var i = 0 ; i < _transitions.Length ; i++ )
-			{
-				if ( _transitions[ i ] == null )
-				{
-					continue;
-				}
-
-				_transitions[ i ].BecomeRelevant();
-			}
-		}
-
-		private void AllTransitionsCeaseRelevant()
-		{
-			for ( var i = 0 ; i < _transitions.Length ; i++ )
-			{
-				if ( _transitions[ i ] == null )
-				{
-					continue;
-				}
-
-				_transitions[ i ].CeaseRelevant();
-			}
-		}
-
 	#region KCC Methods
 
-		public void UpdateRotation( ref Quaternion currentRotation, float deltaTime )
+		public void UpdateRotation(ref Quaternion currentRotation, float deltaTime)
 		{
 			OnUpdateRotation(
 				ref currentRotation,
-				deltaTime );
+				deltaTime
+			);
 
 			CurrentState.UpdateRotation(
 				ref currentRotation,
-				deltaTime );
+				deltaTime
+			);
 		}
 
-		public void UpdateVelocity( ref Vector3 currentVelocity, float deltaTime )
+		public void UpdateVelocity(ref Vector3 currentVelocity, float deltaTime)
 		{
 			OnUpdateVelocity(
 				ref currentVelocity,
-				deltaTime );
+				deltaTime
+			);
 
 			CurrentState.UpdateVelocity(
 				ref currentVelocity,
-				deltaTime );
+				deltaTime
+			);
 		}
 
-		public void BeforeCharacterUpdate( float deltaTime )
+		public void BeforeCharacterUpdate(float deltaTime)
 		{
-			OnBeforeCharacterUpdate( deltaTime );
-			CurrentState.BeforeCharacterUpdate( deltaTime );
+			OnBeforeCharacterUpdate(deltaTime);
+			CurrentState.BeforeCharacterUpdate(deltaTime);
 		}
 
-		public void PostGroundingUpdate( float deltaTime )
+		public void PostGroundingUpdate(float deltaTime)
 		{
-			OnPostGroundingUpdate( deltaTime );
-			CurrentState.PostGroundingUpdate( deltaTime );
+			OnPostGroundingUpdate(deltaTime);
+			CurrentState.PostGroundingUpdate(deltaTime);
 		}
 
-		public void AfterCharacterUpdate( float deltaTime )
+		public void AfterCharacterUpdate(float deltaTime)
 		{
-			OnAfterCharacterUpdate( deltaTime );
-			CurrentState.AfterCharacterUpdate( deltaTime );
+			OnAfterCharacterUpdate(deltaTime);
+			CurrentState.AfterCharacterUpdate(deltaTime);
 			AllTransitionsTick();
 
 			void AllTransitionsTick()
 			{
-				for ( var i = 0 ; i < _transitions.Length ; i++ )
+				for (var i = 0 ; i < _transitions.Length ; i++)
 				{
-					if ( _transitions[ i ] == null )
+					if (_transitions[i] == null)
 					{
 						continue;
 					}
 
-					_transitions[ i ].Tick();
+					_transitions[i].Tick();
 				}
 			}
 		}
@@ -308,10 +307,10 @@ namespace Bezoro.Framework.Unity.StateMachines.KCCBased
 			);
 		}
 
-		public void DiscreteCollisionDetected( Collider hitCollider )
+		public void DiscreteCollisionDetected(Collider hitCollider)
 		{
-			OnDiscreteCollisionDetected( hitCollider );
-			CurrentState.DiscreteCollisionDetected( hitCollider );
+			OnDiscreteCollisionDetected(hitCollider);
+			CurrentState.DiscreteCollisionDetected(hitCollider);
 		}
 
 	#endregion
@@ -373,15 +372,15 @@ namespace Bezoro.Framework.Unity.StateMachines.KCCBased
 		/// </summary>
 		protected abstract void OnLateTick();
 
-		protected abstract void OnUpdateRotation( ref Quaternion currentRotation, float deltaTime );
+		protected abstract void OnUpdateRotation(ref Quaternion currentRotation, float deltaTime);
 
-		protected abstract void OnUpdateVelocity( ref Vector3 currentVelocity, float deltaTime );
+		protected abstract void OnUpdateVelocity(ref Vector3 currentVelocity, float deltaTime);
 
-		protected abstract void OnBeforeCharacterUpdate( float deltaTime );
+		protected abstract void OnBeforeCharacterUpdate(float deltaTime);
 
-		protected abstract void OnPostGroundingUpdate( float deltaTime );
+		protected abstract void OnPostGroundingUpdate(float deltaTime);
 
-		protected abstract void OnAfterCharacterUpdate( float deltaTime );
+		protected abstract void OnAfterCharacterUpdate(float deltaTime);
 
 		protected abstract void OnGroundHit(
 			Collider hitCollider,
@@ -407,7 +406,7 @@ namespace Bezoro.Framework.Unity.StateMachines.KCCBased
 				hitStabilityReport
 		);
 
-		protected abstract void OnDiscreteCollisionDetected( Collider hitCollider );
+		protected abstract void OnDiscreteCollisionDetected(Collider hitCollider);
 
 		/// <summary>
 		///     Called when the <b>SubStateMachine</b> is <i>Exited</i>.

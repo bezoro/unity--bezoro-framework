@@ -3,75 +3,81 @@ using System.Collections.Generic;
 using System.Threading;
 using Bezoro.Framework.Unity.Utilities;
 using Cysharp.Threading.Tasks;
-using UnityEngine;
 
 namespace Bezoro.Framework.Unity
 {
 	public static class Factories
 	{
-		public static class Game_Object
+		public static class GameObject
 		{
 			public const float  DEFAULT_CREATION_TIMEOUT = 5f;
-			public const string DEFAULT_OBJECT_NAME      = "New_GameObject";
+			public const string DEFAULT_OBJECT_NAME      = "[Factory Created] GameObject";
 
-			public static GameObject Create(
+			public static UnityEngine.GameObject Create(
 				string object_name = DEFAULT_OBJECT_NAME,
-				TransformData transform_data = default,
+				Transform_Data transform_data = default,
 				Func<bool> activation_condition = null,
 				params Type[] component_types
 			)
 			{
-				return Create_Async(
-						   object_name,
-						   transform_data,
-						   activation_condition,
-						   component_types
-					   )
-					   .GetAwaiter()
-					   .GetResult();
+				return Create_Async(object_name, transform_data, activation_condition, component_types)
+					.GetAwaiter()
+					.GetResult();
 			}
 
-			public static async UniTask<GameObject> Create_Async(
-				string objectName = DEFAULT_OBJECT_NAME,
-				TransformData transformData = default,
-				Func<bool> enableCondition = null,
-				params Type[] componentTypes
+			public static async UniTask<UnityEngine.GameObject> Create_Async(
+				string object_name = DEFAULT_OBJECT_NAME,
+				Transform_Data transform_data = default,
+				Func<bool> enable_condition = null,
+				params Type[] component_types
 			)
 			{
-				Validation_Helpers.ValidateString( objectName );
-				var gameObject = CreateInternal(
-					objectName,
-					transformData
-				);
+				Validation_Helpers.ValidateString(object_name);
 
-				if ( enableCondition == null )
+				var game_object = Create_Internal(object_name, transform_data);
+				game_object.SetActive(false);
+
+				if (component_types.Length > 0)
+					await game_object.Add_Components_Async(component_types);
+
+				if (enable_condition != null)
 				{
-					gameObject.AddComponents( componentTypes );
-					gameObject.Enable_Behaviours();
-					return gameObject;
+					using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(DEFAULT_CREATION_TIMEOUT));
+					await Monitor_Enable_Condition(game_object, enable_condition, cts.Token);
 				}
 
-				gameObject.SetActive( false );
-				await gameObject.Add_Components_Async( componentTypes );
-				using var cts = new CancellationTokenSource( TimeSpan.FromSeconds( DEFAULT_CREATION_TIMEOUT ) );
-				await MonitorEnableCondition(
-					gameObject,
-					enableCondition,
-					cts.Token
-				);
+				await game_object.Enable_Behaviours();
 
-				await gameObject.Enable_Behaviours_Async();
-				return gameObject;
+				return game_object;
 			}
 
-			private static GameObject CreateInternal(
-				string name = "NewGameObject",
-				TransformData transformData = default
+			public static async UniTask<IReadOnlyList<UnityEngine.GameObject>> Create_Batch(
+				IEnumerable<(string name, Type[] components)> object_specs,
+				Transform_Data transform_data = default,
+				Func<bool> enable_condition = null,
+				float timeoutDuration = DEFAULT_CREATION_TIMEOUT
 			)
 			{
-				if ( !PlayerLoopHelper.IsMainThread ) { UniTask.ReturnToMainThread(); }
+				var created_objects = new List<UnityEngine.GameObject>();
 
-				var go = new GameObject( name )
+				foreach ( var (name, components) in object_specs )
+				{
+					var go = await Create_Async(name, transform_data, enable_condition, components);
+					created_objects.Add(go);
+					await UniTask.Yield(PlayerLoopTiming.Update);
+				}
+
+				return created_objects;
+			}
+
+			private static UnityEngine.GameObject Create_Internal(
+				string name = DEFAULT_OBJECT_NAME,
+				Transform_Data transformData = default
+			)
+			{
+				Player_Loop_Helpers.Return_To_Main_Thread_If_Necessary();
+
+				var go = new UnityEngine.GameObject(name)
 				{
 					transform =
 					{
@@ -81,66 +87,33 @@ namespace Bezoro.Framework.Unity
 					}
 				};
 
-				BDebug.Log(
-					$"Created GameObject: {name}",
-					go
-				);
-
-				if ( transformData.Parent != null ) { go.transform.SetParent( transformData.Parent ); }
-
+				BDebug.Log($"Created GameObject: {name.Bold()}", go);
 				return go;
 			}
 
-			public static async UniTask<IReadOnlyList<GameObject>> CreateBatch(
-				IEnumerable<(string name, Type[] components)> objectSpecs,
-				TransformData transformData = default,
-				Func<bool> enableCondition = null,
-				float timeoutDuration = DEFAULT_CREATION_TIMEOUT
-			)
-			{
-				var createdObjects = new List<GameObject>();
-
-				foreach ( var (name, components) in objectSpecs )
-				{
-					var go = await Create_Async(
-						name,
-						transformData,
-						enableCondition,
-						components
-					);
-
-					createdObjects.Add( go );
-					await UniTask.Yield( PlayerLoopTiming.Update );
-				}
-
-				return createdObjects;
-			}
-
-			private static async UniTask MonitorEnableCondition(
-				GameObject gameObject,
-				Func<bool> enableCondition,
-				CancellationToken cancellationToken
+			private static async UniTask Monitor_Enable_Condition(
+				UnityEngine.GameObject game_object,
+				Func<bool> enable_condition,
+				CancellationToken ct
 			)
 			{
 				try
 				{
-					var isEnabled      = !enableCondition();
-					var isNotCancelled = !cancellationToken.IsCancellationRequested;
+					var is_enabled       = !enable_condition();
+					var is_not_cancelled = !ct.IsCancellationRequested;
 
-					while ( isEnabled && gameObject.Not_Equals_Null() && isNotCancelled )
-					{
-						await UniTask.WaitForEndOfFrame( cancellationToken );
-					}
+					while ( is_enabled && game_object.Not_Equals_Null() && is_not_cancelled )
+						await UniTask.WaitForEndOfFrame(ct);
 
-					if ( gameObject.Not_Equals_Null() && isNotCancelled )
+					if (game_object.Not_Equals_Null() && is_not_cancelled)
 					{
-						BDebug.Log( $"Enabled GameObject: {gameObject.name}" );
-						gameObject.SetActive( true );
+						BDebug.Log($"Enabled GameObject: {game_object.name.Bold()}");
+						game_object.SetActive(true);
 					}
 				}
 				catch ( Exception exception )
 				{
-					BDebug.Log_Exception( exception.Message );
+					BDebug.Log_Exception(exception.Message);
 					throw;
 				}
 			}

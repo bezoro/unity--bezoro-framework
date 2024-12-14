@@ -12,14 +12,12 @@ namespace Bezoro.Framework.Unity.StateMachines.EventBased
 
 		public MonoBehaviour Owner => _owner;
 
-		public void Init( EventStateMachineOwner owner, IEventStateMachine owningStateMachine )
+		public void Init(EventStateMachineOwner owner, IEventStateMachine owningStateMachine)
 		{
 			_owner              = owner;
 			_owningStateMachine = owningStateMachine;
 			OnInit();
 		}
-
-		public EventTransition[] Transitions => _transitions;
 
 		public void Enable()
 		{
@@ -33,9 +31,9 @@ namespace Bezoro.Framework.Unity.StateMachines.EventBased
 			AllTransitionsBecomeRelevant();
 		}
 
-		public void OnTransitionRaised( IEventState toState )
+		public void OnTransitionRaised(IEventState toState)
 		{
-			_owningStateMachine.DoTransition( toState );
+			_owningStateMachine.DoTransition(toState);
 		}
 
 		public void Exit()
@@ -56,44 +54,39 @@ namespace Bezoro.Framework.Unity.StateMachines.EventBased
 			AllTransitionsCeaseRelevant();
 		}
 
-		public EventTransition TransitionsTo( IEventState toState )
+		public EventTransition TransitionsTo(IEventState toState)
 		{
-			var newTransition = new EventTransition();
-			newTransition.Init(
-				this,
-				toState,
-				_owner );
-
-			Array_Helpers.Add(
-				ref _transitions,
-				newTransition );
-
-			return newTransition;
+			var new_transition = new EventTransition();
+			new_transition.Init(this, toState, _owner);
+			Array_Helpers.Add(ref _transitions, new_transition);
+			return new_transition;
 		}
+
+		public EventTransition[] Transitions => _transitions;
 
 		private void AllTransitionsBecomeRelevant()
 		{
-			for ( var i = 0 ; i < _transitions.Length ; i++ )
+			for (var i = 0 ; i < _transitions.Length ; i++)
 			{
-				if ( _transitions[ i ] == null )
+				if (_transitions[i] == null)
 				{
 					continue;
 				}
 
-				_transitions[ i ].BecomeRelevant();
+				_transitions[i].BecomeRelevant();
 			}
 		}
 
 		private void AllTransitionsCeaseRelevant()
 		{
-			for ( var i = 0 ; i < _transitions.Length ; i++ )
+			for (var i = 0 ; i < _transitions.Length ; i++)
 			{
-				if ( _transitions[ i ] == null )
+				if (_transitions[i] == null)
 				{
 					continue;
 				}
 
-				_transitions[ i ].CeaseRelevant();
+				_transitions[i].CeaseRelevant();
 			}
 		}
 

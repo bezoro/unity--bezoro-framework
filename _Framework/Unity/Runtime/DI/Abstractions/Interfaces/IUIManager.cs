@@ -1,7 +1,7 @@
 namespace Bezoro.Framework.Unity.DI
 {
-	public interface IUIManager : IService
+	public interface IUIManager : I_Service
 	{
-		public void ShowMenu( string menuName );
+		public void ShowMenu(string menuName);
 	}
 }
