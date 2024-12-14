@@ -1,0 +1,23 @@
+{
+  "name": "Bezoro.Framework.Core.Tests.PlayMode",
+  "rootNamespace": "Bezoro.Framework.Core.Tests.PlayMode",
+  "references": [
+    "GUID:0acc523941302664db1f4e527237feb3",
+    "GUID:27619889b8ba8c24980f49ee34dbb44a",
+    "GUID:3818b356cb5a2954f883526453e5f59d"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": true,
+  "precompiledReferences": [
+    "nunit.framework.dll",
+    "Moq.dll"
+  ],
+  "autoReferenced": false,
+  "defineConstraints": [
+    "UNITY_INCLUDE_TESTS"
+  ],
+  "versionDefines": [],
+  "noEngineReferences": false
+}
