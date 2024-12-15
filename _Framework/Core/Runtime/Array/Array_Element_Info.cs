@@ -6,7 +6,7 @@ namespace Bezoro.Framework.Core
 	///     A structure to hold detailed information about an array and its data.
 	/// </summary>
 	/// <typeparam name="T">The type of the elements in the array.</typeparam>
-	public readonly struct Array_Data<T>
+	public readonly struct Array_Element_Info<T>
 	{
 		/// <summary>
 		///     The index of the specific element in the array.
@@ -34,12 +34,12 @@ namespace Bezoro.Framework.Core
 		public Type Element_Type => Element?.GetType() ?? typeof(T);
 
 		/// <summary>
-		///     Constructor for creating an Array_Data instance.
+		///     Constructor for creating an Array_Element_Info instance.
 		/// </summary>
 		/// <param name="relevant_index">The index of the element in the array.</param>
 		/// <param name="element">The specific array element.</param>
 		/// <param name="length">The length of the array.</param>
-		public Array_Data(int relevant_index, T element, int length)
+		public Array_Element_Info(int relevant_index, T element, int length)
 		{
 			Relevant_Index = relevant_index;
 			Element        = element;

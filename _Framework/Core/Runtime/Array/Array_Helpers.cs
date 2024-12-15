@@ -194,7 +194,11 @@ namespace Bezoro.Framework.Core
 #endif
 		}
 
-		public static Array_Data<T> Find_Element_Sequentially<T>(T[] array, T element_to_find, I_Logger logger = null)
+		public static Array_Element_Info<T> Find_Element_Sequentially<T>(
+			T[] array,
+			T element_to_find,
+			I_Logger logger = null
+		)
 		{
 			if (array == null || array.Length == 0)
 			{
@@ -228,7 +232,11 @@ namespace Bezoro.Framework.Core
 			return new( -1, element_to_find, array.Length );
 		}
 
-		public static Array_Data<T> Find_Element_Parallel<T>(T[] array, T element_to_find, I_Logger logger = null)
+		public static Array_Element_Info<T> Find_Element_Parallel<T>(
+			T[] array,
+			T element_to_find,
+			I_Logger logger = null
+		)
 		{
 			if (array == null || array.Length == 0)
 			{
@@ -538,7 +546,7 @@ namespace Bezoro.Framework.Core
 			}
 		}
 
-		private static Array_Data<T> Remove_Element_Parallel<T>(
+		private static Array_Element_Info<T> Remove_Element_Parallel<T>(
 			ref T[] array,
 			T element,
 			Array_Removal_Approach removal_approach,
