@@ -15,18 +15,27 @@ namespace Bezoro.Framework.Core
 
 		public static void Initialize_Array_If_Null<T>(ref T[] array, I_Logger logger = null)
 		{
-			if (array != null)
-				return;
+			if (array != null) return;
 
 			array = Array.Empty<T>();
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
-			logger?.Log("Initialized array to an empty array.");
+			logger?.Log("Initialized null array to an empty array.");
 #endif
 		}
 
 		public static void Remove_Duplicates<T>(ref T[] array, I_Logger logger = null)
 		{
-			if (array == null || array.Length <= 1) return;
+			if (array == null)
+			{
+				logger?.Log_Warning("Array is null. Aborting remove operation.");
+				return;
+			}
+
+			if (array.Length <= 1)
+			{
+				logger?.Log("Array has less than 2 elements. No duplicates to remove.");
+				return;
+			}
 
 			var unique_elements = new List<T>();
 			var seen_elements   = new HashSet<T>();
