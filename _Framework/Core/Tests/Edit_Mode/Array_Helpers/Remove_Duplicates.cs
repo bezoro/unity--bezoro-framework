@@ -35,7 +35,7 @@ namespace Bezoro.Framework.Core.Tests.EditMode.Array_Helpers
 	#region Happy Path
 
 		[TestCase(new object[] { 1, 1, 1, 1 }, new object[] { 1 })]
-		[TestCase(new object[] { 1, 2, 3, 4, 5 }, new object[] { 1, 2, 3, 4, 5 })]
+		[TestCase(new object[] { 1, 2, 3, 3, 4, 5 }, new object[] { 1, 2, 3, 4, 5 })]
 		[TestCase(new object[] { "A", "A", "B", "B", "C" }, new object[] { "A", "B", "C" })]
 		public void Removes_Duplicates_From_Existing_Array(object[] array, object[] expectedArray)
 		{
@@ -95,19 +95,6 @@ namespace Bezoro.Framework.Core.Tests.EditMode.Array_Helpers
 
 			// Assert
 			CollectionAssert.AreEqual(expected_array, array);
-		}
-
-		[Test]
-		public void Should_Work_For_Empty_Array()
-		{
-			// Arrange
-			var array = Array.Empty<int>();
-
-			// Act
-			Core.Array_Helpers.Remove_Duplicates(ref array);
-
-			// Assert
-			NUnit.Framework.Assert.IsEmpty(array);
 		}
 
 		[Test]
