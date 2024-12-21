@@ -1,6 +1,6 @@
 {
-  "name": "Bezoro.Framework.Core.Tests.EditMode",
-  "rootNamespace": "Bezoro.Framework.Core.Tests.EditMode",
+  "name": "Bezoro.Framework.Core.Tests.Edit_Mode",
+  "rootNamespace": "Bezoro.Framework.Core.Tests.Edit_Mode",
   "references": [
     "GUID:0acc523941302664db1f4e527237feb3",
     "GUID:27619889b8ba8c24980f49ee34dbb44a",
