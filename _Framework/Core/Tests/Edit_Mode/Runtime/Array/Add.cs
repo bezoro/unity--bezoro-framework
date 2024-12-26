@@ -1,7 +1,7 @@
 ﻿using System.Linq;
 using NUnit.Framework;
 
-namespace Bezoro.Framework.Core.Tests.EditMode.Array_Helpers
+namespace Bezoro.Framework.Core.Tests.Edit_Mode.Array_Helpers
 {
 	[TestFixture]
 	[TestOf(typeof(Core.Array_Helpers))]
@@ -9,7 +9,7 @@ namespace Bezoro.Framework.Core.Tests.EditMode.Array_Helpers
 	{
 		private class Test_Object { }
 
-	#region Happy Path
+		#region Happy Path
 
 		[Test]
 		public void Adds_Element_To_Null_Array()
@@ -152,6 +152,6 @@ namespace Bezoro.Framework.Core.Tests.EditMode.Array_Helpers
 			);
 		}
 
-	#endregion
+		#endregion
 	}
 }

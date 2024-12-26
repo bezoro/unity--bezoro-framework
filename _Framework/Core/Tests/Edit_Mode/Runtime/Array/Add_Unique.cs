@@ -1,12 +1,12 @@
 ﻿using NUnit.Framework;
 
-namespace Bezoro.Framework.Core.Tests.EditMode.Array_Helpers
+namespace Bezoro.Framework.Core.Tests.Edit_Mode.Array_Helpers
 {
 	[TestFixture]
 	[TestOf(typeof(Core.Array_Helpers))]
 	public class Add_Unique
 	{
-	#region Happy Path
+		#region Happy Path
 
 		[Test]
 		public void Does_Not_Add_Duplicate_Element()
@@ -229,5 +229,5 @@ namespace Bezoro.Framework.Core.Tests.EditMode.Array_Helpers
 		}
 	}
 
-#endregion
+	#endregion
 }

@@ -1,12 +1,12 @@
 ﻿using NUnit.Framework;
 
-namespace Bezoro.Framework.Core.Tests.EditMode.Array_Helpers
+namespace Bezoro.Framework.Core.Tests.Edit_Mode.Array_Helpers
 {
 	[TestFixture]
 	[TestOf(typeof(Core.Array_Helpers))]
 	public class Initialize_Array_If_Null
 	{
-	#region Happy Path
+		#region Happy Path
 
 		[TestCase(null, new int[0])]
 		[TestCase(new[] { 1, 2, 3 }, new[] { 1, 2, 3 })]
@@ -16,7 +16,7 @@ namespace Bezoro.Framework.Core.Tests.EditMode.Array_Helpers
 		)
 		{
 			// Act
-			Core.Array_Helpers.Initialize_Array_If_Null(ref array);
+			Core.Array_Helpers.Initialize_Null_Array(ref array);
 
 			// Assert
 			NUnit.Framework.Assert.That(array, Is.EqualTo(expected));
@@ -30,12 +30,12 @@ namespace Bezoro.Framework.Core.Tests.EditMode.Array_Helpers
 			int[] expected = { 1, 2, 3 };
 
 			// Act
-			Core.Array_Helpers.Initialize_Array_If_Null(ref array);
+			Core.Array_Helpers.Initialize_Null_Array(ref array);
 
 			// Assert
 			NUnit.Framework.Assert.That(array, Is.EqualTo(expected));
 		}
 
-	#endregion
+		#endregion
 	}
 }

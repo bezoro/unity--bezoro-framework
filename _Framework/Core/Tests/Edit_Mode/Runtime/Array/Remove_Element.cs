@@ -1,7 +1,7 @@
 ﻿using System.Linq;
 using NUnit.Framework;
 
-namespace Bezoro.Framework.Core.Tests.EditMode.Array_Helpers
+namespace Bezoro.Framework.Core.Tests.Edit_Mode.Array_Helpers
 {
 	[TestFixture]
 	[TestOf(typeof(Core.Array_Helpers))]

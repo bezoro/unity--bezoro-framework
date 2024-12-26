@@ -1,7 +1,7 @@
 ﻿using System;
 using NUnit.Framework;
 
-namespace Bezoro.Framework.Core.Tests.EditMode.Array_Helpers
+namespace Bezoro.Framework.Core.Tests.Edit_Mode.Array_Helpers
 {
 	[TestFixture]
 	[TestOf(typeof(Core.Array_Helpers))]
@@ -32,7 +32,7 @@ namespace Bezoro.Framework.Core.Tests.EditMode.Array_Helpers
 			}
 		}
 
-	#region Happy Path
+		#region Happy Path
 
 		[TestCase(new object[] { 1, 1, 1, 1 }, new object[] { 1 })]
 		[TestCase(new object[] { 1, 2, 3, 3, 4, 5 }, new object[] { 1, 2, 3, 4, 5 })]
@@ -127,7 +127,7 @@ namespace Bezoro.Framework.Core.Tests.EditMode.Array_Helpers
 		public void Does_Nothing_When_Array_Is_Empty()
 		{
 			// Arrange
-			var array = Array.Empty<int>();
+			var array = System.Array.Empty<int>();
 
 			// Act
 			Core.Array_Helpers.Remove_Duplicates(ref array);
@@ -136,6 +136,6 @@ namespace Bezoro.Framework.Core.Tests.EditMode.Array_Helpers
 			CollectionAssert.IsEmpty(array);
 		}
 
-	#endregion
+		#endregion
 	}
 }

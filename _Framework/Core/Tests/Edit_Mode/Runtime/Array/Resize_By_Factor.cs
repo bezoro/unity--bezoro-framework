@@ -1,8 +1,7 @@
-﻿using System;
-using Moq;
+﻿using Moq;
 using NUnit.Framework;
 
-namespace Bezoro.Framework.Core.Tests.EditMode.Array_Helpers
+namespace Bezoro.Framework.Core.Tests.Edit_Mode.Array_Helpers
 {
 	[TestFixture]
 	[TestOf(typeof(Core.Array_Helpers))]
@@ -16,7 +15,7 @@ namespace Bezoro.Framework.Core.Tests.EditMode.Array_Helpers
 			_mockLogger = new();
 		}
 
-	#region Happy Path
+		#region Happy Path
 
 		[Test]
 		public void Increases_Array_Size_By_Factor__When_Factor_Is_Positive()
@@ -41,8 +40,8 @@ namespace Bezoro.Framework.Core.Tests.EditMode.Array_Helpers
 		public void Preserves_Array_Size__When_Array_Is_Empty()
 		{
 			// Arrange
-			var array  = Array.Empty<int>();
-			var factor = 3;
+			var       array  = System.Array.Empty<int>();
+			const int factor = 3;
 
 			// Act
 			Core.Array_Helpers.Resize_By_Factor(ref array, factor, _mockLogger.Object);
@@ -74,6 +73,6 @@ namespace Bezoro.Framework.Core.Tests.EditMode.Array_Helpers
 			);
 		}
 
-	#endregion
+		#endregion
 	}
 }

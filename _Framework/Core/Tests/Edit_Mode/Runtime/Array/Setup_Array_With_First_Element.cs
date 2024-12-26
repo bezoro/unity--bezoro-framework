@@ -1,22 +1,22 @@
 ﻿using NUnit.Framework;
 
-namespace Bezoro.Framework.Core.Tests.EditMode.Array_Helpers
+namespace Bezoro.Framework.Core.Tests.Edit_Mode.Array_Helpers
 {
 	[TestFixture]
 	[TestOf(typeof(Core.Array_Helpers))]
-	public class Create_Array_And_Add_First_Element
+	public class Setup_Array_With_First_Element
 	{
-	#region Happy Path
+		#region Happy Path
 
 		[Test]
-		public void Create_Array_And_Add_First_Element__When_Array_Is_Null__Creates_Array()
+		public void Creates_Array_When_Null()
 		{
 			// Arrange
 			int[] array   = null;
 			var   element = 42;
 
 			// Act
-			var result = Core.Array_Helpers.Create_Array_And_Add_First_Element_If_Needed(ref array, element);
+			var result = Core.Array_Helpers.Setup_Array_With_First_Element(ref array, element);
 
 			// Assert
 			NUnit.Framework.Assert.IsTrue(result, "Expected the method to return true when initializing the array.");
@@ -33,14 +33,14 @@ namespace Bezoro.Framework.Core.Tests.EditMode.Array_Helpers
 		}
 
 		[Test]
-		public void Create_Array_And_Add_First_Element__When_Array_Is_Empty__Creates_Array()
+		public void Creates_Array_When_Empty()
 		{
 			// Arrange
 			var array   = new int[0];
 			var element = 42;
 
 			// Act
-			var result = Core.Array_Helpers.Create_Array_And_Add_First_Element_If_Needed(ref array, element);
+			var result = Core.Array_Helpers.Setup_Array_With_First_Element(ref array, element);
 
 			// Assert
 			NUnit.Framework.Assert.IsTrue(
@@ -59,27 +59,45 @@ namespace Bezoro.Framework.Core.Tests.EditMode.Array_Helpers
 		}
 
 		[Test]
-		public void Create_Array_And_Add_First_Element__When_Array_Is_Not_Empty__Returns_False()
+		public void Returns_False_When_Array_Is_Not_Empty()
 		{
 			// Arrange
 			int[] array   = { 10, 20 };
 			var   element = 42;
 
 			// Act
-			var result = Core.Array_Helpers.Create_Array_And_Add_First_Element_If_Needed(ref array, element);
+			var result = Core.Array_Helpers.Setup_Array_With_First_Element(ref array, element);
 
 			// Assert
 			NUnit.Framework.Assert.IsFalse(
 				result, "Expected the method to return false when the array is already initialized."
 			);
-
-			NUnit.Framework.Assert.AreEqual(2, array.Length, "Existing array length should remain unchanged.");
-
-			NUnit.Framework.Assert.AreEqual(10, array[0], "Existing elements should remain unchanged.");
-
-			NUnit.Framework.Assert.AreEqual(20, array[1], "Existing elements should remain unchanged.");
 		}
 
-	#endregion
+		[Test]
+		public void Does_Not_Modify_Array_When_Already_Initialized()
+		{
+			// Arrange
+			int[] array   = { 10, 20, 30 };
+			var   element = 42;
+
+			// Act
+			var result = Core.Array_Helpers.Setup_Array_With_First_Element(ref array, element);
+
+			// Assert
+			NUnit.Framework.Assert.IsFalse(
+				result, "Expected the method to return false when the array is not empty."
+			);
+
+			NUnit.Framework.Assert.AreEqual(3, array.Length, "Array length should remain unchanged.");
+
+			NUnit.Framework.Assert.AreEqual(10, array[0], "First element should remain unchanged.");
+
+			NUnit.Framework.Assert.AreEqual(20, array[1], "Second element should remain unchanged.");
+
+			NUnit.Framework.Assert.AreEqual(30, array[2], "Third element should remain unchanged.");
+		}
+
+		#endregion
 	}
 }
