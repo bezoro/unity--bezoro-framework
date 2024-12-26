@@ -18,7 +18,7 @@ namespace Bezoro.Framework.Unity.Editor.Tools
 				"Choose a directory to save the Scene to:", Application.dataPath, _NEW_SCENE_NAME, "unity"
 			);
 
-			if (save_path.Is_Null_Or_Empty()) return;
+			if (save_path.Are_Null_Or_Empty()) return;
 
 			Create_Scene_Asset_From_Selection(save_path);
 		}
