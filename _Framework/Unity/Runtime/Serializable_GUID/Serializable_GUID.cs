@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using Bezoro.Framework.Unity.Utilities;
+using Bezoro.Framework.Unity.Utilities.String;
 using UnityEditor;
 using UnityEngine;
 
@@ -13,12 +14,12 @@ namespace Bezoro.Framework.Unity
 		public Serializable_GUID()
 		{
 			Generate_New_Valid_GUID();
-			GUID_Registry.Register( guid );
+			GUID_Registry.Register(guid);
 		}
 
 		~Serializable_GUID()
 		{
-			GUID_Registry.Unregister( guid );
+			GUID_Registry.Unregister(guid);
 			guid = null;
 		}
 
@@ -26,28 +27,29 @@ namespace Bezoro.Framework.Unity
 
 		public string Value => guid;
 
-		public void Generate_New_Valid_GUID( bool force = false )
+		public void Generate_New_Valid_GUID(bool force = false)
 		{
-			if ( !force )
+			if (!force)
 			{
-				var guid_is_valid = GUID_Utils.Check_GUID_Validity( guid );
-				if ( guid_is_valid ) return;
+				var guid_is_valid = GUID_Utils.Check_GUID_Validity(guid);
+				if (guid_is_valid) return;
 			}
 
 			guid = Guid.NewGuid().ToString();
-			while ( GUID_Registry.Check_GUID_Registered( guid ) )
+
+			while ( GUID_Registry.Check_GUID_Registered(guid) )
 			{
-				BDebug.Log_Warning( $"GUID {guid.Bold()} is already registered, generating new GUID..." );
+				BDebug.Log_Warning($"GUID {guid.Bold()} is already registered, generating new GUID...");
 				guid = Guid.NewGuid().ToString();
 			}
 
-			BDebug.Log_Success( $"Generated new valid GUID: {guid}" );
+			BDebug.Log_Success($"Generated new valid GUID: {guid}");
 		}
 
-		public void Set_GUID( string new_value )
+		public void Set_GUID(string new_value)
 		{
 			guid = new_value;
-			GUID_Registry.Check_GUID_Registered( guid );
+			GUID_Registry.Check_GUID_Registered(guid);
 		}
 	}
 
@@ -60,44 +62,44 @@ namespace Bezoro.Framework.Unity
 			get
 			{
 				var count = GUIDs.Count;
-				BDebug.Log( $"There are {count} GUIDs registered." );
+				BDebug.Log($"There are {count} GUIDs registered.");
 				return count;
 			}
 		}
 
-		public static void Register( string guid )
+		public static void Register(string guid)
 		{
-			if ( Check_GUID_Registered( guid ) )
+			if (GUID_Registry.Check_GUID_Registered(guid))
 			{
-				BDebug.Log( $"Couldn't register GUID: {guid}, it's already registered." );
+				BDebug.Log($"Couldn't register GUID: {guid}, it's already registered.");
 				return;
 			}
 
-			GUIDs.Add( guid );
-			BDebug.Log_Success( $"GUID {guid} registered." );
+			GUIDs.Add(guid);
+			BDebug.Log_Success($"GUID {guid} registered.");
 		}
 
-		public static void Unregister( string guid )
+		public static void Unregister(string guid)
 		{
-			if ( !Check_GUID_Registered( guid ) )
+			if (!GUID_Registry.Check_GUID_Registered(guid))
 			{
-				BDebug.Log( $"Couldn't unregister GUID: {guid}, it's not registered." );
+				BDebug.Log($"Couldn't unregister GUID: {guid}, it's not registered.");
 				return;
 			}
 
-			GUIDs.Remove( guid );
-			BDebug.Log_Success( $"GUID {guid} unregistered." );
+			GUIDs.Remove(guid);
+			BDebug.Log_Success($"GUID {guid} unregistered.");
 		}
 
-		public static bool Check_GUID_Registered( string guid )
+		public static bool Check_GUID_Registered(string guid)
 		{
-			if ( !GUIDs.Contains( guid ) )
+			if (!GUIDs.Contains(guid))
 			{
-				BDebug.Log( $"GUID {guid} is not registered." );
+				BDebug.Log($"GUID {guid} is not registered.");
 				return false;
 			}
 
-			BDebug.Log( $"GUID {guid} is registered." );
+			BDebug.Log($"GUID {guid} is registered.");
 			return true;
 		}
 	}
@@ -109,51 +111,39 @@ namespace Bezoro.Framework.Unity
 
 	public static class GUID_Utils
 	{
-		public static bool Check_GUID_Validity( string guid )
+		public static bool Check_GUID_Validity(string guid)
 		{
-			if ( string.IsNullOrEmpty( guid ) )
+			if (string.IsNullOrEmpty(guid))
 			{
-				BDebug.Log_Warning( $"GUID is null or empty: {guid}" );
+				BDebug.Log_Warning($"GUID is null or empty: {guid}");
 				return false;
 			}
 
-			if ( !Guid.TryParse( guid, out _ ) )
+			if (!Guid.TryParse(guid, out _))
 			{
-				BDebug.Log_Warning( $"Failed to parse GUID: {guid}" );
+				BDebug.Log_Warning($"Failed to parse GUID: {guid}");
 				return false;
 			}
 
-			if ( !Regex.IsMatch( guid, GUID_Constants.GUID_PATTERN ) )
+			if (!Regex.IsMatch(guid, GUID_Constants.GUID_PATTERN))
 			{
-				BDebug.Log_Warning( $"GUID does not match pattern: {guid}" );
+				BDebug.Log_Warning($"GUID does not match pattern: {guid}");
 				return false;
 			}
 
-			BDebug.Log_Success( $"Successfully validated GUID: {guid}" );
+			BDebug.Log_Success($"Successfully validated GUID: {guid}");
 			return true;
 		}
 	}
 
-	[CustomPropertyDrawer( typeof(Serializable_GUID) )]
+	[CustomPropertyDrawer(typeof(Serializable_GUID))]
 	public sealed class Serializable_GUID_Drawer : PropertyDrawer
 	{
-		public override void OnGUI( Rect position, SerializedProperty property, GUIContent label )
-		{
-			if ( DisplayPersistentObjectWarning( position, property ) )
-				return;
-
-			var serializable_guid = (Serializable_GUID)fieldInfo.GetValue( property.serializedObject.targetObject );
-			serializable_guid.Generate_New_Valid_GUID();
-			var guid = serializable_guid.Value;
-
-			Draw_GUID_Field_As_Disabled( position, label, guid );
-			Generate_New_GUID_Button( position, property, serializable_guid );
-		}
-
-		private static bool DisplayPersistentObjectWarning( Rect position, SerializedProperty property )
+		private static bool DisplayPersistentObjectWarning(Rect position, SerializedProperty property)
 		{
 			var serialized_object = property.serializedObject;
-			if ( EditorUtility.IsPersistent( serialized_object.targetObject ) )
+
+			if (EditorUtility.IsPersistent(serialized_object.targetObject))
 			{
 				EditorGUI.HelpBox(
 					position, "This Object is a project asset and so won't have a GUID generated.", MessageType.Info
@@ -165,10 +155,10 @@ namespace Bezoro.Framework.Unity
 			return false;
 		}
 
-		private static void Draw_GUID_Field_As_Disabled( Rect position, GUIContent label, string guid )
+		private static void Draw_GUID_Field_As_Disabled(Rect position, GUIContent label, string guid)
 		{
-			EditorGUI.BeginDisabledGroup( true );
-			EditorGUI.TextField( position, label, guid );
+			EditorGUI.BeginDisabledGroup(true);
+			EditorGUI.TextField(position, label, guid);
 			EditorGUI.EndDisabledGroup();
 		}
 
@@ -179,6 +169,7 @@ namespace Bezoro.Framework.Unity
 		)
 		{
 			var button_text = "Generate New GUID";
+
 			var button_position = new Rect(
 				position.x,
 				position.y + EditorGUIUtility.singleLineHeight,
@@ -186,12 +177,25 @@ namespace Bezoro.Framework.Unity
 				EditorGUIUtility.singleLineHeight
 			);
 
-			if ( GUI.Button( button_position, button_text ) )
+			if (GUI.Button(button_position, button_text))
 			{
-				Undo.RecordObject( property.serializedObject.targetObject, "Generate New GUID" );
-				target.Generate_New_Valid_GUID( true );
+				Undo.RecordObject(property.serializedObject.targetObject, "Generate New GUID");
+				target.Generate_New_Valid_GUID(true);
 				property.serializedObject.ApplyModifiedProperties();
 			}
+		}
+
+		public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
+		{
+			if (Serializable_GUID_Drawer.DisplayPersistentObjectWarning(position, property))
+				return;
+
+			var serializable_guid = (Serializable_GUID)fieldInfo.GetValue(property.serializedObject.targetObject);
+			serializable_guid.Generate_New_Valid_GUID();
+			var guid = serializable_guid.Value;
+
+			Serializable_GUID_Drawer.Draw_GUID_Field_As_Disabled(position, label, guid);
+			Serializable_GUID_Drawer.Generate_New_GUID_Button(position, property, serializable_guid);
 		}
 	}
 }
