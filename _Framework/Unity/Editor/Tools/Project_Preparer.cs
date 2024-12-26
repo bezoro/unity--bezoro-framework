@@ -3,6 +3,7 @@ using Bezoro.Framework.Core;
 using Bezoro.Framework.Unity.Editor.Utilities;
 using Bezoro.Framework.Unity.Editor.Utilities.Helpers;
 using Bezoro.Framework.Unity.Utilities;
+using Bezoro.Framework.Unity.Utilities.String;
 using UnityEditor;
 using UnityEditor.Build;
 using UnityEditor.PackageManager;
@@ -53,6 +54,13 @@ namespace Bezoro.Framework.Unity.Editor.Tools
 
 		private static class PackagesManifestOverwritter
 		{
+			private static void ReplaceManifestText(string contents)
+			{
+				var existing_manifest = Path.Combine(Application.dataPath, "../Packages/manifest.json");
+				File.WriteAllText(existing_manifest, contents);
+				Client.Resolve();
+			}
+
 			// [MenuItem("Bezoro/Project Preparer/Overwrite 'manifest.json' from Gist. (2021 LTS Base)",
 			// 		  false,
 			// 		  60)]
@@ -61,13 +69,6 @@ namespace Bezoro.Framework.Unity.Editor.Tools
 				var gist_url          = Gist_Helpers.Get_URL("ebccb4c31b1bb9fc9379652f8acd15bc");
 				var contents_from_url = await UrlHelpers.GetContents(gist_url);
 				ReplaceManifestText(contents_from_url);
-			}
-
-			private static void ReplaceManifestText(string contents)
-			{
-				var existing_manifest = Path.Combine(Application.dataPath, "../Packages/manifest.json");
-				File.WriteAllText(existing_manifest, contents);
-				Client.Resolve();
 			}
 		}
 
