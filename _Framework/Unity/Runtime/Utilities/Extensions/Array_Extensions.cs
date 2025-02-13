@@ -3,61 +3,56 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using Bezoro.Framework.Core;
+using Bezoro.Framework.Unity.Utilities.String;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
+using Array = System.Array;
 using Object = UnityEngine.Object;
 
 namespace Bezoro.Framework.Unity.Utilities
 {
 	public static class Array_Extensions
 	{
-		private static readonly I_Logger _Logger = new Unity_Console_Logger();
-
-		public static bool IsNull<T>(this T[] array)
+		/// <summary>
+		///     Determines whether the specified array contains Unity objects and outputs the Unity object array if found.
+		/// </summary>
+		/// <typeparam name="T">The type of elements in the array (must be a reference type).</typeparam>
+		/// <param name="array">The array to check for Unity objects.</param>
+		/// <param name="out_unity_array">
+		///     An output parameter that will contain the Unity object array if the input array contains Unity objects.
+		///     If the input array does not contain Unity objects, this value will be null.
+		/// </param>
+		/// <returns>
+		///     True if the array contains Unity objects and the output parameter is populated; otherwise, false.
+		/// </returns>
+		public static bool Is_Unity_Object<T>(this T[] array, out T[] out_unity_array) where T : class
 		{
-			return array == null;
-		}
+			out_unity_array = null;
 
-		public static bool IsNotNull<T>(this T[] array)
-		{
-			return array != null;
-		}
-
-		public static bool IsEmpty<T>(this T[] array)
-		{
-			return array.Length == 0;
-		}
-
-		public static bool IsNotEmpty<T>(this T[] array)
-		{
-			return array.Length > 0;
-		}
-
-		public static bool Is_Null_Or_Empty<T>(this T[] array)
-		{
-			return array.IsNull() || array.IsEmpty();
-		}
-
-		public static bool IsNotNullOrEmpty<T>(this T[] array)
-		{
-			return array.IsNotNull() || array.IsNotEmpty();
-		}
-
-		public static bool IsUnityObject<T>(this T[] array, out T[] outUnityArray)
-		{
-			if (array is object[] unity_array)
+			// Validate input array: null or empty
+			if (array == null || array.Length == 0)
 			{
-				outUnityArray = unity_array as T[];
-				return true;
+				Logger.Log_Warning($"{nameof(Is_Unity_Object)}: Input array is null or empty.");
+				return false;
 			}
 
-			outUnityArray = null;
-			return false;
+			// Ensure all elements in the array derive from UnityEngine.Object
+			if (!array.All(element => element is Object))
+			{
+				Logger.Log($"{nameof(Is_Unity_Object)}: Some elements in the array are not Unity objects.");
+
+				return false;
+			}
+
+			// Casting is safe as all elements are Unity objects
+			out_unity_array = array;
+			Logger.Log($"{nameof(Is_Unity_Object)}: Array is a Unity object array.");
+			return true;
 		}
 
 		public static bool Is_Not_Unity_Object<T>(this T[] array)
 		{
-			return array is not Object[];
+			return !array.Is_Unity_Object(out _);
 		}
 
 		public static bool Contains<T>(this T[] array, T element, out int index)
@@ -66,7 +61,7 @@ namespace Bezoro.Framework.Unity.Utilities
 			Assert.Is_Not_Null_Or_Empty(array, nameof(array));
 			Assert.Is_Not_Null(element);
 
-			if (array.IsUnityObject(out var unity_array) && element.Is_Unity_Object(out var unity_element))
+			if (array.Is_Unity_Object(out var unity_array) && element.Is_Unity_Object(out var unity_element))
 			{
 				for (var i = 0 ; i < unity_array.Length ; i++)
 				{
@@ -124,7 +119,7 @@ namespace Bezoro.Framework.Unity.Utilities
 				}
 			}
 
-			if (array.IsUnityObject(out var unityArray) && element.Is_Unity_Object(out var unityElement))
+			if (array.Is_Unity_Object(out var unityArray) && element.Is_Unity_Object(out var unityElement))
 			{
 				for (var i = 0 ; i < validSize ; i++)
 				{
@@ -201,7 +196,7 @@ namespace Bezoro.Framework.Unity.Utilities
 
 			var emptyIndicesCount = 0;
 
-			if (array.IsUnityObject(out var unityArray))
+			if (array.Is_Unity_Object(out var unityArray))
 			{
 				for (var i = 0 ; i < unityArray.Length ; i++)
 				{
@@ -262,7 +257,7 @@ namespace Bezoro.Framework.Unity.Utilities
 
 			var filledIndicesCount = 0;
 
-			if (array.IsUnityObject(out var unityArray))
+			if (array.Is_Unity_Object(out var unityArray))
 			{
 				for (var i = 0 ; i < unityArray.Length ; i++)
 				{
@@ -318,16 +313,9 @@ namespace Bezoro.Framework.Unity.Utilities
 		/// <param name="array">The array to clear.</param>
 		public static void Clear<T>(this T[] array)
 		{
-			if (array == null)
-			{
-				return;
-			}
+			if (array == null) return;
 
-			Array.Clear(
-				array,
-				0,
-				array.Length
-			);
+			Array.Clear(array, 0, array.Length);
 		}
 
 		/// <summary>
@@ -337,16 +325,9 @@ namespace Bezoro.Framework.Unity.Utilities
 		/// <param name="array">The array to clear.</param>
 		public static void Clear<T>(this T[,] array)
 		{
-			if (array == null)
-			{
-				return;
-			}
+			if (array == null) return;
 
-			Array.Clear(
-				array,
-				0,
-				array.Length
-			);
+			Array.Clear(array, 0, array.Length);
 		}
 
 		/// <summary>
@@ -376,25 +357,11 @@ namespace Bezoro.Framework.Unity.Utilities
 			{
 				for (var x = 0 ; x < cols ; x++)
 				{
-					if (cancellationToken.IsCancellationRequested)
-					{
-						return;
-					}
+					if (cancellationToken.IsCancellationRequested) return;
 
-					if (array[y,
-							  x] == null)
-					{
-						continue;
-					}
+					if (array[y, x] == null) continue;
 
-					await processFunc(
-						array[y,
-							  x],
-						x,
-						y,
-						cancellationToken
-					);
-
+					await processFunc(array[y, x], x, y, cancellationToken);
 					await UniTask.Yield();
 				}
 			}
@@ -408,20 +375,20 @@ namespace Bezoro.Framework.Unity.Utilities
 		/// <returns>true if the array is null, false otherwise.</returns>
 		/// <remarks>
 		///     The equality type can be specified as an optional parameter. If
-		///     <paramref name="equalityType" /> is <see cref="EqualityType.Equal" />,
+		///     <paramref name="equalityType" /> is <see cref="Equality_Type.Equal" />,
 		///     the method checks if the array is null by using the equality
-		///     operator (<c>==</c>). If it is <see cref="EqualityType.Is" />, the
+		///     operator (<c>==</c>). If it is <see cref="Equality_Type.Is" />, the
 		///     method checks if the array is null by using the <c>is</c> operator.
 		/// </remarks>
-		public static bool IsNull<T>(this T[] array, EqualityType equalityType = EqualityType.Equal)
+		public static bool Is_Null<T>(this T[] array, Equality_Type equalityType = Equality_Type.Equal)
 		{
 			switch ( equalityType )
 			{
-				case EqualityType.None: return false;
+				case Equality_Type.None: return false;
 
-				case EqualityType.Equal: return array == null;
+				case Equality_Type.Equal: return array == null;
 
-				case EqualityType.Is: return array is null;
+				case Equality_Type.Is: return array is null;
 
 				default:
 					throw new ArgumentOutOfRangeException(
@@ -441,25 +408,25 @@ namespace Bezoro.Framework.Unity.Utilities
 		/// <returns>true if the array is empty, false otherwise.</returns>
 		/// <remarks>
 		///     The equality type can be specified as an optional parameter. If
-		///     <paramref name="equalityType" /> is <see cref="EqualityType.Equal" />,
+		///     <paramref name="equalityType" /> is <see cref="Equality_Type.Equal" />,
 		///     the method checks if the array is empty by using the equality operator
-		///     (<c>==</c>). If it is <see cref="EqualityType.Is" />, the method
+		///     (<c>==</c>). If it is <see cref="Equality_Type.Is" />, the method
 		///     checks if the array is empty by using the <c>is</c> operator.
 		/// </remarks>
-		public static bool IsEmpty<T>(this T[] array, EqualityType equalityType = EqualityType.Equal)
+		public static bool Is_Empty<T>(this T[] array, Equality_Type equalityType = Equality_Type.Equal)
 		{
-			if (array.IsNull(equalityType))
+			if (array.Is_Null(equalityType))
 			{
 				return false;
 			}
 
 			switch ( equalityType )
 			{
-				case EqualityType.None: return false;
+				case Equality_Type.None: return false;
 
-				case EqualityType.Equal: return array.Length == 0;
+				case Equality_Type.Equal: return array.Length == 0;
 
-				case EqualityType.Is: return array.Length is 0;
+				case Equality_Type.Is: return array.Length is 0;
 
 				default:
 					throw new ArgumentOutOfRangeException(
@@ -479,19 +446,19 @@ namespace Bezoro.Framework.Unity.Utilities
 		/// <returns>true if the array is null or empty, false otherwise.</returns>
 		/// <remarks>
 		///     The equality type can be specified as an optional parameter. If
-		///     <paramref name="equalityType" /> is <see cref="EqualityType.Equal" />,
+		///     <paramref name="equalityType" /> is <see cref="Equality_Type.Equal" />,
 		///     the method checks if the array is null or empty by using the equality operator
-		///     (<c>==</c>). If it is <see cref="EqualityType.Is" />, the method
+		///     (<c>==</c>). If it is <see cref="Equality_Type.Is" />, the method
 		///     checks if the array is null or empty by using the <c>is</c> operator.
 		/// </remarks>
-		public static bool Is_Null_Or_Empty<T>(this T[] array, EqualityType equalityType = EqualityType.Equal)
+		public static bool Is_Null_Or_Empty<T>(this T[] array, Equality_Type equalityType = Equality_Type.Equal)
 		{
 			switch ( equalityType )
 			{
-				case EqualityType.None: return false;
+				case Equality_Type.None: return false;
 
-				case EqualityType.Equal:
-				case EqualityType.Is: return array.IsNull(equalityType) || array.IsEmpty(equalityType);
+				case Equality_Type.Equal:
+				case Equality_Type.Is: return array.Is_Null(equalityType) || array.Is_Empty(equalityType);
 
 				default:
 					throw new ArgumentOutOfRangeException(
@@ -511,20 +478,20 @@ namespace Bezoro.Framework.Unity.Utilities
 		/// <returns>true if the arrays are equal, false otherwise.</returns>
 		/// <remarks>
 		///     The equality type can be specified as an optional parameter. If
-		///     <paramref name="equalityType" /> is <see cref="EqualityType.Equal" />,
+		///     <paramref name="equalityType" /> is <see cref="Equality_Type.Equal" />,
 		///     the method checks if the arrays are equal by using the equality
-		///     operator (<c>==</c>). If it is <see cref="EqualityType.Is" />, the
+		///     operator (<c>==</c>). If it is <see cref="Equality_Type.Is" />, the
 		///     method checks if the arrays are equal by using the <c>is</c>
 		///     operator.
 		/// </remarks>
-		public static bool ArraysAreEqual<T>(this T[] array, T[] b, EqualityType equalityType = EqualityType.Equal)
+		public static bool ArraysAreEqual<T>(this T[] array, T[] b, Equality_Type equalityType = Equality_Type.Equal)
 		{
-			if (array.IsNull(equalityType))
+			if (array.Is_Null(equalityType))
 			{
-				return b.IsNull(equalityType);
+				return b.Is_Null(equalityType);
 			}
 
-			if (b.IsNull(equalityType))
+			if (b.Is_Null(equalityType))
 			{
 				return false;
 			}
@@ -658,7 +625,7 @@ namespace Bezoro.Framework.Unity.Utilities
 
 		public static T[] Add<T>(this T[] array, T item)
 		{
-			Core.Array_Helpers.Initialize_Array_If_Null(ref array, _Logger);
+			Core.Array_Helpers.Initialize_Null_Array(ref array);
 			Validation_Helpers.Validate_Object_Not_Null(item);
 
 			if (array.Length <= 0)
@@ -706,47 +673,40 @@ namespace Bezoro.Framework.Unity.Utilities
 			Validation_Helpers.Validate_Object_Not_Null(array);
 			Validation_Helpers.Validate_Object_Not_Null(item);
 
-			var currentLength = array.Length;
-			var newArray      = new T[currentLength - 1];
-			var newIndex      = 0;
-			var found         = false;
+			var current_length = array.Length;
+			var new_array      = new T[current_length - 1];
+			var new_index      = 0;
+			var found          = false;
 
-			for (var i = 0 ; i < currentLength ; i++)
+			for (var i = 0 ; i < current_length ; i++)
 			{
-				if (!found && EqualityComparer<T>.Default.Equals(
-						array[i],
-						item
-					))
+				if (!found && EqualityComparer<T>.Default.Equals(array[i], item))
 				{
 					found = true;
-
 					continue;
 				}
 
-				if (newIndex >= newArray.Length)
-				{
-					return array;
-				}
+				if (new_index >= new_array.Length) return array;
 
-				newArray[newIndex] = array[i];
-				newIndex++;
+				new_array[new_index] = array[i];
+				new_index++;
 			}
 
-			return found ? newArray : array;
+			return found ? new_array : array;
 		}
 	}
 
-	public enum EqualityType
+	public enum Equality_Type
 	{
 		None = -1,
 		Equal,
 		Is
 	}
 
-	public enum InequalityType
+	public enum Inequality_Type
 	{
 		None = -1,
-		NotEqual,
+		Not_Equal,
 		Not
 	}
 }
