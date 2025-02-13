@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Bezoro.Framework.Core;
+using Bezoro.Framework.Unity.Utilities.String;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
@@ -9,13 +10,52 @@ namespace Bezoro.Framework.Unity.Utilities
 	public static class Behaviour_Extensions
 	{
 		/// <summary>
+		///     Processes a collection of behaviours by applying a specified action to each behaviour in the collection.
+		/// </summary>
+		/// <param name="behaviours">The collection of behaviours to be processed. Must not be null or empty.</param>
+		/// <param name="action">The action to be applied to each behaviour in the collection. Must not be null.</param>
+		/// <returns>An asynchronous task representing the operation.</returns>
+		private static async UniTask Process_Behaviours(
+			ICollection<Behaviour> behaviours,
+			Action<Behaviour> action
+		)
+		{
+			// Assert.Is_Not_Null_Or_Empty(behaviours);
+			if (behaviours.Are_Null_Or_Empty())
+			{
+				BDebug.Log_Warning($"Behaviours is null or empty. Aborting {nameof(Process_Behaviours)}");
+				return;
+			}
+
+			// Assert.Is_Not_Null(action);
+			if (action == null)
+			{
+				BDebug.Log_Warning($"Action is null. Aborting {nameof(Process_Behaviours)}");
+				return;
+			}
+
+			foreach ( var behaviour in behaviours )
+			{
+				Assert.Is_Not_Null(behaviour);
+				action.Invoke(behaviour);
+				await UniTask.Yield(PlayerLoopTiming.Update);
+			}
+		}
+
+		/// <summary>
 		///     Toggles the enabled state of a collection of specified Behaviour components.
 		/// </summary>
 		/// <param name="behaviours">The collection of Behaviour components to toggle.</param>
 		/// <returns>A UniTask representing the asynchronous operation of toggling the behaviours.</returns>
 		public static async UniTask Toggle_Behaviours(this ICollection<Behaviour> behaviours)
 		{
-			Assert.Is_Not_Null_Or_Empty(behaviours);
+			// Assert.Is_Not_Null_Or_Empty(behaviours);
+			if (behaviours.Are_Null_Or_Empty())
+			{
+				BDebug.Log_Warning($"Behaviours is null or empty. Aborting {nameof(Toggle_Behaviours)}");
+				return;
+			}
+
 			await Process_Behaviours(behaviours, b => b.Toggle_Behaviour());
 		}
 
@@ -26,7 +66,13 @@ namespace Bezoro.Framework.Unity.Utilities
 		/// <param name="behaviour">The behaviour whose state is to be toggled.</param>
 		public static void Toggle_Behaviour(this Behaviour behaviour)
 		{
-			Assert.Is_Not_Null(behaviour);
+			// Assert.Is_Not_Null(behaviour);
+			if (behaviour == null)
+			{
+				BDebug.Log_Warning($"Behaviour is null. Aborting {nameof(Toggle_Behaviour)}");
+				return;
+			}
+
 			behaviour.Set_Behaviour_State(!behaviour.enabled);
 		}
 
@@ -38,7 +84,13 @@ namespace Bezoro.Framework.Unity.Utilities
 		/// <returns>A UniTask representing the asynchronous operation.</returns>
 		public static async UniTask Set_Behaviours_State(this ICollection<Behaviour> behaviours, bool value)
 		{
-			Assert.Is_Not_Null_Or_Empty(behaviours);
+			// Assert.Is_Not_Null_Or_Empty(behaviours);
+			if (behaviours.Are_Null_Or_Empty())
+			{
+				BDebug.Log_Warning($"Behaviours is null or empty. Aborting {nameof(Set_Behaviours_State)}");
+				return;
+			}
+
 			await Process_Behaviours(behaviours, b => b.Set_Behaviour_State(value));
 		}
 
@@ -49,7 +101,13 @@ namespace Bezoro.Framework.Unity.Utilities
 		/// <returns>A UniTask that completes once all behaviours are enabled.</returns>
 		public static async UniTask Enable_Behaviours(this ICollection<Behaviour> behaviours)
 		{
-			Assert.Is_Not_Null_Or_Empty(behaviours);
+			// Assert.Is_Not_Null_Or_Empty(behaviours);
+			if (behaviours.Are_Null_Or_Empty())
+			{
+				BDebug.Log_Warning($"Behaviours is null or empty. Aborting {nameof(Enable_Behaviours)}");
+				return;
+			}
+
 			await behaviours.Set_Behaviours_State(true);
 		}
 
@@ -59,7 +117,13 @@ namespace Bezoro.Framework.Unity.Utilities
 		/// <param name="behaviour">The behaviour to be enabled. Must not be null.</param>
 		public static void Enable_Behaviour(this Behaviour behaviour)
 		{
-			Assert.Is_Not_Null(behaviour);
+			// Assert.Is_Not_Null(behaviour);
+			if (behaviour == null)
+			{
+				BDebug.Log_Warning($"Behaviour is null. Aborting {nameof(Enable_Behaviour)}");
+				return;
+			}
+
 			behaviour.Set_Behaviour_State(true);
 		}
 
@@ -71,7 +135,13 @@ namespace Bezoro.Framework.Unity.Utilities
 		/// <returns>A <see cref="UniTaskVoid" /> representing the asynchronous operation.</returns>
 		public static async UniTask Disable_Behaviours(this ICollection<Behaviour> behaviours)
 		{
-			Assert.Is_Not_Null_Or_Empty(behaviours);
+			// Assert.Is_Not_Null_Or_Empty(behaviours);
+			if (behaviours.Are_Null_Or_Empty())
+			{
+				BDebug.Log_Warning($"Behaviours is null or empty. Aborting {nameof(Disable_Behaviours)}");
+				return;
+			}
+
 			await behaviours.Set_Behaviours_State(false);
 		}
 
@@ -81,7 +151,13 @@ namespace Bezoro.Framework.Unity.Utilities
 		/// <param name="behaviour">The behaviour to disable. Cannot be null.</param>
 		public static void Disable_Behaviour(this Behaviour behaviour)
 		{
-			Assert.Is_Not_Null(behaviour);
+			// Assert.Is_Not_Null(behaviour);
+			if (behaviour == null)
+			{
+				BDebug.Log_Warning($"Behaviour is null. Aborting {nameof(Disable_Behaviour)}");
+				return;
+			}
+
 			behaviour.Set_Behaviour_State(false);
 		}
 
@@ -93,7 +169,13 @@ namespace Bezoro.Framework.Unity.Utilities
 		/// </param>
 		public static void Set_Behaviour_State(this Behaviour behaviour, bool value)
 		{
-			Assert.Is_Not_Null(behaviour);
+			// Assert.Is_Not_Null(behaviour);
+			if (behaviour == null)
+			{
+				BDebug.Log_Warning($"Behaviour is null. Aborting {nameof(Set_Behaviour_State)}");
+				return;
+			}
+
 			behaviour.enabled = value;
 			var state = value ? "enabled" : "disabled";
 			BDebug.Log($"{state.Capitalize()} behaviour: {behaviour.GetType().Name}", behaviour.gameObject);
@@ -106,29 +188,11 @@ namespace Bezoro.Framework.Unity.Utilities
 		/// <returns>True if the Behaviour is enabled; otherwise, false.</returns>
 		public static bool Get_Behaviour_State(this Behaviour behaviour)
 		{
-			Assert.Is_Not_Null(behaviour);
-			return behaviour.enabled;
-		}
+			// Assert.Is_Not_Null(behaviour);
+			if (behaviour != null) return behaviour.enabled;
 
-		/// <summary>
-		///     Processes a collection of behaviours by applying a specified action to each behaviour in the collection.
-		/// </summary>
-		/// <param name="behaviours">The collection of behaviours to be processed. Must not be null or empty.</param>
-		/// <param name="action">The action to be applied to each behaviour in the collection. Must not be null.</param>
-		/// <returns>An asynchronous task representing the operation.</returns>
-		private static async UniTask Process_Behaviours(
-			ICollection<Behaviour> behaviours,
-			Action<Behaviour> action
-		)
-		{
-			Assert.Is_Not_Null_Or_Empty(behaviours);
-
-			foreach ( var behaviour in behaviours )
-			{
-				Assert.Is_Not_Null(behaviour);
-				action(behaviour);
-				await UniTask.Yield(PlayerLoopTiming.Update);
-			}
+			BDebug.Log_Warning($"Behaviour is null. Aborting {nameof(Get_Behaviour_State)}");
+			return false;
 		}
 	}
 }
