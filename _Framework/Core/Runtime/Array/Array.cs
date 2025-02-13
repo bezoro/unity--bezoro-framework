@@ -31,7 +31,6 @@ namespace Bezoro.Framework.Core
 			private static void Append_Valid_Source_Elements<T>(
 				T[] source,
 				ref T[] target,
-				I_Logger logger,
 				int append_count,
 				int source_index,
 				bool exclude_nulls
@@ -46,15 +45,11 @@ namespace Bezoro.Framework.Core
 						target[append_index++] = source[i];
 				}
 
-				// Log final success message.
-				Log_Helpers.Log_Success(
-					logger, $"Filled null elements and appended {append_count} elements from source."
-				);
+				Logger.Log_Success($"Filled null elements and appended {append_count} elements from source.");
 			}
 
 			private static bool CheckForRemainingElements<T>(
 				T[] source,
-				I_Logger logger,
 				int source_index,
 				bool exclude_nulls,
 				out int append_count
@@ -71,7 +66,7 @@ namespace Bezoro.Framework.Core
 				if (append_count == 0)
 				{
 					// Log and exit if no elements are left to append.
-					Log_Helpers.Log_Success(logger, "Filled null elements in the target array.");
+					Logger.Log_Success("Filled null elements in the target array.");
 					return true;
 				}
 
@@ -110,34 +105,31 @@ namespace Bezoro.Framework.Core
 
 					// Assign to target only if a valid source element was found
 					if (source_element != null || !exclude_nulls)
-					{
 						target[target_index] = source_element;
-					}
 				}
 
-				return source_index; // Return the updated source index
+				return source_index;
 			}
 
-			private static bool Validate_Source<T>(T[] source, I_Logger logger) where T : class
+			private static bool Validate_Source<T>(T[] source) where T : class
 			{
 				if (source != null) return true;
 
-				Log_Helpers.Log_Warning(logger, "Source array must not be null. Aborting operation.");
+				Logger.Log_Warning("Source array must not be null. Aborting operation.");
 				return false;
 			}
 
-			private static bool Validate_Target<T>(T[] target, I_Logger logger) where T : class
+			private static bool Validate_Target<T>(T[] target) where T : class
 			{
 				if (target != null) return true;
 
-				Log_Helpers.Log_Warning(logger, "Target array must not be null. Aborting operation.");
+				Logger.Log_Warning("Target array must not be null. Aborting operation.");
 				return false;
 			}
 
 			private static bool Handle_Null_Target_Initialization<T>(
 				T[] source,
 				ref T[] target,
-				I_Logger logger,
 				bool exclude_nulls
 			)
 			where T : class
@@ -150,7 +142,7 @@ namespace Bezoro.Framework.Core
 					target = new T[Array_Helpers.Count_Non_Null_Elements(source)];
 
 					// Fill the target with elements from the source array
-					Merging.Populate_Target_With_Source(source, target, 0, true);
+					Populate_Target_With_Source(source, target, 0, true);
 				}
 				else
 				{
@@ -158,7 +150,7 @@ namespace Bezoro.Framework.Core
 					target = source.ToArray();
 				}
 
-				Log_Helpers.Log_Success(logger, "Target was null. Initialized from source array.");
+				Logger.Log_Success("Target was null. Initialized from source array.");
 				return true;
 			}
 
@@ -170,21 +162,17 @@ namespace Bezoro.Framework.Core
 			/// <typeparam name="T">The type of elements in the array.</typeparam>
 			/// <param name="source">The source array providing elements to fill the null slots in the target array.</param>
 			/// <param name="target">The target array whose null elements will be replaced.</param>
-			/// <param name="logger">Optional logger for debug or error messages.</param>
-			public static void Fill_Null_Elements_Only<T>(T[] source, ref T[] target, I_Logger logger = null)
+			public static void Fill_Null_Elements_Only<T>(T[] source, ref T[] target)
 			where T : class
 			{
 				// Validate input arrays. Log warnings if null and exit early if validation fails.
-				if (!Merging.Validate_Source(source, logger)) return;
+				if (!Validate_Source(source)) return;
 
 				// If the target array is null, initialize it with the source array and log the operation.
 				if (target == null || target.Length == 0)
 				{
 					target = source.ToArray(); // Clone the source array to avoid reference issues.
-
-					Log_Helpers.Log_Success(
-						logger, "Target array was null and has been initialized with the source array."
-					);
+					Logger.Log_Success("Target array was null and has been initialized with the source array.");
 
 					return;
 				}
@@ -208,10 +196,7 @@ namespace Bezoro.Framework.Core
 					{
 						// Fill the null slot in the target array.
 						target[target_index] = source_element;
-
-						Log_Helpers.Log(
-							logger, $"Element {source_element} added to target array at index {target_index}."
-						);
+						Logger.Log($"Element {source_element} added to target array at index {target_index}.");
 					}
 
 					// Move to the next element in the source array.
@@ -221,16 +206,14 @@ namespace Bezoro.Framework.Core
 				// Log warning if not all source elements could be used.
 				if (source_index < source.Length)
 				{
-					Log_Helpers.Log_Warning(
-						logger,
-						"Source array contains additional elements that could not be used to fill target array null slots."
-					);
+					Logger.Log_Warning(
+						"Source array contains additional elements that could not be used to fill target array null slots.");
 
 					return;
 				}
 
 				// Log success message.
-				Log_Helpers.Log_Success(logger, "Source array elements used to fill target array null slots.");
+				Logger.Log_Success("Source array elements used to fill target array null slots.");
 			}
 
 			/// <summary>
@@ -240,12 +223,11 @@ namespace Bezoro.Framework.Core
 			/// <typeparam name="T">The type of elements in the arrays.</typeparam>
 			/// <param name="source">The source array providing elements to fill the null slots in the target array.</param>
 			/// <param name="target">The target array whose null elements will be replaced and potentially resized.</param>
-			/// <param name="logger">Optional logger for debug or error messages.</param>
-			public static void Fill_Null_Elements_And_Resize<T>(T[] source, ref T[] target, I_Logger logger = null)
+			public static void Fill_Null_Elements_And_Resize<T>(T[] source, ref T[] target)
 			where T : class
 			{
 				// Validate input arrays. Log warnings if null and exit early if validation fails.
-				if (!Merging.Validate_Source(source, logger)) return;
+				if (!Validate_Source(source)) return;
 
 				// Keep track of source and target array indices.
 				var source_index = 0;
@@ -280,14 +262,12 @@ namespace Bezoro.Framework.Core
 					// Reassign the reference and log success.
 					target = resized_target;
 
-					Log_Helpers.Log_Success(
-						logger, $"Target array resized to fit all source elements. New size: {total_new_size}"
-					);
+					Logger.Log_Success($"Target array resized to fit all source elements. New size: {total_new_size}");
 				}
 				else
 				{
 					// Log success if no resizing was needed.
-					Log_Helpers.Log_Success(logger, "Merge Completed. No resizing needed.");
+					Logger.Log_Success("Merge Completed. No resizing needed.");
 				}
 			}
 
@@ -302,16 +282,14 @@ namespace Bezoro.Framework.Core
 			/// <param name="null_element_handling">
 			///     A boolean flag indicating whether to include null elements from the source array in the append operation.
 			/// </param>
-			/// <param name="logger">Optional logger for debug or error messages.</param>
 			public static void Append_Only<T>(
 				T[] source,
 				ref T[] target,
-				Null_Element_Handling null_element_handling = Null_Element_Handling.Exclude,
-				I_Logger logger = null
+				Null_Element_Handling null_element_handling = Null_Element_Handling.Exclude
 			) where T : class
 			{
 				// Validate input arrays. Log warnings if null and exit early if validation fails.
-				if (!Merging.Validate_Source(source, logger)) return;
+				if (!Validate_Source(source)) return;
 
 				var elements_to_append_count = 0;
 
@@ -325,7 +303,7 @@ namespace Bezoro.Framework.Core
 				// If there are no valid elements to append, exit early.
 				if (elements_to_append_count == 0)
 				{
-					Log_Helpers.Log(logger, "No elements to append from the source array.");
+					Logger.Log("No elements to append from the source array.");
 					return;
 				}
 
@@ -343,9 +321,7 @@ namespace Bezoro.Framework.Core
 				}
 
 				// Log a success message.
-				Log_Helpers.Log_Success(
-					logger, $"Appended {elements_to_append_count} elements to the end of the target array."
-				);
+				Logger.Log_Success($"Appended {elements_to_append_count} elements to the end of the target array.");
 			}
 
 			/// <summary>
@@ -358,17 +334,15 @@ namespace Bezoro.Framework.Core
 			/// <param name="preserve_null_elements">
 			///     A boolean flag indicating whether to include null elements from the source array in the prepend operation.
 			/// </param>
-			/// <param name="logger">Optional logger for debug or error messages.</param>
 			/// <typeparam name="T">The type of elements in the arrays.</typeparam>
 			public static void Prepend_Only<T>(
 				T[] source,
 				ref T[] target,
-				Null_Element_Handling preserve_null_elements = Null_Element_Handling.Exclude,
-				I_Logger logger = null
+				Null_Element_Handling preserve_null_elements = Null_Element_Handling.Exclude
 			) where T : class
 			{
 				// Validate source and target arrays. Log warnings and exit early if validation fails.
-				if (!Merging.Validate_Source(source, logger)) return;
+				if (!Validate_Source(source)) return;
 
 				// Calculate the size of the new array.
 				var non_null_count = preserve_null_elements == Null_Element_Handling.Include
@@ -393,8 +367,7 @@ namespace Bezoro.Framework.Core
 				// Assign the new array to the target reference.
 				target = new_array;
 
-				// Log success message.
-				Log_Helpers.Log_Success(logger, "Source array elements were prepended successfully.");
+				Logger.Log_Success("Source array elements were prepended successfully.");
 			}
 
 			/// <summary>
@@ -408,53 +381,46 @@ namespace Bezoro.Framework.Core
 			///     The target array whose null elements will be replaced, and where remaining source elements will be
 			///     appended.
 			/// </param>
-			/// <param name="logger">Optional logger for debug or error messages.</param>
 			/// <param name="null_element_handling">
 			///     A boolean flag indicating whether to include null elements from the source array during the operation.
 			/// </param>
 			public static void Fill_Null_Elements_And_Append<T>(
 				T[] source,
 				ref T[] target,
-				Null_Element_Handling null_element_handling = Null_Element_Handling.Exclude,
-				I_Logger logger = null
+				Null_Element_Handling null_element_handling = Null_Element_Handling.Exclude
 			) where T : class
 			{
 				// Validate the input arrays. Logs warnings and exit early if validation fails.
-				var validation_successful = Merging.Validate_Source(source, logger);
+				var validation_successful = Validate_Source(source);
 				if (!validation_successful) return;
 
 				// Cache the condition to skip null elements in the source
-				var exclude_nulls = null_element_handling == Null_Element_Handling.Exclude;
-
-				var target_initialized = Merging.Handle_Null_Target_Initialization(
-					source, ref target, logger, exclude_nulls);
+				var exclude_nulls      = null_element_handling == Null_Element_Handling.Exclude;
+				var target_initialized = Handle_Null_Target_Initialization(source, ref target, exclude_nulls);
 
 				if (target_initialized) return;
 
 				var source_index = 0;
 
 				// Step 1: Fill null elements in target from the source array.
-				source_index = Merging.Populate_Target_With_Source(source, target, source_index, exclude_nulls);
+				source_index = Populate_Target_With_Source(source, target, source_index, exclude_nulls);
 
 				// Step 2: Calculate remaining valid source elements.
-				if (Merging.CheckForRemainingElements(
-						source, logger, source_index, exclude_nulls, out var append_count))
+				if (CheckForRemainingElements(source, source_index, exclude_nulls, out var append_count))
 					return;
 
 				// Resize target and append remaining valid source elements.
-				Merging.Append_Valid_Source_Elements(
-					source, ref target, logger, append_count, source_index, exclude_nulls);
+				Append_Valid_Source_Elements(source, ref target, append_count, source_index, exclude_nulls);
 			}
 
 			public static void Fill_Null_Elements_And_Prepend<T>(
 				T[] source,
 				ref T[] target,
-				Null_Element_Handling null_element_handling = Null_Element_Handling.Exclude,
-				I_Logger logger = null
+				Null_Element_Handling null_element_handling = Null_Element_Handling.Exclude
 			) where T : class
 			{
 				// Validate input arrays. Log warnings if null and exit early if validation fails.
-				if (!Merging.Validate_Source(source, logger)) return;
+				if (!Validate_Source(source)) return;
 
 				// Step 1: Fill null elements in the target array using the source array.
 				var source_index = 0;
@@ -469,8 +435,7 @@ namespace Bezoro.Framework.Core
 						target[target_index] = source[source_index];
 					}
 
-					if (null_element_handling == Null_Element_Handling.Exclude ||
-						source[source_index] != null)
+					if (null_element_handling == Null_Element_Handling.Exclude || source[source_index] != null)
 						source_index++;
 				}
 
@@ -493,9 +458,7 @@ namespace Bezoro.Framework.Core
 				}
 
 				// Log success message.
-				Log_Helpers.Log_Success(
-					logger, "Filled null slots in the target array and prepended remaining source elements."
-				);
+				Logger.Log_Success("Filled null slots in the target array and prepended remaining source elements.");
 			}
 		}
 
@@ -516,37 +479,33 @@ namespace Bezoro.Framework.Core
 		///     Determines how to handle null elements from the source during the merge process.
 		///     Options include preserving null elements or excluding them from the merge.
 		/// </param>
-		/// <param name="logger">
-		///     Optional logger for capturing debug, warning, error or success messages during the merge process.
-		/// </param>
 		public static void Merge<T>(
 			T[] source,
 			T[] target,
 			Merging_Strategy strategy = Merging_Strategy.Fill_Null_Elements_And_Append,
-			Null_Element_Handling null_element_handling = Null_Element_Handling.Exclude,
-			I_Logger logger = null
+			Null_Element_Handling null_element_handling = Null_Element_Handling.Exclude
 		)
 		where T : class
 		{
 			switch ( strategy )
 			{
 				case Merging_Strategy.Fill_Null_Elements_And_Append:
-					Merging.Fill_Null_Elements_And_Append(source, ref target, null_element_handling, logger);
+					Merging.Fill_Null_Elements_And_Append(source, ref target, null_element_handling);
 					break;
 				case Merging_Strategy.Fill_Null_Elements_And_Resize:
-					Merging.Fill_Null_Elements_And_Resize(source, ref target, logger);
+					Merging.Fill_Null_Elements_And_Resize(source, ref target);
 					break;
 				case Merging_Strategy.Fill_Null_Elements_And_Prepend:
-					Merging.Fill_Null_Elements_And_Prepend(source, ref target, null_element_handling, logger);
+					Merging.Fill_Null_Elements_And_Prepend(source, ref target, null_element_handling);
 					break;
 				case Merging_Strategy.Fill_Null_Elements_Only:
-					Merging.Fill_Null_Elements_Only(source, ref target, logger);
+					Merging.Fill_Null_Elements_Only(source, ref target);
 					break;
 				case Merging_Strategy.Append_Only:
-					Merging.Append_Only(source, ref target, null_element_handling, logger);
+					Merging.Append_Only(source, ref target, null_element_handling);
 					break;
 				case Merging_Strategy.Prepend_Only:
-					Merging.Prepend_Only(source, ref target, null_element_handling, logger);
+					Merging.Prepend_Only(source, ref target, null_element_handling);
 					break;
 				default:
 					throw new ArgumentOutOfRangeException(nameof(strategy), strategy, null);

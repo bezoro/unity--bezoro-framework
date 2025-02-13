@@ -1,4 +1,5 @@
 ﻿using System;
+using Bezoro.Framework.Core.Extensions;
 
 namespace Bezoro.Framework.Core
 {
@@ -10,21 +11,25 @@ namespace Bezoro.Framework.Core
 	/// <typeparam name="T">Specifies the type of elements stored in the array.</typeparam>
 	public class SwapbackArray<T>
 	{
-		public SwapbackArray(int count = 4, I_Logger logger = null)
+		public SwapbackArray(int initial_capacity = _MINIMUM_ARRAY_SIZE, I_Logger logger = null)
 		{
-			_items  = new T[count];
+			_items  = new T[Math.Max(initial_capacity, _MINIMUM_ARRAY_SIZE)];
 			_count  = 0;
 			_logger = logger;
 
-			Log_Helpers.Log(_logger, $"SwapbackArray initialized with capacity: {count}");
+			Logger.Log($"SwapbackArray initialized with capacity: {initial_capacity}");
 		}
 
 		~SwapbackArray()
 		{
-			Log_Helpers.Log(_logger, "SwapbackArray finalized and resources released.");
+			Logger.Log("SwapbackArray finalized and resources released.");
 			_items  = null;
 			_logger = null;
 		}
+
+		private const int _MINIMUM_ARRAY_SIZE = 4;
+
+		private readonly object _lock = new();
 
 		/// <summary>
 		/// Internal storage array for the elements of the <see cref="SwapbackArray{T}" />.
@@ -65,7 +70,45 @@ namespace Bezoro.Framework.Core
 			System.Array.Copy(_items, new_items, _count);
 			_items = new_items;
 
-			Log_Helpers.Log(_logger, $"Resize operation complete. New size: {newSize}");
+			Logger.Log($"Resize operation complete. New size: {newSize}");
+		}
+
+		private bool Validate_Remove_Index(int index)
+		{
+			if (_items.Is_Null_Or_Empty())
+			{
+				Logger.Log_Error("Remove operation failed. Array is empty.");
+				return false;
+			}
+
+			if (index < 0 || index >= _count)
+			{
+				Logger.Log_Exception(
+					new ArgumentOutOfRangeException(
+						nameof(index), index, $"Remove operation failed. Invalid index. Aborting {nameof(Remove_At)}.")
+				);
+
+				return false;
+			}
+
+			return true;
+		}
+
+		private void Perform_Swap_And_Trim(int index)
+		{
+			Logger.Log($"Removing item at index {index}.");
+
+			// Replace the item at the given index with the last item (swap-and-trim)
+			_items[index] = _items[_count - 1];
+
+			// Clear the last item and reduce the count
+			_items[--_count] = default;
+			Logger.Log_Success($"Item removed. Current count: {_count}");
+		}
+
+		private bool Should_Resize(int currentCount, int currentCapacity)
+		{
+			return currentCount <= currentCapacity / 4 && currentCapacity > _MINIMUM_ARRAY_SIZE;
 		}
 
 		/// <summary>
@@ -77,13 +120,13 @@ namespace Bezoro.Framework.Core
 		{
 			if (_count == _items.Length)
 			{
-				Log_Helpers.Log_Warning(_logger, "Array capacity reached. Resizing...");
+				Logger.Log_Warning("Array capacity reached. Resizing...");
 				Resize(_items.Length * 2);
-				Log_Helpers.Log_Success(_logger, $"Array resized to new capacity: {_items.Length}");
+				Logger.Log_Success($"Array resized to new capacity: {_items.Length}");
 			}
 
 			_items[_count++] = item;
-			Log_Helpers.Log_Success(_logger, $"Item added. Current count: {_count}");
+			Logger.Log_Success($"Item added. Current count: {_count}");
 		}
 
 		/// <summary>
@@ -97,52 +140,35 @@ namespace Bezoro.Framework.Core
 		/// <returns>
 		/// A boolean value indicating whether the retrieval was successful.
 		/// </returns>
-		public bool TryGet(int index, out T value)
+		public bool Try_Get(int index, out T value)
 		{
 			if (index < 0 || index >= _count)
 			{
-				Log_Helpers.Log_Error(_logger, $"Attempted to access invalid index: {index}");
+				Logger.Log_Error($"Attempted to access invalid index: {index}");
 				value = default;
 				return false;
 			}
 
 			value = _items[index];
-			Log_Helpers.Log(_logger, $"Item retrieved at index {index}: {value}");
+			Logger.Log($"Item retrieved at index {index}: {value}");
 			return true;
 		}
 
-		/// <summary>
-		/// Removes the element at the specified index, replacing it with the last element in the array to maintain
-		/// constant-time complexity. The array's order may change as a result of this operation.
-		/// </summary>
-		/// <param name="index">The index of the element to remove.</param>
-		/// <exception cref="ArgumentOutOfRangeException">
-		/// Thrown if the index is less than 0 or greater than or equal to the count
-		/// of elements in the array.
-		/// </exception>
-		public void RemoveAt(int index)
+		public void Remove_At(int index)
 		{
-			if (index < 0 || index >= _count)
+			lock ( _lock ) // Ensure atomicity
 			{
-				Log_Helpers.Log_Error(_logger, $"Remove operation failed. Invalid index: {index}");
-				throw new ArgumentOutOfRangeException(nameof(index));
-			}
+				if (!Validate_Remove_Index(index))
+					return;
 
-			Log_Helpers.Log(_logger, $"Removing item at index {index}.");
+				Perform_Swap_And_Trim(index);
 
-			// Replace the element at `index` with the last element (swap-and-trim).
-			_items[index] = _items[_count - 1];
-
-			// Nullify the last element (cleanup) and decrement the count.
-			_items[--_count] = default;
-			Log_Helpers.Log_Success(_logger, $"Item removed. Current count: {_count}");
-
-			// Resize array if necessary: shrink if `_count` drops to one-fourth of capacity.
-			if (_count > 0 && _count == _items.Length / 4 && _items.Length > 4)
-			{
-				Log_Helpers.Log_Warning(_logger, "Array under-utilized. Resizing...");
-				Resize(_items.Length / 2);
-				Log_Helpers.Log_Success(_logger, $"Array resized to new capacity: {_items.Length}");
+				if (Should_Resize(_count, _items.Length))
+				{
+					Logger.Log_Warning("Array under-utilized. Resizing...");
+					Resize(Math.Max(_items.Length / 2, _MINIMUM_ARRAY_SIZE));
+					Logger.Log_Success($"Array resized to new capacity: {_items.Length}");
+				}
 			}
 		}
 
@@ -151,10 +177,10 @@ namespace Bezoro.Framework.Core
 		/// </summary>
 		public void Clear()
 		{
-			Log_Helpers.Log(_logger, "Clearing all elements from the array.");
+			Logger.Log("Clearing all elements from the array.");
 			System.Array.Clear(_items, 0, _count);
 			_count = 0;
-			Log_Helpers.Log_Success(_logger, "Array cleared.");
+			Logger.Log_Success("Array cleared.");
 		}
 	}
 }

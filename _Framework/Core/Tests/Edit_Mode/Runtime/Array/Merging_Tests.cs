@@ -98,16 +98,16 @@ namespace Bezoro.Framework.Core.Tests.Edit_Mode.Array
 				}
 
 				// [TestCaseSource(nameof(Target_Parameter_Validation_Test_Cases))]
-				[TestCaseSource(nameof(Parameter_Validation.Source_Parameter_Validation_Test_Cases))]
+				[TestCaseSource(nameof(Source_Parameter_Validation_Test_Cases))]
 				public void Source_Parameter_Tests(Merging_Test_Parameter_Data data)
 				{
 					// Act
 					Core.Array.Merging.Fill_Null_Elements_And_Append(
-						data.Source, ref data.Target, data.NullHandling, _Logger_Mock.Object);
+						data.Source, ref data.Target, data.NullHandling);
 
 					// Assert
-					Fill_Null_Elements_And_Append.Assert_Are_Equal(data.Expected, data.Target);
-					Fill_Null_Elements_And_Append.Verify_Logger_Ran(_Logger_Mock, Log_Type.Warning);
+					Assert_Are_Equal(data.Expected, data.Target);
+					Verify_Logger_Ran(_Logger_Mock, Log_Type.Warning);
 				}
 
 				public void SHOULD_Handle_Target_Correctly_Based_On_Null_Element_Handling(
@@ -121,13 +121,12 @@ namespace Bezoro.Framework.Core.Tests.Edit_Mode.Array
 					Core.Array.Merging.Fill_Null_Elements_And_Append(
 						source,
 						ref target,
-						handling,
-						_Logger_Mock.Object
+						handling
 					);
 
 					// Assert
-					Fill_Null_Elements_And_Append.Assert_Is_True(target.SequenceEqual(expectedTarget));
-					Fill_Null_Elements_And_Append.Verify_Logger_Ran(_Logger_Mock, Log_Type.Success);
+					Assert_Is_True(target.SequenceEqual(expectedTarget));
+					Verify_Logger_Ran(_Logger_Mock, Log_Type.Success);
 				}
 
 				public static IEnumerable<TestCaseData> Target_Parameter_Validation_Test_Cases()
@@ -172,7 +171,7 @@ namespace Bezoro.Framework.Core.Tests.Edit_Mode.Array
 
 				// Act
 				Core.Array.Merging.Fill_Null_Elements_And_Append(
-					null, ref target, Null_Element_Handling.Exclude, _Logger_Mock.Object
+					null, ref target, Null_Element_Handling.Exclude
 				);
 
 				// Assert
@@ -215,7 +214,7 @@ namespace Bezoro.Framework.Core.Tests.Edit_Mode.Array
 			{
 				// Act
 				Core.Array.Merging.Fill_Null_Elements_And_Append(
-					source, ref target, nullElementHandling, _Logger_Mock.Object);
+					source, ref target, nullElementHandling);
 
 				// Assert
 				NUnit.Framework.Assert.That(
@@ -243,8 +242,7 @@ namespace Bezoro.Framework.Core.Tests.Edit_Mode.Array
 				Core.Array.Merging.Fill_Null_Elements_And_Append(
 					source,
 					ref target,
-					Null_Element_Handling.Exclude,
-					_Logger_Mock.Object
+					Null_Element_Handling.Exclude
 				);
 
 				// Assert
@@ -266,8 +264,7 @@ namespace Bezoro.Framework.Core.Tests.Edit_Mode.Array
 				Core.Array.Merging.Fill_Null_Elements_And_Append(
 					source,
 					ref target,
-					Null_Element_Handling.Exclude,
-					_Logger_Mock.Object
+					Null_Element_Handling.Exclude
 				);
 
 				// Assert
@@ -289,8 +286,7 @@ namespace Bezoro.Framework.Core.Tests.Edit_Mode.Array
 				Core.Array.Merging.Fill_Null_Elements_And_Append(
 					source,
 					ref target,
-					Null_Element_Handling.Include,
-					_Logger_Mock.Object
+					Null_Element_Handling.Include
 				);
 
 				// Assert
@@ -316,7 +312,7 @@ namespace Bezoro.Framework.Core.Tests.Edit_Mode.Array
 
 				// Act
 				Core.Array.Merging.Fill_Null_Elements_And_Append(
-					source, ref target, Null_Element_Handling.Exclude, _Logger_Mock.Object
+					source, ref target, Null_Element_Handling.Exclude
 				);
 
 				// Assert
@@ -336,7 +332,7 @@ namespace Bezoro.Framework.Core.Tests.Edit_Mode.Array
 
 				// Act
 				Core.Array.Merging.Fill_Null_Elements_And_Append(
-					source, ref target, Null_Element_Handling.Exclude, _Logger_Mock.Object
+					source, ref target, Null_Element_Handling.Exclude
 				);
 
 				// Assert
@@ -371,7 +367,7 @@ namespace Bezoro.Framework.Core.Tests.Edit_Mode.Array
 				stopwatch.Start();
 
 				Core.Array.Merging.Fill_Null_Elements_And_Append(
-					source, ref target, Null_Element_Handling.Exclude, _Logger_Mock.Object
+					source, ref target, Null_Element_Handling.Exclude
 				);
 
 				stopwatch.Stop();
@@ -398,14 +394,14 @@ namespace Bezoro.Framework.Core.Tests.Edit_Mode.Array
 			private void Fill_Null_Elements_And_Append_Excluding_Source_Nulls(object[] source, object[] target)
 			{
 				Core.Array.Merging.Fill_Null_Elements_And_Append(
-					source, ref target, Null_Element_Handling.Exclude, _Logger_Mock.Object
+					source, ref target, Null_Element_Handling.Exclude
 				);
 			}
 
 			private void Fill_Null_Elements_And_Append_Including_Source_Nulls(object[] source, object[] target)
 			{
 				Core.Array.Merging.Fill_Null_Elements_And_Append(
-					source, ref target, Null_Element_Handling.Include, _Logger_Mock.Object
+					source, ref target, Null_Element_Handling.Include
 				);
 			}
 
@@ -762,7 +758,7 @@ namespace Bezoro.Framework.Core.Tests.Edit_Mode.Array
 
 				// Act
 				Core.Array.Merging.Fill_Null_Elements_And_Prepend(
-					source, ref target, Null_Element_Handling.Exclude, _Logger_Mock.Object
+					source, ref target, Null_Element_Handling.Exclude
 				);
 
 				// Assert
@@ -827,7 +823,7 @@ namespace Bezoro.Framework.Core.Tests.Edit_Mode.Array
 				var target = new string[3];
 
 				// Act
-				Core.Array.Merging.Fill_Null_Elements_Only(null, ref target, _Logger_Mock.Object);
+				Core.Array.Merging.Fill_Null_Elements_Only(null, ref target);
 
 				// Assert
 				NUnit.Framework.Assert.That(
@@ -849,7 +845,7 @@ namespace Bezoro.Framework.Core.Tests.Edit_Mode.Array
 				string[] target = null;
 
 				// Act
-				Core.Array.Merging.Fill_Null_Elements_Only(source, ref target, _Logger_Mock.Object);
+				Core.Array.Merging.Fill_Null_Elements_Only(source, ref target);
 
 				// Assert
 				NUnit.Framework.Assert.IsNotNull(target, "Target should be initialized when it is null.");
@@ -866,7 +862,7 @@ namespace Bezoro.Framework.Core.Tests.Edit_Mode.Array
 				string[] target = null;
 
 				// Act
-				Core.Array.Merging.Fill_Null_Elements_Only(null, ref target, _Logger_Mock.Object);
+				Core.Array.Merging.Fill_Null_Elements_Only(null, ref target);
 
 				// Assert
 				NUnit.Framework.Assert.IsNull(
@@ -882,7 +878,7 @@ namespace Bezoro.Framework.Core.Tests.Edit_Mode.Array
 				var target = new string[] { null, null, null };
 
 				// Act
-				Core.Array.Merging.Fill_Null_Elements_Only(source, ref target, _Logger_Mock.Object);
+				Core.Array.Merging.Fill_Null_Elements_Only(source, ref target);
 
 				// Assert
 				NUnit.Framework.Assert.AreEqual(new[] { "A", "B", "C" }, target);
@@ -896,7 +892,7 @@ namespace Bezoro.Framework.Core.Tests.Edit_Mode.Array
 				var target = new string[] { null, null, null };
 
 				// Act
-				Core.Array.Merging.Fill_Null_Elements_Only(source, ref target, _Logger_Mock.Object);
+				Core.Array.Merging.Fill_Null_Elements_Only(source, ref target);
 
 				// Assert
 				NUnit.Framework.Assert.AreEqual(new[] { "A", "B", null }, target);
@@ -910,7 +906,7 @@ namespace Bezoro.Framework.Core.Tests.Edit_Mode.Array
 				var target = new[] { "X", "Y", "Z" };
 
 				// Act
-				Core.Array.Merging.Fill_Null_Elements_Only(source, ref target, _Logger_Mock.Object);
+				Core.Array.Merging.Fill_Null_Elements_Only(source, ref target);
 
 				// Assert
 				NUnit.Framework.Assert.AreEqual(new[] { "X", "Y", "Z" }, target);
@@ -924,7 +920,7 @@ namespace Bezoro.Framework.Core.Tests.Edit_Mode.Array
 				var target = new string[] { null, null };
 
 				// Act
-				Core.Array.Merging.Fill_Null_Elements_Only(source, ref target, _Logger_Mock.Object);
+				Core.Array.Merging.Fill_Null_Elements_Only(source, ref target);
 
 				// Assert
 				NUnit.Framework.Assert.AreEqual(new[] { "A", "B" }, target);
@@ -943,7 +939,7 @@ namespace Bezoro.Framework.Core.Tests.Edit_Mode.Array
 				var logger = new Mock<I_Logger>();
 
 				// Act
-				Core.Array.Merging.Fill_Null_Elements_Only(source, ref target, logger.Object);
+				Core.Array.Merging.Fill_Null_Elements_Only(source, ref target);
 
 				// Assert
 				NUnit.Framework.Assert.AreEqual(new[] { "A", "B", "C" }, target);
@@ -958,7 +954,7 @@ namespace Bezoro.Framework.Core.Tests.Edit_Mode.Array
 				var logger = new Mock<I_Logger>();
 
 				// Act
-				Core.Array.Merging.Fill_Null_Elements_Only(source, ref target, logger.Object);
+				Core.Array.Merging.Fill_Null_Elements_Only(source, ref target);
 
 				// Assert
 				NUnit.Framework.Assert.AreEqual(new[] { "A", "B", null }, target);
@@ -973,7 +969,7 @@ namespace Bezoro.Framework.Core.Tests.Edit_Mode.Array
 				var logger = new Mock<I_Logger>();
 
 				// Act
-				Core.Array.Merging.Fill_Null_Elements_Only(source, ref target, logger.Object);
+				Core.Array.Merging.Fill_Null_Elements_Only(source, ref target);
 
 				// Assert
 				NUnit.Framework.Assert.AreEqual(new[] { "X", "Y", "Z" }, target);
@@ -988,7 +984,7 @@ namespace Bezoro.Framework.Core.Tests.Edit_Mode.Array
 				var logger = new Mock<I_Logger>();
 
 				// Act
-				Core.Array.Merging.Fill_Null_Elements_Only(source, ref target, logger.Object);
+				Core.Array.Merging.Fill_Null_Elements_Only(source, ref target);
 
 				// Assert
 				NUnit.Framework.Assert.AreEqual(new[] { "A", "B" }, target);
@@ -1006,7 +1002,7 @@ namespace Bezoro.Framework.Core.Tests.Edit_Mode.Array
 				var target = System.Array.Empty<string>();
 
 				// Act
-				Core.Array.Merging.Fill_Null_Elements_Only(source, ref target, _Logger_Mock.Object);
+				Core.Array.Merging.Fill_Null_Elements_Only(source, ref target);
 
 				// Assert
 				NUnit.Framework.Assert.IsNotNull(target, "Target should be initialized when it is empty.");
@@ -1024,7 +1020,7 @@ namespace Bezoro.Framework.Core.Tests.Edit_Mode.Array
 				var target = new string[3];
 
 				// Act
-				Core.Array.Merging.Fill_Null_Elements_Only(source, ref target, _Logger_Mock.Object);
+				Core.Array.Merging.Fill_Null_Elements_Only(source, ref target);
 
 				// Assert
 				NUnit.Framework.Assert.AreEqual(
@@ -1050,7 +1046,7 @@ namespace Bezoro.Framework.Core.Tests.Edit_Mode.Array
 				}
 
 				// Act
-				Core.Array.Merging.Fill_Null_Elements_Only(source, ref target, _Logger_Mock.Object);
+				Core.Array.Merging.Fill_Null_Elements_Only(source, ref target);
 
 				// Assert
 				var filled_count = target.Count(x => x?.StartsWith("Item") == true);
@@ -1074,7 +1070,7 @@ namespace Bezoro.Framework.Core.Tests.Edit_Mode.Array
 				NUnit.Framework.Assert.That(
 					() =>
 					{
-						Core.Array.Merging.Fill_Null_Elements_Only(source, ref target, logger.Object);
+						Core.Array.Merging.Fill_Null_Elements_Only(source, ref target);
 					}, Throws.Nothing.After(2000)
 				); // Should complete within 2 seconds.
 			}
