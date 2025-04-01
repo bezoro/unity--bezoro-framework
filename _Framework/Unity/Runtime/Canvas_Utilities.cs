@@ -19,19 +19,19 @@ namespace Bezoro.Framework.Unity
 			Camera camera = null
 		)
 		{
-			Assert.Is_Not_Null( canvas );
+			Assert.IsNotNull(canvas);
 
-			if ( normalizedPosition.x < 0 || normalizedPosition.x > 1 ||
-				 normalizedPosition.y < 0 || normalizedPosition.y > 1 )
+			if (normalizedPosition.x < 0 || normalizedPosition.x > 1 ||
+				normalizedPosition.y < 0 || normalizedPosition.y > 1)
 			{
-				normalizedPosition.x = Mathf.Clamp01( normalizedPosition.x );
-				normalizedPosition.y = Mathf.Clamp01( normalizedPosition.y );
-				BDebug.Log_Warning( $"{nameof( normalizedPosition )} was out of [0..1] range. Clamping." );
+				normalizedPosition.x = Mathf.Clamp01(normalizedPosition.x);
+				normalizedPosition.y = Mathf.Clamp01(normalizedPosition.y);
+				BDebug.Log_Warning($"{nameof(normalizedPosition)} was out of [0..1] range. Clamping.");
 			}
 
 			var rect_transform = canvas.GetComponent<RectTransform>();
 
-			if ( rect_transform.Equals_Null() ) BDebug.Log_Exception( "There is no RectTransform in the Canvas. wtf?" );
+			if (rect_transform.Equals_Null()) BDebug.Log_Exception("There is no RectTransform in the Canvas. wtf?");
 
 			switch ( canvas.renderMode )
 			{
@@ -43,12 +43,13 @@ namespace Bezoro.Framework.Unity
 
 				case RenderMode.ScreenSpaceCamera when camera != null:
 				{
-					var screen_point = camera.ViewportToScreenPoint( normalizedPosition );
+					var screen_point = camera.ViewportToScreenPoint(normalizedPosition);
+
 					RectTransformUtility.ScreenPointToLocalPointInRectangle(
 						rect_transform,
 						screen_point,
 						camera,
-						out var local_point );
+						out var local_point);
 
 					return local_point;
 				}
@@ -58,13 +59,13 @@ namespace Bezoro.Framework.Unity
 					var world_position = new Vector3(
 						( normalizedPosition.x - 0.5f ) * rect_transform.rect.width,
 						( normalizedPosition.y - 0.5f ) * rect_transform.rect.height,
-						0 );
+						0);
 
-					return rect_transform.TransformPoint( world_position );
+					return rect_transform.TransformPoint(world_position);
 				}
 
 				default:
-					BDebug.Log_Exception( $"Unknown canvas render mode: {canvas.renderMode}" );
+					BDebug.Log_Exception($"Unknown canvas render mode: {canvas.renderMode}");
 					return Vector3.zero;
 			}
 		}

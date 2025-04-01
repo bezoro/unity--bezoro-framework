@@ -6,7 +6,7 @@ using System.Text;
 
 namespace Bezoro.Framework.Core
 {
-	public class Code_Writer
+	public class CodeWriter
 	{
 		private const string _INDENT_STRING = "    "; // 4 spaces
 
@@ -16,13 +16,13 @@ namespace Bezoro.Framework.Core
 		private int  _indentLevel;
 		private bool _isNewLine = true;
 
-		public Code_Writer AddUsing(string nameSpace)
+		public CodeWriter AddUsing(string nameSpace)
 		{
 			_usings.Add(nameSpace);
 			return this;
 		}
 
-		public Code_Writer AddUsingRange(IEnumerable<string> namespaces)
+		public CodeWriter AddUsingRange(IEnumerable<string> namespaces)
 		{
 			foreach ( var @namespace in namespaces ) AddUsing(@namespace);
 			return this;
@@ -42,7 +42,7 @@ namespace Bezoro.Framework.Core
 			WriteLine(closer);
 		}
 
-		public Code_Writer WriteLine(string line = "")
+		public CodeWriter WriteLine(string line = "")
 		{
 			if (!string.IsNullOrEmpty(line))
 			{
@@ -55,7 +55,7 @@ namespace Bezoro.Framework.Core
 			return this;
 		}
 
-		public Code_Writer Write(string text)
+		public CodeWriter Write(string text)
 		{
 			if (_isNewLine)
 			{
@@ -91,12 +91,12 @@ namespace Bezoro.Framework.Core
 
 		private class ScopeGuard : IDisposable
 		{
-			public ScopeGuard(Code_Writer writer)
+			public ScopeGuard(CodeWriter writer)
 			{
 				_writer = writer;
 			}
 
-			private readonly Code_Writer _writer;
+			private readonly CodeWriter _writer;
 
 			public void Dispose()
 			{
@@ -108,7 +108,7 @@ namespace Bezoro.Framework.Core
 	public class CSharpCodeBuilder
 	{
 		private readonly Stack<string> _namespaceStack = new();
-		private readonly Code_Writer   _writer         = new();
+		private readonly CodeWriter    _writer         = new();
 
 		private bool _isInClass;
 
@@ -179,7 +179,7 @@ namespace Bezoro.Framework.Core
 			string accessibility = "public",
 			bool isStatic = false,
 			string[] parameters = null,
-			Action<Code_Writer> bodyWriter = null,
+			Action<CodeWriter> bodyWriter = null,
 			string[] attributes = null
 		)
 		{

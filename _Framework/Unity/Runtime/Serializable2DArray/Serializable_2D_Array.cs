@@ -106,7 +106,7 @@ namespace Bezoro.Framework.Unity
 		{
 			if (array2D == null || array2D.Length == 0)
 			{
-				Logger.Log_Warning("Input array is null or empty.");
+				Logger.LogWarning("Input array is null or empty.");
 				return;
 			}
 
@@ -141,7 +141,7 @@ namespace Bezoro.Framework.Unity
 
 			if (new_width == width && new_height == height)
 			{
-				Logger.Log_Warning("New dimensions are the same as the current dimensions.");
+				Logger.LogWarning("New dimensions are the same as the current dimensions.");
 				return;
 			}
 
@@ -155,7 +155,7 @@ namespace Bezoro.Framework.Unity
 			data   = new_data;
 			width  = new_width;
 			height = new_height;
-			Logger.Log_Success($"Array resized to {width}x{height}.");
+			Logger.LogSuccess($"Array resized to {width}x{height}.");
 		}
 
 		public T[,] To_2D_Array()

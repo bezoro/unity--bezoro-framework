@@ -2,65 +2,71 @@
 using Bezoro.Framework.Core;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace Bezoro.Framework.Unity.Bootstrapping
 {
 	[DefaultExecutionOrder(int.MinValue)]
 	[CreateAssetMenu(
-		fileName = Constants.Game_Initialization.GAME_INITIALIZATION_CONFIG_ASSET_MENU_FILE_NAME,
-		menuName = Constants.Game_Initialization.GAME_INITIALIZATION_CONFIG_ASSET_MENU_PATH,
-		order = Constants.Game_Initialization.GAME_INITIALIZATION_CONFIG_ASSET_MENU_ORDER
+		fileName = Constants.GameInitialization.CONFIG_ASSET_MENU_FILE_NAME,
+		menuName = Constants.GameInitialization.CONFIG_ASSET_MENU_PATH,
+		order = Constants.GameInitialization.CONFIG_ASSET_MENU_ORDER
 	)]
 	public sealed class Game_Initialization_Config : ScriptableObject
 	{
-		[SerializeReference] private I_Initialization_Object[] subsystem_Registration_Entries = { };
-		[SerializeReference] private I_Initialization_Object[] after_Assembly_Load_Entries    = { };
-		[SerializeReference] private I_Initialization_Object[] before_Splash_Screen_Entries   = { };
-		[SerializeReference] private I_Initialization_Object[] before_Scene_Load_Entries      = { };
-		[SerializeReference] private I_Initialization_Object[] after_Scene_Load_Entries       = { };
+		[FormerlySerializedAs("subsystem_Registration_Entries")]
+		[SerializeReference] private IInitializationObject[] subsystemRegistrationEntries = { };
+		[FormerlySerializedAs("after_Assembly_Load_Entries")]
+		[SerializeReference] private IInitializationObject[] afterAssemblyLoadEntries = { };
+		[FormerlySerializedAs("before_Splash_Screen_Entries")]
+		[SerializeReference] private IInitializationObject[] beforeSplashScreenEntries = { };
+		[FormerlySerializedAs("before_Scene_Load_Entries")]
+		[SerializeReference] private IInitializationObject[] beforeSceneLoadEntries = { };
+		[FormerlySerializedAs("after_Scene_Load_Entries")]
+		[SerializeReference] private IInitializationObject[] afterSceneLoadEntries = { };
 
 		public static bool Is_Game_Initialized { get; private set; }
 
 		public void SubsystemRegistrationPhase()
 		{
-			ExecuteEntries(subsystem_Registration_Entries);
+			ExecuteEntries(subsystemRegistrationEntries);
 		}
 
 		public void AfterAssemblyLoadPhase()
 		{
-			ExecuteEntries(after_Assembly_Load_Entries);
+			ExecuteEntries(afterAssemblyLoadEntries);
 		}
 
 		public void BeforeSplashScreenPhase()
 		{
-			ExecuteEntries(before_Splash_Screen_Entries);
+			ExecuteEntries(beforeSplashScreenEntries);
 		}
 
 		public void BeforeSceneLoadPhase()
 		{
-			ExecuteEntries(before_Scene_Load_Entries);
+			ExecuteEntries(beforeSceneLoadEntries);
 		}
 
 		public void AfterSceneLoadPhase()
 		{
-			ExecuteEntries(after_Scene_Load_Entries);
+			ExecuteEntries(afterSceneLoadEntries);
 			Is_Game_Initialized = true;
 		}
 
-		public static async UniTask<bool> Wait_For_Initialization_Complete(CancellationToken ct = default)
+		public static async UniTask<bool> WaitForInitializationToComplete(CancellationToken ct = default)
 		{
 			while ( !Is_Game_Initialized ) await UniTask.Yield(ct);
 			return true;
 		}
 
-		private static void ExecuteEntries(I_Initialization_Object[] entries)
+		private static void ExecuteEntries(IInitializationObject[] entries)
 		{
-			Assert.Is_Not_Null(entries);
+			Assert.IsNotNull(entries);
 			foreach ( var entry in entries ) entry.Initialize();
 		}
 	}
 
-	public interface I_Initialization_Object
+	public interface IInitializationObject
 	{
 		public void Initialize();
 	}

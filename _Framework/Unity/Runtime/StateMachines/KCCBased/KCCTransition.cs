@@ -112,7 +112,7 @@ namespace Bezoro.Framework.Unity.StateMachines.KCCBased
 		{
 			var new_condition = new T();
 			new_condition.Init(_stateMachine, inverted);
-			Array_Helpers.Add(ref _conditions, new_condition);
+			ArrayHelpers.Add(ref _conditions, new_condition);
 		}
 
 		public void WithConditions<T0, T1>(
@@ -125,11 +125,11 @@ namespace Bezoro.Framework.Unity.StateMachines.KCCBased
 		{
 			var new_condition0 = new T0();
 			new_condition0.Init(_stateMachine, inverted0);
-			Array_Helpers.Add(ref _conditions, new_condition0);
+			ArrayHelpers.Add(ref _conditions, new_condition0);
 
 			var new_condition1 = new T1();
 			new_condition1.Init(_stateMachine, inverted1);
-			Array_Helpers.Add(ref _conditions, new_condition1);
+			ArrayHelpers.Add(ref _conditions, new_condition1);
 
 			_conditionsCriteria = conditionsCriteria;
 		}
@@ -146,15 +146,15 @@ namespace Bezoro.Framework.Unity.StateMachines.KCCBased
 		{
 			var new_condition0 = new T0();
 			new_condition0.Init(_stateMachine, inverted0);
-			Array_Helpers.Add(ref _conditions, new_condition0);
+			ArrayHelpers.Add(ref _conditions, new_condition0);
 
 			var new_condition1 = new T1();
 			new_condition1.Init(_stateMachine, inverted1);
-			Array_Helpers.Add(ref _conditions, new_condition1);
+			ArrayHelpers.Add(ref _conditions, new_condition1);
 
 			var new_condition2 = new T2();
 			new_condition2.Init(_stateMachine, inverted2);
-			Array_Helpers.Add(ref _conditions, new_condition2);
+			ArrayHelpers.Add(ref _conditions, new_condition2);
 
 			_conditionsCriteria = conditionsCriteria;
 		}

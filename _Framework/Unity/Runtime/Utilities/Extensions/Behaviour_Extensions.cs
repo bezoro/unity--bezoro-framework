@@ -10,36 +10,44 @@ namespace Bezoro.Framework.Unity.Utilities
 	public static class Behaviour_Extensions
 	{
 		/// <summary>
-		///     Processes a collection of behaviours by applying a specified action to each behaviour in the collection.
+		/// Processes a collection of behaviours by applying a specified action to each behaviour in the collection asynchronously.
 		/// </summary>
-		/// <param name="behaviours">The collection of behaviours to be processed. Must not be null or empty.</param>
-		/// <param name="action">The action to be applied to each behaviour in the collection. Must not be null.</param>
-		/// <returns>An asynchronous task representing the operation.</returns>
+		/// <param name="behaviours">The collection of behaviours to process.</param>
+		/// <param name="action">The action to be applied to each behaviour. Must not be null.</param>
+		/// <param name="yield_timing">The player loop timing to use for yielding between processing behaviours. Defaults to PlayerLoopTiming.Update.</param>
+		/// <returns>An asynchronous task representing the processing operation.</returns>
 		private static async UniTask Process_Behaviours(
 			ICollection<Behaviour> behaviours,
-			Action<Behaviour> action
+			Action<Behaviour> action,
+			PlayerLoopTiming yield_timing = PlayerLoopTiming.Update
 		)
 		{
-			// Assert.Is_Not_Null_Or_Empty(behaviours);
-			if (behaviours.Are_Null_Or_Empty())
+			if (behaviours == null || behaviours.Count == 0)
 			{
-				BDebug.Log_Warning($"Behaviours is null or empty. Aborting {nameof(Process_Behaviours)}");
+				Logger.LogWarning($"Behaviours Collection is null or empty. Aborting {nameof(Process_Behaviours)}");
 				return;
 			}
 
-			// Assert.Is_Not_Null(action);
 			if (action == null)
 			{
-				BDebug.Log_Warning($"Action is null. Aborting {nameof(Process_Behaviours)}");
+				Logger.LogWarning($"Action is null. Aborting {nameof(Process_Behaviours)}");
 				return;
 			}
 
 			foreach ( var behaviour in behaviours )
 			{
-				Assert.Is_Not_Null(behaviour);
+				if (behaviour == null)
+				{
+					Logger.LogWarning($"Behaviour is null. Skipping.");
+					continue;
+				}
+
+				Logger.Log($"Processing behaviour: {behaviour.GetType().Name}", behaviour.gameObject);
 				action.Invoke(behaviour);
-				await UniTask.Yield(PlayerLoopTiming.Update);
+				await UniTask.Yield(yield_timing);
 			}
+
+			Logger.Log("Finished Processing Behaviours.", Game_Object_Extensions.Find_First_In(behaviours));
 		}
 
 		/// <summary>
@@ -50,7 +58,7 @@ namespace Bezoro.Framework.Unity.Utilities
 		public static async UniTask Toggle_Behaviours(this ICollection<Behaviour> behaviours)
 		{
 			// Assert.Is_Not_Null_Or_Empty(behaviours);
-			if (behaviours.Are_Null_Or_Empty())
+			if (behaviours == null || behaviours.Count == 0)
 			{
 				BDebug.Log_Warning($"Behaviours is null or empty. Aborting {nameof(Toggle_Behaviours)}");
 				return;
@@ -85,7 +93,7 @@ namespace Bezoro.Framework.Unity.Utilities
 		public static async UniTask Set_Behaviours_State(this ICollection<Behaviour> behaviours, bool value)
 		{
 			// Assert.Is_Not_Null_Or_Empty(behaviours);
-			if (behaviours.Are_Null_Or_Empty())
+			if (behaviours == null || behaviours.Count == 0)
 			{
 				BDebug.Log_Warning($"Behaviours is null or empty. Aborting {nameof(Set_Behaviours_State)}");
 				return;
@@ -102,7 +110,7 @@ namespace Bezoro.Framework.Unity.Utilities
 		public static async UniTask Enable_Behaviours(this ICollection<Behaviour> behaviours)
 		{
 			// Assert.Is_Not_Null_Or_Empty(behaviours);
-			if (behaviours.Are_Null_Or_Empty())
+			if (behaviours == null || behaviours.Count == 0)
 			{
 				BDebug.Log_Warning($"Behaviours is null or empty. Aborting {nameof(Enable_Behaviours)}");
 				return;
@@ -136,7 +144,7 @@ namespace Bezoro.Framework.Unity.Utilities
 		public static async UniTask Disable_Behaviours(this ICollection<Behaviour> behaviours)
 		{
 			// Assert.Is_Not_Null_Or_Empty(behaviours);
-			if (behaviours.Are_Null_Or_Empty())
+			if (behaviours == null || behaviours.Count == 0)
 			{
 				BDebug.Log_Warning($"Behaviours is null or empty. Aborting {nameof(Disable_Behaviours)}");
 				return;

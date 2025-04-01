@@ -58,7 +58,7 @@ namespace Bezoro.Framework.Unity.StateMachines.EventBased
 		{
 			var new_transition = new EventTransition();
 			new_transition.Init(this, toState, _owner);
-			Array_Helpers.Add(ref _transitions, new_transition);
+			ArrayHelpers.Add(ref _transitions, new_transition);
 			return new_transition;
 		}
 
@@ -90,7 +90,7 @@ namespace Bezoro.Framework.Unity.StateMachines.EventBased
 			}
 		}
 
-	#region Abstract Methods
+		#region Abstract Methods
 
 		/// <summary>
 		///     Called once in the lifetime of the object, when it is created.
@@ -124,6 +124,6 @@ namespace Bezoro.Framework.Unity.StateMachines.EventBased
 		/// </summary>
 		protected abstract void OnDestroy();
 
-	#endregion
+		#endregion
 	}
 }

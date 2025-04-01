@@ -2,18 +2,19 @@
 using System.Collections;
 using System.Threading.Tasks;
 using Bezoro.Framework.Core;
-using Bezoro.Framework.Core.Tests.Edit_Mode.Eitor.Utilities;
+using Bezoro.Framework.Core.Editor.Editor.Utilities;
 using Moq;
 using NUnit.Framework;
 using UnityEngine;
 using Assert = NUnit.Framework.Assert;
+using ILogger = Bezoro.Framework.Core.ILogger;
 
 namespace Bezoro.Framework.Unity.Tests.PlayMode
 {
 	[TestFixture]
 	public class Factories_Tests
 	{
-		private static Mock<I_Logger> _Logger_Mock;
+		private static Mock<ILogger> _Logger_Mock;
 
 		public class GameObject
 		{
@@ -48,7 +49,7 @@ namespace Bezoro.Framework.Unity.Tests.PlayMode
 
 			#region 2. Core Functionality
 
-			[TestCaseSource(nameof(GameObject.Core_Functionality_Test_Cases))]
+			[TestCaseSource(nameof(Core_Functionality_Test_Cases))]
 			public async Task SHOULD_Create_GameObject_As_Expected(Create_Async_Test_Parameter_Data testData)
 			{
 				// Act
@@ -75,7 +76,7 @@ namespace Bezoro.Framework.Unity.Tests.PlayMode
 
 			private static IEnumerable Core_Functionality_Test_Cases()
 			{
-				yield return Test_Utils.Create_Test_Case(
+				yield return TestUtils.CreateTestCase(
 					"SHOULD_Create_Disabled_Object_With_Specified_Components",
 					new Create_Async_Test_Parameter_Data
 					{
@@ -87,7 +88,7 @@ namespace Bezoro.Framework.Unity.Tests.PlayMode
 						ExpectedActiveState = false
 					});
 
-				yield return Test_Utils.Create_Test_Case(
+				yield return TestUtils.CreateTestCase(
 					"SHOULD_Activate_Object_When_EnableCondition_Is_True",
 					new Create_Async_Test_Parameter_Data
 					{
@@ -99,7 +100,7 @@ namespace Bezoro.Framework.Unity.Tests.PlayMode
 						ExpectedActiveState = true
 					});
 
-				yield return Test_Utils.Create_Test_Case(
+				yield return TestUtils.CreateTestCase(
 					"SHOULD_Add_Multiple_Specified_Components_To_Object",
 					new Create_Async_Test_Parameter_Data
 					{
@@ -111,7 +112,7 @@ namespace Bezoro.Framework.Unity.Tests.PlayMode
 						ExpectedActiveState = true
 					});
 
-				yield return Test_Utils.Create_Test_Case(
+				yield return TestUtils.CreateTestCase(
 					"SHOULD_Enable_Added_Behaviours_Correctly",
 					new Create_Async_Test_Parameter_Data
 					{
@@ -128,7 +129,7 @@ namespace Bezoro.Framework.Unity.Tests.PlayMode
 
 			#region 3. Edge Cases
 
-			[TestCaseSource(nameof(GameObject.EdgeCaseTestCases))]
+			[TestCaseSource(nameof(EdgeCaseTestCases))]
 			public async Task SHOULD_Handle_Edge_Cases_Gracefully(Create_Async_Test_Parameter_Data testData)
 			{
 				// Act
@@ -149,7 +150,7 @@ namespace Bezoro.Framework.Unity.Tests.PlayMode
 
 			private static IEnumerable EdgeCaseTestCases()
 			{
-				yield return Test_Utils.Create_Test_Case(
+				yield return TestUtils.CreateTestCase(
 					"SHOULD_Handle_Long_ObjectName_And_Valid_Components",
 					new Create_Async_Test_Parameter_Data
 					{
@@ -161,7 +162,7 @@ namespace Bezoro.Framework.Unity.Tests.PlayMode
 						ExpectedActiveState = false
 					});
 
-				yield return Test_Utils.Create_Test_Case(
+				yield return TestUtils.CreateTestCase(
 					"SHOULD_Not_Activate_Object_When_EnableCondition_Is_False",
 					new Create_Async_Test_Parameter_Data
 					{

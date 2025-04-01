@@ -1,24 +1,40 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Threading;
-using Bezoro.Framework.Unity.Utilities;
 using Cysharp.Threading.Tasks;
 
 namespace Bezoro.Framework.Unity
 {
 	public static class Player_Loop_Helpers
 	{
+		private static SynchronizationContext _Main_Thread_Context;
+
+		/// <summary>
+		///     Initializes the main thread context.
+		/// </summary>
+		/// <remarks>
+		///     This method should be called in the Awake method of a MonoBehaviour.
+		/// </remarks>
+		public static void Initialize_Main_Thread_Context()
+		{
+			_Main_Thread_Context = SynchronizationContext.Current;
+
+			if (_Main_Thread_Context == null)
+			{
+				Logger.Log_Exception(new InvalidOperationException("SynchronizationContext is null."));
+			}
+		}
+
 		/// <summary>
 		///     Ensures that the current thread is the main thread.
 		///     If not, switches execution back to the main thread.
 		/// </summary>
-		public static void Return_To_Main_Thread_If_Necessary()
+		public static void Return_To_Main_Thread()
 		{
-			if (!Is_On_Main_Thread())
-				return;
+			// if (!Is_On_Main_Thread()) return;
 
 			UniTask.ReturnToMainThread();
-			BDebug.Log("Returned to main thread");
+			Logger.Log("Returned to main thread");
 		}
 
 		/// <summary>
@@ -29,7 +45,7 @@ namespace Bezoro.Framework.Unity
 		public static int Get_Current_Managed_Thread_Id()
 		{
 			var thread_id = Thread.CurrentThread.ManagedThreadId;
-			BDebug.Log($"Current Managed Thread ID: {thread_id}");
+			Logger.Log($"Current Managed Thread ID: {thread_id}");
 			return thread_id;
 		}
 
@@ -40,9 +56,24 @@ namespace Bezoro.Framework.Unity
 		/// <returns>An awaitable task.</returns>
 		public static async UniTask Run_On_Main_Thread(Action action)
 		{
-			Return_To_Main_Thread_If_Necessary();
+			if (!Is_On_Main_Thread())
+				Return_To_Main_Thread();
+
 			action();
 			await UniTask.Yield();
+		}
+
+		/// <summary>
+		/// Posts an action to be executed on the main thread.
+		/// </summary>
+		/// <param name="action">The action to execute.</param>
+		public static void Return_To_Main_Thread(Action action)
+		{
+			if (action == null)
+				throw new ArgumentNullException(nameof(action));
+
+			var context = Get_Main_Thread_Context();
+			context.Post(_ => action.Invoke(), null);
 		}
 
 		/// <summary>
@@ -62,13 +93,11 @@ namespace Bezoro.Framework.Unity
 		/// <returns>The result of the function.</returns>
 		public static async UniTask<T> Run_On_Main_Thread<T>(Func<T> func)
 		{
-			if (Is_On_Main_Thread())
-				return func();
+			if (!Is_On_Main_Thread())
+				Return_To_Main_Thread();
 
-			T result = default;
-
-			await Run_On_Main_Thread(() => result = func());
-
+			var result = func();
+			await UniTask.Yield();
 			return result;
 		}
 
@@ -100,7 +129,7 @@ namespace Bezoro.Framework.Unity
 		{
 			var thread_id   = Thread.CurrentThread.ManagedThreadId;
 			var thread_name = Thread.CurrentThread.Name;
-			BDebug.Log($"Thread ID: {thread_id}, Thread Name: {thread_name ?? "Unnamed"}");
+			Logger.Log($"Thread ID: {thread_id}, Thread Name: {thread_name ?? "Unnamed"}");
 		}
 
 		/// <summary>
@@ -111,7 +140,10 @@ namespace Bezoro.Framework.Unity
 		public static void Ensure_On_Main_Thread()
 		{
 			if (!Is_On_Main_Thread())
-				throw new InvalidOperationException("This operation must be performed on the main thread.");
+			{
+				Logger.Log_Exception(
+					new InvalidOperationException("This operation must be performed on the main thread."));
+			}
 		}
 
 		/// <summary>
@@ -145,7 +177,10 @@ namespace Bezoro.Framework.Unity
 		/// <returns>The synchronization context for the main thread.</returns>
 		public static SynchronizationContext Get_Main_Thread_Context()
 		{
-			return SynchronizationContext.Current;
+			if (_Main_Thread_Context == null)
+				Initialize_Main_Thread_Context();
+
+			return _Main_Thread_Context;
 		}
 	}
 }

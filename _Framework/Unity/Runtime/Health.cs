@@ -5,8 +5,8 @@ using Bezoro.Framework.Unity.Utilities;
 namespace Bezoro.Framework.Unity
 {
 	public sealed class Health :
-		I_Health,
-		IEquatable<I_Health>,
+		IHealth,
+		IEquatable<IHealth>,
 		ICloneable
 	{
 		public Health(int max, int? current = null)
@@ -20,66 +20,66 @@ namespace Bezoro.Framework.Unity
 
 		private readonly Guid _guid;
 
-		public void Decrease_Current_Health_By(int value)
+		public void DecreaseCurrentHealthBy(int value)
 		{
-			Validation_Helpers.Validate_Positive_Value(this, nameof(Decrease_Current_Health_By), value);
+			Validation_Helpers.Validate_Positive_Value(this, nameof(DecreaseCurrentHealthBy), value);
 
 			Current = Math.Max(0, Current - value);
 		}
 
-		public void Deplete_Current_Health()
+		public void DepleteCurrentHealth()
 		{
 			Current = 0;
 		}
 
-		public void Set_Current_Health_To(int value)
+		public void SetCurrentHealthTo(int value)
 		{
-			Validation_Helpers.Validate_Positive_Value(this, nameof(Set_Current_Health_To), value);
+			Validation_Helpers.Validate_Positive_Value(this, nameof(SetCurrentHealthTo), value);
 
 			Current = Math.Clamp(value, 0, Max);
 		}
 
-		public void Increase_Current_Health_By(int value)
+		public void IncreaseCurrentHealthBy(int value)
 		{
-			Validation_Helpers.Validate_Positive_Value(this, nameof(Increase_Current_Health_By), value);
+			Validation_Helpers.Validate_Positive_Value(this, nameof(IncreaseCurrentHealthBy), value);
 
 			Current = Math.Min(Current + value, Max);
 		}
 
-		public void Fully_Restore_Current_Health()
+		public void FullyRestoreCurrentHealth()
 		{
 			Current = Max;
 		}
 
-		public void Restore_Current_Health_By(int value)
+		public void RestoreCurrentHealthBy(int value)
 		{
 			Current = Math.Min(Current + value, Max);
 		}
 
-		public void Decrease_Max_Health_By(int value)
+		public void DecreaseMaxHealthBy(int value)
 		{
-			Validation_Helpers.Validate_Positive_Value(this, nameof(Decrease_Max_Health_By), value);
+			Validation_Helpers.Validate_Positive_Value(this, nameof(DecreaseMaxHealthBy), value);
 
 			Max     = Math.Max(1, Max - value);
 			Current = Math.Min(Current, Max);
 		}
 
-		public void Increase_Max_Health_By(int value)
+		public void IncreaseMaxHealthBy(int value)
 		{
-			Validation_Helpers.Validate_Positive_Value(this, nameof(Increase_Max_Health_By), value);
+			Validation_Helpers.Validate_Positive_Value(this, nameof(IncreaseMaxHealthBy), value);
 
 			Max = Math.Min(Max + value, int.MaxValue);
 		}
 
-		public void Set_Max_Health_To(int value)
+		public void SetMaxHealthTo(int value)
 		{
-			Validation_Helpers.Validate_Positive_Value(this, nameof(Set_Max_Health_To), value);
+			Validation_Helpers.Validate_Positive_Value(this, nameof(SetMaxHealthTo), value);
 
 			Max     = Math.Max(1, value);
 			Current = Math.Min(Current, Max);
 		}
 
-		public bool Equals(I_Health other)
+		public bool Equals(IHealth other)
 		{
 			return other is not null && ReferenceEquals(this, other);
 		}
@@ -99,7 +99,7 @@ namespace Bezoro.Framework.Unity
 		public int   Max        { get; private set; }
 		public float Percentage => Current / (float)Max;
 
-	#region Plumbing
+		#region Plumbing
 
 		private void Validate_Health_Parameters(
 			int max,
@@ -130,6 +130,6 @@ namespace Bezoro.Framework.Unity
 			}
 		}
 
-	#endregion
+		#endregion
 	}
 }

@@ -11,18 +11,18 @@ namespace Bezoro.Framework.Core
 	/// <typeparam name="T">Specifies the type of elements stored in the array.</typeparam>
 	public class SwapbackArray<T>
 	{
-		public SwapbackArray(int initial_capacity = _MINIMUM_ARRAY_SIZE, I_Logger logger = null)
+		public SwapbackArray(int initial_capacity = _MINIMUM_ARRAY_SIZE, ILogger logger = null)
 		{
 			_items  = new T[Math.Max(initial_capacity, _MINIMUM_ARRAY_SIZE)];
 			_count  = 0;
 			_logger = logger;
 
-			Logger.Log($"SwapbackArray initialized with capacity: {initial_capacity}");
+			Logger.LogSuccess($"SwapbackArray initialized with capacity: {initial_capacity}");
 		}
 
 		~SwapbackArray()
 		{
-			Logger.Log("SwapbackArray finalized and resources released.");
+			Logger.LogSuccess("SwapbackArray finalized and resources released.");
 			_items  = null;
 			_logger = null;
 		}
@@ -48,7 +48,7 @@ namespace Bezoro.Framework.Core
 		/// within the <see cref="SwapbackArray{T}" />. It enables tracking and debugging of array-related
 		/// operations and processes, enhancing observability and diagnostics.
 		/// </summary>
-		private I_Logger _logger;
+		private ILogger _logger;
 
 		/// <summary>
 		/// Gets the number of elements currently contained in the <see cref="SwapbackArray{T}" />.
@@ -70,12 +70,12 @@ namespace Bezoro.Framework.Core
 			System.Array.Copy(_items, new_items, _count);
 			_items = new_items;
 
-			Logger.Log($"Resize operation complete. New size: {newSize}");
+			Logger.LogSuccess($"Resize operation complete. New size: {newSize}");
 		}
 
 		private bool Validate_Remove_Index(int index)
 		{
-			if (_items.Is_Null_Or_Empty())
+			if (_items.IsNullOrEmpty())
 			{
 				Logger.Log_Error("Remove operation failed. Array is empty.");
 				return false;
@@ -96,14 +96,14 @@ namespace Bezoro.Framework.Core
 
 		private void Perform_Swap_And_Trim(int index)
 		{
-			Logger.Log($"Removing item at index {index}.");
+			Logger.Log_Info($"Removing item at index {index}.");
 
 			// Replace the item at the given index with the last item (swap-and-trim)
 			_items[index] = _items[_count - 1];
 
 			// Clear the last item and reduce the count
 			_items[--_count] = default;
-			Logger.Log_Success($"Item removed. Current count: {_count}");
+			Logger.LogSuccess($"Item removed. Current count: {_count}");
 		}
 
 		private bool Should_Resize(int currentCount, int currentCapacity)
@@ -122,11 +122,11 @@ namespace Bezoro.Framework.Core
 			{
 				Logger.Log_Warning("Array capacity reached. Resizing...");
 				Resize(_items.Length * 2);
-				Logger.Log_Success($"Array resized to new capacity: {_items.Length}");
+				Logger.LogSuccess($"Array resized to new capacity: {_items.Length}");
 			}
 
 			_items[_count++] = item;
-			Logger.Log_Success($"Item added. Current count: {_count}");
+			Logger.LogSuccess($"Item added. Current count: {_count}");
 		}
 
 		/// <summary>
@@ -150,7 +150,7 @@ namespace Bezoro.Framework.Core
 			}
 
 			value = _items[index];
-			Logger.Log($"Item retrieved at index {index}: {value}");
+			Logger.LogSuccess($"Item retrieved at index {index}: {value}");
 			return true;
 		}
 
@@ -167,7 +167,7 @@ namespace Bezoro.Framework.Core
 				{
 					Logger.Log_Warning("Array under-utilized. Resizing...");
 					Resize(Math.Max(_items.Length / 2, _MINIMUM_ARRAY_SIZE));
-					Logger.Log_Success($"Array resized to new capacity: {_items.Length}");
+					Logger.LogSuccess($"Array resized to new capacity: {_items.Length}");
 				}
 			}
 		}
@@ -177,10 +177,10 @@ namespace Bezoro.Framework.Core
 		/// </summary>
 		public void Clear()
 		{
-			Logger.Log("Clearing all elements from the array.");
+			Logger.Log_Info("Clearing all elements from the array.");
 			System.Array.Clear(_items, 0, _count);
 			_count = 0;
-			Logger.Log_Success("Array cleared.");
+			Logger.LogSuccess("Array cleared.");
 		}
 	}
 }

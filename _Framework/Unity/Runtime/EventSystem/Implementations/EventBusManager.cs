@@ -15,7 +15,7 @@ public sealed class EventBusManager : Base_Singleton<EventBusManager>
 	public I_Event_Bus GetOrCreateEventBus(string context)
 	{
 		Assert.Is_Not_Null_Or_Empty(context);
-		Assert.Is_Not_Null(_eventBuses);
+		Assert.IsNotNull(_eventBuses);
 
 		return _eventBuses.GetOrAdd(
 			context,
@@ -26,7 +26,7 @@ public sealed class EventBusManager : Base_Singleton<EventBusManager>
 	public bool TryGetEventBus(string context, out I_Event_Bus eventBus)
 	{
 		Assert.Is_Not_Null_Or_Empty(context);
-		Assert.Is_Not_Null(_eventBuses);
+		Assert.IsNotNull(_eventBuses);
 
 		return _eventBuses.TryGetValue(
 			context,
@@ -37,7 +37,7 @@ public sealed class EventBusManager : Base_Singleton<EventBusManager>
 	public bool RemoveEventBus(string context)
 	{
 		Assert.Is_Not_Null_Or_Empty(context);
-		Assert.Is_Not_Null(_eventBuses);
+		Assert.IsNotNull(_eventBuses);
 
 		return _eventBuses.TryRemove(
 			context,
@@ -47,7 +47,7 @@ public sealed class EventBusManager : Base_Singleton<EventBusManager>
 
 	public void ClearAll()
 	{
-		Assert.Is_Not_Null(_eventBuses);
+		Assert.IsNotNull(_eventBuses);
 
 		_eventBuses.Clear();
 	}

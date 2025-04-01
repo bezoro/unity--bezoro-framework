@@ -36,6 +36,11 @@ namespace Bezoro.Framework.Core
 				bool exclude_nulls
 			) where T : class
 			{
+				if (append_count == 0) return;
+				if (source_index >= source.Length) return;
+
+				Logger.Log_Info("Filling null elements and appending remaining elements from source.");
+
 				var original_length = target.Length;
 				System.Array.Resize(ref target, original_length + append_count);
 
@@ -45,7 +50,7 @@ namespace Bezoro.Framework.Core
 						target[append_index++] = source[i];
 				}
 
-				Logger.Log_Success($"Filled null elements and appended {append_count} elements from source.");
+				Logger.LogSuccess($"Filled null elements and appended {append_count} elements from source.");
 			}
 
 			private static bool CheckForRemainingElements<T>(
@@ -66,7 +71,7 @@ namespace Bezoro.Framework.Core
 				if (append_count == 0)
 				{
 					// Log and exit if no elements are left to append.
-					Logger.Log_Success("Filled null elements in the target array.");
+					Logger.LogSuccess("Filled null elements in the target array.");
 					return true;
 				}
 
@@ -115,7 +120,7 @@ namespace Bezoro.Framework.Core
 			{
 				if (source != null) return true;
 
-				Logger.Log_Warning("Source array must not be null. Aborting operation.");
+				Logger.Log_Exception(new NullReferenceException("Source array must not be null. Aborting operation."));
 				return false;
 			}
 
@@ -139,7 +144,7 @@ namespace Bezoro.Framework.Core
 				if (exclude_nulls)
 				{
 					// Initialize target with enough space for source elements
-					target = new T[Array_Helpers.Count_Non_Null_Elements(source)];
+					target = new T[ArrayHelpers.Count_Non_Null_Elements(source)];
 
 					// Fill the target with elements from the source array
 					Populate_Target_With_Source(source, target, 0, true);
@@ -150,7 +155,7 @@ namespace Bezoro.Framework.Core
 					target = source.ToArray();
 				}
 
-				Logger.Log_Success("Target was null. Initialized from source array.");
+				Logger.LogSuccess("Target was null. Initialized from source array.");
 				return true;
 			}
 
@@ -172,7 +177,7 @@ namespace Bezoro.Framework.Core
 				if (target == null || target.Length == 0)
 				{
 					target = source.ToArray(); // Clone the source array to avoid reference issues.
-					Logger.Log_Success("Target array was null and has been initialized with the source array.");
+					Logger.LogSuccess("Target array was null and has been initialized with the source array.");
 
 					return;
 				}
@@ -196,7 +201,7 @@ namespace Bezoro.Framework.Core
 					{
 						// Fill the null slot in the target array.
 						target[target_index] = source_element;
-						Logger.Log($"Element {source_element} added to target array at index {target_index}.");
+						Logger.Log_Info($"Element {source_element} added to target array at index {target_index}.");
 					}
 
 					// Move to the next element in the source array.
@@ -213,7 +218,7 @@ namespace Bezoro.Framework.Core
 				}
 
 				// Log success message.
-				Logger.Log_Success("Source array elements used to fill target array null slots.");
+				Logger.LogSuccess("Source array elements used to fill target array null slots.");
 			}
 
 			/// <summary>
@@ -262,12 +267,12 @@ namespace Bezoro.Framework.Core
 					// Reassign the reference and log success.
 					target = resized_target;
 
-					Logger.Log_Success($"Target array resized to fit all source elements. New size: {total_new_size}");
+					Logger.LogSuccess($"Target array resized to fit all source elements. New size: {total_new_size}");
 				}
 				else
 				{
 					// Log success if no resizing was needed.
-					Logger.Log_Success("Merge Completed. No resizing needed.");
+					Logger.LogSuccess("Merge Completed. No resizing needed.");
 				}
 			}
 
@@ -303,7 +308,7 @@ namespace Bezoro.Framework.Core
 				// If there are no valid elements to append, exit early.
 				if (elements_to_append_count == 0)
 				{
-					Logger.Log("No elements to append from the source array.");
+					Logger.Log_Info("No elements to append from the source array.");
 					return;
 				}
 
@@ -321,7 +326,7 @@ namespace Bezoro.Framework.Core
 				}
 
 				// Log a success message.
-				Logger.Log_Success($"Appended {elements_to_append_count} elements to the end of the target array.");
+				Logger.LogSuccess($"Appended {elements_to_append_count} elements to the end of the target array.");
 			}
 
 			/// <summary>
@@ -367,7 +372,7 @@ namespace Bezoro.Framework.Core
 				// Assign the new array to the target reference.
 				target = new_array;
 
-				Logger.Log_Success("Source array elements were prepended successfully.");
+				Logger.LogSuccess("Source array elements were prepended successfully.");
 			}
 
 			/// <summary>
@@ -458,7 +463,7 @@ namespace Bezoro.Framework.Core
 				}
 
 				// Log success message.
-				Logger.Log_Success("Filled null slots in the target array and prepended remaining source elements.");
+				Logger.LogSuccess("Filled null slots in the target array and prepended remaining source elements.");
 			}
 		}
 

@@ -4,7 +4,7 @@ using NUnit.Framework;
 namespace Bezoro.Framework.Core.Tests.Edit_Mode.Array_Helpers
 {
 	[TestFixture]
-	[TestOf(typeof(Core.Array_Helpers))]
+	[TestOf(typeof(ArrayHelpers))]
 	public class Add
 	{
 		private class Test_Object { }
@@ -19,7 +19,7 @@ namespace Bezoro.Framework.Core.Tests.Edit_Mode.Array_Helpers
 			var           element_to_add = new Test_Object();
 
 			// Act
-			Core.Array_Helpers.Add(ref array, element_to_add);
+			ArrayHelpers.Add(ref array, element_to_add);
 
 			// Assert
 			NUnit.Framework.Assert.That(array, Is.Not.Null, "Array should be initialized.");
@@ -42,7 +42,7 @@ namespace Bezoro.Framework.Core.Tests.Edit_Mode.Array_Helpers
 			var initial_length = array.Length;
 
 			// Act
-			Core.Array_Helpers.Add(ref array, element_to_add);
+			ArrayHelpers.Add(ref array, element_to_add);
 
 			// Assert
 			NUnit.Framework.Assert.That(
@@ -71,7 +71,7 @@ namespace Bezoro.Framework.Core.Tests.Edit_Mode.Array_Helpers
 			var initial_length = array.Length;
 
 			// Act
-			Core.Array_Helpers.Add(ref array, element_to_add);
+			ArrayHelpers.Add(ref array, element_to_add);
 
 			// Assert
 			NUnit.Framework.Assert.That(
@@ -100,7 +100,7 @@ namespace Bezoro.Framework.Core.Tests.Edit_Mode.Array_Helpers
 			var initial_length = array.Length;
 
 			// Act
-			Core.Array_Helpers.Add(ref array, element_to_add, out var index);
+			ArrayHelpers.Add(ref array, element_to_add, out var index);
 
 			// Assert
 			NUnit.Framework.Assert.That(
@@ -120,7 +120,7 @@ namespace Bezoro.Framework.Core.Tests.Edit_Mode.Array_Helpers
 			var initial_length = array.Length;
 
 			// Act
-			Core.Array_Helpers.Add(ref array, null);
+			ArrayHelpers.Add(ref array, null);
 
 			// Assert
 			NUnit.Framework.Assert.That(
@@ -140,7 +140,7 @@ namespace Bezoro.Framework.Core.Tests.Edit_Mode.Array_Helpers
 			var element_to_add = new Test_Object();
 
 			// Act
-			Core.Array_Helpers.Add(ref array, element_to_add);
+			ArrayHelpers.Add(ref array, element_to_add);
 
 			// Assert
 			NUnit.Framework.Assert.That(

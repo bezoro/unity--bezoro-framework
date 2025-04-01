@@ -1,8 +1,8 @@
 ﻿namespace Bezoro.Framework.Core
 {
-	public enum Array_Removal_Approach
+	public enum ArrayRemovalApproach
 	{
 		Resize = 0,
-		Set_To_Null
+		SetToNull
 	}
 }

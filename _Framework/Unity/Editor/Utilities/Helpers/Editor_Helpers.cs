@@ -11,7 +11,7 @@ namespace Bezoro.Framework.Unity.Editor.Utilities
 		{
 			if (save)
 			{
-				var open_scenes        = Scene_Manager.Get_All_Loaded_Scenes();
+				var open_scenes        = SceneManager.Get_All_Loaded_Scenes();
 				var save_prompt_result = EditorSceneManager.SaveModifiedScenesIfUserWantsTo(open_scenes.ToArray());
 
 				if (!save_prompt_result)

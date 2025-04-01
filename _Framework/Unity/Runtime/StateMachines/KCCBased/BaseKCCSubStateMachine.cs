@@ -117,7 +117,7 @@ namespace Bezoro.Framework.Unity.StateMachines.KCCBased
 		{
 			var new_transition = new KCCTransition();
 			new_transition.Init(this, toState, _owner);
-			Array_Helpers.Add(ref _transitions, new_transition);
+			ArrayHelpers.Add(ref _transitions, new_transition);
 			return new_transition;
 		}
 
@@ -175,7 +175,7 @@ namespace Bezoro.Framework.Unity.StateMachines.KCCBased
 			return newState;
 		}
 
-	#region KCC Methods
+		#region KCC Methods
 
 		public void UpdateRotation(ref Quaternion currentRotation, float deltaTime)
 		{
@@ -313,9 +313,9 @@ namespace Bezoro.Framework.Unity.StateMachines.KCCBased
 			CurrentState.DiscreteCollisionDetected(hitCollider);
 		}
 
-	#endregion
+		#endregion
 
-	#region Abstract Methods
+		#region Abstract Methods
 
 		/// <summary>
 		///     Called once in the lifetime of the object, when it is created.
@@ -423,6 +423,6 @@ namespace Bezoro.Framework.Unity.StateMachines.KCCBased
 		/// </summary>
 		protected abstract void OnDestroy();
 
-	#endregion
+		#endregion
 	}
 }

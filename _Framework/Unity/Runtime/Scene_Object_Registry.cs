@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using Bezoro.Framework.Unity.Utilities;
+using Bezoro.Framework.Unity.Utilities.String;
 using UnityEditor;
 using UnityEngine;
 
@@ -10,7 +11,7 @@ namespace Bezoro.Framework.Unity
 		private static readonly Dictionary<string, GameObject> _GUID_To_GameObject_Map = new();
 		private static readonly object                         _Lock                   = new();
 
-		public static void Register( GameObject gameObject )
+		public static void Register(GameObject gameObject)
 		{
 			// Assert.Is_Not_Null( gameObject );
 			//
@@ -25,15 +26,15 @@ namespace Bezoro.Framework.Unity
 			// }
 		}
 
-		public static void Unregister( string guid )
+		public static void Unregister(string guid)
 		{
 			lock ( _Lock )
 			{
-				if ( !GUID_Utils.Check_GUID_Validity( guid ) ) return;
-				if ( !Is_GUID_Registered( guid ) ) return;
+				if (!GUID_Utils.Check_GUID_Validity(guid)) return;
+				if (!Is_GUID_Registered(guid)) return;
 
-				_GUID_To_GameObject_Map.Remove( guid );
-				BDebug.Log( $"Unregistered GUID: {guid.Bold()}" );
+				_GUID_To_GameObject_Map.Remove(guid);
+				BDebug.Log($"Unregistered GUID: {guid.Bold()}");
 			}
 		}
 
@@ -42,11 +43,11 @@ namespace Bezoro.Framework.Unity
 		/// </summary>
 		/// <param name="guid">The GUID string.</param>
 		/// <returns>The associated GameObject if found; otherwise, Null.</returns>
-		public static GameObject Get_Object_By_GUID( string guid )
+		public static GameObject Get_Object_By_GUID(string guid)
 		{
 			lock ( _Lock )
 			{
-				if ( !GUID_Utils.Check_GUID_Validity( guid ) )
+				if (!GUID_Utils.Check_GUID_Validity(guid))
 				{
 					BDebug.Log_Warning(
 						$"Couldn't find the GameObject by its GUID because the GUID ({guid}) is not valid."
@@ -55,24 +56,25 @@ namespace Bezoro.Framework.Unity
 					return null;
 				}
 
-				var go = _GUID_To_GameObject_Map.GetValueOrDefault( guid );
-				BDebug.Log_Success( $"Found the GameObject {go.name} by its GUID: {guid}" );
+				var go = _GUID_To_GameObject_Map.GetValueOrDefault(guid);
+				BDebug.Log_Success($"Found the GameObject {go.name} by its GUID: {guid}");
 				return go;
 			}
 		}
 
-		public static bool Is_GUID_Registered( string guid )
+		public static bool Is_GUID_Registered(string guid)
 		{
 			lock ( _Lock )
 			{
-				if ( !GUID_Utils.Check_GUID_Validity( guid ) ) return false;
-				if ( !_GUID_To_GameObject_Map.ContainsKey( guid ) )
+				if (!GUID_Utils.Check_GUID_Validity(guid)) return false;
+
+				if (!_GUID_To_GameObject_Map.ContainsKey(guid))
 				{
-					BDebug.Log( $"Serializable_GUID {guid} is not registered." );
+					BDebug.Log($"Serializable_GUID {guid} is not registered.");
 					return false;
 				}
 
-				BDebug.Log( $"Serializable_GUID {guid} is registered." );
+				BDebug.Log($"Serializable_GUID {guid} is registered.");
 				return true;
 			}
 		}
@@ -117,6 +119,7 @@ namespace Bezoro.Framework.Unity
 		{
 			EditorApplication.playModeStateChanged -= On_Play_Mode_State_Changed;
 			EditorApplication.playModeStateChanged += On_Play_Mode_State_Changed;
+
 			// Refresh_Registry();
 		}
 
@@ -124,7 +127,7 @@ namespace Bezoro.Framework.Unity
 		///     Handles play mode state changes to scan for object UIDs.
 		/// </summary>
 		/// <param name="state">The state of the play mode.</param>
-		private static void On_Play_Mode_State_Changed( PlayModeStateChange state )
+		private static void On_Play_Mode_State_Changed(PlayModeStateChange state)
 		{
 			switch ( state )
 			{

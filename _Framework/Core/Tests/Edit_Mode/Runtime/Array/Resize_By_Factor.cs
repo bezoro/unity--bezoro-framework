@@ -4,10 +4,10 @@ using NUnit.Framework;
 namespace Bezoro.Framework.Core.Tests.Edit_Mode.Array_Helpers
 {
 	[TestFixture]
-	[TestOf(typeof(Core.Array_Helpers))]
+	[TestOf(typeof(ArrayHelpers))]
 	public class Resize_By_Factor
 	{
-		private Mock<I_Logger> _mockLogger;
+		private Mock<ILogger> _mockLogger;
 
 		[SetUp]
 		public void SetUp()
@@ -25,15 +25,16 @@ namespace Bezoro.Framework.Core.Tests.Edit_Mode.Array_Helpers
 			var   factor = 2;
 
 			// Act
-			Core.Array_Helpers.Resize_By_Factor(ref array, factor, _mockLogger.Object);
+			ArrayHelpers.Resize_By_Factor(ref array, factor);
 
 			// Assert
 			NUnit.Framework.Assert.AreEqual(6, array.Length, "Array size should be multiplied by the factor.");
 
-			_mockLogger.Verify(
-				logger => logger.Log(It.Is<string>(msg => !string.IsNullOrEmpty(msg))),
-				Times.Once
-			);
+			// _mockLogger.Verify(
+			// logger => logger.Log(
+			// It.Is<string>(msg => !string.IsNullOrEmpty(msg))),
+			// Times.Once
+			// );
 		}
 
 		[Test]
@@ -44,15 +45,15 @@ namespace Bezoro.Framework.Core.Tests.Edit_Mode.Array_Helpers
 			const int factor = 3;
 
 			// Act
-			Core.Array_Helpers.Resize_By_Factor(ref array, factor, _mockLogger.Object);
+			ArrayHelpers.Resize_By_Factor(ref array, factor);
 
 			// Assert
 			NUnit.Framework.Assert.AreEqual(0, array.Length, "Empty array multiplied should still stay empty.");
 
-			_mockLogger.Verify(
-				logger => logger.Log(It.Is<string>(msg => !string.IsNullOrEmpty(msg))),
-				Times.Once
-			);
+			// _mockLogger.Verify(
+			// logger => logger.Log(It.Is<string>(msg => !string.IsNullOrEmpty(msg))),
+			// Times.Once
+			// );
 		}
 
 		[Test]
@@ -62,15 +63,15 @@ namespace Bezoro.Framework.Core.Tests.Edit_Mode.Array_Helpers
 			int[] array = { 1, 2, 3 };
 
 			// Act
-			Core.Array_Helpers.Resize_By_Factor(ref array, factor, _mockLogger.Object);
+			ArrayHelpers.Resize_By_Factor(ref array, factor);
 
 			// Assert
 			NUnit.Framework.Assert.AreEqual(3, array.Length, "Array size should remain unchanged.");
 
-			_mockLogger.Verify(
-				logger => logger.Log_Warning(It.Is<string>(msg => !string.IsNullOrEmpty(msg))),
-				Times.Once
-			);
+			// _mockLogger.Verify(
+			// logger => logger.Log_Warning(It.Is<string>(msg => !string.IsNullOrEmpty(msg))),
+			// Times.Once
+			// );
 		}
 
 		#endregion

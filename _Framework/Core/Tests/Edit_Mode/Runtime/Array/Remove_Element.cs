@@ -4,7 +4,7 @@ using NUnit.Framework;
 namespace Bezoro.Framework.Core.Tests.Edit_Mode.Array_Helpers
 {
 	[TestFixture]
-	[TestOf(typeof(Core.Array_Helpers))]
+	[TestOf(typeof(ArrayHelpers))]
 	public class Remove_Element
 	{
 		[Test]
@@ -15,7 +15,7 @@ namespace Bezoro.Framework.Core.Tests.Edit_Mode.Array_Helpers
 			const int element_to_remove = 3;
 
 			// Act
-			Core.Array_Helpers.Remove_Element(ref array, element_to_remove);
+			ArrayHelpers.Remove_Element(ref array, element_to_remove);
 
 			// Assert
 			NUnit.Framework.Assert.False(array.Contains(element_to_remove), "The element should be removed.");
@@ -25,12 +25,12 @@ namespace Bezoro.Framework.Core.Tests.Edit_Mode.Array_Helpers
 		public void Removes_Element_In_Parallel_When_Size_Is_Larger_Than_Threshold()
 		{
 			// Arrange
-			var parallel_threshold = Core.Array_Helpers.Parallel_Threshold;
+			var parallel_threshold = ArrayHelpers.Parallel_Threshold;
 			var array              = Enumerable.Range(1, parallel_threshold * 2).ToArray();
 			var element_to_remove  = parallel_threshold;
 
 			// Act
-			Core.Array_Helpers.Remove_Element(ref array, element_to_remove);
+			ArrayHelpers.Remove_Element(ref array, element_to_remove);
 
 			// Assert
 			NUnit.Framework.Assert.False(array.Contains(element_to_remove), "The element should be removed.");
@@ -44,7 +44,7 @@ namespace Bezoro.Framework.Core.Tests.Edit_Mode.Array_Helpers
 			const int element_to_remove = 3;
 
 			// Act
-			Core.Array_Helpers.Remove_Element(ref array, element_to_remove);
+			ArrayHelpers.Remove_Element(ref array, element_to_remove);
 
 			// Assert
 			NUnit.Framework.Assert.AreEqual(
@@ -69,7 +69,7 @@ namespace Bezoro.Framework.Core.Tests.Edit_Mode.Array_Helpers
 			const int element_to_remove = 3;
 
 			// Act
-			Core.Array_Helpers.Remove_Element(ref array, element_to_remove, Array_Removal_Approach.Set_To_Null);
+			ArrayHelpers.Remove_Element(ref array, element_to_remove, ArrayRemovalApproach.SetToNull);
 
 			// Assert
 			NUnit.Framework.Assert.AreEqual(
@@ -93,7 +93,7 @@ namespace Bezoro.Framework.Core.Tests.Edit_Mode.Array_Helpers
 			const int element_to_remove = 3;
 
 			// Act
-			Core.Array_Helpers.Remove_Element(ref array, element_to_remove);
+			ArrayHelpers.Remove_Element(ref array, element_to_remove);
 
 			// Assert
 
@@ -118,7 +118,7 @@ namespace Bezoro.Framework.Core.Tests.Edit_Mode.Array_Helpers
 			const int element_to_remove = 3;
 
 			// Act
-			Core.Array_Helpers.Remove_Element(ref array, element_to_remove);
+			ArrayHelpers.Remove_Element(ref array, element_to_remove);
 
 			// Assert
 			NUnit.Framework.Assert.IsNull(array, "The array should remain null.");
@@ -132,7 +132,7 @@ namespace Bezoro.Framework.Core.Tests.Edit_Mode.Array_Helpers
 			const int element_to_remove = 3;
 
 			// Act
-			Core.Array_Helpers.Remove_Element(ref array, element_to_remove);
+			ArrayHelpers.Remove_Element(ref array, element_to_remove);
 
 			// Assert
 			NUnit.Framework.Assert.IsEmpty(array, "The array should remain empty.");
@@ -147,7 +147,7 @@ namespace Bezoro.Framework.Core.Tests.Edit_Mode.Array_Helpers
 			var       initial_length       = array.Length;
 
 			// Act
-			Core.Array_Helpers.Remove_Element(ref array, element_not_in_array);
+			ArrayHelpers.Remove_Element(ref array, element_not_in_array);
 
 			// Assert
 			NUnit.Framework.Assert.AreEqual(
@@ -171,7 +171,7 @@ namespace Bezoro.Framework.Core.Tests.Edit_Mode.Array_Helpers
 			var initial_length = array.Length;
 
 			// Act
-			Core.Array_Helpers.Remove_Element(ref array, null);
+			ArrayHelpers.Remove_Element(ref array, null);
 
 			// Assert
 			NUnit.Framework.Assert.AreEqual(

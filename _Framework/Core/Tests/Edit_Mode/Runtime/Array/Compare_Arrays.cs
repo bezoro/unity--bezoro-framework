@@ -3,7 +3,7 @@
 namespace Bezoro.Framework.Core.Tests.Edit_Mode.Array_Helpers
 {
 	[TestFixture]
-	[TestOf(typeof(Core.Array_Helpers))]
+	[TestOf(typeof(ArrayHelpers))]
 	public class Compare_Arrays
 	{
 		private class TestObject
@@ -38,7 +38,7 @@ namespace Bezoro.Framework.Core.Tests.Edit_Mode.Array_Helpers
 		public void Returns_False_For_Different_Arrays(object[] a, object[] b)
 		{
 			// Act
-			var comparison_result = Core.Array_Helpers.Compare_Arrays(a, b);
+			var comparison_result = ArrayHelpers.Compare_Arrays(a, b);
 
 			// Assert
 			NUnit.Framework.Assert.AreEqual(
@@ -52,7 +52,7 @@ namespace Bezoro.Framework.Core.Tests.Edit_Mode.Array_Helpers
 		public void Returns_True_For_Identical_Arrays(object[] a, object[] b)
 		{
 			// Act
-			var result = Core.Array_Helpers.Compare_Arrays(a, b);
+			var result = ArrayHelpers.Compare_Arrays(a, b);
 
 			// Assert
 			NUnit.Framework.Assert.AreEqual(
@@ -65,7 +65,7 @@ namespace Bezoro.Framework.Core.Tests.Edit_Mode.Array_Helpers
 		public void Compares_Simple_Array_Types(object[] a, object[] b)
 		{
 			// Act
-			var result = Core.Array_Helpers.Compare_Arrays(a, b);
+			var result = ArrayHelpers.Compare_Arrays(a, b);
 
 			// Assert
 			NUnit.Framework.Assert.AreEqual(
@@ -86,8 +86,8 @@ namespace Bezoro.Framework.Core.Tests.Edit_Mode.Array_Helpers
 			var array3 = new[] { obj3, obj2 };
 
 			// Act
-			var result1 = Core.Array_Helpers.Compare_Arrays(array1, array2);
-			var result2 = Core.Array_Helpers.Compare_Arrays(array1, array3);
+			var result1 = ArrayHelpers.Compare_Arrays(array1, array2);
+			var result2 = ArrayHelpers.Compare_Arrays(array1, array3);
 
 			// Assert
 			NUnit.Framework.Assert.IsTrue(
@@ -104,7 +104,7 @@ namespace Bezoro.Framework.Core.Tests.Edit_Mode.Array_Helpers
 		public void Returns_False_When_Comparing_With_Null(object[] a, object[] b)
 		{
 			// Act
-			var result = Core.Array_Helpers.Compare_Arrays(a, b);
+			var result = ArrayHelpers.Compare_Arrays(a, b);
 
 			// Assert
 			NUnit.Framework.Assert.AreEqual(
@@ -116,7 +116,7 @@ namespace Bezoro.Framework.Core.Tests.Edit_Mode.Array_Helpers
 		public void Returns_True_When_Comparing_Null_Arrays()
 		{
 			// Act
-			var result = Core.Array_Helpers.Compare_Arrays<object>(null, null);
+			var result = ArrayHelpers.Compare_Arrays<object>(null, null);
 
 			// Assert
 			NUnit.Framework.Assert.IsTrue(result, "Comparing 2 null arrays should be considered equal.");
@@ -130,7 +130,7 @@ namespace Bezoro.Framework.Core.Tests.Edit_Mode.Array_Helpers
 			var array2 = new[] { 1, 2, 3, 4 };
 
 			// Act
-			var result = Core.Array_Helpers.Compare_Arrays(array1, array2);
+			var result = ArrayHelpers.Compare_Arrays(array1, array2);
 
 			// Assert
 			NUnit.Framework.Assert.IsFalse(
@@ -147,8 +147,8 @@ namespace Bezoro.Framework.Core.Tests.Edit_Mode.Array_Helpers
 			string[] array3 = { "a", null, "b" };
 
 			// Act
-			var result1 = Core.Array_Helpers.Compare_Arrays(array1, array2);
-			var result2 = Core.Array_Helpers.Compare_Arrays(array1, array3);
+			var result1 = ArrayHelpers.Compare_Arrays(array1, array2);
+			var result2 = ArrayHelpers.Compare_Arrays(array1, array3);
 
 			// Assert
 			NUnit.Framework.Assert.IsTrue(result1);
@@ -163,7 +163,7 @@ namespace Bezoro.Framework.Core.Tests.Edit_Mode.Array_Helpers
 			string[] array2 = { null, null, null };
 
 			// Act
-			var result = Core.Array_Helpers.Compare_Arrays(array1, array2);
+			var result = ArrayHelpers.Compare_Arrays(array1, array2);
 
 			// Assert
 			NUnit.Framework.Assert.IsTrue(

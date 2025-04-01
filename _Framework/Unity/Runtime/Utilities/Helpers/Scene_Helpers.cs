@@ -7,32 +7,23 @@ namespace Bezoro.Framework.Unity.Utilities
 	{
 		public static void GetAllRootGameObjectsNonAlloc(ref GameObject[] results)
 		{
-			if (SceneManager.sceneCount == 1)
-			{
-				results = SceneManager.GetActiveScene().GetRootGameObjects();
-			}
+			if (UnityEngine.SceneManagement.SceneManager.sceneCount == 1)
+				results = UnityEngine.SceneManagement.SceneManager.GetActiveScene().GetRootGameObjects();
 
-			for (var i = 0 ; i < SceneManager.sceneCount ; i++)
+			for (var i = 0 ; i < UnityEngine.SceneManagement.SceneManager.sceneCount ; i++)
 			{
-				var scene = SceneManager.GetSceneAt(i);
-
-				Core.Array_Helpers.Merge(
-					scene.GetRootGameObjects(),
-					ref results
-				);
+				var scene = UnityEngine.SceneManagement.SceneManager.GetSceneAt(i);
+				Core.ArrayHelpers.Merge(scene.GetRootGameObjects(), ref results);
 			}
 		}
 
 		public static bool IsSceneAlreadyOpenByPath(string path, out Scene scene, out int index)
 		{
-			for (var i = 0 ; i < SceneManager.sceneCount ; i++)
+			for (var i = 0 ; i < UnityEngine.SceneManagement.SceneManager.sceneCount ; i++)
 			{
-				var sc = SceneManager.GetSceneAt(i);
+				var sc = UnityEngine.SceneManagement.SceneManager.GetSceneAt(i);
 
-				if (sc.path != path)
-				{
-					continue;
-				}
+				if (sc.path != path) continue;
 
 				scene = sc;
 				index = i;
@@ -48,14 +39,11 @@ namespace Bezoro.Framework.Unity.Utilities
 
 		public static bool IsSceneAlreadyOpenByName(string name, out Scene scene, out int index)
 		{
-			for (var i = 0 ; i < SceneManager.sceneCount ; i++)
+			for (var i = 0 ; i < UnityEngine.SceneManagement.SceneManager.sceneCount ; i++)
 			{
-				var sc = SceneManager.GetSceneAt(i);
+				var sc = UnityEngine.SceneManagement.SceneManager.GetSceneAt(i);
 
-				if (sc.name != name)
-				{
-					continue;
-				}
+				if (sc.name != name) continue;
 
 				scene = sc;
 				index = i;

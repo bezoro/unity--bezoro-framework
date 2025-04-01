@@ -1,5 +1,6 @@
 ﻿using System;
 using UnityEditor;
+using UnityEngine;
 
 namespace Bezoro.Framework.Unity.Editor
 {
@@ -9,29 +10,27 @@ namespace Bezoro.Framework.Unity.Editor
 	[InitializeOnLoad]
 	public static class EditorPlayModeStateNotifier
 	{
-		private static bool _initialized;
-
 		static EditorPlayModeStateNotifier()
 		{
-			if ( _initialized ) { return; }
-
-			EditorApplication.playModeStateChanged += OnPlayModeChanged;
-			_initialized                           =  true;
+			EditorApplication.playModeStateChanged    += OnPlayModeChanged;
+			AssemblyReloadEvents.beforeAssemblyReload += Cleanup;
 		}
 
 		public static PlayModeStateChange               PlayModeState { get; private set; }
 		public static event Action<PlayModeStateChange> PlayModeStateChanged;
 
-		private static void OnPlayModeChanged( PlayModeStateChange playModeStateChange )
+		private static void OnPlayModeChanged(PlayModeStateChange playModeStateChange)
 		{
 			PlayModeState = playModeStateChange;
-			PlayModeStateChanged?.Invoke( playModeStateChange );
+			PlayModeStateChanged?.Invoke(playModeStateChange);
+
+			Logger.Log(PlayModeState.ToString(), nameof(EditorPlayModeStateNotifier));
 		}
 
 		public static void Cleanup()
 		{
-			EditorApplication.playModeStateChanged -= OnPlayModeChanged;
-			_initialized                           =  false;
+			EditorApplication.playModeStateChanged    -= OnPlayModeChanged;
+			AssemblyReloadEvents.beforeAssemblyReload -= Cleanup;
 		}
 	}
 }

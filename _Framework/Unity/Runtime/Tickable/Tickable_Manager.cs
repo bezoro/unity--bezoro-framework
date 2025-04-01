@@ -18,42 +18,42 @@ namespace Bezoro.Framework.Unity
 
 		public void AddUniqueEarlyTickable(Tickable tickable)
 		{
-			Array_Helpers.Add_Unique(ref _early_tickables, tickable);
+			ArrayHelpers.Add_Unique(ref _early_tickables, tickable);
 		}
 
 		public void AddUniqueTickable(Tickable tickable)
 		{
-			Array_Helpers.Add_Unique(ref _tickables, tickable);
+			ArrayHelpers.Add_Unique(ref _tickables, tickable);
 		}
 
 		public void AddUniqueFixedTickable(Tickable tickable)
 		{
-			Array_Helpers.Add_Unique(ref _fixed_tickables, tickable);
+			ArrayHelpers.Add_Unique(ref _fixed_tickables, tickable);
 		}
 
 		public void AddUniqueLateTickable(Tickable tickable)
 		{
-			Array_Helpers.Add_Unique(ref _late_tickables, tickable);
+			ArrayHelpers.Add_Unique(ref _late_tickables, tickable);
 		}
 
 		public void RemoveEarlyTickable(Tickable tickable)
 		{
-			Array_Helpers.Remove_Element(ref _early_tickables, tickable);
+			ArrayHelpers.Remove_Element(ref _early_tickables, tickable);
 		}
 
 		public void RemoveTickable(Tickable tickable)
 		{
-			Array_Helpers.Remove_Element(ref _tickables, tickable);
+			ArrayHelpers.Remove_Element(ref _tickables, tickable);
 		}
 
 		public void RemoveFixedTickable(Tickable tickable)
 		{
-			Array_Helpers.Remove_Element(ref _fixed_tickables, tickable);
+			ArrayHelpers.Remove_Element(ref _fixed_tickables, tickable);
 		}
 
 		public void RemoveLateTickable(Tickable tickable)
 		{
-			Array_Helpers.Remove_Element(ref _late_tickables, tickable);
+			ArrayHelpers.Remove_Element(ref _late_tickables, tickable);
 		}
 
 		private void Update()

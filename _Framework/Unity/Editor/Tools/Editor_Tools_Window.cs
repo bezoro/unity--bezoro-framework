@@ -42,7 +42,7 @@ namespace Bezoro.Framework.Unity.Editor.Tools
 		private static void SceneReloadButton()
 		{
 			if (!GUILayout.Button("Reload Scene")) return;
-			var scene = SceneManager.GetActiveScene();
+			var scene = UnityEngine.SceneManagement.SceneManager.GetActiveScene();
 			var opts  = new LoadSceneParameters();
 			EditorSceneManager.LoadSceneInPlayMode(scene.path, opts);
 		}

@@ -59,14 +59,14 @@
 		public const string CARET            = "^";
 		public const string AND              = "&";
 
-		public static class Game_Initialization
+		public static class GameInitialization
 		{
-			public const string GAME_INITIALIZATION_CONFIG_ASSET_MENU_PATH =
+			public const string CONFIG_ASSET_MENU_PATH =
 				BEZORO + SLASH + RUNTIME + SLASH + CONFIG + SLASH + "Game Initialization";
 
-			public const string GAME_INITIALIZATION_CONFIG_ASSET_MENU_FILE_NAME = "Game_Initialization_Config";
+			public const string CONFIG_ASSET_MENU_FILE_NAME = "Game_Initialization_Config";
 
-			public const int GAME_INITIALIZATION_CONFIG_ASSET_MENU_ORDER = 0;
+			public const int CONFIG_ASSET_MENU_ORDER = 0;
 		}
 	}
 }

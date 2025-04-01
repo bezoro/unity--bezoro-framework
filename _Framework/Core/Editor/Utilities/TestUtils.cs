@@ -1,17 +1,17 @@
 ﻿using Moq;
 using NUnit.Framework;
 
-namespace Bezoro.Framework.Core.Tests.Edit_Mode.Eitor.Utilities
+namespace Bezoro.Framework.Core.Editor.Editor.Utilities
 {
 	/// <summary>
 	///     Provides utilities for testing purposes, including methods to create test cases
 	///     and mock objects for dependencies commonly utilized in unit tests.
 	/// </summary>
-	public class Test_Utils
+	public class TestUtils
 	{
-		public Mock<I_Logger> Logger_Mock => new();
+		public Mock<ILogger> LoggerMock => new();
 
-		public static TestCaseData Create_Test_Case<T>(string test_name, T data)
+		public static TestCaseData CreateTestCase<T>(string test_name, T data)
 		{
 			return new( data )
 			{

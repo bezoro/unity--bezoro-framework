@@ -1,6 +1,6 @@
 ﻿namespace Bezoro.Framework.Core
 {
-	public enum Log_Type
+	public enum LogType
 	{
 		Log,
 		Warning,

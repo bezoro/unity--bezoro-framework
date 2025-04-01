@@ -3,7 +3,7 @@
 namespace Bezoro.Framework.Core.Tests.Edit_Mode.Array_Helpers
 {
 	[TestFixture]
-	[TestOf(typeof(Core.Array_Helpers))]
+	[TestOf(typeof(ArrayHelpers))]
 	public class Setup_Array_With_First_Element
 	{
 		#region Happy Path
@@ -16,7 +16,7 @@ namespace Bezoro.Framework.Core.Tests.Edit_Mode.Array_Helpers
 			var   element = 42;
 
 			// Act
-			var result = Core.Array_Helpers.Setup_Array_With_First_Element(ref array, element);
+			var result = ArrayHelpers.Setup_Array_With_First_Element(ref array, element);
 
 			// Assert
 			NUnit.Framework.Assert.IsTrue(result, "Expected the method to return true when initializing the array.");
@@ -40,7 +40,7 @@ namespace Bezoro.Framework.Core.Tests.Edit_Mode.Array_Helpers
 			var element = 42;
 
 			// Act
-			var result = Core.Array_Helpers.Setup_Array_With_First_Element(ref array, element);
+			var result = ArrayHelpers.Setup_Array_With_First_Element(ref array, element);
 
 			// Assert
 			NUnit.Framework.Assert.IsTrue(
@@ -66,7 +66,7 @@ namespace Bezoro.Framework.Core.Tests.Edit_Mode.Array_Helpers
 			var   element = 42;
 
 			// Act
-			var result = Core.Array_Helpers.Setup_Array_With_First_Element(ref array, element);
+			var result = ArrayHelpers.Setup_Array_With_First_Element(ref array, element);
 
 			// Assert
 			NUnit.Framework.Assert.IsFalse(
@@ -82,7 +82,7 @@ namespace Bezoro.Framework.Core.Tests.Edit_Mode.Array_Helpers
 			var   element = 42;
 
 			// Act
-			var result = Core.Array_Helpers.Setup_Array_With_First_Element(ref array, element);
+			var result = ArrayHelpers.Setup_Array_With_First_Element(ref array, element);
 
 			// Assert
 			NUnit.Framework.Assert.IsFalse(

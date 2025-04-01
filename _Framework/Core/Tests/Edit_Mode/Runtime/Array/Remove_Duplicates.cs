@@ -4,7 +4,7 @@ using NUnit.Framework;
 namespace Bezoro.Framework.Core.Tests.Edit_Mode.Array_Helpers
 {
 	[TestFixture]
-	[TestOf(typeof(Core.Array_Helpers))]
+	[TestOf(typeof(ArrayHelpers))]
 	public class Remove_Duplicates
 	{
 		private class TestObject
@@ -40,7 +40,7 @@ namespace Bezoro.Framework.Core.Tests.Edit_Mode.Array_Helpers
 		public void Removes_Duplicates_From_Existing_Array(object[] array, object[] expectedArray)
 		{
 			// Act
-			Core.Array_Helpers.Remove_Duplicates(ref array);
+			ArrayHelpers.Remove_Duplicates(ref array);
 
 			// Assert
 			CollectionAssert.AreEqual(expectedArray, array);
@@ -52,7 +52,7 @@ namespace Bezoro.Framework.Core.Tests.Edit_Mode.Array_Helpers
 		public void Removes_Duplicate_Nulls(object[] array, object[] expected)
 		{
 			// Act
-			Core.Array_Helpers.Remove_Duplicates(ref array);
+			ArrayHelpers.Remove_Duplicates(ref array);
 
 			// Assert
 			CollectionAssert.AreEqual(expected, array);
@@ -64,7 +64,7 @@ namespace Bezoro.Framework.Core.Tests.Edit_Mode.Array_Helpers
 		public void Removes_Duplicates_From_Simple_Types(object[] array, object[] expectedArray)
 		{
 			// Act
-			Core.Array_Helpers.Remove_Duplicates(ref array);
+			ArrayHelpers.Remove_Duplicates(ref array);
 
 			// Assert
 			CollectionAssert.AreEqual(expectedArray, array);
@@ -91,7 +91,7 @@ namespace Bezoro.Framework.Core.Tests.Edit_Mode.Array_Helpers
 			};
 
 			// Act
-			Core.Array_Helpers.Remove_Duplicates(ref array);
+			ArrayHelpers.Remove_Duplicates(ref array);
 
 			// Assert
 			CollectionAssert.AreEqual(expected_array, array);
@@ -104,7 +104,7 @@ namespace Bezoro.Framework.Core.Tests.Edit_Mode.Array_Helpers
 			int[] array = null;
 
 			// Act
-			Core.Array_Helpers.Remove_Duplicates(ref array);
+			ArrayHelpers.Remove_Duplicates(ref array);
 
 			// Assert
 			NUnit.Framework.Assert.IsNull(array);
@@ -117,7 +117,7 @@ namespace Bezoro.Framework.Core.Tests.Edit_Mode.Array_Helpers
 			var array = new[] { 42 };
 
 			// Act
-			Core.Array_Helpers.Remove_Duplicates(ref array);
+			ArrayHelpers.Remove_Duplicates(ref array);
 
 			// Assert
 			CollectionAssert.AreEqual(new[] { 42 }, array);
@@ -130,7 +130,7 @@ namespace Bezoro.Framework.Core.Tests.Edit_Mode.Array_Helpers
 			var array = System.Array.Empty<int>();
 
 			// Act
-			Core.Array_Helpers.Remove_Duplicates(ref array);
+			ArrayHelpers.Remove_Duplicates(ref array);
 
 			// Assert
 			CollectionAssert.IsEmpty(array);

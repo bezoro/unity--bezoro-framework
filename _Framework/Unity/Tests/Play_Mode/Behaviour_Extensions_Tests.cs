@@ -1,10 +1,11 @@
 ﻿// Behaviour_Extensions_Tests.cs
 
 using System.Threading.Tasks;
+using Bezoro.Framework.Core;
 using Bezoro.Framework.Unity.Utilities;
 using NUnit.Framework;
 using UnityEngine;
-using Array_Helpers = Bezoro.Framework.Core.Array_Helpers;
+using Assert = NUnit.Framework.Assert;
 
 namespace Bezoro.Framework.Unity.Tests.PlayMode
 {
@@ -21,9 +22,9 @@ namespace Bezoro.Framework.Unity.Tests.PlayMode
 			_test_game_object = new();
 			_test_behaviour   = _test_game_object.AddComponent<Test_Behaviour>();
 
-			Array_Helpers.Add(ref _test_behaviours, _test_game_object.AddComponent<Test_Behaviour>());
-			Array_Helpers.Add(ref _test_behaviours, _test_game_object.AddComponent<Test_Behaviour>());
-			Array_Helpers.Add(ref _test_behaviours, _test_game_object.AddComponent<Test_Behaviour>());
+			ArrayHelpers.Add(ref _test_behaviours, _test_game_object.AddComponent<Test_Behaviour>());
+			ArrayHelpers.Add(ref _test_behaviours, _test_game_object.AddComponent<Test_Behaviour>());
+			ArrayHelpers.Add(ref _test_behaviours, _test_game_object.AddComponent<Test_Behaviour>());
 		}
 
 		// [TearDown]

@@ -36,7 +36,7 @@ namespace Bezoro.Framework.Unity.DI
 		where TInterface : I_Service
 		where TImplementation : class, TInterface
 		{
-			Assert.Is_Not_Null(
+			Assert.IsNotNull(
 				factory,
 				nameof(factory)
 			);

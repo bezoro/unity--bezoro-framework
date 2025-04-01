@@ -4,7 +4,7 @@ using NUnit.Framework;
 namespace Bezoro.Framework.Core.Tests.Edit_Mode.Array_Helpers
 {
 	[TestFixture]
-	[TestOf(typeof(Core.Array_Helpers))]
+	[TestOf(typeof(ArrayHelpers))]
 	public class Clear
 	{
 		#region Happy Path
@@ -16,7 +16,7 @@ namespace Bezoro.Framework.Core.Tests.Edit_Mode.Array_Helpers
 			int[] array = { 1, 2, 3, 4, 5 };
 
 			// Act
-			Core.Array_Helpers.Clear(ref array);
+			ArrayHelpers.Clear(ref array);
 
 			// Assert
 			NUnit.Framework.Assert.IsTrue(array.All(element => element == default));
@@ -26,14 +26,14 @@ namespace Bezoro.Framework.Core.Tests.Edit_Mode.Array_Helpers
 		public void Uses_Parallel_Method_When_Size_Is_Greater_Than_Threshold()
 		{
 			// Arrange
-			var threshold = Core.Array_Helpers.Parallel_Threshold;
+			var threshold = ArrayHelpers.Parallel_Threshold;
 			var array     = new int[threshold * 2];
 
 			for (var i = 0 ; i < array.Length ; i++)
 				array[i] = i + 1;
 
 			// Act
-			Core.Array_Helpers.Clear(ref array);
+			ArrayHelpers.Clear(ref array);
 
 			// Assert
 			NUnit.Framework.Assert.IsTrue(array.All(element => element == default));

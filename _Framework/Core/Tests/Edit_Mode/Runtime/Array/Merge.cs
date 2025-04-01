@@ -42,7 +42,7 @@ namespace Bezoro.Framework.Core.Tests.Edit_Mode.Array
 			string[] to   = null;
 
 			// Act
-			Core.Array_Helpers.Merge(from, ref to);
+			ArrayHelpers.Merge(from, ref to);
 
 			// Assert
 			CollectionAssert.AreEqual(from, to);
@@ -56,7 +56,7 @@ namespace Bezoro.Framework.Core.Tests.Edit_Mode.Array
 			var to   = System.Array.Empty<string>();
 
 			// Act
-			Core.Array_Helpers.Merge(from, ref to);
+			ArrayHelpers.Merge(from, ref to);
 
 			// Assert
 			CollectionAssert.AreEqual(from, to);
@@ -70,7 +70,7 @@ namespace Bezoro.Framework.Core.Tests.Edit_Mode.Array
 			var to   = new int[2]; // Smaller array than 'from'
 
 			// Act
-			Core.Array_Helpers.Merge(from, ref to);
+			ArrayHelpers.Merge(from, ref to);
 
 			// Assert
 			CollectionAssert.AreEqual(new[] { 1, 2, 3 }, to);
@@ -84,7 +84,7 @@ namespace Bezoro.Framework.Core.Tests.Edit_Mode.Array
 			var to   = new[] { "A", "B", null };
 
 			// Act
-			Core.Array_Helpers.Merge(from, ref to);
+			ArrayHelpers.Merge(from, ref to);
 
 			// Assert
 			CollectionAssert.AreEqual(new[] { "A", "B", "Z" }, to);
@@ -104,7 +104,7 @@ namespace Bezoro.Framework.Core.Tests.Edit_Mode.Array
 			var to = new TestObject[2]; // Smaller array than 'from'
 
 			// Act
-			Core.Array_Helpers.Merge(from, ref to);
+			ArrayHelpers.Merge(from, ref to);
 
 			// Assert
 			CollectionAssert.AreEqual(from, to);
@@ -117,7 +117,7 @@ namespace Bezoro.Framework.Core.Tests.Edit_Mode.Array
 			string[] to = { "Existing" };
 
 			// Act
-			Core.Array_Helpers.Merge(null, ref to);
+			ArrayHelpers.Merge(null, ref to);
 
 			// Assert
 			CollectionAssert.AreEqual(new[] { "Existing" }, to);
@@ -131,7 +131,7 @@ namespace Bezoro.Framework.Core.Tests.Edit_Mode.Array
 			var to   = new[] { "Existing" };
 
 			// Act
-			Core.Array_Helpers.Merge(from, ref to);
+			ArrayHelpers.Merge(from, ref to);
 
 			// Assert
 			CollectionAssert.AreEqual(new[] { "Existing" }, to);
@@ -144,7 +144,7 @@ namespace Bezoro.Framework.Core.Tests.Edit_Mode.Array
 			string[] to = null;
 
 			// Act
-			Core.Array_Helpers.Merge(null, ref to);
+			ArrayHelpers.Merge(null, ref to);
 
 			// Assert
 			NUnit.Framework.Assert.IsNull(to);
@@ -158,7 +158,7 @@ namespace Bezoro.Framework.Core.Tests.Edit_Mode.Array
 			var to   = new[] { 3, 4, 5 };
 
 			// Act
-			Core.Array_Helpers.Merge(from, ref to);
+			ArrayHelpers.Merge(from, ref to);
 
 			// Assert
 			CollectionAssert.AreEqual(new[] { 3, 4, 5 }, to);
@@ -172,7 +172,7 @@ namespace Bezoro.Framework.Core.Tests.Edit_Mode.Array
 			var to   = new[] { "X", null, "Z" };
 
 			// Act
-			Core.Array_Helpers.Merge(from, ref to);
+			ArrayHelpers.Merge(from, ref to);
 
 			// Assert
 			CollectionAssert.AreEqual(new[] { "X", "B", "Z" }, to);
@@ -186,7 +186,7 @@ namespace Bezoro.Framework.Core.Tests.Edit_Mode.Array
 			var to   = new int[1]; // Smaller array than 'from'
 
 			// Act
-			Core.Array_Helpers.Merge(from, ref to);
+			ArrayHelpers.Merge(from, ref to);
 
 			// Assert
 			CollectionAssert.AreEqual(from, to);

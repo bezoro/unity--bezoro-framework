@@ -6,7 +6,7 @@ using Bezoro.Framework.Unity.Utilities;
 using Bezoro.Framework.Unity.Utilities.String;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
-using Object = UnityEngine.Object;
+using ILogger = Bezoro.Framework.Core.ILogger;
 
 namespace Bezoro.Framework.Unity
 {
@@ -25,7 +25,7 @@ namespace Bezoro.Framework.Unity
 				if (!Player_Loop_Helpers.Is_On_Main_Thread())
 					Player_Loop_Helpers.Return_To_Main_Thread();
 
-				var go = new UnityEngine.GameObject(name)
+				var game_obj = new UnityEngine.GameObject(name)
 				{
 					transform =
 					{
@@ -35,107 +35,106 @@ namespace Bezoro.Framework.Unity
 					}
 				};
 
-				BDebug.Log($"Created GameObject: {name.Bold()}", go);
-				return go;
+				BDebug.Log($"Created GameObject: {name.Bold()}", game_obj);
+				return game_obj;
 			}
 
 			private static async UniTask Monitor_Enable_Condition(
-				UnityEngine.GameObject game_object,
-				Func<bool> enable_condition,
-				CancellationToken ct
+				UnityEngine.GameObject gameObject,
+				Func<bool> enableCondition,
+				CancellationToken cancellationToken
 			)
 			{
 				try
 				{
-					var is_enabled       = !enable_condition();
-					var is_not_cancelled = !ct.IsCancellationRequested;
+					var target_not_enabled         = !enableCondition();
+					var cancellation_not_requested = !cancellationToken.IsCancellationRequested;
 
-					while ( is_enabled && game_object.Not_Equals_Null() && is_not_cancelled )
-						await UniTask.WaitForEndOfFrame(ct);
-
-					if (game_object.Not_Equals_Null() && is_not_cancelled)
+					while ( target_not_enabled && gameObject.Not_Equals_Null() && cancellation_not_requested )
 					{
-						BDebug.Log($"Enabled GameObject: {game_object.name.Bold()}");
-						game_object.SetActive(true);
+						await UniTask.WaitForEndOfFrame(cancellationToken);
+
+						// Update checks on each frame iteration in case conditions change
+						target_not_enabled         = !enableCondition();
+						cancellation_not_requested = !cancellationToken.IsCancellationRequested;
+					}
+
+					if (gameObject.Not_Equals_Null() && cancellation_not_requested)
+					{
+						Logger.Log($"Enabled GameObject: {gameObject.name.Bold()}");
+						gameObject.SetActive(true);
 					}
 				}
-				catch ( Exception exception )
+				catch ( Exception ex )
 				{
-					BDebug.Log_Exception(exception.Message);
+					BDebug.Log_Exception(ex.Message);
 					throw;
 				}
 			}
 
 			public static UnityEngine.GameObject Create(
-				string object_name = DEFAULT_OBJECT_NAME,
-				Transform_Data transform_data = default,
-				Func<bool> activation_condition = null,
-				I_Logger logger = null,
-				params Type[] component_types
+				string objectName = DEFAULT_OBJECT_NAME,
+				Transform_Data transformData = default,
+				Func<bool> activationCondition = null,
+				ILogger logger = null,
+				params Type[] componentTypes
 			)
 			{
-				return GameObject.Create_Async(
-						object_name, transform_data, activation_condition, logger, component_types)
+				if (!Player_Loop_Helpers.Is_On_Main_Thread())
+					Player_Loop_Helpers.Return_To_Main_Thread();
+
+				return Create_Async(objectName, transformData, activationCondition, logger, componentTypes)
 					.GetAwaiter().GetResult();
 			}
 
 			public static async UniTask<UnityEngine.GameObject> Create_Async(
-				string object_name = DEFAULT_OBJECT_NAME,
-				Transform_Data transform_data = default,
-				Func<bool> enable_condition = null,
-				I_Logger logger = null,
-				params Type[] component_types
+				string objectName = DEFAULT_OBJECT_NAME,
+				Transform_Data transformData = default,
+				Func<bool> enableCondition = null,
+				ILogger logger = null,
+				params Type[] componentTypes
 			)
 			{
-				// Validation_Helpers.ValidateString(object_name);
-
-				var game_object = GameObject.Create_Internal(object_name, transform_data);
-				game_object.SetActive(false);
-
-				if (component_types.Length > 0)
+				foreach ( var type in componentTypes )
 				{
-					foreach ( var type in component_types )
-					{
-						if (typeof(Component).IsAssignableFrom(type))
-							continue;
+					if (typeof(Component).IsAssignableFrom(type))
+						continue;
 
-						Log_Helpers.Log_Error(
-							logger,
-							$"Type {type} is not a valid Unity Component. Aborting {nameof(GameObject.Create_Async)}.");
-
-						if (game_object != null)
-							Object.Destroy(game_object);
-
-						return null;
-					}
-
-					await game_object.Add_Components_Async(component_types);
+					Logger.Log_Error($"Type {type} is not a valid Unity Component. Aborting {nameof(Create_Async)}.");
+					return null;
 				}
 
-				if (enable_condition != null)
+				var game_object = Create_Internal(objectName, transformData);
+				game_object.SetActive(false);
+
+				if (componentTypes.Length > 0)
+				{
+					await game_object.Add_Components_Async(componentTypes);
+				}
+
+				if (enableCondition != null)
 				{
 					using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(DEFAULT_CREATION_TIMEOUT));
-					await GameObject.Monitor_Enable_Condition(game_object, enable_condition, cts.Token);
+					await Monitor_Enable_Condition(game_object, enableCondition, cts.Token);
 				}
 
 				await game_object.Enable_Behaviours();
-
 				return game_object;
 			}
 
 			public static async UniTask<IReadOnlyList<UnityEngine.GameObject>> Create_Batch(
-				IEnumerable<(string name, Type[] components)> object_specs,
-				Transform_Data transform_data = default,
-				Func<bool> enable_condition = null,
+				IEnumerable<(string name, Type[] components)> objectSpecs,
+				Transform_Data transformData = default,
+				Func<bool> enableCondition = null,
 				float timeoutDuration = DEFAULT_CREATION_TIMEOUT,
-				I_Logger logger = null
+				ILogger logger = null
 			)
 			{
 				var created_objects = new List<UnityEngine.GameObject>();
 
-				foreach ( var (name, components) in object_specs )
+				foreach ( var (name, components) in objectSpecs )
 				{
-					var go = await GameObject.Create_Async(name, transform_data, enable_condition, logger, components);
+					var go = await Create_Async(name, transformData, enableCondition, logger, components);
 					created_objects.Add(go);
 					await UniTask.Yield(PlayerLoopTiming.Update);
 				}

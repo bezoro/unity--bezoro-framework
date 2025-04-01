@@ -28,7 +28,7 @@ namespace Bezoro.Framework.Core
 	public static class Assert
 	{
 		[Conditional("UNITY_EDITOR")]
-		public static void Is_True(bool condition, string message = null)
+		public static void IsTrue(bool condition, string message = null)
 		{
 			if (!condition)
 				throw new Assertion_Exception(message ?? "Assertion failed: Expected condition to be true.");
@@ -49,7 +49,7 @@ namespace Bezoro.Framework.Core
 		}
 
 		[Conditional("UNITY_EDITOR")]
-		public static void Is_Not_Null(object obj, string message = null)
+		public static void IsNotNull(object obj, string message = null)
 		{
 			if (obj == null)
 				throw new Assertion_Exception(message ?? "Assertion failed: Expected object to not be null.");

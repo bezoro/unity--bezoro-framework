@@ -1,11 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using Bezoro.Framework.Core;
 using Bezoro.Framework.Unity.DI;
+using Bezoro.Framework.Unity.Utilities.String;
 using Cysharp.Threading.Tasks;
 using Unity.Profiling;
 using UnityEngine;
+using Array = System.Array;
 using Object = UnityEngine.Object;
 
 namespace Bezoro.Framework.Unity.Utilities
@@ -14,7 +17,7 @@ namespace Bezoro.Framework.Unity.Utilities
 	{
 		public static void Set_Layer_Recursively(this GameObject game_object, int layer)
 		{
-			Assert.Is_Not_Null(game_object);
+			Assert.IsNotNull(game_object);
 
 			game_object.layer = layer;
 			foreach ( Transform child in game_object.transform ) child.gameObject.Set_Layer_Recursively(layer);
@@ -22,7 +25,7 @@ namespace Bezoro.Framework.Unity.Utilities
 
 		public static void Activate_Self_And_Children(this GameObject game_object, bool value)
 		{
-			Assert.Is_Not_Null(game_object);
+			Assert.IsNotNull(game_object);
 
 			game_object.SetActive(value);
 			foreach ( Transform child in game_object.transform ) child.gameObject.SetActive(value);
@@ -31,7 +34,7 @@ namespace Bezoro.Framework.Unity.Utilities
 		public static T Get_Component_In_Children<T>(this GameObject game_object, bool including_inactive)
 		where T : Component
 		{
-			Assert.Is_Not_Null(game_object);
+			Assert.IsNotNull(game_object);
 
 			var component = game_object.GetComponent<T>();
 
@@ -49,14 +52,14 @@ namespace Bezoro.Framework.Unity.Utilities
 
 		public static void Destroy_All_Children(this GameObject game_object)
 		{
-			Assert.Is_Not_Null(game_object);
+			Assert.IsNotNull(game_object);
 
 			foreach ( Transform child in game_object.transform ) Object.Destroy(child.gameObject);
 		}
 
 		public static void Reset_Transform(this GameObject game_object)
 		{
-			Assert.Is_Not_Null(game_object);
+			Assert.IsNotNull(game_object);
 
 			var transform = game_object.transform;
 			transform.position   = Vector3.zero;
@@ -67,15 +70,15 @@ namespace Bezoro.Framework.Unity.Utilities
 		public static bool Has_Component<T>(this GameObject gameObject)
 		where T : Component
 		{
-			Assert.Is_Not_Null(gameObject);
+			Assert.IsNotNull(gameObject);
 
 			return gameObject.GetComponent<T>() != null;
 		}
 
 		public static void Copy_Components_From(this GameObject destination, GameObject source)
 		{
-			Assert.Is_Not_Null(destination);
-			Assert.Is_Not_Null(source);
+			Assert.IsNotNull(destination);
+			Assert.IsNotNull(source);
 
 			// Instantiate a temporary clone of the source GameObject
 			var temp_clone = Object.Instantiate(source);
@@ -126,8 +129,23 @@ namespace Bezoro.Framework.Unity.Utilities
 
 		public static async UniTask<Behaviour[]> Enable_Behaviours(this GameObject go)
 		{
+			if (go == null)
+			{
+				BDebug.Log_Warning($"GameObject is null. Aborting {nameof(Enable_Behaviours)}", go);
+				return null;
+			}
+
 			var behaviours = go.GetComponents<Behaviour>();
+
+			if (behaviours.Length == 0)
+			{
+				BDebug.Log_Warning($"No Behaviours found on {go.name}. Aborting {nameof(Enable_Behaviours)}", go);
+				return null;
+			}
+
 			await behaviours.Enable_Behaviours();
+
+			BDebug.Log_Success($"Enabled Behaviours on {go.name}", go);
 			return behaviours;
 		}
 
@@ -150,6 +168,22 @@ namespace Bezoro.Framework.Unity.Utilities
 		public static bool Try_Get_Component_In_Children<T>(this GameObject game_object, out T component)
 		where T : Component
 		{
+			if (game_object == null)
+			{
+				Logger.Log_Error($"GameObject is null. Aborting {nameof(Try_Get_Component_In_Children)}", game_object);
+				component = null;
+				return false;
+			}
+
+			if (game_object.transform.childCount == 0)
+			{
+				Logger.Log_Error(
+					$"GameObject has no children. Aborting {nameof(Try_Get_Component_In_Children)}", game_object);
+
+				component = null;
+				return false;
+			}
+
 			component = game_object.GetComponentInChildren<T>();
 			return component != null;
 		}
@@ -324,53 +358,223 @@ namespace Bezoro.Framework.Unity.Utilities
 			params Type[] component_types
 		)
 		{
-			var added_components = new Component[] { };
-			var behaviours       = new Behaviour[component_types.Length];
+			if (go == null)
+			{
+				BDebug.Log_Warning($"GameObject is null. Aborting {nameof(Add_Components_Async)}.", go);
+				return null;
+			}
+
+			if (component_types == null || component_types.Length == 0)
+			{
+				BDebug.Log_Warning($"No component types provided. Aborting {nameof(Add_Components_Async)}.", go);
+				return null;
+			}
+
+			component_types = component_types.Where(type => type != null && typeof(Component).IsAssignableFrom(type))
+				.ToArray();
+
+			if (component_types.Length == 0)
+			{
+				BDebug.Log_Warning(
+					$"Provided component types are either null or invalid. Aborting {nameof(Add_Components_Async)}.",
+					go);
+
+				return Array.Empty<Component>();
+			}
+
+			var added_components = new List<Component>(component_types.Length);
 
 			foreach ( var type in component_types )
 			{
 				var component = await go.Add_Component_Async(type);
+
+				if (component == null)
+				{
+					BDebug.Log_Warning($"Failed to add component of type {type.Name}. Skipping.", go);
+					continue;
+				}
+
 				added_components.Add(component);
+				BDebug.Log(go, $"Added component: {type.Name}", go);
 
 				if (component is Behaviour behaviour)
 				{
 					behaviour.enabled = false;
-					behaviours.Add(behaviour);
+					BDebug.Log(go, $"{type.Name} is a Behaviour. Disabling.", go);
 				}
 
 				await UniTask.WaitForEndOfFrame();
 			}
 
-			foreach ( var behaviour in behaviours )
+			foreach ( var component in added_components )
 			{
-				behaviour.enabled = true;
+				if (component is Behaviour behaviour)
+				{
+					behaviour.enabled = true;
+					BDebug.Log(go, $"Enabling: {component.GetType().Name}", go);
+				}
+
 				await UniTask.WaitForEndOfFrame();
 			}
 
-			return added_components;
+			return added_components.ToArray();
 		}
 
 		public static Component[] Add_Components(this GameObject go, params Type[] component_types)
 		{
-			Component[] added_components = { };
+			if (go == null)
+			{
+				BDebug.Log_Warning($"GameObject is null. Aborting {nameof(Add_Components)}.");
+				return Array.Empty<Component>(); // Return an empty array when the GameObject is null.
+			}
+
+			if (component_types == null || component_types.Length == 0)
+			{
+				BDebug.Log_Warning($"No component types provided. Aborting {nameof(Add_Components)}.", go);
+				return Array.Empty<Component>();
+			}
+
+			var added_components = new List<Component>();
 
 			foreach ( var type in component_types )
-				added_components.Add(go.Add_Component(type));
+			{
+				if (type == null)
+				{
+					BDebug.Log_Warning("A null component type was provided. Skipping this type.", go);
+					continue;
+				}
 
-			return added_components;
+				var added_component = go.Add_Component(type);
+
+				if (added_component != null)
+				{
+					added_components.Add(added_component);
+					BDebug.Log_Success($"Added component: {type.Name}", go);
+				}
+				else
+					BDebug.Log_Warning($"Failed to add component of type {type}.", go);
+			}
+
+			BDebug.Log_Success($"Added {added_components.Count} components.", go);
+			return added_components.ToArray();
 		}
 
 		public static async UniTask<Component> Add_Component_Async(this GameObject go, Type component_type)
 		{
-			var component = go.Add_Component(component_type);
+			if (go == null)
+			{
+				BDebug.Log_Warning($"GameObject reference is null. Aborting {nameof(Add_Component_Async)}.");
+				return null;
+			}
 
-			if (component is not Behaviour behaviour)
-				return component;
+			if (component_type == null)
+			{
+				BDebug.Log_Warning($"Component type is null. Aborting {nameof(Add_Component_Async)}.", go);
+				return null;
+			}
 
+			// Verify that the 'component_type' is actually a Unity Component type
+			if (!typeof(Component).IsAssignableFrom(component_type))
+			{
+				BDebug.Log_Warning(
+					$"Provided type {component_type.FullName} is not a Component. Aborting {nameof(Add_Component_Async)}.",
+					go);
+
+				return null;
+			}
+
+			// Ensure method runs on Unity's main thread
+			await UniTask.SwitchToMainThread();
+
+			// Add the component
+			var added_component = go.Add_Component(component_type);
+
+			// If the added component is not a Behaviour, we can return immediately
+			if (added_component is not Behaviour behaviour)
+				return added_component;
+
+			// Handle Behaviour types by toggling their 'enabled' state
 			behaviour.enabled = false;
 			await UniTask.WaitForEndOfFrame();
 			behaviour.enabled = true;
-			return component;
+
+			return added_component;
+		}
+
+		public static async UniTask<T> Add_Component_Async<T>(this GameObject go) where T : Component
+		{
+			if (go == null)
+			{
+				BDebug.Log_Warning($"GameObject is null. Aborting {nameof(Add_Component_Async)}.");
+				return null;
+			}
+
+			var added_component = go.AddComponent<T>();
+			BDebug.Log_Success($"Added component: {typeof(T).Name}", go);
+
+			if (added_component is Behaviour behaviour)
+			{
+				behaviour.enabled = false;
+				BDebug.Log(go, $"Disabling: {typeof(T).Name} Behaviour.", go);
+
+				await UniTask.WaitForEndOfFrame();
+
+				behaviour.enabled = true;
+				BDebug.Log(go, $"Enabling: {typeof(T).Name} Behaviour", go);
+			}
+
+			return added_component;
+		}
+
+		public static T Add_Disabled_Behaviour<T>(this GameObject go, T behaviour_type)
+		where T : Behaviour
+		{
+			if (go == null)
+			{
+				BDebug.Log_Warning($"GameObject is null. Aborting {nameof(Add_Disabled_Behaviour)}.", go);
+				return null;
+			}
+
+			if (behaviour_type == null)
+			{
+				BDebug.Log_Warning($"Behaviour type is null. Aborting {nameof(Add_Disabled_Behaviour)}.", go);
+				return null;
+			}
+
+			var behaviour = go.AddComponent<T>();
+			behaviour.enabled = false;
+			BDebug.Log_Success($"Added disabled {typeof(T).Name} Behaviour.", go);
+			return behaviour;
+		}
+
+		public static async UniTask<T> Add_Disabled_Behaviour<T>(
+			this GameObject go,
+			T behaviour_type,
+			Func<T, bool> predicate
+		)
+		where T : Behaviour
+		{
+			if (Utilities.Verify_Object_Exists(
+					go, $"GameObject is null. Aborting {nameof(Add_Disabled_Behaviour)}.", go))
+				return null;
+
+			if (!Utilities.Verify_Object_Exists(
+					behaviour_type, $"Behaviour type is null. Aborting {nameof(Add_Disabled_Behaviour)}.", go))
+				return null;
+
+			if (!Utilities.Verify_Object_Exists(
+					predicate, $"Predicate is null. Aborting {nameof(Add_Disabled_Behaviour)}.", go))
+				return null;
+
+			var behaviour = go.AddComponent<T>();
+			behaviour.enabled = false;
+			BDebug.Log_Success($"Added disabled {typeof(T).Name} Behaviour.", go);
+
+			await UniTask.WaitUntil(() => predicate(behaviour));
+
+			behaviour.enabled = true;
+			BDebug.Log_Success($"Enabled {typeof(T).Name} Behaviour.", go);
+			return behaviour;
 		}
 
 		public static T Add_Component<T>(this GameObject go)
@@ -382,12 +586,26 @@ namespace Bezoro.Framework.Unity.Utilities
 
 		public static Component Add_Component(this GameObject go, Type component_type)
 		{
-			Assert.Is_Not_Null(go);
-			Assert.Is_Not_Null(component_type);
+			if (go == null)
+			{
+				BDebug.Log_Warning($"GameObject is null. Aborting {nameof(Add_Component)}", go);
+				return null;
+			}
 
-			Player_Loop_Helpers.Return_To_Main_Thread_If_Necessary();
+			if (component_type == null)
+			{
+				BDebug.Log_Warning($"Component type is null. Aborting {nameof(Add_Component)}", go);
+				return null;
+			}
+
+			// Assert.Is_Not_Null(go);
+			// Assert.Is_Not_Null(component_type);
+
+			if (!Player_Loop_Helpers.Is_On_Main_Thread())
+				Player_Loop_Helpers.Return_To_Main_Thread();
+
 			var component = go.AddComponent(component_type);
-			BDebug.Log(go, $"Added component: {component_type.Name}", go);
+			BDebug.Log_Success($"Added component: {component_type.Name}", go);
 			return component;
 		}
 
@@ -440,10 +658,11 @@ namespace Bezoro.Framework.Unity.Utilities
 
 		private static async UniTask<Component[]> Add_Components_Internal(this GameObject go, Type[] component_types)
 		{
-			Assert.Is_Not_Null(go);
-			Assert.Is_Not_Null(component_types);
+			Assert.IsNotNull(go);
+			Assert.IsNotNull(component_types);
 
-			Player_Loop_Helpers.Return_To_Main_Thread_If_Necessary();
+			if (!Player_Loop_Helpers.Is_On_Main_Thread())
+				Player_Loop_Helpers.Return_To_Main_Thread();
 
 			var added_components = new Component[component_types.Length];
 			var behaviours       = new Behaviour[component_types.Length];
@@ -503,11 +722,25 @@ namespace Bezoro.Framework.Unity.Utilities
 			}
 
 			foreach ( var prop in type.GetProperties(
-						 BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance
-					 ) )
+						 BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance) )
 			{
 				if (prop.CanWrite) prop.SetValue(destination, prop.GetValue(source));
 			}
+		}
+
+		public static GameObject Find_First_In(ICollection<Behaviour> behaviours)
+		{
+			foreach ( var behaviour in behaviours )
+			{
+				if (behaviour.gameObject == null)
+					continue;
+
+				Logger.LogSuccess($"Found GameObject: {behaviour.gameObject.name}");
+				return behaviour.gameObject;
+			}
+
+			Logger.LogWarning("No GameObject found in the provided collection.");
+			return null;
 		}
 	}
 

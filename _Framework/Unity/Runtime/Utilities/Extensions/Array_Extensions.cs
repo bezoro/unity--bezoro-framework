@@ -14,146 +14,112 @@ namespace Bezoro.Framework.Unity.Utilities
 	public static class Array_Extensions
 	{
 		/// <summary>
-		///     Determines whether the specified array contains Unity objects and outputs the Unity object array if found.
+		/// Validates whether all elements in the array are UnityEngine.Object instances.
 		/// </summary>
-		/// <typeparam name="T">The type of elements in the array (must be a reference type).</typeparam>
-		/// <param name="array">The array to check for Unity objects.</param>
-		/// <param name="out_unity_array">
-		///     An output parameter that will contain the Unity object array if the input array contains Unity objects.
-		///     If the input array does not contain Unity objects, this value will be null.
-		/// </param>
-		/// <returns>
-		///     True if the array contains Unity objects and the output parameter is populated; otherwise, false.
-		/// </returns>
-		public static bool Is_Unity_Object<T>(this T[] array, out T[] out_unity_array) where T : class
+		/// <typeparam name="T">The type of elements in the array (must be a reference type)</typeparam>
+		/// <param name="array">The array to validate</param>
+		/// <param name="unityArray">When this method returns, contains the original array if validation succeeds, or null if validation fails</param>
+		/// <returns>true if all elements are Unity objects; otherwise, false</returns>
+		public static bool Is_Unity_Object<T>(this T[] array, out T[] unityArray)
+		where T : class
 		{
-			out_unity_array = null;
+			unityArray = null;
 
-			// Validate input array: null or empty
+			// Early return for null or empty arrays
 			if (array == null || array.Length == 0)
-			{
-				Logger.Log_Warning($"{nameof(Is_Unity_Object)}: Input array is null or empty.");
 				return false;
+
+			// Cache type check result to avoid repeated IsAssignableFrom calls
+			var is_unity_object_type = typeof(Object).IsAssignableFrom(typeof(T));
+
+			if (!is_unity_object_type)
+				return false;
+
+			// If T is a Unity object type, we don't need additional runtime checks
+			if (typeof(T).IsSubclassOf(typeof(Object)))
+			{
+				unityArray = array;
+				return true;
 			}
 
-			// Ensure all elements in the array derive from UnityEngine.Object
-			if (!array.All(element => element is Object))
+			// For interface types or classes that might be Unity objects, check each element
+			foreach ( var element in array )
 			{
-				Logger.Log($"{nameof(Is_Unity_Object)}: Some elements in the array are not Unity objects.");
-
-				return false;
+				if (element != null && element is not Object)
+					return false;
 			}
 
-			// Casting is safe as all elements are Unity objects
-			out_unity_array = array;
-			Logger.Log($"{nameof(Is_Unity_Object)}: Array is a Unity object array.");
+			unityArray = array;
 			return true;
 		}
 
+		/// <summary>
+		/// Checks if the array is not a Unity Object array.
+		/// </summary>
+		/// <typeparam name="T">The type of elements in the array.</typeparam>
+		/// <param name="array">The array to check.</param>
+		/// <returns>True if the array is not a Unity Object array, false otherwise.</returns>
 		public static bool Is_Not_Unity_Object<T>(this T[] array)
+		where T : class
 		{
 			return !array.Is_Unity_Object(out _);
 		}
 
+		/// <summary>
+		/// Searches for the specified element in the array and returns its index.
+		/// </summary>
+		/// <typeparam name="T">The type of elements in the array. Must be a reference type.</typeparam>
+		/// <param name="array">The array to search in.</param>
+		/// <param name="element">The element to find.</param>
+		/// <param name="index">When this method returns, contains the index of the found element,
+		/// or -1 if the element was not found.</param>
+		/// <returns>true if the element was found; otherwise, false.</returns>
+		/// <exception cref="ArgumentNullException">Thrown when array is null.</exception>
 		public static bool Contains<T>(this T[] array, T element, out int index)
 		where T : class
 		{
-			Assert.Is_Not_Null_Or_Empty(array, nameof(array));
-			Assert.Is_Not_Null(element);
+			// Validate input parameters
+			if (array == null)
+				throw new ArgumentNullException(nameof(array));
 
-			if (array.Is_Unity_Object(out var unity_array) && element.Is_Unity_Object(out var unity_element))
-			{
-				for (var i = 0 ; i < unity_array.Length ; i++)
-				{
-					if (unity_array[i] != unity_element) { continue; }
-
-					index = i;
-					return true;
-				}
-			}
-			else
-			{
-				for (var i = 0 ; i < array.Length ; i++)
-				{
-					if (array[i] != element) { continue; }
-
-					index = i;
-					return true;
-				}
-			}
-
+			// Initialize output parameter
 			index = -1;
-			return false;
-		}
 
-		public static bool Contains<T>(
-			this T[] array,
-			T element,
-			int validSize,
-			out int index,
-			bool safetyChecks = true
-		)
-		where T : class
-		{
-			if (safetyChecks)
+			// Handle null element case - can't find null in array
+			if (element == null)
+				return false;
+
+			// Check if we're dealing with Unity Objects
+			var is_unity_object = array.Is_Unity_Object(out _) &&
+								  element.Is_Unity_Object(out _);
+
+			// Single loop implementation that handles both cases
+			for (var i = 0 ; i < array.Length ; i++)
 			{
-				if (validSize <= 0)
-				{
-					index = -1;
+				bool is_match;
 
-					return false;
+				if (is_unity_object)
+				{
+					// Use Unity's equality comparison for Unity objects
+					is_match = array[i] == element;
+				}
+				else
+				{
+					// Use regular reference equality for non-Unity objects
+					is_match = array[i]?.Equals(element) ?? false;
 				}
 
-				if (element.Equals_Null())
+				if (is_match)
 				{
-					index = -1;
-
-					return false;
-				}
-
-				if (array.Is_Null_Or_Empty())
-				{
-					index = -1;
-
-					return false;
-				}
-			}
-
-			if (array.Is_Unity_Object(out var unityArray) && element.Is_Unity_Object(out var unityElement))
-			{
-				for (var i = 0 ; i < validSize ; i++)
-				{
-					if (unityArray[i] != unityElement)
-					{
-						continue;
-					}
-
 					index = i;
-
 					return true;
 				}
 			}
-			else
-			{
-				for (var i = 0 ; i < validSize ; i++)
-				{
-					if (array[i] != element)
-					{
-						continue;
-					}
-
-					index = i;
-
-					return true;
-				}
-			}
-
-			index = -1;
 
 			return false;
 		}
 
-		public static bool ContainsStruct<T>(this T[] array, T element, out int index, bool safetyChecks = true)
+		public static bool Contains_Struct<T>(this T[] array, T element, out int index, bool safetyChecks = true)
 		where T : struct, IEquatable<T>
 		{
 			if (safetyChecks)
@@ -161,7 +127,6 @@ namespace Bezoro.Framework.Unity.Utilities
 				if (array.Is_Null_Or_Empty())
 				{
 					index = -1;
-
 					return false;
 				}
 			}
@@ -169,41 +134,33 @@ namespace Bezoro.Framework.Unity.Utilities
 			for (var i = 0 ; i < array.Length ; i++)
 			{
 				if (!array[i].Equals(element))
-				{
 					continue;
-				}
 
 				index = i;
-
 				return true;
 			}
 
 			index = -1;
-
 			return false;
 		}
 
-		public static int CountEmptyIndices<T>(this T[] array, bool safetyChecks = true)
+		public static int Count_Empty_Indices<T>(this T[] array, bool safetyChecks = true)
 		where T : class
 		{
 			if (safetyChecks)
 			{
 				if (array.Is_Null_Or_Empty())
-				{
 					return -1;
-				}
 			}
 
-			var emptyIndicesCount = 0;
+			var empty_indices_count = 0;
 
-			if (array.Is_Unity_Object(out var unityArray))
+			if (array.Is_Unity_Object(out var unity_array))
 			{
-				for (var i = 0 ; i < unityArray.Length ; i++)
+				for (var i = 0 ; i < unity_array.Length ; i++)
 				{
-					if (unityArray[i].Equals_Null())
-					{
-						emptyIndicesCount++;
-					}
+					if (unity_array[i].Equals_Null())
+						empty_indices_count++;
 				}
 			}
 			else
@@ -211,16 +168,14 @@ namespace Bezoro.Framework.Unity.Utilities
 				for (var i = 0 ; i < array.Length ; i++)
 				{
 					if (array[i].Equals_Null())
-					{
-						emptyIndicesCount++;
-					}
+						empty_indices_count++;
 				}
 			}
 
-			return emptyIndicesCount;
+			return empty_indices_count;
 		}
 
-		public static int CountEmptyIndices<T>(this T[] array, int validSize, bool safetyChecks = true)
+		public static int Count_Empty_Indices<T>(this T[] array, int validSize, bool safetyChecks = true)
 		where T : class
 		{
 			if (safetyChecks)
@@ -368,35 +323,18 @@ namespace Bezoro.Framework.Unity.Utilities
 		}
 
 		/// <summary>
-		///     Checks if an array is null.
+		/// Determines whether the specified array is null.
 		/// </summary>
+		/// <typeparam name="T">The type of elements in the array.</typeparam>
 		/// <param name="array">The array to check.</param>
-		/// <param name="equalityType">The equality type to use.</param>
-		/// <returns>true if the array is null, false otherwise.</returns>
+		/// <returns>true if the array is null; otherwise, false.</returns>
 		/// <remarks>
-		///     The equality type can be specified as an optional parameter. If
-		///     <paramref name="equalityType" /> is <see cref="Equality_Type.Equal" />,
-		///     the method checks if the array is null by using the equality
-		///     operator (<c>==</c>). If it is <see cref="Equality_Type.Is" />, the
-		///     method checks if the array is null by using the <c>is</c> operator.
+		/// This method provides a clean, straightforward way to check if an array is null.
+		/// It follows the principle of least surprise by having a single, clear way to perform the check.
 		/// </remarks>
-		public static bool Is_Null<T>(this T[] array, Equality_Type equalityType = Equality_Type.Equal)
+		public static bool IsNull<T>(this T[] array)
 		{
-			switch ( equalityType )
-			{
-				case Equality_Type.None: return false;
-
-				case Equality_Type.Equal: return array == null;
-
-				case Equality_Type.Is: return array is null;
-
-				default:
-					throw new ArgumentOutOfRangeException(
-						nameof(equalityType),
-						equalityType,
-						null
-					);
-			}
+			return array is null;
 		}
 
 		/// <summary>
@@ -415,7 +353,7 @@ namespace Bezoro.Framework.Unity.Utilities
 		/// </remarks>
 		public static bool Is_Empty<T>(this T[] array, Equality_Type equalityType = Equality_Type.Equal)
 		{
-			if (array.Is_Null(equalityType))
+			if (array.Is_Null())
 			{
 				return false;
 			}
@@ -458,7 +396,7 @@ namespace Bezoro.Framework.Unity.Utilities
 				case Equality_Type.None: return false;
 
 				case Equality_Type.Equal:
-				case Equality_Type.Is: return array.Is_Null(equalityType) || array.Is_Empty(equalityType);
+				case Equality_Type.Is: return array.Is_Null() || array.Is_Empty(equalityType);
 
 				default:
 					throw new ArgumentOutOfRangeException(
@@ -486,12 +424,12 @@ namespace Bezoro.Framework.Unity.Utilities
 		/// </remarks>
 		public static bool ArraysAreEqual<T>(this T[] array, T[] b, Equality_Type equalityType = Equality_Type.Equal)
 		{
-			if (array.Is_Null(equalityType))
+			if (array.Is_Null())
 			{
-				return b.Is_Null(equalityType);
+				return b.Is_Null();
 			}
 
-			if (b.Is_Null(equalityType))
+			if (b.Is_Null())
 			{
 				return false;
 			}
@@ -625,7 +563,7 @@ namespace Bezoro.Framework.Unity.Utilities
 
 		public static T[] Add<T>(this T[] array, T item)
 		{
-			Core.Array_Helpers.Initialize_Null_Array(ref array);
+			ArrayHelpers.Initialize_Null_Array(ref array);
 			Validation_Helpers.Validate_Object_Not_Null(item);
 
 			if (array.Length <= 0)

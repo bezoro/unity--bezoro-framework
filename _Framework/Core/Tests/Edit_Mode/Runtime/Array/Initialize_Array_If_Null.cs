@@ -3,7 +3,7 @@
 namespace Bezoro.Framework.Core.Tests.Edit_Mode.Array_Helpers
 {
 	[TestFixture]
-	[TestOf(typeof(Core.Array_Helpers))]
+	[TestOf(typeof(ArrayHelpers))]
 	public class Initialize_Array_If_Null
 	{
 		#region Happy Path
@@ -16,7 +16,7 @@ namespace Bezoro.Framework.Core.Tests.Edit_Mode.Array_Helpers
 		)
 		{
 			// Act
-			Core.Array_Helpers.Initialize_Null_Array(ref array);
+			ArrayHelpers.Initialize_Null_Array(ref array);
 
 			// Assert
 			NUnit.Framework.Assert.That(array, Is.EqualTo(expected));
@@ -30,7 +30,7 @@ namespace Bezoro.Framework.Core.Tests.Edit_Mode.Array_Helpers
 			int[] expected = { 1, 2, 3 };
 
 			// Act
-			Core.Array_Helpers.Initialize_Null_Array(ref array);
+			ArrayHelpers.Initialize_Null_Array(ref array);
 
 			// Assert
 			NUnit.Framework.Assert.That(array, Is.EqualTo(expected));

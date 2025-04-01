@@ -1,203 +1,299 @@
 ﻿using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.ExceptionServices;
-using Bezoro.Framework.Core;
 using Bezoro.Framework.Unity.Utilities.String;
+using UnityEngine;
 using Debug = UnityEngine.Debug;
+using LogType = Bezoro.Framework.Core.LogType;
 using Object = UnityEngine.Object;
 
 namespace Bezoro.Framework.Unity
 {
-	public interface I_Console_Logger : I_Logger { }
-
-	public class Unity_Log_Entry : Core.Logger.Log_Entry
+	public static class Logger
 	{
-		public Unity_Log_Entry(string message, Object context_object, Log_Type type, string category)
-			: base(message, context_object, type, category)
+		public static int Max_Message_Length => 1_000;
+
+		[Conditional("UNITY_EDITOR")] [Conditional("DEVELOPMENT_BUILD")]
+		public static void Log(
+			string message,
+			object context = null,
+			Log_Category category = Log_Category.Default
+		)
 		{
-			Context_Object = context_object;
+			LogInternal(message, context, category, LogType.Log);
 		}
 
-		public new Object Context_Object { get; }
-	}
-
-	public class Console_Logger : I_Console_Logger
-	{
-		public void Log(Core.Logger.Log_Entry log)
+		[Conditional("UNITY_EDITOR")] [Conditional("DEVELOPMENT_BUILD")]
+		public static void LogWarning(
+			string message,
+			object context = null,
+			Log_Category category = Log_Category.Default
+		)
 		{
-			var unityLog = log as Unity_Log_Entry;
-			Debug.Log(log.Message, unityLog?.Context_Object);
+			LogInternal(message, context, category, LogType.Warning);
 		}
 
-		public void Log_Success(Core.Logger.Log_Entry log)
+		[Conditional("UNITY_EDITOR")] [Conditional("DEVELOPMENT_BUILD")]
+		public static void Log_Error(
+			string message,
+			object context = null,
+			Log_Category category = Log_Category.Default
+		)
 		{
-			var unityLog = log as Unity_Log_Entry;
-			Debug.Log(log.Message.Green().Bold(), unityLog?.Context_Object);
+			LogInternal(message, context, category, LogType.Error);
 		}
 
-		public void Log_Warning(Core.Logger.Log_Entry log)
+		[Conditional("UNITY_EDITOR")] [Conditional("DEVELOPMENT_BUILD")]
+		public static void LogSuccess(
+			string message,
+			object context = null,
+			Log_Category category = Log_Category.Default
+		)
 		{
-			var unityLog = log as Unity_Log_Entry;
-			Debug.LogWarning(log.Message.Yellow().Bold(), unityLog?.Context_Object);
+			LogInternal(message, context, category, LogType.Success);
 		}
 
-		public void Log_Error(Core.Logger.Log_Entry log)
-		{
-			var unityLog = log as Unity_Log_Entry;
-			Debug.LogError(log.Message.Red().Bold(), unityLog?.Context_Object);
-		}
-
-		public void Log_Exception(Core.Logger.Log_Entry log)
-		{
-			var unityLog = log as Unity_Log_Entry;
-			Debug.LogError(log.Message.Red().Bold(), unityLog?.Context_Object);
-		}
-
-		public void Log_Exception(
+		[Conditional("UNITY_EDITOR")] [Conditional("DEVELOPMENT_BUILD")]
+		public static void Log_Exception(
 			Exception exception,
 			bool throw_exception = true,
 			object context = null,
-			string category = "Uncategorized"
+			Log_Category category = Log_Category.Default
 		)
 		{
-			Debug.LogException(exception);
-		}
+			LogInternal(exception.Message, context, category, LogType.Exception);
 
-		public void Log_Exception(Exception exception, Object context, bool throwException = true)
-		{
-			// Validate the argument to avoid silent failures.
-			if (exception == null)
-			{
-				throw new ArgumentNullException(nameof(exception), "Exception parameter cannot be null.");
-			}
-
-			// Log the exception using Unity Debug.
-			Debug.LogException(exception, context);
-
-			// If rethrowing is requested, propagate the original exception while preserving the stack trace.
-			if (throwException)
-			{
+			if (throw_exception)
 				ExceptionDispatchInfo.Capture(exception).Throw();
-			}
 		}
 
-		public void Log_Success(string message, Object context)
+		[Conditional("UNITY_EDITOR")] [Conditional("DEVELOPMENT_BUILD")]
+		private static void LogInternal(
+			string message,
+			object context,
+			Log_Category category,
+			LogType type
+		)
 		{
-			Debug.Log(message.Green().Bold(), context);
+			if (string.IsNullOrEmpty(message)) return;
+			if (!Configuration.Should_Log) return;
+			if (!Configuration.IsCategoryEnabled(category)) return;
+			if (!Configuration.IsLogTypeAtLeastMinimumLevel(type)) return;
+
+			var truncatedMessage = message.Length <= Max_Message_Length
+				? message
+				: message[..Max_Message_Length] + "... (truncated)";
+
+			var entry        = new LogEntry(truncatedMessage, context, category, type);
+			var unityContext = context as Object;
+
+			// Dictionary of log actions based on type
+			var logActions = new Dictionary<LogType, Action<LogEntry>>
+			{
+				[LogType.Log]     = e => Debug.Log(Format_Log_Message(e), unityContext),
+				[LogType.Warning] = e => Debug.LogWarning(Format_Log_Message(e).Yellow(), unityContext),
+				[LogType.Error]   = e => Debug.LogError(Format_Log_Message(e).Red(), unityContext),
+				[LogType.Success] = e => Debug.Log(Format_Log_Message(e).Green(), unityContext),
+				[LogType.Exception] = e =>
+				{
+					var exception = new Exception(Format_Log_Message(e));
+					Debug.LogException(exception, unityContext);
+				}
+			};
+
+			if (logActions.TryGetValue(type, out var action))
+				action(entry);
+		}
+
+		private static string Format_Log_Message(LogEntry entry)
+		{
+			var frame = Time.frameCount;
+			var time  = entry.Time.ToString("HH:mm:ss.fff");
+
+			var context = entry.Context is Object
+				? "Object: " + entry.Context
+				: entry.Context?.ToString() ?? "Context Not Specified";
+
+			var category = entry.Category.ToString();
+			var message  = entry.Message;
+
+			return $"[ Frame {frame} | {time} ] [ {context.Bold()} ] [ {category.Bold()} ] : {message}";
+		}
+
+		public static class Configuration
+		{
+			static Configuration()
+			{
+				Should_Log = true;
+				Initialize_Enabled_Categories();
+				Initialize_Minimum_Log_Level();
+			}
+
+			public static ConcurrentDictionary<Log_Category, bool> Enabled_Categories => _EnabledCategories;
+			public static bool                                     Should_Log         { get; }
+
+			public static LogType Minimum_Log_Level
+			{
+				get => _MinimumLogLevel;
+				set => _MinimumLogLevel = value;
+			}
+
+			private static void Initialize_Minimum_Log_Level()
+			{
+				_MinimumLogLevel = LogType.Log;
+			}
+
+			private static void Initialize_Enabled_Categories()
+			{
+				_EnabledCategories = new();
+				var categories = Enum.GetValues(typeof(Log_Category));
+
+				foreach ( Log_Category category in categories )
+				{
+					_EnabledCategories[category] = true;
+				}
+			}
+
+			public static bool IsLogTypeAtLeastMinimumLevel(LogType type)
+			{
+				return type >= _MinimumLogLevel;
+			}
+
+			public static void Enable_Category(Log_Category category)
+			{
+				_EnabledCategories.AddOrUpdate(category, true, (_, _) => true);
+			}
+
+			public static void Disable_Category(Log_Category category)
+			{
+				_EnabledCategories.AddOrUpdate(category, false, (_, _) => false);
+			}
+
+			public static void Enable_All_Categories()
+			{
+				_EnabledCategories.Clear();
+				var categories = Enum.GetValues(typeof(Log_Category));
+
+				foreach ( Log_Category category in categories )
+				{
+					_EnabledCategories[category] = true;
+				}
+			}
+
+			public static void Disable_All_Categories()
+			{
+				_EnabledCategories.Clear();
+			}
+
+			public static bool IsCategoryEnabled(Log_Category category)
+			{
+				return _EnabledCategories.GetValueOrDefault(category);
+			}
+
+			private static volatile LogType                                  _MinimumLogLevel;
+			private static          ConcurrentDictionary<Log_Category, bool> _EnabledCategories;
 		}
 	}
 
-	public static class Logger
+	public class LogEntry
 	{
-		public static I_Console_Logger Logger_Instance
+		public LogEntry(
+			string message,
+			object context,
+			Log_Category category,
+			LogType type
+		)
 		{
-			get
-			{
-				if (Core.Logger.Logger_Instance is not I_Console_Logger)
-					Core.Logger.Set_Logger(new Console_Logger());
-
-				return Core.Logger.Logger_Instance as I_Console_Logger;
-			}
+			_message  = message;
+			_context  = context;
+			_category = category;
+			_time     = DateTime.Now;
+			_type     = type;
 		}
 
-		[Conditional("UNITY_EDITOR")] [Conditional("DEVELOPMENT_BUILD")]
-		public static void Log(string message, Object context = null, string category = "Uncategorized")
-		{
-			var log = new Unity_Log_Entry(
-				message,
-				context,
-				Core.Logger.Log_Entry.Log_Type.Info,
-				category);
+		public string       Message  => _message;
+		public object       Context  => _context;
+		public Log_Category Category => _category;
+		public DateTime     Time     => _time;
+		public LogType      Type     => _type;
 
-			Logger_Instance.Log(log);
-		}
+		private string       _message;
+		private object       _context;
+		private Log_Category _category;
+		private DateTime     _time;
+		private LogType      _type;
+	}
 
-		[Conditional("UNITY_EDITOR")] [Conditional("DEVELOPMENT_BUILD")]
-		public static void Log_Warning(string message, Object context = null, string category = "Uncategorized")
-		{
-			var log = new Unity_Log_Entry(
-				message,
-				context,
-				Core.Logger.Log_Entry.Log_Type.Warning,
-				category);
+	public enum Log_Category
+	{
+		// Core
+		Default,
+		System,
+		Other,
 
-			Logger_Instance.Log_Warning(log);
-		}
+		// Development & Debugging
+		Debug,
+		Test,
+		Profiling,
+		Editor,
+		Analytics,
+		Performance,
 
-		[Conditional("UNITY_EDITOR")] [Conditional("DEVELOPMENT_BUILD")]
-		public static void Log_Error(string message, Object context = null, string category = "Uncategorized")
-		{
-			var log = new Unity_Log_Entry(
-				message,
-				context,
-				Core.Logger.Log_Entry.Log_Type.Error,
-				category);
+		// System Core
+		Memory,
+		Security,
+		Database,
+		FileIO,
+		Configuration,
+		Loading,
+		SaveSystem,
+		Resources,
+		AssetBundle,
+		SceneManagement,
 
-			Logger_Instance.Log_Error(log);
-		}
+		// Rendering & Graphics
+		Rendering,
+		Particles,
+		Shaders,
+		PostProcessing,
+		Lighting,
 
-		[Conditional("UNITY_EDITOR")] [Conditional("DEVELOPMENT_BUILD")]
-		public static void Log_Exception(Exception exception, bool throw_exception = true, Object context = null)
-		{
-			var log = new Unity_Log_Entry(
-				exception.Message,
-				context,
-				Core.Logger.Log_Entry.Log_Type.Exception,
-				"Uncategorized");
+		// Game Systems
+		Gameplay,
+		Combat,
+		Inventory,
+		Quest,
+		Dialog,
+		LevelGeneration,
+		Progression,
+		Achievement,
+		Economy,
 
-			Logger_Instance.Log_Exception(log);
-		}
+		// Input & UI
+		Input,
+		UI,
 
-		[Conditional("UNITY_EDITOR")] [Conditional("DEVELOPMENT_BUILD")]
-		public static void Log_Success(string message, Object context = null, string category = "Uncategorized")
-		{
-			var log = new Unity_Log_Entry(
-				message,
-				context,
-				Core.Logger.Log_Entry.Log_Type.Success,
-				category);
+		// Animation & Physics
+		Animation,
+		Physics,
+		Physics2D,
 
-			Logger_Instance.Log_Success(log);
-		}
+		// AI & Behavior
+		AI,
 
-		// [Conditional("UNITY_EDITOR")] [Conditional("DEVELOPMENT_BUILD")]
-		// public static void Log(string message, ICollection<Behaviour> context)
-		// {
-		// 	GameObject go = null;
-		//
-		// 	foreach ( var behaviour in context )
-		// 	{
-		// 		if (behaviour.gameObject == null)
-		// 			continue;
-		//
-		// 		go = behaviour.gameObject;
-		// 	}
-		//
-		// 	Log(message, go);
-		// }
+		// Audio
+		Audio,
 
-		// [Conditional("UNITY_EDITOR")] [Conditional("DEVELOPMENT_BUILD")]
-		// public static void Log_Warning(string message, Object context)
-		// {
-		// 	Logger_Instance.Log_Warning((Log)message);
-		// }
-		//
-		// [Conditional("UNITY_EDITOR")] [Conditional("DEVELOPMENT_BUILD")]
-		// public static void Log_Error(string message, Object context)
-		// {
-		// 	Logger_Instance?.Log_Error((Log)message);
-		// }
-		//
-		// [Conditional("UNITY_EDITOR")] [Conditional("DEVELOPMENT_BUILD")]
-		// public static void Log_Exception(Exception exception, Object context)
-		// {
-		// 	Logger_Instance?.Log_Exception(exception, context);
-		// }
-		//
-		// [Conditional("UNITY_EDITOR")] [Conditional("DEVELOPMENT_BUILD")]
-		// public static void Log_Success(string message, Object context)
-		// {
-		// 	Logger_Instance?.Log_Success((Log)message);
-		// }
+		// Networking & Services
+		Network,
+		Cloud,
+		Authentication,
+		Social,
+		Purchasing,
+
+		// Localization
+		Localization
 	}
 }
