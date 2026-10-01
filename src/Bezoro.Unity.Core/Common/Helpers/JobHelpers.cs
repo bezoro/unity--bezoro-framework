@@ -1,0 +1,280 @@
+using Bezoro.Unity.Core.Common.Extensions;
+using Bezoro.Unity.Core.Jobs;
+using Unity.Collections;
+using Unity.Jobs;
+using Unity.Mathematics;
+using UnityEngine;
+
+namespace Bezoro.Unity.Core.Common.Helpers;
+
+/// <summary>
+///     Completes and disposes Unity jobs and native containers.
+/// </summary>
+public static class JobHelpers
+{
+	public static void CheckRaycastHitsPersistent(
+		NativeArray<RaycastHit>     hits,
+		ref NativeArray<RaycastHit> validHits,
+		int                         batchCount = 64
+	)
+	{
+		if (hits.Length == 0) return;
+
+		if (hits.Length != validHits.Length)
+		{
+			validHits.Safe_Dispose();
+
+			validHits = new(
+				hits.Length,
+				Allocator.Persistent
+			);
+		}
+
+		var checkRaycastHitJob = new CheckRaycastHitJob
+		{
+			Hits      = hits,
+			ValidHits = validHits
+		};
+
+		checkRaycastHitJob.Schedule(
+			hits.Length,
+			batchCount
+		).Complete();
+	}
+
+	public static void CheckRaycastHitsTempJob(
+		NativeArray<RaycastHit>     hits,
+		ref NativeArray<RaycastHit> validHits,
+		int                         batchCount = 64
+	)
+	{
+		if (hits.Length == 0) return;
+
+		validHits.Safe_Dispose();
+
+		validHits = new(
+			hits.Length,
+			Allocator.TempJob
+		);
+
+		var checkRaycastHitJob = new CheckRaycastHitJob
+		{
+			Hits      = hits,
+			ValidHits = validHits
+		};
+
+		checkRaycastHitJob.Schedule(
+			hits.Length,
+			batchCount
+		).Complete();
+	}
+
+	public static void CreateRaycastCommandsPersistent(
+		NativeArray<float3>             origins,
+		float3                          direction,
+		ref NativeArray<RaycastCommand> commands,
+		int                             batchCount = 64
+	)
+	{
+		if (origins.Length == 0) return;
+
+		if (origins.Length != commands.Length)
+		{
+			commands.Safe_Dispose();
+
+			commands = new(
+				origins.Length,
+				Allocator.Persistent
+			);
+		}
+
+		var createRaycastCommandsJob = new CreateRaycastCommandsJob
+		{
+			Origins   = origins,
+			Direction = direction,
+			Commands  = commands
+		};
+
+		createRaycastCommandsJob.Schedule(
+			origins.Length,
+			batchCount
+		).Complete();
+	}
+
+	public static void CreateRaycastCommandsTempJob(
+		NativeArray<float3>             origins,
+		float3                          direction,
+		ref NativeArray<RaycastCommand> commands,
+		int                             batchCount = 64
+	)
+	{
+		if (origins.Length == 0) return;
+
+		commands.Safe_Dispose();
+
+		commands = new(
+			origins.Length,
+			Allocator.TempJob
+		);
+
+		var createRaycastCommandsJob = new CreateRaycastCommandsJob
+		{
+			Origins   = origins,
+			Direction = direction,
+			Commands  = commands
+		};
+
+		createRaycastCommandsJob.Schedule(
+			origins.Length,
+			batchCount
+		).Complete();
+	}
+
+	public static void ExecuteRaycastCommandsPersistent(
+		NativeArray<RaycastCommand> commands,
+		ref NativeArray<RaycastHit> hits,
+		int                         minCommandsPerJob = 1
+	)
+	{
+		if (commands.Length == 0) return;
+
+		if (commands.Length != hits.Length)
+		{
+			hits.Safe_Dispose();
+
+			hits = new(
+				commands.Length,
+				Allocator.Persistent
+			);
+		}
+
+		RaycastCommand.ScheduleBatch(
+			commands,
+			hits,
+			minCommandsPerJob
+		).Complete();
+	}
+
+	public static void ExecuteRaycastCommandsTempJob(
+		NativeArray<RaycastCommand> commands,
+		ref NativeArray<RaycastHit> hits,
+		int                         minCommandsPerJob = 1
+	)
+	{
+		if (commands.Length == 0) return;
+
+		hits.Safe_Dispose();
+
+		hits = new(
+			commands.Length,
+			Allocator.TempJob
+		);
+
+		RaycastCommand.ScheduleBatch(
+			commands,
+			hits,
+			minCommandsPerJob
+		).Complete();
+	}
+
+	public static void GeneratePointsOnPlanePersistent(
+		float3                  center,
+		float                   width,
+		float                   height,
+		int                     numPointsWidth,
+		int                     numPointsHeight,
+		float3                  rightAxis,
+		float3                  upAxis,
+		ref NativeArray<float3> resultPoints,
+		int                     batchCount = 64
+	)
+	{
+		int totalPoints = numPointsWidth * numPointsHeight;
+
+		if (totalPoints <= 0) return;
+
+		if (resultPoints.Length != totalPoints)
+		{
+			resultPoints.Safe_Dispose();
+
+			resultPoints = new(
+				totalPoints,
+				Allocator.Persistent
+			);
+		}
+
+		rightAxis = math.normalize(
+			rightAxis
+		);
+
+		upAxis = math.normalize(
+			upAxis
+		);
+
+		var generatePointsOnPlaneJob = new GeneratePointsOnPlaneJob
+		{
+			Center          = center,
+			Width           = width,
+			Height          = height,
+			NumPointsWidth  = numPointsWidth,
+			NumPointsHeight = numPointsHeight,
+			RightAxis       = rightAxis,
+			UpAxis          = upAxis,
+			ResultPoints    = resultPoints
+		};
+
+		generatePointsOnPlaneJob.Schedule(
+			totalPoints,
+			batchCount
+		).Complete();
+	}
+
+	public static void GeneratePointsOnPlaneTempJob(
+		float3                  center,
+		float                   width,
+		float                   height,
+		int                     numPointsWidth,
+		int                     numPointsHeight,
+		float3                  rightAxis,
+		float3                  upAxis,
+		ref NativeArray<float3> resultPoints,
+		int                     batchCount = 64
+	)
+	{
+		int totalPoints = numPointsWidth * numPointsHeight;
+
+		if (totalPoints <= 0) return;
+
+		resultPoints.Safe_Dispose();
+
+		resultPoints = new(
+			totalPoints,
+			Allocator.TempJob
+		);
+
+		rightAxis = math.normalize(
+			rightAxis
+		);
+
+		upAxis = math.normalize(
+			upAxis
+		);
+
+		var generatePointsOnPlaneJob = new GeneratePointsOnPlaneJob
+		{
+			Center          = center,
+			Width           = width,
+			Height          = height,
+			NumPointsWidth  = numPointsWidth,
+			NumPointsHeight = numPointsHeight,
+			RightAxis       = rightAxis,
+			UpAxis          = upAxis,
+			ResultPoints    = resultPoints
+		};
+
+		generatePointsOnPlaneJob.Schedule(
+			totalPoints,
+			batchCount
+		).Complete();
+	}
+}
