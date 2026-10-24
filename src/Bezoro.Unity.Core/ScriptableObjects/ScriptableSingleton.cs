@@ -1,9 +1,11 @@
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
+using UnityEngine;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
-using System.Collections.Generic;
-using System.Diagnostics;
-using UnityEngine;
 using Logger = Bezoro.Logging.Logger;
 
 namespace Bezoro.Unity.Core.ScriptableObjects
@@ -28,20 +30,24 @@ namespace Bezoro.Unity.Core.ScriptableObjects
 				// In editor, if not found in Resources, look in the entire project
 				if (_instance == null && !UnityEngine.Application.isPlaying)
 				{
-					string[] guids = AssetDatabase.FindAssets(
-						$"t:{typeof(T).Name}"
-					);
-
-					if (guids.Length > 0)
+					string[] assetPaths = FindAssetPaths();
+					foreach (string path in assetPaths)
 					{
-						string path = AssetDatabase.GUIDToAssetPath(
-							guids[0]
-						);
-
-						_instance = AssetDatabase.LoadAssetAtPath<T>(
+						var candidate = AssetDatabase.LoadAssetAtPath<T>(
 							path
 						);
+						if (candidate == null)
+							continue;
+
+						_instance = candidate;
+						break;
 					}
+
+					if (assetPaths.Length > 1)
+						Logger.LogError(
+							$"Duplicate singleton assets of {typeof(T).Name} detected at:{Environment.NewLine}{string.Join(Environment.NewLine, assetPaths)}",
+							contextObject: typeof(T)
+						);
 				}
 #endif
 
@@ -57,22 +63,12 @@ namespace Bezoro.Unity.Core.ScriptableObjects
 		protected virtual void Awake()
 		{
 #if UNITY_EDITOR
-
-			// Ensure we don't have duplicate instances in the editor
 			if (_instance != null && _instance != this)
 			{
 				Logger.LogError(
-					$"Duplicate singleton instance of {typeof(T).Name} detected!",
+					$"Duplicate singleton instance of {typeof(T).Name} detected at '{AssetDatabase.GetAssetPath(this)}'.",
 					contextObject: this
 				);
-
-				EditorApplication.delayCall += () =>
-					AssetDatabase.DeleteAsset(
-						AssetDatabase.GetAssetPath(
-							this
-						)
-					);
-
 				return;
 			}
 #endif
@@ -85,6 +81,17 @@ namespace Bezoro.Unity.Core.ScriptableObjects
 		protected virtual void OnValidate() { }
 
 		#endregion
+
+#if UNITY_EDITOR
+		private static string[] FindAssetPaths()
+		{
+			return AssetDatabase.FindAssets($"t:{typeof(T).Name}")
+				.Select(AssetDatabase.GUIDToAssetPath)
+				.Where(path => !string.IsNullOrWhiteSpace(path))
+				.OrderBy(path => path, StringComparer.Ordinal)
+				.ToArray();
+		}
+#endif
 
 		private static T? LoadFromResources()
 		{
