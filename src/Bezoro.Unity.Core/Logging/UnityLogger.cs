@@ -9,25 +9,30 @@ using Logger = Bezoro.Logging.Logger;
 using Object = UnityEngine.Object;
 
 namespace Bezoro.Unity.Core.Logging;
-#if UNITY_EDITOR
-[InitializeOnLoad]
-#endif
 /// <summary>
 /// Adapts framework logging calls to Unity's Debug logger.
 /// </summary>
 public static class UnityLogger
 {
-	static UnityLogger()
+	internal static void Initialize()
 	{
 		LoggerSettings.Stage      = StageConfig.Create(() => ApplicationLifecycle.CurrentStage.ToString());
 		LoggerSettings.FrameCount = FrameCountConfig.Create(() => Time.frameCount);
 
-		Logger.OnLog -= HandleLog;
-		Logger.OnLog += HandleLog;
+		Logger.OnLog -= ForwardToUnity;
+		Logger.OnLog += ForwardToUnity;
 	}
 
+#if UNITY_EDITOR
+	[InitializeOnLoadMethod]
+	private static void InitializeInEditor() => Initialize();
+#endif
+
+	[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+	private static void InitializeAtRuntime() => Initialize();
+
 	[HideInCallstack]
-	private static void HandleLog(LogPayload logPayload)
+	internal static void ForwardToUnity(LogPayload logPayload)
 	{
 		Object? unityObject = null;
 		if (logPayload.ContextObject is Object contextObject)
@@ -48,6 +53,7 @@ public static class UnityLogger
 				Debug.LogException(logPayload.Exception);
 				break;
 			case LogLevel.Success:
+				Debug.Log(logPayload.FormattedMessage, unityObject);
 				break;
 			case LogLevel.Divider:
 				Debug.Log("[DIVIDER]" + logPayload.Message, unityObject);
