@@ -4,7 +4,10 @@ using Bezoro.Unity.Core.Dependencies;
 using Bezoro.Unity.Core.Scenes;
 using Bezoro.Unity.Core.ScriptableObjects;
 using NUnit.Framework;
+using UnityEditor;
 using UnityEngine;
+using UnityEngine.SceneManagement;
+using UnityEngine.TestTools;
 
 namespace Bezoro.Unity.Core.Tests.EditMode
 {
@@ -118,6 +121,66 @@ namespace Bezoro.Unity.Core.Tests.EditMode
 			var plan = SceneCollectionLoadPlan.Create(entries);
 
 			Assert.AreEqual("Assets/Scenes/Gameplay.unity", plan.ActiveScenePath);
+		}
+
+		[Test]
+		public void ApplyInspectorChanges_WhenSceneEntriesEdited_RemovesDuplicatesAndPreservesFirstEntry()
+		{
+			var collection = CreateCollection();
+			SetField(collection, "name", "Inspector collection");
+			var first = new SceneCollectionEntry(new SceneReference("Assets/Scenes/First.unity"));
+			var second = new SceneCollectionEntry(new SceneReference("Assets/Scenes/Second.unity"));
+			var duplicate = new SceneCollectionEntry(new SceneReference("Assets/Scenes/First.unity"));
+			collection.SetEntries(new[] { first, second, duplicate });
+			LogAssert.Expect(LogType.Error, "Duplicate scenes detected in Inspector collection. Duplicates will be removed.");
+
+			collection.ApplyInspectorChanges(sceneEntriesChanged: true, loadModeChanged: false);
+
+			CollectionAssert.AreEqual(new[] { first, second }, collection.Entries);
+		}
+
+		[Test]
+		public void ApplyInspectorChanges_WhenLoadModeEdited_AppliesModeToEverySceneReference()
+		{
+			var collection = CreateCollection();
+			collection.SetScenes(new List<SceneReference>
+			{
+				new("Assets/Scenes/First.unity"),
+				new("Assets/Scenes/Second.unity")
+			});
+			var serialized = new SerializedObject(collection);
+			serialized.FindProperty("loadMode").enumValueIndex = (int)LoadSceneMode.Additive;
+			serialized.ApplyModifiedPropertiesWithoutUndo();
+
+			collection.ApplyInspectorChanges(sceneEntriesChanged: false, loadModeChanged: true);
+
+			serialized.Update();
+			var entries = serialized.FindProperty("sceneEntries");
+			for (var i = 0; i < entries.arraySize; i++)
+			{
+				var mode = entries.GetArrayElementAtIndex(i).FindPropertyRelative("scene").FindPropertyRelative("loadSceneMode");
+				Assert.AreEqual((int)LoadSceneMode.Additive, mode.enumValueIndex);
+			}
+		}
+
+		[Test]
+		public void ApplyInspectorChanges_WithoutUserEdits_PreservesDuplicateEntriesAndIndividualModes()
+		{
+			var collection = CreateCollection();
+			var first = new SceneReference("Assets/Scenes/First.unity");
+			var duplicate = new SceneReference("Assets/Scenes/First.unity");
+			duplicate.SetLoadSceneMode(LoadSceneMode.Additive);
+			collection.SetScenes(new List<SceneReference> { first, duplicate });
+
+			collection.ApplyInspectorChanges(sceneEntriesChanged: false, loadModeChanged: false);
+
+			Assert.AreEqual(2, collection.Entries.Count);
+			var serialized = new SerializedObject(collection);
+			var entries = serialized.FindProperty("sceneEntries");
+			var firstMode = entries.GetArrayElementAtIndex(0).FindPropertyRelative("scene").FindPropertyRelative("loadSceneMode");
+			var duplicateMode = entries.GetArrayElementAtIndex(1).FindPropertyRelative("scene").FindPropertyRelative("loadSceneMode");
+			Assert.AreEqual((int)LoadSceneMode.Single, firstMode.enumValueIndex);
+			Assert.AreEqual((int)LoadSceneMode.Additive, duplicateMode.enumValueIndex);
 		}
 
 		private SceneCollection CreateCollection()

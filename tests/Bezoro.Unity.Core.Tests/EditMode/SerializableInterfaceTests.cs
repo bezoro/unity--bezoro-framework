@@ -1,6 +1,7 @@
 using System;
 using Bezoro.Unity.Core.Common.Serialization;
 using NUnit.Framework;
+using UnityEditor;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
@@ -56,9 +57,76 @@ namespace Bezoro.Unity.Core.Tests.EditMode
 			Assert.Throws<InvalidOperationException>(() => serializable.Value = new RawImplementation());
 		}
 
+		[Test]
+		public void Value_AfterManagedReferenceDeserialization_ResolvesSerializedImplementation()
+		{
+			var original = new SerializableInterface<ITestInterface>(new RawImplementation { Number = 17 });
+			var restored = JsonUtility.FromJson<SerializableInterface<ITestInterface>>(JsonUtility.ToJson(original));
+
+			Assert.That(restored.Value, Is.TypeOf<RawImplementation>());
+			Assert.That(((RawImplementation)restored.Value).Number, Is.EqualTo(17));
+		}
+
+		[Test]
+		public void Value_AfterInspectorChangesManagedReference_ReturnsEditedImplementation()
+		{
+			var holder = ScriptableObject.CreateInstance<InterfaceReferenceHolder>();
+			try
+			{
+				holder.Reference = new SerializableInterface<ITestInterface>(new RawImplementation { Number = 1 });
+				Assert.That(((RawImplementation)holder.Reference.Value).Number, Is.EqualTo(1));
+				using var serializedObject = new SerializedObject(holder);
+				serializedObject.FindProperty("Reference.rawReference").managedReferenceValue = new RawImplementation { Number = 2 };
+				serializedObject.ApplyModifiedProperties();
+
+				Assert.That(((RawImplementation)holder.Reference.Value).Number, Is.EqualTo(2));
+			}
+			finally
+			{
+				Object.DestroyImmediate(holder);
+			}
+		}
+
+		[Test]
+		public void Value_AfterInspectorClearsManagedReference_DoesNotReturnCachedValue()
+		{
+			var holder = ScriptableObject.CreateInstance<InterfaceReferenceHolder>();
+			try
+			{
+				holder.Reference = new SerializableInterface<ITestInterface>(new RawImplementation());
+				Assert.That(holder.Reference.Value, Is.Not.Null);
+				using var serializedObject = new SerializedObject(holder);
+				serializedObject.FindProperty("Reference.rawReference").managedReferenceValue = null;
+				serializedObject.ApplyModifiedProperties();
+
+				Assert.Throws<InvalidOperationException>(() => _ = holder.Reference.Value);
+			}
+			finally
+			{
+				Object.DestroyImmediate(holder);
+			}
+		}
+
+		[Test]
+		public void Value_AfterReadingAssignedValue_StillRejectsSecondAssignment()
+		{
+			var serializable = new SerializableInterface<ITestInterface>(new RawImplementation());
+			Assert.That(serializable.Value, Is.Not.Null);
+			Assert.Throws<InvalidOperationException>(() => serializable.Value = new RawImplementation());
+		}
+
 		private interface ITestInterface { }
 
-		private sealed class RawImplementation : ITestInterface { }
+		[Serializable]
+		private sealed class RawImplementation : ITestInterface
+		{
+			public int Number;
+		}
+
+		private sealed class InterfaceReferenceHolder : ScriptableObject
+		{
+			public SerializableInterface<ITestInterface> Reference = new();
+		}
 
 		private sealed class UnityImplementation : MonoBehaviour, ITestInterface { }
 	}
