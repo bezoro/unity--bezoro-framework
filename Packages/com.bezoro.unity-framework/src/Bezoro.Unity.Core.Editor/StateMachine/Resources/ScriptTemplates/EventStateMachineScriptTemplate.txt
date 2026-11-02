@@ -1,0 +1,32 @@
+﻿using UnityEngine;
+using Bezoro.Unity.Core.StateMachines.EventBased;
+
+#ROOTNAMESPACEBEGIN#
+    [CreateAssetMenu(fileName = nameof(#SCRIPTNAME#),
+                     menuName = "Bezoro/StateMachines/Event/" +
+                                nameof(#SCRIPTNAME#))]
+    public sealed class #SCRIPTNAME# : BaseEventStateMachine
+    {
+        protected override void RegisterStates() { }
+        
+        protected override void SetUpTransitions() { }
+        
+        protected override void OnInit() { }
+        
+        protected override IEventState ResolveStartState()
+        {
+            //TODO: Make sure to return a valid IEventState, otherwise you will get an Exception.
+            return null;
+        }
+        
+        protected override void OnStart() { }
+        
+        protected override void OnEnabled() { }
+        
+        protected override void OnExit() { }
+        
+        protected override void OnDisabled() { }
+        
+        protected override void OnDestroyed() { }
+    }
+#ROOTNAMESPACEEND#

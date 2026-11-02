@@ -1,0 +1,139 @@
+name: Unity tests
+run-name: Unity 6000.6.3f1 / ${{ github.ref_name }}
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'Assets/**'
+      - 'Packages/**'
+      - 'ProjectSettings/**'
+      - '.github/workflows/unity-tests.yml'
+      - '.github/scripts/**'
+  workflow_dispatch:
+    inputs:
+      allow_activation:
+        description: 'Authorize this run to activate and return Personal using the repository Unity account.'
+        type: boolean
+        default: false
+      recovered_run_id:
+        description: 'After resolving an uncertain Personal seat: enter the exact blocked run ID and attempt below.'
+        type: string
+        default: ''
+      recovered_run_attempt:
+        description: 'Exact blocked run attempt, required together with recovered_run_id.'
+        type: string
+        default: ''
+
+permissions:
+  contents: read
+  actions: read
+
+# Do not cancel an active run while its Personal seat is being returned.
+concurrency:
+  group: unity-tests
+  cancel-in-progress: false
+
+jobs:
+  test:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 60
+    env:
+      SOURCE_COMMIT: ${{ github.sha }}
+    steps:
+      - name: Require activation authorization
+        env:
+          AUTHORIZED: ${{ github.event_name == 'push' || inputs.allow_activation }}
+        run: |
+          if [[ "$AUTHORIZED" != true ]]; then
+            echo '::error::Unity has not started. Manual dispatch requires allow_activation=true.'
+            exit 1
+          fi
+      - name: Require Unity credentials before activation
+        env:
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        run: |
+          if [[ -z "$UNITY_EMAIL" || -z "$UNITY_PASSWORD" ]]; then
+            echo '::error::Unity has not started. UNITY_EMAIL and UNITY_PASSWORD repository secrets are required.'
+            exit 1
+          fi
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+          lfs: true
+      - name: Check runner safeguards before activation
+        run: |
+          python3 -m unittest discover -s .github/scripts -p 'test_*.py' -v
+          bash -n .github/scripts/framework_unity_wrapper.sh
+      - name: Block activation after uncertain Personal return
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          RECOVERED_RUN_ID: ${{ inputs.recovered_run_id || '' }}
+          RECOVERED_RUN_ATTEMPT: ${{ inputs.recovered_run_attempt || '' }}
+        run: python3 .github/scripts/framework_license_gate.py
+      - name: Prepare exact isolated package and development project
+        id: project
+        run: |
+          python3 .github/scripts/framework_unity_ci.py prepare
+          echo "owner=$(id -u):$(id -g)" >> "$GITHUB_OUTPUT"
+      - name: Install pinned GameCI CLI and verify checksum
+        run: |
+          gameci_dir="$RUNNER_TEMP/game-ci-v0.1.72"
+          mkdir "$gameci_dir"
+          curl --fail --location --silent --show-error --max-time 120 \
+            https://github.com/game-ci/cli/releases/download/v0.1.72/game-ci-linux-x64.tar.gz \
+            --output "$gameci_dir/release.tar.gz"
+          echo "1de550a620ee92e05e920b6db7d431621440b60b2577f04b4a997dc92a58cb0a  $gameci_dir/release.tar.gz" | sha256sum --check
+          tar -xzf "$gameci_dir/release.tar.gz" -C "$gameci_dir"
+          "$gameci_dir/game-ci" --version
+      - name: Free host SDK space for the Unity image
+        run: |
+          sudo rm -rf -- /usr/local/lib/android /usr/share/dotnet
+          df -h /
+      - name: Verify the pinned Docker launch hook without activating Unity
+        run: |
+          python3 .github/scripts/verify_gameci_docker_wrapper.py \
+            --gameci-dir "$RUNNER_TEMP/game-ci-v0.1.72" \
+            --image '${{ steps.project.outputs.image }}' \
+            --output artifacts/docker-wrapper-probe.json
+      - name: Run EditMode and PlayMode sequentially with graphics
+        id: unity
+        env:
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+          ENGINE_LAUNCH_WRAPPER: bash /github/workspace/.github/scripts/framework_unity_wrapper.sh
+        run: |
+          set -o pipefail
+          "$RUNNER_TEMP/game-ci-v0.1.72/game-ci" test 'ci-source' \
+            --docker --dockerShmSize=1025m --engine=unity \
+            --engineVersion=6000.6.3f1 --customImage='${{ steps.project.outputs.image }}' \
+            --testPlatforms='editmode;playmode' --coverageEnabled=false \
+            --customParameters=-force-glcore --artifactsPath=artifacts \
+            --chownFilesTo='${{ steps.project.outputs.owner }}' 2>&1 | tee artifacts/gameci.log
+      - name: Confirm Personal return from the final CLI return scope
+        if: ${{ always() && steps.project.outcome == 'success' && steps.unity.outcome != 'skipped' }}
+        run: python3 .github/scripts/framework_unity_ci.py license-return
+      - name: Require native passing reports with no skipped tests
+        if: ${{ always() && steps.project.outcome == 'success' && steps.unity.outcome != 'skipped' }}
+        run: python3 .github/scripts/framework_unity_ci.py verify
+      - name: Sanitize evidence before upload
+        id: sanitize
+        if: ${{ always() && steps.project.outcome == 'success' }}
+        env:
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        run: python3 .github/scripts/framework_unity_ci.py redact
+      - name: Upload native reports and source identity
+        if: ${{ always() && steps.sanitize.outcome == 'success' }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: unity-6000.6.3f1-${{ github.run_attempt }}
+          retention-days: 3
+          if-no-files-found: error
+          path: |
+            artifacts/*.xml
+            artifacts/*.log
+            artifacts/*.json
+            artifacts/unity-failed
