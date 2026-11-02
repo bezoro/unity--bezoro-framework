@@ -1,31 +1,44 @@
 # Bezoro Unity Framework
 
-Unity runtime utilities and native editor tools. The source is a local UPM package; `DevProject~` is its development project for Unity 6000.6.3f1.
+This repository is a Unity 6000.6.3f1 project. Add the repository root to Unity Hub, or open it with the exact Editor recorded in `ProjectSettings/ProjectVersion.txt`.
 
-## Framework dependency
+```text
+Assets/Editor/                         Project-owned native test runner
+Packages/manifest.json                 Project dependencies and package testables
+Packages/com.bezoro.unity-framework/    Embedded UPM package, edited in place
+ProjectSettings/ProjectVersion.txt     Pinned Unity Editor and revision
+```
 
-`DevProject~/Packages/manifest.json` installs `com.bezoro.framework` from the published Git package at `c9ed5cf0224afdd7256968cde5e3b3a58b80bc3e`, version `0.1.0-preview.1671`. It also imports this checkout through `file:../..` and pins UniTask to a Git revision.
+There is one project and one editable package. There is no separate development project or source copy. Unity resolves the embedded package automatically from `Packages/com.bezoro.unity-framework`; the project manifest enables its tests without installing a second copy.
 
-Open `DevProject~` in the exact Editor recorded in `ProjectSettings/ProjectVersion.txt`. Package Manager resolves the Git dependencies. Keep its generated `Packages/packages-lock.json` with the project after resolution. No lock file or PackageCache is fabricated outside Unity.
+## Install in another Unity project
 
-The published Framework package contains the compiled .NET Standard assemblies and their dependency closure. Entries such as `Bezoro.Core.dll` in an assembly definition select assemblies supplied by UPM. Do not copy those DLLs into `Assets`, `src`, or another package, and remove duplicate manually installed copies from the development project before import.
+Install the published pure C# Framework and UniTask Git dependencies first. Add these entries to the other project's `Packages/manifest.json`, preserving its existing dependencies:
 
-Unity permits Git dependencies in a [project manifest](https://docs.unity3d.com/6000.0/Documentation/Manual/upm-git.html), not as Git URLs in a package's `dependencies`. This is why the Framework and UniTask Git URLs live in `DevProject~/Packages/manifest.json`, while this package declares its Unity registry dependencies in the root `package.json`.
+```json
+{
+  "dependencies": {
+    "com.bezoro.framework": "https://github.com/bezoro/framework.git#c9ed5cf0224afdd7256968cde5e3b3a58b80bc3e",
+    "com.bezoro.unity-framework": "https://github.com/bezoro/unity--bezoro-framework.git?path=Packages/com.bezoro.unity-framework#<tag-or-commit>",
+    "com.cysharp.unitask": "https://github.com/Cysharp/UniTask.git?path=src/UniTask/Assets/Plugins/UniTask#ceac8d6946b1125fe782cd171fbcb245b567dbf9"
+  }
+}
+```
 
-## Existing integration requirements
+Replace `<tag-or-commit>` with a published revision containing this layout. The Package Manager's **Add package from git URL** accepts the same utilities URL. The `?path=Packages/com.bezoro.unity-framework` part is required; the repository root is the project, not a package. To install from disk, select `Packages/com.bezoro.unity-framework/package.json` in **Add package from disk**.
 
-The complete utilities still require dependencies that this repository does not distribute:
+Unity does not support Git URLs in a package's dependency list. Framework and UniTask therefore belong in each consuming project's manifest. Unity registry dependencies are declared by the utilities package. Let Unity generate `Packages/packages-lock.json` after a real resolution and commit that lock; no fabricated lock or copied Framework DLLs are provided.
 
-- The modified KCC runtime assembly, GUID `3425d614f9c95a249bba44bc0d17f503`, used by the character-controller state machines.
-- ALINE, GUID `de4e6084e6d474788bb8c799d6b461ec`, used by the KCC editor labels.
-- The EditMode suite currently references a consuming game's editor helpers, GUID `a0b9c4d55ebc710408ee5bc6fd470b8f`, in two button tests.
+## Dependencies and validation
 
-These are existing integration requirements, separate from the Framework package. Install legitimately available integrations into the development project itself. Do not point local package paths at another game's folders, copy proprietary integrations into this repository, or replace missing integrations with stubs to claim validation. Full compilation and the existing test suite remain blocked until these requirements are supplied or extracted into independent integrations.
+The package uses the published pure C# Framework, UniTask and the Unity registry packages listed in its manifest. It no longer includes the character-controller integration or the commercial drawing integration. The UI component tests use reflection directly and do not depend on a consuming game's editor helpers.
 
-## Package development
+Do not treat manifest or metadata checks as proof of successful Unity import. The native workflow validates package resolution, compilation and full EditMode/PlayMode inventories against the tested revision. Check the matching reports and license-return evidence for each run. See [CI_GUIDE.md](CI_GUIDE.md).
 
-`src` and `tests` keep their existing assembly names, paths and Unity GUIDs. The development project's `testables` entry enables this package's tests. Unity excludes the `DevProject~` folder when importing the package, so its project files are not compiled as package content.
+## Migrate an existing installation
 
-For another project, add the Framework and UniTask Git dependencies to that project's manifest, supply the integration requirements above, then install this package from disk using its root `package.json` or from its Git repository. Use either the package installation or the legacy Assets/submodule installation for the utilities, never both in the same project.
+Version 0.2.0 moves the package from the repository root to `Packages/com.bezoro.unity-framework`. Update existing Git package URLs with the `?path=...` parameter, or update disk references to the package's new `package.json`. Retained source, test and assembly GUIDs are preserved.
 
-The development project does not change any existing game, its package lock, or its submodule revision. Native Unity resolution, compilation and tests need their own recorded results; package metadata checks alone do not establish those results.
+Version 0.3.0 removes all state-machine APIs, runtime owners, conditions, transitions, hierarchy extensions, editor menus, gizmos and script templates. Projects using `Bezoro.Unity.Core.StateMachines` or `Bezoro.Unity.Core.Editor.StateMachine` must migrate to the separately maintained implementation before upgrading. This package does not install that implementation automatically. The independent `Bezoro.Unity.Core.Tickable` update dispatcher remains available with its existing contract.
+
+The old installation of the whole repository under a game's `Assets` directory is no longer supported by this project layout. Remove that legacy source installation before installing the UPM package, preserving any game-owned assets and their references. Do not import both copies. This change does not automatically modify another game's manifest, submodule or package lock.

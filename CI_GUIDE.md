@@ -1,6 +1,6 @@
 # Unity Framework CI
 
-The workflow in `.github/workflows/unity-tests.yml` runs this repository's `DevProject~` in a real Unity 6000.6.3f1 Editor. It uses the GameCI flow adapted from [Canvas Auto Framing PR 24](https://github.com/bezoro/unity--canvas-auto-framing/pull/24). It does not check out or run a game project.
+The workflow in `.github/workflows/unity-tests.yml` runs the repository-root project in a real Unity 6000.6.3f1 Editor. It uses the GameCI flow adapted from [Canvas Auto Framing PR 24](https://github.com/bezoro/unity--canvas-auto-framing/pull/24). It does not check out or run a consuming game project.
 
 ## Activation setup
 
@@ -22,7 +22,7 @@ git diff --check
 
 ## Native execution and evidence
 
-The runner records the source commit, file hashes, image digest and dependency manifests, then verifies the copied bytes under `ci-source`. The copied project keeps its local package path, so Package Manager imports the actual source and test assemblies. The Framework and UniTask remain pinned Git dependencies; no framework DLLs are copied into Assets.
+The runner records the source commit, file hashes, image digest and dependency manifests, then verifies the copied bytes under `ci-source`. That directory is the disposable copy of the root project; its embedded package stays at `ci-source/Packages/com.bezoro.unity-framework`. No separate development project is used. The Framework and UniTask remain pinned Git dependencies; no framework DLLs are copied into Assets.
 
 EditMode and PlayMode run sequentially in one GameCI activation with Xvfb/OpenGL and a cold Library. Each mode uses Unity's public Test Runner API to discover its complete `Bezoro.Unity.Core.Tests` assembly before executing that assembly in the same Editor process. Native discovery expands parameterized cases. Acceptance compares every executed case with that independent inventory and also checks coverage against the package's source methods. No cases from other packages are included. A native failure blocks later Editor launches while allowing the CLI to return the license. No home directories or personal preferences are mounted.
 
@@ -34,4 +34,4 @@ Source identity, reports and sanitized logs are retained for three days. Inspect
 
 ## Existing dependencies
 
-This setup does not fabricate dependencies or disable tests. The source still references the real KCC and ALINE integrations, and two existing tests reference external editor helpers, as listed in `README.md`. Missing integrations must remain visible as setup or native compilation failures. They cannot be replaced by stubs and then described as a successful validation.
+The package uses the published Framework, UniTask and its declared Unity registry dependencies. The character-controller integration and commercial drawing integration have been removed. Their APIs are not replaced by substitutes. UI component tests use reflection directly and no longer require external editor helpers. Native resolution and compilation must still pass before claiming acceptance; static manifest checks do not establish either result.

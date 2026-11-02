@@ -12,6 +12,102 @@ from unittest.mock import patch
 import framework_unity_ci as ci
 
 
+class ProjectLayoutTests(unittest.TestCase):
+    def setUp(self):
+        self.temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temporary.cleanup)
+        self.root = Path(self.temporary.name)
+        for name in ('Assets', 'ProjectSettings', str(ci.PACKAGE_PATH / 'src'), str(ci.PACKAGE_PATH / 'tests')):
+            (self.root / name).mkdir(parents=True)
+        self.manifest = {'dependencies': {}, 'testables': [ci.PACKAGE_PATH.name]}
+        self.package = {'name': ci.PACKAGE_PATH.name, 'dependencies': {'com.unity.test-framework': '1.8.0'}}
+        ci.write_json(self.root / 'Packages/manifest.json', self.manifest)
+        ci.write_json(self.root / ci.PACKAGE_PATH / 'package.json', self.package)
+        (self.root / 'ProjectSettings/ProjectVersion.txt').write_text(
+            f'm_EditorVersion: {ci.EDITOR}\nm_EditorVersionWithRevision: {ci.EDITOR} ({ci.REVISION})\n')
+
+    def test_repository_root_is_the_project_and_package_is_embedded_once(self):
+        self.assertEqual(ci.project_layout(self.root), (self.manifest, self.package))
+
+    def test_nested_or_duplicate_legacy_layout_is_rejected(self):
+        for name in ('DevProject~', 'src', 'tests', 'package.json'):
+            with self.subTest(name=name):
+                legacy = self.root / name
+                legacy.touch()
+                with self.assertRaisesRegex(ValueError, 'Legacy project/package roots'):
+                    ci.project_layout(self.root)
+                legacy.unlink()
+        (self.root / 'Assets').rmdir()
+        with self.assertRaisesRegex(ValueError, 'Assets is required'):
+            ci.project_layout(self.root)
+
+    def test_embedded_package_cannot_resolve_to_another_copy(self):
+        for source in ('file:../..', 'https://example.com/utilities.git'):
+            self.manifest['dependencies'][ci.PACKAGE_PATH.name] = source
+            ci.write_json(self.root / 'Packages/manifest.json', self.manifest)
+            with self.assertRaisesRegex(ValueError, 'second local or remote copy'):
+                ci.project_layout(self.root)
+
+    def test_package_tests_must_be_enabled(self):
+        self.manifest['testables'] = []
+        ci.write_json(self.root / 'Packages/manifest.json', self.manifest)
+        with self.assertRaisesRegex(ValueError, 'enable tests'):
+            ci.project_layout(self.root)
+
+    def test_package_identity_and_sources_are_required(self):
+        self.package['name'] = 'com.example.wrong'
+        ci.write_json(self.root / ci.PACKAGE_PATH / 'package.json', self.package)
+        with self.assertRaisesRegex(ValueError, 'embedded package'):
+            ci.project_layout(self.root)
+        self.package['name'] = ci.PACKAGE_PATH.name
+        ci.write_json(self.root / ci.PACKAGE_PATH / 'package.json', self.package)
+        (self.root / ci.PACKAGE_PATH / 'src').rmdir()
+        with self.assertRaisesRegex(ValueError, 'missing src'):
+            ci.project_layout(self.root)
+
+    def test_git_and_disk_dependencies_cannot_be_declared_inside_the_package(self):
+        for version in ('https://example.com/dependency.git#commit', 'file:../another-package', 'latest'):
+            self.package['dependencies']['com.example.dependency'] = version
+            ci.write_json(self.root / ci.PACKAGE_PATH / 'package.json', self.package)
+            with self.assertRaisesRegex(ValueError, 'registry versions'):
+                ci.project_layout(self.root)
+
+    def test_editor_revision_must_match(self):
+        (self.root / 'ProjectSettings/ProjectVersion.txt').write_text(f'm_EditorVersion: {ci.EDITOR}\n')
+        with self.assertRaisesRegex(ValueError, 'pinned Unity Editor'):
+            ci.project_layout(self.root)
+
+    def test_prepared_project_copies_the_embedded_package_and_records_both_paths(self):
+        # This temporary repository is a CI fixture, not a Unity acceptance run.
+        (self.root / ci.PACKAGE_PATH / 'src/Example.cs').write_text('// Package source fixture.\n')
+        for mode in ('EditMode', 'PlayMode'):
+            folder = self.root / ci.PACKAGE_PATH / 'tests' / mode
+            folder.mkdir()
+            (folder / 'Example.cs').write_text(
+                f'namespace Bezoro.Unity.Core.Tests.{mode} {{ public class Example {{ '
+                '[Test] public void ExampleTest() {} } }')
+        (self.root / 'Assets/Editor').mkdir()
+        (self.root / 'Assets/Editor/Runner.cs').write_text('// Project-owned runner fixture.\n')
+        def git(*args):
+            return subprocess.check_output(['git', *args], cwd=self.root, text=True, stderr=subprocess.DEVNULL).strip()
+        git('init', '--quiet')
+        git('add', '.')
+        git('-c', 'user.name=CI fixture', '-c', 'user.email=ci@example.invalid',
+            '-c', 'commit.gpgsign=false', 'commit', '--quiet', '-m', 'CI fixture')
+        with patch.object(ci, 'ROOT', self.root), patch.object(ci, 'ARTIFACTS', self.root / 'artifacts'), \
+                patch.dict(os.environ, {'SOURCE_COMMIT': git('rev-parse', 'HEAD'), 'GITHUB_OUTPUT': ''}):
+            ci.prepare()
+        source = json.loads((self.root / 'artifacts/source.json').read_text())
+        destination = self.root / 'ci-source'
+        self.assertEqual(source['test_project_path'], str(destination))
+        self.assertEqual(source['test_package_path'], str(destination / ci.PACKAGE_PATH))
+        self.assertEqual(ci.project_layout(destination), (self.manifest, self.package))
+        for name in source['source_sha256']:
+            self.assertEqual((self.root / name).read_bytes(), (destination / name).read_bytes())
+        self.assertFalse((destination / 'DevProject~').exists())
+        self.assertFalse((destination / 'Packages/packages-lock.json').exists())
+
+
 class NativeEvidenceTests(unittest.TestCase):
     def setUp(self):
         self.temporary = tempfile.TemporaryDirectory()
@@ -91,7 +187,7 @@ class NativeEvidenceTests(unittest.TestCase):
 
     def test_source_inventory_records_parameterized_methods_without_guessing_case_counts(self):
         for mode in ('EditMode', 'PlayMode'):
-            folder = self.folder / 'tests' / mode
+            folder = self.folder / ci.PACKAGE_PATH / 'tests' / mode
             folder.mkdir(parents=True)
             (folder / 'Example.cs').write_text(
                 'namespace Bezoro.Unity.Core.Tests.' + mode + ' { public class Example {\n'
@@ -104,6 +200,8 @@ class NativeEvidenceTests(unittest.TestCase):
             self.assertTrue(any(name.endswith('.Parameters') for name in methods))
             self.assertTrue(any(name.endswith('.Coroutine') for name in methods))
             self.assertFalse(any('NotATest' in name for name in methods))
+            self.assertTrue(all(item['source'].startswith(ci.PACKAGE_PATH.as_posix() + '/tests/')
+                                for item in methods.values()))
 
     def test_only_success_inside_the_final_return_scope_confirms_personal_return(self):
         success = 'Returning personal license seat\nSuccessfully returned the entitlement license\n'

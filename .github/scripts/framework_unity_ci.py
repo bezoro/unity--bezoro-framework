@@ -17,6 +17,31 @@ IMAGE = 'unityci/editor@sha256:59bfffa0e0b8254ce0606502d9b8362f72258de028e21b6de
 MODES = ('editmode', 'playmode')
 ROOT = Path(__file__).resolve().parents[2]
 ARTIFACTS = ROOT / 'artifacts'
+PACKAGE_PATH = Path('Packages/com.bezoro.unity-framework')
+
+
+def project_layout(root):
+    """Validate a root Unity project with one embedded, independently installable package."""
+    if not (root / 'Assets').is_dir():
+        raise ValueError('Open the repository root as the Unity project; Assets is required.')
+    if any((root / name).exists() for name in ('DevProject~', 'src', 'tests', 'package.json')):
+        raise ValueError('Legacy project/package roots must not coexist with the embedded package.')
+    manifest = json.loads((root / 'Packages/manifest.json').read_text())
+    package = json.loads((root / PACKAGE_PATH / 'package.json').read_text())
+    if package['name'] != PACKAGE_PATH.name or package['name'] not in manifest.get('testables', []):
+        raise ValueError('The root project must enable tests for its embedded package.')
+    if package['name'] in manifest['dependencies']:
+        raise ValueError('The embedded package must not resolve to a second local or remote copy.')
+    for name in ('src', 'tests'):
+        if not (root / PACKAGE_PATH / name).is_dir():
+            raise ValueError(f'The embedded package is missing {name}.')
+    if any(not isinstance(version, str) or not re.fullmatch(r'\d+\.\d+\.\d+(?:-[\w.-]+)?', version)
+           for version in package.get('dependencies', {}).values()):
+        raise ValueError('Package dependencies must use registry versions; Git URLs belong in the project manifest.')
+    version = (root / 'ProjectSettings/ProjectVersion.txt').read_text()
+    if f'm_EditorVersion: {EDITOR}\n' not in version or f'({REVISION})' not in version:
+        raise ValueError('The root project does not use the pinned Unity Editor.')
+    return manifest, package
 
 
 def write_json(path, value):
@@ -32,7 +57,7 @@ def source_test_inventory(root):
     method = re.compile(r'((?:\s*\[[^\]]*\])+)'
                         r'\s*(?:public|internal)\s+(?:(?:static|async)\s+)*'
                         r'[\w.<>?,]+\s+(\w+)\s*\(', re.M)
-    for path in sorted((root / 'tests').rglob('*.cs')):
+    for path in sorted((root / PACKAGE_PATH / 'tests').rglob('*.cs')):
         text = path.read_text(encoding='utf-8-sig')
         code = literals.sub(lambda match: ''.join('\n' if char == '\n' else ' ' for char in match.group()), text)
         if re.search(r'\[\s*(?:TestCaseSource|TestFixtureSource|Theory)\b', code):
@@ -92,17 +117,11 @@ def prepare():
     subprocess.run(['git', 'diff', '--exit-code', '--quiet', 'HEAD', '--'], cwd=ROOT, check=True)
     names = subprocess.check_output(['git', 'ls-files', '-z'], cwd=ROOT).decode().split('\0')
     files = [Path(name) for name in names if name]
-    required = {Path('package.json'), Path('DevProject~/Packages/manifest.json'),
-                Path('DevProject~/ProjectSettings/ProjectVersion.txt')}
+    required = {PACKAGE_PATH / 'package.json', Path('Packages/manifest.json'),
+                Path('ProjectSettings/ProjectVersion.txt')}
     if not required.issubset(files):
         raise ValueError('The package and development project must be committed before testing.')
-    manifest = json.loads((ROOT / 'DevProject~/Packages/manifest.json').read_text())
-    package = json.loads((ROOT / 'package.json').read_text())
-    if manifest['dependencies'].get(package['name']) != 'file:../..' or package['name'] not in manifest.get('testables', []):
-        raise ValueError('The development project must test the real local package at file:../..')
-    version = (ROOT / 'DevProject~/ProjectSettings/ProjectVersion.txt').read_text()
-    if f'm_EditorVersion: {EDITOR}\n' not in version or f'({REVISION})' not in version:
-        raise ValueError('The development project does not use the pinned Unity Editor.')
+    manifest, package = project_layout(ROOT)
     hashes = {}
     for relative in files:
         source = ROOT / relative
@@ -116,12 +135,12 @@ def prepare():
             raise ValueError(f'Copied source differs: {relative}')
         hashes[relative.as_posix()] = digest
     inventory = source_test_inventory(destination)
-    (destination / 'DevProject~/Assets').mkdir(exist_ok=True)
+    project_layout(destination)
     ARTIFACTS.mkdir()
     write_json(ARTIFACTS / 'source.json', {
         'schema': 1, 'commit': commit, 'editor': EDITOR, 'revision': REVISION, 'image': IMAGE,
-        'source_path': str(ROOT), 'test_package_path': str(destination),
-        'test_project_path': str(destination / 'DevProject~'), 'source_sha256': hashes,
+        'source_path': str(ROOT), 'test_package_path': str(destination / PACKAGE_PATH),
+        'test_project_path': str(destination), 'source_sha256': hashes,
         'package_manifest': package, 'project_manifest': manifest,
         'run_id': os.environ.get('GITHUB_RUN_ID'), 'run_attempt': os.environ.get('GITHUB_RUN_ATTEMPT'),
     })
@@ -238,7 +257,7 @@ def sanitize(text):
 
 def redact():
     # The resolved lock is native output. Never manufacture a successful dependency resolution.
-    lock = ROOT / 'ci-source/DevProject~/Packages/packages-lock.json'
+    lock = ROOT / 'ci-source/Packages/packages-lock.json'
     if lock.is_file():
         shutil.copyfile(lock, ARTIFACTS / 'packages-lock.json')
     for path in ARTIFACTS.rglob('*'):

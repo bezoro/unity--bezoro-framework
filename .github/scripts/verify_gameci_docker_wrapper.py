@@ -51,7 +51,7 @@ raise SystemExit(74)
                            ENGINE_LAUNCH_WRAPPER=hook, FRAMEWORK_DOCKER_ARGS=str(docker_arguments_path))
         # Exercise the downloaded binary's actual Docker command construction.
         # Its Docker executable is a recorder, so this phase cannot start a container or activate.
-        cli_probe = subprocess.run([str(gameci_directory / 'game-ci'), 'test', 'DevProject~', '--docker', '--engine=unity',
+        cli_probe = subprocess.run([str(gameci_directory / 'game-ci'), 'test', '.', '--docker', '--engine=unity',
                         '--engineVersion=6000.6.3f1', '--customImage=' + image,
                         '--testPlatforms=editmode;playmode', '--coverageEnabled=false'],
                        cwd=ROOT, env=environment, capture_output=True, text=True, timeout=60)

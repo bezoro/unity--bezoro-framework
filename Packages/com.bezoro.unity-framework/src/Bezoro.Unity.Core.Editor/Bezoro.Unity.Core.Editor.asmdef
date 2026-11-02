@@ -1,0 +1,31 @@
+{
+    "name": "Bezoro.Unity.Core.Editor",
+    "rootNamespace": "",
+    "references": [
+        "GUID:b5120e6e7c923514e83c2ac656701190",
+        "GUID:d8b63aba1907145bea998dd612889d6b",
+        "GUID:69448af7b92c7f342b298e06a37122aa",
+        "GUID:84651a3751eca9349aac36a66bba901b",
+        "GUID:e0cd26848372d4e5c891c569017e11f1",
+        "GUID:0acc523941302664db1f4e527237feb3",
+        "GUID:27619889b8ba8c24980f49ee34dbb44a",
+        "GUID:f51ebe6a0ceec4240a699833d6309b23",
+        "GUID:15fc0a57446b3144c949da3e2b9737a9",
+        "GUID:df380645f10b7bc4b97d4f5eb6303d95",
+        "GUID:49818357e697641afb75d2f8acaf1861"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": true,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "Bezoro.Core.dll",
+        "Bezoro.Logging.dll"
+    ],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

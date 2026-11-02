@@ -5,10 +5,9 @@ on:
   push:
     branches: [main]
     paths:
-      - 'src/**'
-      - 'tests/**'
-      - 'package.json'
-      - 'DevProject~/**'
+      - 'Assets/**'
+      - 'Packages/**'
+      - 'ProjectSettings/**'
       - '.github/workflows/unity-tests.yml'
       - '.github/scripts/**'
   workflow_dispatch:
@@ -107,7 +106,7 @@ jobs:
           ENGINE_LAUNCH_WRAPPER: bash /github/workspace/.github/scripts/framework_unity_wrapper.sh
         run: |
           set -o pipefail
-          "$RUNNER_TEMP/game-ci-v0.1.72/game-ci" test 'ci-source/DevProject~' \
+          "$RUNNER_TEMP/game-ci-v0.1.72/game-ci" test 'ci-source' \
             --docker --dockerShmSize=1025m --engine=unity \
             --engineVersion=6000.6.3f1 --customImage='${{ steps.project.outputs.image }}' \
             --testPlatforms='editmode;playmode' --coverageEnabled=false \
