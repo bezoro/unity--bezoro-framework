@@ -6,7 +6,6 @@ using Bezoro.Unity.Core.AsyncLoading;
 using Bezoro.Unity.Core.Loading;
 using Bezoro.Unity.Core.MonoBehaviours;
 using Bezoro.Unity.Core.ReflectionProbes;
-using Bezoro.Unity.Core.StateMachines.Utilities;
 using NUnit.Framework;
 using UnityEngine;
 using Object = UnityEngine.Object;
@@ -1262,61 +1261,6 @@ namespace Bezoro.Unity.Core.Tests.EditMode
 			var model = new StartDisabledModel();
 
 			Assert.AreEqual(hasTarget, model.ShouldApplyTarget(hasTarget));
-		}
-
-		[TestCase(true)]
-		[TestCase(false)]
-		public void StateMachineOwnerModel_HasRequiredStateMachine_ReturnsStateMachinePresence(
-			bool hasStateMachine)
-		{
-			var model = new StateMachineOwnerModel();
-
-			Assert.AreEqual(hasStateMachine, model.HasRequiredStateMachine(hasStateMachine));
-		}
-
-		[TestCase(true,  false)]
-		[TestCase(false, true)]
-		public void StateMachineOwnerModel_ShouldDisableOwner_ReturnsOnlyWhenMissingRequiredStateMachine(
-			bool hasRequiredStateMachine,
-			bool expected)
-		{
-			var model = new StateMachineOwnerModel();
-
-			Assert.AreEqual(expected, model.ShouldDisableOwner(hasRequiredStateMachine));
-		}
-
-		[TestCase(false, true)]
-		[TestCase(true,  false)]
-		public void StateMachineOwnerModel_ShouldRegisterTickable_ReturnsOnlyWhenNotAlreadyRegistered(
-			bool isTickRegistered,
-			bool expected)
-		{
-			var model = new StateMachineOwnerModel();
-
-			Assert.AreEqual(expected, model.ShouldRegisterTickable(isTickRegistered));
-		}
-
-		[TestCase(false, false)]
-		[TestCase(true,  true)]
-		public void StateMachineOwnerModel_ShouldUnregisterTickable_ReturnsOnlyWhenRegistered(
-			bool isTickRegistered,
-			bool expected)
-		{
-			var model = new StateMachineOwnerModel();
-
-			Assert.AreEqual(expected, model.ShouldUnregisterTickable(isTickRegistered));
-		}
-
-		[TestCase(true)]
-		[TestCase(false)]
-		public void StateMachineOwnerModel_StateMachineActions_RunOnlyWhenStateMachineExists(
-			bool hasStateMachine)
-		{
-			var model = new StateMachineOwnerModel();
-
-			Assert.AreEqual(hasStateMachine, model.ShouldRunStateMachineAction(hasStateMachine));
-			Assert.AreEqual(hasStateMachine, model.ShouldFindState(hasStateMachine));
-			Assert.AreEqual(hasStateMachine, model.ShouldReplaceExistingStateMachine(hasStateMachine));
 		}
 
 		[TestCase(true,  false, true)]

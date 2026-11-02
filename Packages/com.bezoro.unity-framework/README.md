@@ -12,11 +12,13 @@ The published Framework package contains the compiled .NET Standard assemblies a
 
 Unity permits Git dependencies in a [project manifest](https://docs.unity3d.com/6000.0/Documentation/Manual/upm-git.html), not as Git URLs in a package's `dependencies`. This is why each consuming project must declare the Framework and UniTask Git URLs, while this package declares its Unity registry dependencies in its own `package.json`.
 
-## Integration changes in 0.2.0
+## Breaking changes in 0.3.0
 
-The KCC state-machine integration has been removed, including `KCCBased`, `KCCStateExtensions`, the editor drawing integration and the script creation menu/template. The commercial drawing dependency is no longer referenced. No replacement controller is included. Consumers using those APIs or serialized components must migrate before upgrading.
+All state-machine code has been removed. This includes event-based and tickable machines, states, owners, conditions, transitions, hierarchy extensions, editor menus, gizmos and templates. Consumers using `Bezoro.Unity.Core.StateMachines` or `Bezoro.Unity.Core.Editor.StateMachine`, including their serialized components, must migrate to the separately maintained implementation before upgrading. No replacement dependency is added here.
 
-Event-based and tickable state machines remain part of the package. Their templates use the current runtime namespaces without referencing an editor assembly from generated runtime code. UI component tests use reflection directly and do not require a game's editor helpers.
+The independent `Bezoro.Unity.Core.Tickable` update dispatcher and its tick interfaces are retained unchanged. UI component tests use reflection directly and do not require a game's editor helpers.
+
+Version 0.2.0 moved the package into `Packages/com.bezoro.unity-framework` and removed the character-controller and commercial drawing integrations. Its Git subpath migration still applies.
 
 ## Package development
 

@@ -1,6 +1,6 @@
 {
   "name": "com.bezoro.unity-framework",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "displayName": "Bezoro Unity Framework",
   "description": "Unity runtime utilities and native editor tools for Bezoro Framework consumers.",
   "unity": "6000.6",
