@@ -2,8 +2,8 @@
 
 Run before GameCI receives credentials. Requires GITHUB_TOKEN with actions:read,
 GITHUB_REPOSITORY, GITHUB_RUN_ID and GITHUB_RUN_ATTEMPT. A manual
-workflow_dispatch may set RECOVERED_RUN_ID after the owner has resolved that
-exact run's uncertain seat. No workflow result or raw GameCI exit code proves a
+workflow_dispatch may set RECOVERED_RUN_ID and RECOVERED_RUN_ATTEMPT after the
+owner has resolved that exact attempt's uncertain seat. No workflow result or raw GameCI exit code proves a
 return; only the dedicated positive-return verifier step in the same job does.
 """
 
@@ -32,8 +32,14 @@ class Attempt:
     run_id: int
     number: int
     source: str
-    started_at: datetime.datetime
     status: str
+
+
+@dataclass(frozen=True)
+class NativeLaunch:
+    attempt: Attempt
+    started_at: datetime.datetime
+    returned: bool
 
 
 class ActionsApi:
@@ -82,13 +88,17 @@ def read_attempt(data, run_id, number, expected_source=None):
     source = data.get('head_sha', '')
     if not re.fullmatch(r'[0-9a-f]{40}', source) or expected_source and source != expected_source:
         raise GateError('Cannot establish license history: source identity mismatch.')
+    return Attempt(run_id, number, source, data.get('status', ''))
+
+
+def native_timestamp(step):
     try:
-        started_at = datetime.datetime.fromisoformat(data['run_started_at'].replace('Z', '+00:00'))
+        started_at = datetime.datetime.fromisoformat(step['started_at'].replace('Z', '+00:00'))
         if started_at.tzinfo is None:
             raise ValueError()
     except (KeyError, TypeError, ValueError, AttributeError):
-        raise GateError('Cannot order license history without native run timestamps.') from None
-    return Attempt(run_id, number, source, started_at, data.get('status', ''))
+        raise GateError('Cannot order license history without actual native launch timestamps.') from None
+    return started_at
 
 
 def previous_attempts(api, current_run, current_attempt):
@@ -110,17 +120,16 @@ def previous_attempts(api, current_run, current_attempt):
             attempts.append(read_attempt(data, run_id, number, run.get('head_sha')))
     if current_run not in seen:
         raise GateError('Cannot establish license history: current workflow run is absent.')
-    # Old runs can be retried today, so API creation order is insufficient.
-    return sorted(attempts, key=lambda item: (item.started_at, item.run_id, item.number), reverse=True)
+    return attempts
 
 
 def inspect_attempt(api, attempt):
     jobs = list(api.pages(f'/actions/runs/{attempt.run_id}/attempts/{attempt.number}/jobs', 'jobs'))
     if not jobs:
         if attempt.status in NOT_STARTED:
-            return None
+            return []
         raise GateError(f'Cannot establish license history for run {attempt.run_id}, attempt {attempt.number}: native job evidence is missing.')
-    launched = False
+    native = []
     for job in jobs:
         if (job.get('run_id') != attempt.run_id or job.get('run_attempt') != attempt.number
                 or job.get('head_sha') != attempt.source):
@@ -138,38 +147,52 @@ def inspect_attempt(api, attempt):
         launch = launches[0]
         if launch.get('conclusion') == 'skipped' or launch.get('status') in NOT_STARTED:
             continue
-        launched = True
+        started_at = native_timestamp(launch)
         returns = [step for step in steps if step.get('name') == RETURN_STEP]
-        if (len(returns) != 1 or returns[0].get('status') != 'completed'
-                or returns[0].get('conclusion') != 'success'
-                or not isinstance(launch.get('number'), int)
-                or not isinstance(returns[0].get('number'), int)
-                or returns[0]['number'] <= launch['number']):
-            return 'The launched Unity job has no successful dedicated Personal-return verification.'
-    return '' if launched else None
+        returned = (len(returns) == 1 and returns[0].get('status') == 'completed'
+                    and returns[0].get('conclusion') == 'success'
+                    and isinstance(launch.get('number'), int)
+                    and isinstance(returns[0].get('number'), int)
+                    and returns[0]['number'] > launch['number'])
+        native.append(NativeLaunch(attempt, started_at, returned))
+    return native
 
 
-def check_history(api, current_run, current_attempt, event, recovered_run_id=''):
-    recovered = positive_integer(recovered_run_id, 'RECOVERED_RUN_ID') if recovered_run_id else None
+def check_history(api, current_run, current_attempt, event, recovered_run_id='', recovered_run_attempt=''):
+    if bool(recovered_run_id) != bool(recovered_run_attempt):
+        raise GateError('Seat recovery requires both RECOVERED_RUN_ID and RECOVERED_RUN_ATTEMPT.')
+    recovered = (positive_integer(recovered_run_id, 'RECOVERED_RUN_ID'),
+                 positive_integer(recovered_run_attempt, 'RECOVERED_RUN_ATTEMPT')) if recovered_run_id else None
     if recovered is not None and event != 'workflow_dispatch':
         raise GateError('Seat recovery is accepted only through an explicit manual workflow_dispatch.')
+    launches = []
     for attempt in previous_attempts(api, current_run, current_attempt):
-        reason = inspect_attempt(api, attempt)
-        if reason is None:
-            continue  # A skipped/preflight-only run must never clear an older uncertain seat.
-        identity = {'run_id': attempt.run_id, 'attempt': attempt.number, 'source': attempt.source}
-        if not reason:
-            if recovered is not None:
-                raise GateError('RECOVERED_RUN_ID does not match an uncertain launch. Remove the stale recovery input.')
-            return {'result': 'Passed', 'basis': 'verified_return', **identity}
-        if recovered == attempt.run_id:
-            return {'result': 'Passed', 'basis': 'manual_seat_recovery', **identity}
-        raise GateError(f'Activation blocked after run {attempt.run_id}, attempt {attempt.number}. {reason} '
-                        'Resolve the seat with its owner, then manually dispatch with '
-                        f'recovered_run_id={attempt.run_id}. No Unity activation was attempted.')
-    if recovered is not None:
-        raise GateError('RECOVERED_RUN_ID has no matching uncertain launch.')
-    return {'result': 'Passed', 'basis': 'no_previous_launch'}
+        # Inspect all attempts. Scheduling order is not native execution order, even
+        # when workflow concurrency prevents overlapping activations.
+        launches.extend(inspect_attempt(api, attempt))
+    if not launches:
+        if recovered is not None:
+            raise GateError('RECOVERED_RUN_ID has no matching uncertain launch.')
+        return {'result': 'Passed', 'basis': 'no_previous_launch'}
+    latest_time = max(launch.started_at for launch in launches)
+    candidates = {launch.attempt for launch in launches if launch.started_at == latest_time}
+    if len(candidates) != 1:
+        raise GateError('Cannot establish the last native launch: distinct attempts have identical launch timestamps.')
+    attempt = candidates.pop()
+    # Every native job in this attempt must have its own positive return proof.
+    returned = all(launch.returned for launch in launches if launch.attempt == attempt)
+    identity = {'run_id': attempt.run_id, 'attempt': attempt.number, 'source': attempt.source}
+    if returned:
+        if recovered is not None:
+            raise GateError('Recovery inputs do not match an uncertain launch. Remove the stale recovery input.')
+        return {'result': 'Passed', 'basis': 'verified_return', **identity}
+    if recovered == (attempt.run_id, attempt.number):
+        return {'result': 'Passed', 'basis': 'manual_seat_recovery', **identity}
+    raise GateError(f'Activation blocked after run {attempt.run_id}, attempt {attempt.number}. '
+                    'The launched Unity job has no successful dedicated Personal-return verification. '
+                    'Resolve the seat with its owner, then manually dispatch with '
+                    f'recovered_run_id={attempt.run_id} and recovered_run_attempt={attempt.number}. '
+                    'No Unity activation was attempted.')
 
 
 def main():
@@ -178,7 +201,8 @@ def main():
         current_attempt = positive_integer(os.environ.get('GITHUB_RUN_ATTEMPT'), 'GITHUB_RUN_ATTEMPT')
         api = ActionsApi(os.environ.get('GITHUB_REPOSITORY', ''), os.environ.get('GITHUB_TOKEN', ''))
         decision = check_history(api, current_run, current_attempt,
-                                 os.environ.get('GITHUB_EVENT_NAME', ''), os.environ.get('RECOVERED_RUN_ID', ''))
+                                 os.environ.get('GITHUB_EVENT_NAME', ''), os.environ.get('RECOVERED_RUN_ID', ''),
+                                 os.environ.get('RECOVERED_RUN_ATTEMPT', ''))
         print(json.dumps(decision, sort_keys=True))
         return 0
     except (GateError, TypeError, KeyError) as error:

@@ -6,7 +6,7 @@ The workflow in `.github/workflows/unity-tests.yml` runs this repository's `DevP
 
 The owner must configure `UNITY_EMAIL` and `UNITY_PASSWORD` in this repository's [Actions secrets](https://github.com/bezoro/unity--bezoro-framework/settings/secrets/actions). Use the intended Unity Personal account with its entitlement and terms already accepted. Never put credentials in commits, comments, artifacts or chat.
 
-The workflow checks these secrets before downloading the Editor or attempting activation. A missing secret fails the run explicitly; it does not mean Unity executed. Manual dispatch also requires `allow_activation=true`. An Actions-history interlock blocks activation after an earlier Unity launch without successful dedicated return verification, including retries of the same run. After resolving that exact seat with the owner, a manual dispatch can explicitly provide its `recovered_run_id`. A preflight-only run never clears older uncertainty.
+The workflow checks these secrets before downloading the Editor or attempting activation. A missing secret fails the run explicitly; it does not mean Unity executed. Manual dispatch also requires `allow_activation=true`. An Actions-history interlock blocks activation after an earlier Unity launch without successful dedicated return verification, including retries of the same run. Launches are ordered by their native step start time, not workflow scheduling time. After resolving that exact seat with the owner, a manual dispatch can explicitly provide its exact `recovered_run_id` and `recovered_run_attempt`. A preflight-only run never clears older uncertainty.
 
 ## When to run
 

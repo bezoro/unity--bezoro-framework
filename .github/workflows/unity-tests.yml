@@ -18,7 +18,11 @@ on:
         type: boolean
         default: false
       recovered_run_id:
-        description: 'Only after the owner resolves an uncertain Personal seat: enter that exact blocked run ID.'
+        description: 'After resolving an uncertain Personal seat: enter the exact blocked run ID and attempt below.'
+        type: string
+        default: ''
+      recovered_run_attempt:
+        description: 'Exact blocked run attempt, required together with recovered_run_id.'
         type: string
         default: ''
 
@@ -68,6 +72,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
           RECOVERED_RUN_ID: ${{ inputs.recovered_run_id || '' }}
+          RECOVERED_RUN_ATTEMPT: ${{ inputs.recovered_run_attempt || '' }}
         run: python3 .github/scripts/framework_license_gate.py
       - name: Prepare exact isolated package and development project
         id: project

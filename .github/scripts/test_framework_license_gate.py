@@ -13,9 +13,9 @@ def run(run_id, attempt=1, started='2026-11-02T12:00:00Z', status='completed'):
             'run_started_at': started, 'status': status}
 
 
-def job(run_id, attempt=1, launched=True, returned=True, conclusion='success'):
+def job(run_id, attempt=1, launched=True, returned=True, conclusion='success', started='2026-11-02T12:15:00Z'):
     launch = {'name': gate.LAUNCH_STEP, 'number': 5, 'status': 'completed',
-              'conclusion': 'success' if launched else 'skipped'}
+              'conclusion': 'success' if launched else 'skipped', 'started_at': started}
     steps = [launch]
     if returned is not None:
         steps.append({'name': gate.RETURN_STEP, 'number': 6, 'status': 'completed',
@@ -52,8 +52,8 @@ class LicenseGateTests(unittest.TestCase):
     def tearDown(self):
         self.network.stop()
 
-    def check(self, api, event='push', recovered='', attempt=1):
-        return gate.check_history(api, 900, attempt, event, recovered)
+    def check(self, api, event='push', recovered='', recovered_attempt='', attempt=1):
+        return gate.check_history(api, 900, attempt, event, recovered, recovered_attempt)
 
     def test_first_run_needs_no_historical_launch(self):
         api = FakeApi([self.current])
@@ -107,27 +107,29 @@ class LicenseGateTests(unittest.TestCase):
     def test_old_run_retried_today_takes_precedence_over_api_creation_order(self):
         api = FakeApi([self.current, run(200, started='2026-11-02T12:30:00Z'),
                        run(100, attempt=2, started='2026-11-02T13:00:00Z')],
-                      {(100, 2): [job(100, attempt=2, returned=False)]},
+                      {(100, 2): [job(100, attempt=2, returned=False, started='2026-11-02T13:15:00Z')],
+                       (100, 1): [job(100, started='2026-11-01T10:15:00Z')],
+                       (200, 1): [job(200)]},
                       {(100, 1): run(100, started='2026-11-01T10:00:00Z')})
         with self.assertRaisesRegex(gate.GateError, 'run 100, attempt 2'):
             self.check(api)
 
     def test_only_exact_uncertain_run_can_be_recovered_in_a_manual_dispatch(self):
         api = FakeApi([self.current, run(100)], {(100, 1): [job(100, returned=False)]})
-        decision = self.check(api, event='workflow_dispatch', recovered='100')
+        decision = self.check(api, event='workflow_dispatch', recovered='100', recovered_attempt='1')
         self.assertEqual(decision['basis'], 'manual_seat_recovery')
         self.assertEqual(decision['attempt'], 1)
         with self.assertRaisesRegex(gate.GateError, 'run 100, attempt 1'):
-            self.check(api, event='workflow_dispatch', recovered='101')
+            self.check(api, event='workflow_dispatch', recovered='101', recovered_attempt='1')
 
     def test_recovery_input_cannot_authorize_a_push_or_silently_match_a_safe_run(self):
         api = FakeApi([self.current, run(100)], {(100, 1): [job(100)]})
         with self.assertRaisesRegex(gate.GateError, 'explicit manual'):
-            self.check(api, recovered='100')
+            self.check(api, recovered='100', recovered_attempt='1')
         with self.assertRaisesRegex(gate.GateError, 'stale recovery input'):
-            self.check(api, event='workflow_dispatch', recovered='100')
+            self.check(api, event='workflow_dispatch', recovered='100', recovered_attempt='1')
         with self.assertRaisesRegex(gate.GateError, 'no matching uncertain'):
-            self.check(FakeApi([self.current]), event='workflow_dispatch', recovered='100')
+            self.check(FakeApi([self.current]), event='workflow_dispatch', recovered='100', recovered_attempt='1')
 
     def test_missing_job_evidence_is_not_assumed_to_mean_no_activation(self):
         api = FakeApi([self.current, run(100)], {(100, 1): []})
@@ -138,7 +140,7 @@ class LicenseGateTests(unittest.TestCase):
         api = FakeApi([self.current, run(200, started='2026-11-02T13:00:00Z'), run(100)],
                       {(200, 1): [], (100, 1): [job(100, returned=False)]})
         with self.assertRaisesRegex(gate.GateError, 'native job evidence is missing'):
-            self.check(api, event='workflow_dispatch', recovered='200')
+            self.check(api, event='workflow_dispatch', recovered='200', recovered_attempt='1')
 
     def test_queued_run_without_jobs_does_not_clear_an_older_uncertain_launch(self):
         api = FakeApi([self.current, run(200, started='2026-11-02T13:00:00Z', status='queued'), run(100)],
@@ -170,10 +172,55 @@ class LicenseGateTests(unittest.TestCase):
     def test_missing_current_run_and_invalid_timestamps_fail_closed(self):
         with self.assertRaisesRegex(gate.GateError, 'current workflow run is absent'):
             self.check(FakeApi([]))
-        old = run(100)
-        old['run_started_at'] = 'not a timestamp'
+        native = job(100, started='not a timestamp')
         with self.assertRaisesRegex(gate.GateError, 'timestamps'):
-            self.check(FakeApi([self.current, old]))
+            self.check(FakeApi([self.current, run(100)], {(100, 1): [native]}))
+
+    def test_actual_native_start_overrides_run_scheduling_order(self):
+        unsafe = job(100, returned=False, started='2026-11-02T13:20:00Z')
+        safe = job(200, started='2026-11-02T13:00:00Z')
+        api = FakeApi([self.current, run(200, started='2026-11-02T12:30:00Z'),
+                       run(100, started='2026-11-02T12:00:00Z')],
+                      {(200, 1): [safe], (100, 1): [unsafe]})
+        with self.assertRaisesRegex(gate.GateError, 'run 100, attempt 1'):
+            self.check(api)
+
+    def test_recovery_of_attempt_one_cannot_acknowledge_new_failure_in_attempt_two(self):
+        api = FakeApi([self.current, run(100, attempt=2)],
+                      {(100, 2): [job(100, attempt=2, returned=False, started='2026-11-02T13:00:00Z')],
+                       (100, 1): [job(100, returned=False)]}, {(100, 1): run(100)})
+        with self.assertRaisesRegex(gate.GateError, 'run 100, attempt 2'):
+            self.check(api, event='workflow_dispatch', recovered='100', recovered_attempt='1')
+        decision = self.check(api, event='workflow_dispatch', recovered='100', recovered_attempt='2')
+        self.assertEqual(decision['basis'], 'manual_seat_recovery')
+        self.assertEqual(decision['attempt'], 2)
+
+    def test_recovery_requires_both_identity_fields(self):
+        api = FakeApi([self.current])
+        for values in ({'recovered': '100'}, {'recovered_attempt': '1'}):
+            with self.subTest(values=values):
+                with self.assertRaisesRegex(gate.GateError, 'requires both'):
+                    self.check(api, event='workflow_dispatch', **values)
+
+    def test_missing_native_timestamp_cannot_fall_back_to_run_timestamp(self):
+        native = job(100)
+        del native['steps'][0]['started_at']
+        api = FakeApi([self.current, run(100)], {(100, 1): [native]})
+        with self.assertRaisesRegex(gate.GateError, 'actual native launch timestamps'):
+            self.check(api)
+
+    def test_tied_native_timestamps_of_distinct_attempts_fail_closed(self):
+        api = FakeApi([self.current, run(100), run(200)],
+                      {(100, 1): [job(100, returned=False)], (200, 1): [job(200)]})
+        with self.assertRaisesRegex(gate.GateError, 'identical launch timestamps'):
+            self.check(api)
+
+    def test_queued_run_does_not_need_a_native_start_timestamp(self):
+        queued = run(200, status='queued')
+        queued['run_started_at'] = None
+        api = FakeApi([self.current, queued, run(100)],
+                      {(200, 1): [], (100, 1): [job(100)]})
+        self.assertEqual(self.check(api)['basis'], 'verified_return')
 
     def test_pagination_cannot_ignore_older_history(self):
         api = FakeApi([])

@@ -17,6 +17,12 @@ namespace Bezoro.Unity.Framework.Validation
         private static readonly Callbacks Listener = new Callbacks();
         private static TestRunnerApi _api;
         private static Settings _settings;
+        // UTF's command-line runner waits for this job-level signal, which includes PlayMode exit
+        // and post-run cleanup. It is internal in UTF 1.4.6; use a strict signature lookup so the
+        // pinned UTF 1.8.0 must expose the same signal instead of exiting from RunFinished early.
+        private static readonly System.Reflection.MethodInfo IsRunActiveMethod = typeof(TestRunnerApi).GetMethod(
+            "IsRunActive", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic |
+            System.Reflection.BindingFlags.Static, null, Type.EmptyTypes, null);
 
         static NativeTestRunner()
         {
@@ -36,6 +42,8 @@ namespace Bezoro.Unity.Framework.Validation
                     throw new InvalidOperationException("Missing framework native-test command arguments.");
                 if (SessionState.GetBool(SessionPrefix + "started", false))
                     throw new InvalidOperationException("Native test execution was already started in this process.");
+                if (IsRunActiveMethod == null || IsRunActiveMethod.ContainsGenericParameters || IsRunActiveMethod.ReturnType != typeof(bool))
+                    throw new InvalidOperationException("The pinned Unity Test Framework must expose static bool TestRunnerApi.IsRunActive().");
                 SessionState.SetBool(SessionPrefix + "started", true);
                 SessionState.SetString(SessionPrefix + "deadline",
                     DateTime.UtcNow.AddMinutes(40).Ticks.ToString(CultureInfo.InvariantCulture));
@@ -90,25 +98,61 @@ namespace Bezoro.Unity.Framework.Validation
 
         private static void CheckDeadline()
         {
-            if (!SessionState.GetBool(SessionPrefix + "started", false) ||
-                SessionState.GetBool(SessionPrefix + "finished", false)) return;
-            if (long.TryParse(SessionState.GetString(SessionPrefix + "deadline", ""),
-                    NumberStyles.None, CultureInfo.InvariantCulture, out var deadline) && DateTime.UtcNow.Ticks > deadline)
-                Fail(new TimeoutException("Native discovery/execution exceeded its bounded deadline."));
+            if (!SessionState.GetBool(SessionPrefix + "started", false)) return;
+            if (SessionState.GetBool(SessionPrefix + "finished", false))
+            {
+                Exit(SessionState.GetInt(SessionPrefix + "exitCode", 1));
+                return;
+            }
+            if (!long.TryParse(SessionState.GetString(SessionPrefix + "deadline", ""),
+                    NumberStyles.None, CultureInfo.InvariantCulture, out var deadline) || DateTime.UtcNow.Ticks > deadline)
+            {
+                Debug.LogException(new TimeoutException("Native discovery/execution/cleanup exceeded its bounded deadline."));
+                Exit(1);
+                return;
+            }
+            if (!SessionState.GetBool(SessionPrefix + "resultReceived", false)) return;
+            try
+            {
+                if (IsRunActiveMethod == null || IsRunActiveMethod.ContainsGenericParameters || IsRunActiveMethod.ReturnType != typeof(bool))
+                    throw new InvalidOperationException("The pinned Unity Test Framework no longer exposes its job completion signal.");
+                if ((bool)IsRunActiveMethod.Invoke(null, null)) return;
+                Exit(SessionState.GetInt(SessionPrefix + "exitCode", 1));
+            }
+            catch (Exception exception)
+            {
+                Debug.LogException(exception);
+                Exit(1);
+            }
         }
 
         private static void Fail(Exception exception)
         {
             Debug.LogException(exception);
+            if (!SessionState.GetBool(SessionPrefix + "started", false))
+            {
+                Exit(1);
+                return;
+            }
             Finish(1);
         }
 
         private static void Finish(int exitCode)
         {
-            if (SessionState.GetBool(SessionPrefix + "finished", false)) return;
+            // These values survive Enter/Exit PlayMode domain reloads. A later cleanup error
+            // must override a passing test result, and a reload must not lose a pending exit.
+            if (exitCode != 0 || !SessionState.GetBool(SessionPrefix + "resultReceived", false))
+                SessionState.SetInt(SessionPrefix + "exitCode", exitCode);
+            SessionState.SetBool(SessionPrefix + "resultReceived", true);
+        }
+
+        private static void Exit(int exitCode)
+        {
+            SessionState.SetInt(SessionPrefix + "exitCode", exitCode);
             SessionState.SetBool(SessionPrefix + "finished", true);
             EditorApplication.update -= CheckDeadline;
-            EditorApplication.delayCall += () => EditorApplication.Exit(exitCode);
+            if (_api != null) _api.UnregisterCallbacks(Listener);
+            EditorApplication.Exit(exitCode);
         }
 
         private static bool TryReadSettings(out Settings settings)
@@ -164,19 +208,29 @@ namespace Bezoro.Unity.Framework.Validation
             public string methodname;
         }
 
-        private sealed class Callbacks : ICallbacks
+        private sealed class Callbacks : IErrorCallbacks
         {
             public void RunStarted(ITestAdaptor testsToRun) { }
             public void TestStarted(ITestAdaptor test) { }
             public void TestFinished(ITestResultAdaptor result) { }
 
+            public void OnError(string message)
+            {
+                if (SessionState.GetBool(SessionPrefix + "started", false))
+                    Fail(new InvalidOperationException("Native test infrastructure failed: " + message));
+            }
+
             public void RunFinished(ITestResultAdaptor result)
             {
+                if (!SessionState.GetBool(SessionPrefix + "started", false)) return;
                 try
                 {
                     Directory.CreateDirectory(Path.GetDirectoryName(_settings.ResultsPath));
                     TestRunnerApi.SaveResultToFile(result, _settings.ResultsPath);
-                    Finish(result.PassCount > 0 && result.FailCount == 0 && result.SkipCount == 0 &&
+                    // SaveResultToFile catches I/O errors internally; do not treat an absent report as success.
+                    if (!File.Exists(_settings.ResultsPath) || new FileInfo(_settings.ResultsPath).Length == 0)
+                        throw new IOException("Unity did not write a nonempty native test result report.");
+                    Finish(result.TestStatus == TestStatus.Passed && result.PassCount > 0 && result.FailCount == 0 && result.SkipCount == 0 &&
                         result.InconclusiveCount == 0 ? 0 : 1);
                 }
                 catch (Exception exception) { Fail(exception); }
