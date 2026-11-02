@@ -1,0 +1,11 @@
+{
+  "name": "Bezoro.Unity.Framework.Validation.Editor",
+  "references": [
+    "UnityEditor.TestRunner",
+    "UnityEngine.TestRunner"
+  ],
+  "includePlatforms": ["Editor"],
+  "overrideReferences": true,
+  "precompiledReferences": ["nunit.framework.dll"],
+  "autoReferenced": true
+}
