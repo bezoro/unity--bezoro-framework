@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using Bezoro.Unity.Core.Editor.EditorWindows;
 using Bezoro.Unity.Core.Editor.Tools;
 using Bezoro.Unity.Core.Scenes;
@@ -50,6 +51,7 @@ namespace Bezoro.Unity.Core.Tests.EditMode
 				_ownedWindows.Clear();
 				if (_registeredGuid != null)
 				{
+					LogAssert.Expect(LogType.Log, new Regex(Regex.Escape($"Unregistered GUID: <b>{_registeredGuid}</b>")));
 					SceneObjectRegistry.Unregister(_registeredGuid);
 					_registeredGuid = null;
 				}
@@ -109,6 +111,7 @@ namespace Bezoro.Unity.Core.Tests.EditMode
 			};
 			UnityEngine.SceneManagement.SceneManager.MoveGameObjectToScene(registeredObject, _previewScene);
 			_registeredGuid = Guid.NewGuid().ToString();
+			LogAssert.Expect(LogType.Log, new Regex(Regex.Escape($"Registered Object: <b>{registeredObject.name}</b> with GUID: <b>{_registeredGuid}</b>")));
 			SceneObjectRegistry.Register(registeredObject, _registeredGuid);
 			Assert.That(SceneObjectRegistry.GetObjectByGuid(_registeredGuid), Is.SameAs(registeredObject));
 

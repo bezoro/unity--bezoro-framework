@@ -1,7 +1,12 @@
 using System;
+using System.Collections;
+using System.Reflection;
+using System.Threading;
 using Bezoro.Unity.Core.Loading;
 using NUnit.Framework;
+using UnityEditor;
 using UnityEngine;
+using UnityEngine.TestTools;
 using Object = UnityEngine.Object;
 
 namespace Bezoro.Unity.Core.Tests.EditMode
@@ -20,14 +25,52 @@ namespace Bezoro.Unity.Core.Tests.EditMode
 		{
 			_serviceObject = new("LoadingProgressTestsService");
 			_service       = _serviceObject.AddComponent<LoadingProgressService>();
-			_service.BeginOperation("EditMode Test Loading");
 		}
 
 		[TearDown]
 		public void TearDown()
 		{
 			if (_serviceObject != null)
+			{
+				// These EditMode components do not execute their runtime lifecycle.
+				InvokeDestroy();
 				Object.DestroyImmediate(_serviceObject);
+			}
+		}
+
+		[UnityTest]
+		public IEnumerator OnDestroy_WhenNotSingleton_CancelsPendingTrackerWait()
+		{
+			SetPrivateField("noTrackerTimeoutS", 0.01f);
+			_service.BeginOperation("Destroyed tracker wait");
+			var waitToken = GetPendingToken("_waitForTrackerCts");
+
+			InvokeDestroy();
+
+			Assert.That(waitToken.IsCancellationRequested, Is.True);
+			Assert.That(_service.IsLoading, Is.False);
+			Assert.That(_service.OperationName, Is.Empty);
+			yield return WaitForEditorSeconds(0.05);
+		}
+
+		[UnityTest]
+		public IEnumerator OnDestroy_WhenNotSingleton_CancelsPendingCompletion()
+		{
+			_service.completeEventDelayS = 0.01f;
+			_service.BeginOperation("Destroyed completion");
+			int completionCount = 0;
+			_service.Completed += () => completionCount++;
+			_service.ForceComplete();
+			var waitToken = GetPendingToken("_waitForTrackerCts");
+			var completionToken = GetPendingToken("_concludeOperationCts");
+
+			InvokeDestroy();
+
+			Assert.That(waitToken.IsCancellationRequested, Is.True);
+			Assert.That(completionToken.IsCancellationRequested, Is.True);
+			Assert.That(_service.IsLoading, Is.False);
+			yield return WaitForEditorSeconds(0.05);
+			Assert.That(completionCount, Is.Zero);
 		}
 
 		[Test]
@@ -112,6 +155,8 @@ namespace Bezoro.Unity.Core.Tests.EditMode
 		[Test]
 		public void LoadingStage_ProgressUsesTrackerWeights()
 		{
+			_service.BeginOperation("EditMode Test Loading");
+
 			var stage  = _service.BeginStage("Stage");
 			var first  = stage.CreateTracker("First");
 			var second = stage.CreateTracker("Second", 3f);
@@ -125,6 +170,8 @@ namespace Bezoro.Unity.Core.Tests.EditMode
 		[Test]
 		public void ProgressTracker_ClampsProgressAndWeight()
 		{
+			_service.BeginOperation("EditMode Test Loading");
+
 			var stage   = _service.BeginStage("Stage");
 			var tracker = stage.CreateTracker("Tracker", -1f);
 
@@ -137,6 +184,8 @@ namespace Bezoro.Unity.Core.Tests.EditMode
 		[Test]
 		public void ProgressTracker_WhenBoundToVariable_UsesClampedGetterValue()
 		{
+			_service.BeginOperation("EditMode Test Loading");
+
 			var value   = 2f;
 			var tracker = _service.CreateTracker("Bound");
 
@@ -147,6 +196,31 @@ namespace Bezoro.Unity.Core.Tests.EditMode
 			value = 0.5f;
 
 			Assert.AreEqual(0.5f, tracker.Progress);
+		}
+
+		private CancellationToken GetPendingToken(string fieldName) =>
+			((CancellationTokenSource) typeof(LoadingProgressService)
+				.GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic)!
+				.GetValue(_service)!).Token;
+
+		private void SetPrivateField(string fieldName, object value) =>
+			typeof(LoadingProgressService)
+				.GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic)!
+				.SetValue(_service, value);
+
+		private void InvokeDestroy() =>
+			typeof(LoadingProgressService)
+				.GetMethod("OnDestroy", BindingFlags.Instance | BindingFlags.NonPublic)!
+				.Invoke(_service, null);
+
+		private static IEnumerator WaitForEditorSeconds(double seconds)
+		{
+			double deadline = EditorApplication.timeSinceStartup + seconds;
+			while (EditorApplication.timeSinceStartup < deadline)
+			{
+				EditorApplication.QueuePlayerLoopUpdate();
+				yield return null;
+			}
 		}
 	}
 }

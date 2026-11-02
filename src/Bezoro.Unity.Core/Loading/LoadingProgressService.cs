@@ -115,11 +115,10 @@ namespace Bezoro.Unity.Core.Loading
 
 		private void OnDestroy()
 		{
-			if (!_isSingletonInstance)
-				return;
+			if (_isSingletonInstance)
+				SceneLoader.SceneLoadCompleted -= OnSceneLoadCompleted;
 
-			SceneLoader.SceneLoadCompleted -= OnSceneLoadCompleted;
-
+			// Every instance owns its operations, even if it was never registered globally.
 			ResetState();
 
 			Completed       = null;
