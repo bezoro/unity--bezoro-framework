@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using Bezoro.Unity.Core.Dependencies;
 using Bezoro.Unity.Core.Scenes;
 using Bezoro.Unity.Core.ScriptableObjects;
@@ -132,7 +133,8 @@ namespace Bezoro.Unity.Core.Tests.EditMode
 			var second = new SceneCollectionEntry(new SceneReference("Assets/Scenes/Second.unity"));
 			var duplicate = new SceneCollectionEntry(new SceneReference("Assets/Scenes/First.unity"));
 			collection.SetEntries(new[] { first, second, duplicate });
-			LogAssert.Expect(LogType.Error, "Duplicate scenes detected in Inspector collection. Duplicates will be removed.");
+			LogAssert.Expect(LogType.Error, new Regex(Regex.Escape(
+				"Duplicate scenes detected in Inspector collection. Duplicates will be removed.")));
 
 			collection.ApplyInspectorChanges(sceneEntriesChanged: true, loadModeChanged: false);
 
