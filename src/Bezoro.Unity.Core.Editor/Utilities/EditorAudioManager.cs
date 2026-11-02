@@ -322,11 +322,16 @@ namespace Bezoro.Unity.Core.Editor.Utilities
 			}
 		}
 
-		private static void CloseNativePlayback() =>
+		private static void CloseNativePlayback()
+		{
+			// This cleanup also runs on timer threads, where Unity platform APIs are unavailable.
+			if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) return;
+
 			SendMciCommand(
 				$"close {MCI_ALIAS}",
 				false
 			);
+		}
 
 		private static void CancelNativeCloseTimer()
 		{

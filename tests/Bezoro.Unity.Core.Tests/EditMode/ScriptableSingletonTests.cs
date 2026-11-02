@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using Bezoro.Unity.Core.ScriptableObjects;
 using NUnit.Framework;
 using UnityEngine;
@@ -69,12 +70,16 @@ namespace Bezoro.Unity.Core.Tests.EditMode
 			ResetInstance();
 			first.InitializeForTest();
 			var delayCallsBefore = GetDelayCallCallbacks();
+			LogAssert.Expect(LogType.Error, new Regex(Regex.Escape(
+				$"Duplicate singleton instance of {nameof(ScriptableSingletonProbe)} detected at '{secondPath}'.")));
 			second.InitializeForTest();
 			InvokeNewDelayCalls(delayCallsBefore);
 
 			yield return null;
 
 			ResetInstance();
+			LogAssert.Expect(LogType.Error, new Regex(Regex.Escape(
+				$"Duplicate singleton assets of {nameof(ScriptableSingletonProbe)} detected at:{System.Environment.NewLine}{firstPath}{System.Environment.NewLine}{secondPath}")));
 			var instance = GetInstance();
 
 			Assert.That(AssetDatabase.GetAssetPath(instance), Is.EqualTo(firstPath));
