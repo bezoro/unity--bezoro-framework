@@ -1,0 +1,10 @@
+{
+  "dependencies": {
+    "com.bezoro.framework": "https://github.com/bezoro/framework.git#c9ed5cf0224afdd7256968cde5e3b3a58b80bc3e",
+    "com.bezoro.unity-framework": "file:../..",
+    "com.cysharp.unitask": "https://github.com/Cysharp/UniTask.git?path=src/UniTask/Assets/Plugins/UniTask#ceac8d6946b1125fe782cd171fbcb245b567dbf9"
+  },
+  "testables": [
+    "com.bezoro.unity-framework"
+  ]
+}
