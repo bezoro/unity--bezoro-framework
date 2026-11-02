@@ -17,9 +17,14 @@ on:
         description: 'Authorize this run to activate and return Personal using the repository Unity account.'
         type: boolean
         default: false
+      recovered_run_id:
+        description: 'Only after the owner resolves an uncertain Personal seat: enter that exact blocked run ID.'
+        type: string
+        default: ''
 
 permissions:
   contents: read
+  actions: read
 
 # Do not cancel an active run while its Personal seat is being returned.
 concurrency:
@@ -59,6 +64,11 @@ jobs:
         run: |
           python3 -m unittest discover -s .github/scripts -p 'test_*.py' -v
           bash -n .github/scripts/framework_unity_wrapper.sh
+      - name: Block activation after uncertain Personal return
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          RECOVERED_RUN_ID: ${{ inputs.recovered_run_id || '' }}
+        run: python3 .github/scripts/framework_license_gate.py
       - name: Prepare exact isolated package and development project
         id: project
         run: |
@@ -78,6 +88,12 @@ jobs:
         run: |
           sudo rm -rf -- /usr/local/lib/android /usr/share/dotnet
           df -h /
+      - name: Verify the pinned Docker launch hook without activating Unity
+        run: |
+          python3 .github/scripts/verify_gameci_docker_wrapper.py \
+            --gameci-dir "$RUNNER_TEMP/game-ci-v0.1.72" \
+            --image '${{ steps.project.outputs.image }}' \
+            --output artifacts/docker-wrapper-probe.json
       - name: Run EditMode and PlayMode sequentially with graphics
         id: unity
         env:

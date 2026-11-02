@@ -6,7 +6,7 @@ The workflow in `.github/workflows/unity-tests.yml` runs this repository's `DevP
 
 The owner must configure `UNITY_EMAIL` and `UNITY_PASSWORD` in this repository's [Actions secrets](https://github.com/bezoro/unity--bezoro-framework/settings/secrets/actions). Use the intended Unity Personal account with its entitlement and terms already accepted. Never put credentials in commits, comments, artifacts or chat.
 
-The workflow checks these secrets before downloading the Editor or attempting activation. A missing secret fails the run explicitly; it does not mean Unity executed. Manual dispatch also requires `allow_activation=true`.
+The workflow checks these secrets before downloading the Editor or attempting activation. A missing secret fails the run explicitly; it does not mean Unity executed. Manual dispatch also requires `allow_activation=true`. An Actions-history interlock blocks activation after an earlier Unity launch without successful dedicated return verification, including retries of the same run. After resolving that exact seat with the owner, a manual dispatch can explicitly provide its `recovered_run_id`. A preflight-only run never clears older uncertainty.
 
 ## When to run
 
@@ -24,7 +24,9 @@ git diff --check
 
 The runner records the source commit, file hashes, image digest and dependency manifests, then verifies the copied bytes under `ci-source`. The copied project keeps its local package path, so Package Manager imports the actual source and test assemblies. The Framework and UniTask remain pinned Git dependencies; no framework DLLs are copied into Assets.
 
-EditMode and PlayMode run sequentially in one GameCI activation with Xvfb/OpenGL and a cold Library. Each mode selects its complete `Bezoro.Unity.Core.Tests` assembly, and report acceptance checks coverage against every fixture and test method declared in the package source. This excludes unrelated tests distributed by other Unity packages. A native failure blocks later Editor launches while allowing the CLI to return the license. No home directories or personal preferences are mounted.
+EditMode and PlayMode run sequentially in one GameCI activation with Xvfb/OpenGL and a cold Library. Each mode uses Unity's public Test Runner API to discover its complete `Bezoro.Unity.Core.Tests` assembly before executing that assembly in the same Editor process. Native discovery expands parameterized cases. Acceptance compares every executed case with that independent inventory and also checks coverage against the package's source methods. No cases from other packages are included. A native failure blocks later Editor launches while allowing the CLI to return the license. No home directories or personal preferences are mounted.
+
+Before activation, a credential-free Docker probe verifies that the checksum-pinned GameCI CLI forwards the wrapper and that its real container test script invokes it. The probe records commands and failure propagation without launching Unity or producing test-result XML. It does not substitute for the subsequent native test run.
 
 Acceptance requires complete native XML reports, distinct passing tests without failures, skips or inconclusive results, and confirmation that the Personal entitlement was returned in the final return scope. A green process exit, static source check, exported diagnostic or passing subset does not establish full native acceptance. The resolved package lock is captured only if Unity actually creates it.
 

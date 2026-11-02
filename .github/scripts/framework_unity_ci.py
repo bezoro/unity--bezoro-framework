@@ -144,10 +144,24 @@ def verify_mode(mode, report):
     names = [case.get('fullname', '') for case in cases]
     count = len(cases)
     expected = json.loads((ARTIFACTS / 'test-inventory.json').read_text())[mode]
+    discovery = json.loads((ARTIFACTS / f'{mode}-discovery.json').read_text())
+    assembly = 'Bezoro.Unity.Core.Tests.' + ('EditMode' if mode == 'editmode' else 'PlayMode')
+    discovered = discovery.get('cases', [])
+    if not (discovery.get('schema') == 1 and discovery.get('mode') == mode
+            and discovery.get('assembly') == assembly and discovery.get('editor') == EDITOR
+            and discovery.get('producer') == 'Unity TestRunnerApi.RetrieveTestList'
+            and isinstance(discovered, list) and discovered
+            and all(isinstance(case, dict) and all(isinstance(case.get(key), str) and case[key]
+                    for key in ('fullname', 'classname', 'methodname')) for case in discovered)):
+        raise ValueError(f'{mode}: missing or invalid independent native test discovery.')
+    discovered_names = [case['fullname'] for case in discovered]
+    if len(set(discovered_names)) != len(discovered_names):
+        raise ValueError(f'{mode}: native discovery contains duplicate case identities.')
     native_inventory = {
         'mode': mode, 'source_method_count': len(expected), 'cases': sorted(names),
         'native_result': result.get('result'), 'source_method_coverage': 'unverified',
-        'parameterized_expansion': 'recorded from native NUnit XML; not independently predicted',
+        'discovered_case_count': len(discovered_names),
+        'parameterized_expansion': 'checked against independent native discovery before execution',
     }
     write_json(ARTIFACTS / f'{mode}-native-inventory.json', native_inventory)
     if not (result.tag == 'test-run' and result.get('result') == 'Passed' and count > 0
@@ -156,15 +170,20 @@ def verify_mode(mode, report):
             and len(set(names)) == count and all(name.startswith('Bezoro.Unity.Core.Tests.') for name in names)
             and all(case.get('result') == 'Passed' for case in cases)):
         raise ValueError(f'{mode}: expected nonempty distinct package tests, all passing without skips.')
-    actual_methods = {name.split('(', 1)[0] for name in names}
     mode_prefix = 'Bezoro.Unity.Core.Tests.' + ('EditMode.' if mode == 'editmode' else 'PlayMode.')
-    if any(not name.startswith(mode_prefix) for name in names):
+    if any(not name.startswith(mode_prefix) for name in names + discovered_names):
         raise ValueError(f'{mode}: report contains cases from another test mode.')
-    missing = set(expected) - actual_methods
-    extra = actual_methods - set(expected)
+    if set(names) != set(discovered_names):
+        raise ValueError(f'{mode}: execution omits or adds native-discovered cases; '
+                         f'missing {len(set(discovered_names) - set(names))}, '
+                         f'unexpected {len(set(names) - set(discovered_names))}.')
+    discovered_methods = {case['classname'] + '.' + case['methodname'] for case in discovered}
+    missing = set(expected) - discovered_methods
+    extra = discovered_methods - set(expected)
     if missing or extra or not expected:
         raise ValueError(f'{mode}: incomplete source method coverage; missing {len(missing)}, unexpected {len(extra)}.')
     native_inventory['source_method_coverage'] = 'complete'
+    native_inventory['native_case_coverage'] = 'complete'
     write_json(ARTIFACTS / f'{mode}-native-inventory.json', native_inventory)
     print(f'{mode}: {count} native cases passed and cover all {len(expected)} source test methods.')
     return count

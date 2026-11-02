@@ -24,6 +24,14 @@ class NativeEvidenceTests(unittest.TestCase):
             'playmode': {'Bezoro.Unity.Core.Tests.PlayMode.Example.Test': {'fixture': 'Bezoro.Unity.Core.Tests.PlayMode.Example'}},
         }
         ci.write_json(self.folder / 'test-inventory.json', self.inventory)
+        for mode in ci.MODES:
+            method = next(iter(self.inventory[mode]))
+            ci.write_json(self.folder / f'{mode}-discovery.json', {
+                'schema': 1, 'producer': 'Unity TestRunnerApi.RetrieveTestList',
+                'mode': mode, 'editor': ci.EDITOR,
+                'assembly': 'Bezoro.Unity.Core.Tests.' + ('EditMode' if mode == 'editmode' else 'PlayMode'),
+                'cases': [{'fullname': method, 'classname': method.rsplit('.', 1)[0], 'methodname': 'Test'}],
+            })
 
     def tearDown(self):
         self.artifacts_patch.stop()
@@ -61,6 +69,24 @@ class NativeEvidenceTests(unittest.TestCase):
     def test_passing_report_from_another_mode_is_rejected(self):
         self.xml(name='Bezoro.Unity.Core.Tests.PlayMode.Example.Test')
         with self.assertRaisesRegex(ValueError, 'another test mode'):
+            ci.verify_mode('editmode', self.report)
+
+    def test_passing_subset_of_parameterized_cases_is_rejected(self):
+        method = 'Bezoro.Unity.Core.Tests.EditMode.Example.Test'
+        path = self.folder / 'editmode-discovery.json'
+        discovery = json.loads(path.read_text())
+        discovery['cases'] = [{'fullname': method + '(' + str(value) + ')',
+                               'classname': method.rsplit('.', 1)[0], 'methodname': 'Test'}
+                              for value in range(4)]
+        ci.write_json(path, discovery)
+        self.xml(name=method + '(0)')
+        with self.assertRaisesRegex(ValueError, 'execution omits or adds native-discovered cases'):
+            ci.verify_mode('editmode', self.report)
+
+    def test_native_discovery_cannot_be_replaced_by_execution_results(self):
+        self.xml()
+        (self.folder / 'editmode-discovery.json').unlink()
+        with self.assertRaises(FileNotFoundError):
             ci.verify_mode('editmode', self.report)
 
     def test_source_inventory_records_parameterized_methods_without_guessing_case_counts(self):
