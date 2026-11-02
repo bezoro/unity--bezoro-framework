@@ -1,3 +1,5 @@
+using System;
+using System.Linq;
 using Bezoro.Unity.Core.ScriptableObjects;
 using UnityEditor;
 using UnityEngine;
@@ -21,7 +23,14 @@ namespace Bezoro.Unity.Core.Editor.EditorWindows
 
 		private void OnEnable()
 		{
-			config = ArrayHelpersConfig.Instance;
+			if (config != null)
+				return;
+
+			config = AssetDatabase.FindAssets($"t:{nameof(ArrayHelpersConfig)}")
+				.Select(AssetDatabase.GUIDToAssetPath)
+				.OrderBy(path => path, StringComparer.Ordinal)
+				.Select(AssetDatabase.LoadAssetAtPath<ArrayHelpersConfig>)
+				.FirstOrDefault(asset => asset != null);
 		}
 
 		private void OnDisable()

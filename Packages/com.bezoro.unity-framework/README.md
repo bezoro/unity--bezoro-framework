@@ -12,6 +12,10 @@ The published Framework package contains the compiled .NET Standard assemblies a
 
 Unity permits Git dependencies in a [project manifest](https://docs.unity3d.com/6000.0/Documentation/Manual/upm-git.html), not as Git URLs in a package's `dependencies`. This is why each consuming project must declare the Framework and UniTask Git URLs, while this package declares its Unity registry dependencies in its own `package.json`.
 
+## Fix in 0.3.1
+
+The Array Helpers configuration window treats a missing configuration as its supported empty state without logging a missing-singleton warning. It retains an assigned configuration and searches project assets in ordinal path order when none is assigned.
+
 ## Breaking changes in 0.3.0
 
 All state-machine code has been removed. This includes event-based and tickable machines, states, owners, conditions, transitions, hierarchy extensions, editor menus, gizmos and templates. Consumers using `Bezoro.Unity.Core.StateMachines` or `Bezoro.Unity.Core.Editor.StateMachine`, including their serialized components, must migrate to the separately maintained implementation before upgrading. No replacement dependency is added here.

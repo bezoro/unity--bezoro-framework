@@ -33,7 +33,7 @@ Unity does not support Git URLs in a package's dependency list. Framework and Un
 
 The package uses the published pure C# Framework, UniTask and the Unity registry packages listed in its manifest. It no longer includes the character-controller integration or the commercial drawing integration. The UI component tests use reflection directly and do not depend on a consuming game's editor helpers.
 
-Do not treat manifest or metadata checks as proof of successful Unity import. Native resolution, compilation and full EditMode/PlayMode validation remain pending. The existing CI run stopped at the missing Unity credentials check before launching the Editor. See [CI_GUIDE.md](CI_GUIDE.md).
+Do not treat manifest or metadata checks as proof of successful Unity import. The native workflow validates package resolution, compilation and full EditMode/PlayMode inventories against the tested revision. Check the matching reports and license-return evidence for each run. See [CI_GUIDE.md](CI_GUIDE.md).
 
 ## Migrate an existing installation
 
