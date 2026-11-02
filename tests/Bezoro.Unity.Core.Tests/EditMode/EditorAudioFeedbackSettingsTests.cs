@@ -1,16 +1,66 @@
 using System;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using Bezoro.Unity.Core.Editor.Tools.CompilationSoundPlayer;
 using Bezoro.Unity.Core.Editor.Utilities;
 using NUnit.Framework;
 using UnityEditor;
+using UnityEngine;
+using UnityEngine.TestTools;
 
 namespace Bezoro.Unity.Core.Tests.EditMode
 {
 	[TestFixture]
 	public sealed class EditorAudioFeedbackSettingsTests
 	{
+		[Test]
+		public void EditorAudioFeedbackSettings_AutomaticCallbackHonorsBatchModeWithoutChangingSettings()
+		{
+			var settings = EditorAudioFeedbackSettings.instance;
+			var playField = GetVolumeField("play");
+			var masterField = GetVolumeField("masterVolume");
+			var eventVolumeField = GetVolumeField("testStartVolume");
+			var originalPlay = playField.GetValue(settings);
+			var originalMaster = masterField.GetValue(settings);
+			var originalEventVolume = eventVolumeField.GetValue(settings);
+			var originalClip = settings.testStartClip;
+			string settingsPath = Path.GetFullPath(Path.Combine(UnityEngine.Application.dataPath,
+				"../ProjectSettings/EditorAudioFeedbackSettings.asset"));
+			byte[]? originalFile = File.Exists(settingsPath) ? File.ReadAllBytes(settingsPath) : null;
+			var clip = AudioClip.Create("Unbacked editor feedback regression", 1, 1, 44100, false);
+
+			try
+			{
+				settings.testStartClip = clip;
+				playField.SetValue(settings, true);
+				masterField.SetValue(settings, 1f);
+				eventVolumeField.SetValue(settings, 1f);
+				string serializedBefore = EditorJsonUtility.ToJson(settings);
+
+				// An unbacked clip cannot play at full volume. Interactive Editors retain
+				// the existing fallback as a positive control, without emitting sound.
+				if (!UnityEngine.Application.isBatchMode)
+					LogAssert.Expect(LogType.Error,
+						"Error playing compilation sound: attenuated editor audio playback is only supported for audio clips with project file paths on Windows.");
+
+				InvokeLifecycle(settings, "OnTestRunStarted");
+				LogAssert.NoUnexpectedReceived();
+				Assert.That(EditorJsonUtility.ToJson(settings), Is.EqualTo(serializedBefore));
+				Assert.That(File.Exists(settingsPath), Is.EqualTo(originalFile != null));
+				if (originalFile != null)
+					Assert.That(File.ReadAllBytes(settingsPath), Is.EqualTo(originalFile));
+			}
+			finally
+			{
+				settings.testStartClip = originalClip;
+				playField.SetValue(settings, originalPlay);
+				masterField.SetValue(settings, originalMaster);
+				eventVolumeField.SetValue(settings, originalEventVolume);
+				UnityEngine.Object.DestroyImmediate(clip);
+			}
+		}
+
 		[Test]
 		public void EditorAudioFeedbackSettings_WhenEditorDomainLoads_RegistersInitializer()
 		{

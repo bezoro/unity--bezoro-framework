@@ -170,7 +170,7 @@ namespace Bezoro.Unity.Core.Editor.PropertyDrawers
 		}
 
 		private static string GetPropertyKey(SerializedProperty property) =>
-			property.serializedObject.targetObject.GetInstanceID() + ":" + property.propertyPath;
+			property.serializedObject.targetObject.GetEntityId() + ":" + property.propertyPath;
 
 		private Type? GetWrapperType()
 		{

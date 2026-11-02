@@ -2,12 +2,41 @@ using System;
 using System.Reflection;
 using Bezoro.Unity.Core.Editor.Utilities;
 using NUnit.Framework;
+using UnityEngine;
+using UnityEngine.TestTools;
 
 namespace Bezoro.Unity.Core.Tests.EditMode
 {
 	[TestFixture]
 	public sealed class EditorAudioManagerTests
 	{
+		[Test]
+		public void EditorAudioManager_WhenStoppingWithoutPlayback_IsSafeAndIdempotent()
+		{
+			var stop = typeof(EditorAudioManager).GetMethod(
+				"StopNativePlayback",
+				BindingFlags.Static | BindingFlags.NonPublic
+			);
+			Assert.That(stop, Is.Not.Null);
+
+			// Exercise the same cleanup callback used when the Editor quits.
+			Assert.DoesNotThrow(() => stop!.Invoke(null, null));
+			Assert.DoesNotThrow(() => stop!.Invoke(null, null));
+			LogAssert.NoUnexpectedReceived();
+		}
+
+		[Test]
+		public void EditorAudioManager_WhenMuted_StopsWithoutNativeLibraryErrors()
+		{
+			var clip = AudioClip.Create("Muted editor feedback regression", 1, 1, 44100, false);
+			try
+			{
+				Assert.DoesNotThrow(() => EditorAudioManager.PlayClip(clip, 0f));
+				LogAssert.NoUnexpectedReceived();
+			}
+			finally { UnityEngine.Object.DestroyImmediate(clip); }
+		}
+
 		[Test]
 		public void EditorAudioManager_WhenCreatingAttenuatedWavData_ScalesPcmSamples()
 		{

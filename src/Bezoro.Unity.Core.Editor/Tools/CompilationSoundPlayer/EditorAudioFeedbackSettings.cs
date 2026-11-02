@@ -131,6 +131,7 @@ namespace Bezoro.Unity.Core.Editor.Tools.CompilationSoundPlayer
 		/// <param name="clip">The audio clip to play.</param>
 		private void PlayAudioClip(AudioClip clip, float eventVolume)
 		{
+			if (UnityEngine.Application.isBatchMode) return;
 			if (!play) return;
 			if (clip == null) return;
 
