@@ -23,7 +23,7 @@ namespace Bezoro.Unity.Core.Tests.PlayMode
 		[UnityTest]
 		public IEnumerator RebuildCache_InPlayMode_RestoresTemporaryChildrenAndComponents()
 		{
-			Assert.IsTrue(Application.isPlaying);
+			Assert.IsTrue(UnityEngine.Application.isPlaying);
 			_root = new GameObject("Runtime hierarchy cache");
 			var cache = _root.AddComponent<HierarchyCache>();
 			var child = new GameObject("Runtime helper");

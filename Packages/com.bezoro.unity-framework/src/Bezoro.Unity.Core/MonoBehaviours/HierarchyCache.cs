@@ -157,7 +157,7 @@ namespace Bezoro.Unity.Core.MonoBehaviours
 
 		private bool CollectStartDisabledObjects()
 		{
-			var disabled = new HashSet<GameObject>();
+			var disabled = new HashSet<GameObject?>();
 
 			foreach (var group in gameObjectStatesCache)
 			{

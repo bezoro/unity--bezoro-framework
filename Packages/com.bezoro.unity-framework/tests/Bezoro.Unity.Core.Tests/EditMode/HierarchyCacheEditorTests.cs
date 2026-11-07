@@ -33,7 +33,7 @@ namespace Bezoro.Unity.Core.Tests.EditMode
 		[SetUp]
 		public void SetUp()
 		{
-			Assert.IsFalse(Application.isPlaying);
+			Assert.IsFalse(UnityEngine.Application.isPlaying);
 			_originalActive = SceneManager.GetActiveScene();
 			_originalScenes = Enumerable.Range(0, SceneManager.sceneCount).Select(SceneManager.GetSceneAt).ToArray();
 			_originalDirty = _originalScenes.Select(scene => scene.isDirty).ToArray();
@@ -106,8 +106,8 @@ namespace Bezoro.Unity.Core.Tests.EditMode
 			_cache.RebuildCache();
 
 			Assert.That(GroupTargets(_cache), Is.EqualTo(new Object[] { _root, authored }), "Hidden authored objects remain, while the entire transient subtree is omitted.");
-			Assert.That(ComponentTargets(_cache), Does.Not.Contain(temporaryLight));
-			Assert.That(GroupTargets(_cache), Does.Not.Contain(nested));
+			CollectionAssert.DoesNotContain(ComponentTargets(_cache), temporaryLight);
+			CollectionAssert.DoesNotContain(GroupTargets(_cache), nested);
 			Assert.That(new GameObjectState(authored).ComponentStates.Select(state => state.Target), Does.Contain(temporaryLight),
 				"The public snapshot constructor must retain its complete runtime contract.");
 			Assert.That(new GameObjectState(transient).Target, Is.SameAs(transient));
@@ -171,7 +171,7 @@ namespace Bezoro.Unity.Core.Tests.EditMode
 			var asset = PrefabUtility.SaveAsPrefabAsset(_root, path, out bool saved);
 			Assert.IsTrue(saved);
 			Assert.IsTrue(asset != null);
-			var identities = PersistentIdentities(asset);
+			var identities = PersistentIdentities(asset!);
 			string guid = AssetDatabase.AssetPathToGUID(path);
 
 			_prefabContents = PrefabUtility.LoadPrefabContents(path);
