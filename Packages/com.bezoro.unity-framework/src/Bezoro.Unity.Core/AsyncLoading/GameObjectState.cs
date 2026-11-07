@@ -99,7 +99,10 @@ public class GameObjectState : IEquatable<GameObjectState>
 	[SerializeField] private GameObject?      target;
 	[SerializeField] private ComponentState[] componentStates;
 
-	public GameObjectState(GameObject target)
+	public GameObjectState(GameObject target) : this(target, HideFlags.None) { }
+
+	// The serialized hierarchy cache excludes editor-only helpers. Public snapshots retain every component.
+	internal GameObjectState(GameObject target, HideFlags excludedComponentFlags)
 	{
 		this.target        = target;
 		wasInitiallyActive = target.activeSelf;
@@ -109,7 +112,7 @@ public class GameObjectState : IEquatable<GameObjectState>
 
 		for (var i = 0; i < raw.Length; i++)
 		{
-			if (raw[i] != null)
+			if (raw[i] != null && (raw[i].hideFlags & excludedComponentFlags) == 0)
 				count++;
 		}
 
@@ -118,7 +121,7 @@ public class GameObjectState : IEquatable<GameObjectState>
 
 		for (var i = 0; i < raw.Length; i++)
 		{
-			if (raw[i] != null)
+			if (raw[i] != null && (raw[i].hideFlags & excludedComponentFlags) == 0)
 				componentStates[idx++] = new(raw[i]);
 		}
 	}

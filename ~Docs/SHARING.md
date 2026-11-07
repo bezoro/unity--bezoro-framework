@@ -1,6 +1,6 @@
 # Working on the shared Unity utilities
 
-This repository root is the Unity project. Its current utility source is the embedded `com.bezoro.unity-framework` UPM package at `Packages/com.bezoro.unity-framework`. The root project resolves the pure C# Framework through Package Manager. Chess Crush retains its separate legacy installation at `Assets/_Bezoro/Unity`; the project migration does not modify that game. Source and test trees retain their Unity `.meta` files and assembly names.
+This repository root is the Unity project. Its current utility source is the embedded `com.bezoro.unity-framework` UPM package at `Packages/com.bezoro.unity-framework`. The root project resolves the pure C# Framework through Package Manager. Consumer projects install published revisions independently; this repository does not modify their installations. Source and test trees retain their Unity `.meta` files and assembly names.
 
 Edit the embedded package in this repository directly. Consumers install a published revision using the Git URL subpath `?path=Packages/com.bezoro.unity-framework`, or choose that directory's `package.json` for a disk installation. Independent clones share committed changes through normal Git operations. A consumer's immutable PackageCache is not an editable source checkout.
 

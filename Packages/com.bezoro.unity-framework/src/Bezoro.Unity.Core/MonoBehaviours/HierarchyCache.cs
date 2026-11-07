@@ -157,7 +157,7 @@ namespace Bezoro.Unity.Core.MonoBehaviours
 
 		private bool CollectStartDisabledObjects()
 		{
-			var disabled = new HashSet<GameObject>();
+			var disabled = new HashSet<GameObject?>();
 
 			foreach (var group in gameObjectStatesCache)
 			{
@@ -168,15 +168,21 @@ namespace Bezoro.Unity.Core.MonoBehaviours
 				foreach (var component in components)
 				{
 					if (component is StartDisabled sd && sd != null)
-						disabled.UnionWith(sd.GameObjects);
+					{
+						foreach (var target in sd.GameObjects)
+						{
+							if (target != null && CanCacheHierarchy(target.transform))
+								disabled.Add(target);
+						}
+					}
 				}
 			}
 
-			var next = disabled.ToArray();
-			if (startDisabledObjects.SequenceEqual(next))
+			// Activation uses this array as a set. Preserve its serialized order when membership is unchanged.
+			if (startDisabledObjects.Length == disabled.Count && disabled.SetEquals(startDisabledObjects))
 				return false;
 
-			startDisabledObjects = next;
+			startDisabledObjects = disabled.ToArray();
 			return true;
 		}
 
@@ -200,12 +206,37 @@ namespace Bezoro.Unity.Core.MonoBehaviours
 
 			void Collect(Transform node)
 			{
-				if (node == null) return;
+				if (node == null || !CanCacheHierarchy(node)) return;
 
-				list.Add(new(node.gameObject));
+				list.Add(new(node.gameObject, ExcludedAuthoringFlags));
 
 				for (var i = 0; i < node.childCount; i++) Collect(node.GetChild(i));
 			}
+		}
+
+		private static HideFlags ExcludedAuthoringFlags
+		{
+			get
+			{
+#if UNITY_EDITOR
+				if (!UnityEngine.Application.isPlaying)
+					return HideFlags.DontSaveInEditor | HideFlags.DontSaveInBuild;
+#endif
+				return HideFlags.None;
+			}
+		}
+
+		private static bool CanCacheHierarchy(Transform node)
+		{
+			var excludedFlags = ExcludedAuthoringFlags;
+			if (excludedFlags == HideFlags.None) return true;
+
+			// External StartDisabled targets can also belong to an editor-only subtree.
+			for (var ancestor = node; ancestor != null; ancestor = ancestor.parent)
+				if ((ancestor.gameObject.hideFlags & excludedFlags) != 0)
+					return false;
+
+			return true;
 		}
 
 		private async UniTask ActivateGameObjectGroupAsync(
