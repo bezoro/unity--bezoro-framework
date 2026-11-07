@@ -12,6 +12,12 @@ The published Framework package contains the compiled .NET Standard assemblies a
 
 Unity permits Git dependencies in a [project manifest](https://docs.unity3d.com/6000.0/Documentation/Manual/upm-git.html), not as Git URLs in a package's `dependencies`. This is why each consuming project must declare the Framework and UniTask Git URLs, while this package declares its Unity registry dependencies in its own `package.json`.
 
+## Fix in 0.3.2
+
+In Edit Mode, hierarchy caches exclude GameObjects and components marked `DontSaveInEditor` or `DontSaveInBuild`, including descendants of excluded GameObjects. `StartDisabled` references use the same hierarchy rule. Visibility flags alone do not exclude authored content. Equivalent disabled-target membership preserves the existing serialized order, avoiding unnecessary prefab overrides.
+
+Runtime rebuilding and public `GameObjectState` snapshots still capture temporary objects and components. Existing caches containing temporary references rebuild on the next normal cache refresh. Legacy prefab or scene data may still require a separate native migration. This change does not rewrite consumer assets.
+
 ## Fix in 0.3.1
 
 The Array Helpers configuration window treats a missing configuration as its supported empty state without logging a missing-singleton warning. It retains an assigned configuration and searches project assets in ordinal path order when none is assigned.
