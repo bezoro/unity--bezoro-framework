@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
@@ -12,24 +13,53 @@ namespace Bezoro.Unity.Core.Common.Extensions;
 /// </summary>
 public static class ComponentExtensions
 {
+	/// <summary>Reads the component's native enabled state, or false when it has no enabled member.</summary>
 	public static bool IsEnabled(this Component c)
 	{
 		if (!c) return false;
 
-		if (c is Behaviour behaviour)
-			return behaviour.enabled;
+		switch (c)
+		{
+			case Behaviour behaviour: return behaviour.enabled;
+			case Renderer renderer: return renderer.enabled;
+			case Collider collider: return collider.enabled;
+		}
 
-		if (c.GetType().GetField(
-				"enabled"
-			) !=
-			null)
-			return (bool)c.GetType().GetField(
-				"enabled"
-			).GetValue(
-				c
-			);
+		var field = c.GetType().GetField("enabled", BindingFlags.Instance | BindingFlags.Public);
+		if (field?.FieldType == typeof(bool))
+			return (bool)field.GetValue(c);
 
-		return false;
+		var property = EnabledProperty(c);
+		return property?.GetMethod?.IsPublic == true && (bool)property.GetValue(c);
+	}
+
+	private static PropertyInfo? EnabledProperty(Component component)
+	{
+		var property = component.GetType().GetProperty("enabled", BindingFlags.Instance | BindingFlags.Public);
+		return property?.PropertyType == typeof(bool) && property.GetIndexParameters().Length == 0 ? property : null;
+	}
+
+	private static void SetEnabled(Component component, bool enabled)
+	{
+		if (!component) return;
+
+		switch (component)
+		{
+			case Behaviour behaviour: behaviour.enabled = enabled; return;
+			case Renderer renderer: renderer.enabled = enabled; return;
+			case Collider collider: collider.enabled = enabled; return;
+		}
+
+		var field = component.GetType().GetField("enabled", BindingFlags.Instance | BindingFlags.Public);
+		if (field?.FieldType == typeof(bool) && !field.IsInitOnly)
+		{
+			field.SetValue(component, enabled);
+			return;
+		}
+
+		var property = EnabledProperty(component);
+		if (property?.SetMethod?.IsPublic == true)
+			property.SetValue(component, enabled);
 	}
 
 	public static bool TryGetComponentInChildren<T>(this Component c, out T? component)
@@ -114,29 +144,8 @@ public static class ComponentExtensions
 		}
 	}
 
-	/// <summary>
-	///     Disables a component using reflection for components that have an 'enabled' field
-	/// </summary>
-	public static void Disable(this Component c)
-	{
-		if (!c) return;
-
-		if (c is Behaviour behaviour)
-		{
-			behaviour.enabled = false;
-		}
-		else
-		{
-			var enabledField = c.GetType().GetField(
-				"enabled"
-			);
-
-			enabledField?.SetValue(
-				c,
-				false
-			);
-		}
-	}
+	/// <summary>Disables a component with a writable enabled member; ignores missing or unsupported components.</summary>
+	public static void Disable(this Component c) => SetEnabled(c, false);
 
 	public static void Enable(this Component[] c)
 	{
@@ -154,28 +163,8 @@ public static class ComponentExtensions
 		}
 	}
 
-	/// <summary>
-	///     Enables a component using reflection for components that have an 'enabled' field
-	/// </summary>
-	public static void Enable(this Component c)
-	{
-		if (!c) return;
-
-		if (c is Behaviour behaviour)
-		{
-			behaviour.enabled = true;
-			return;
-		}
-
-		var enabledField = c.GetType().GetField(
-			"enabled"
-		);
-
-		enabledField?.SetValue(
-			c,
-			true
-		);
-	}
+	/// <summary>Enables a component with a writable enabled member; ignores missing or unsupported components.</summary>
+	public static void Enable(this Component c) => SetEnabled(c, true);
 
 	public static void SetHideFlags(this Component c, HideFlags hideFlags)
 	{

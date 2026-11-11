@@ -1,6 +1,9 @@
+using System;
+using Bezoro.Unity.Core.AsyncLoading;
 using Bezoro.Unity.Core.Common.Extensions;
 using NUnit.Framework;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace Bezoro.Unity.Core.Tests.EditMode
 {
@@ -55,6 +58,75 @@ namespace Bezoro.Unity.Core.Tests.EditMode
 
 			Assert.IsTrue(behaviour.enabled);
 			Assert.IsTrue(behaviour.IsEnabled());
+		}
+
+		[TestCase(typeof(MeshRenderer), true)]
+		[TestCase(typeof(MeshRenderer), false)]
+		[TestCase(typeof(BoxCollider), true)]
+		[TestCase(typeof(BoxCollider), false)]
+		[TestCase(typeof(BoxCollider2D), true)]
+		[TestCase(typeof(BoxCollider2D), false)]
+		[TestCase(typeof(LODGroup), true)]
+		[TestCase(typeof(LODGroup), false)]
+		public void NativeEnabledProperties_CaptureAndToggleTheActualInitialState(Type type, bool initiallyEnabled)
+		{
+			var component = _root.AddComponent(type);
+			SetNativeEnabled(component, initiallyEnabled);
+
+			Assert.AreEqual(initiallyEnabled, ReadNativeEnabled(component));
+			Assert.AreEqual(initiallyEnabled, component.IsEnabled());
+			Assert.AreEqual(initiallyEnabled, new ComponentState(component).WasInitiallyEnabled);
+
+			component.Disable();
+			Assert.IsFalse(ReadNativeEnabled(component));
+			Assert.IsFalse(component.IsEnabled());
+
+			component.Enable();
+			Assert.IsTrue(ReadNativeEnabled(component));
+			Assert.IsTrue(component.IsEnabled());
+		}
+
+		[Test]
+		public void EnabledState_WhenUnsupportedMissingOrDestroyed_DoesNotChangeOtherState()
+		{
+			_root.transform.localPosition = new Vector3(1, 2, 3);
+			_root.transform.Disable();
+			_root.transform.Enable();
+			Assert.IsFalse(_root.transform.IsEnabled());
+			Assert.AreEqual(new Vector3(1, 2, 3), _root.transform.localPosition);
+			Assert.IsTrue(_root.activeSelf);
+
+			Component missing = null;
+			missing.Disable();
+			missing.Enable();
+			Assert.IsFalse(missing.IsEnabled());
+
+			var destroyed = _root.AddComponent<MeshRenderer>();
+			Object.DestroyImmediate(destroyed);
+			destroyed.Disable();
+			destroyed.Enable();
+			Assert.IsFalse(destroyed.IsEnabled());
+		}
+
+		private static bool ReadNativeEnabled(Component component) => component switch
+		{
+			Renderer renderer => renderer.enabled,
+			Collider collider => collider.enabled,
+			Collider2D collider => collider.enabled,
+			LODGroup lod => lod.enabled,
+			_ => throw new ArgumentException("This regression requires a native enabled property.")
+		};
+
+		private static void SetNativeEnabled(Component component, bool enabled)
+		{
+			switch (component)
+			{
+				case Renderer renderer: renderer.enabled = enabled; break;
+				case Collider collider: collider.enabled = enabled; break;
+				case Collider2D collider: collider.enabled = enabled; break;
+				case LODGroup lod: lod.enabled = enabled; break;
+				default: throw new ArgumentException("This regression requires a native enabled property.");
+			}
 		}
 
 		[Test]
