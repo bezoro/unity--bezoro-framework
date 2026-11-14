@@ -42,3 +42,9 @@ Version 0.2.0 moves the package from the repository root to `Packages/com.bezoro
 Version 0.3.0 removes all state-machine APIs, runtime owners, conditions, transitions, hierarchy extensions, editor menus, gizmos and script templates. Projects using `Bezoro.Unity.Core.StateMachines` or `Bezoro.Unity.Core.Editor.StateMachine` must migrate to the separately maintained implementation before upgrading. This package does not install that implementation automatically. The independent `Bezoro.Unity.Core.Tickable` update dispatcher remains available with its existing contract.
 
 The old installation of the whole repository under a game's `Assets` directory is no longer supported by this project layout. Remove that legacy source installation before installing the UPM package, preserving any game-owned assets and their references. Do not import both copies. This change does not automatically modify another game's manifest, submodule or package lock.
+
+## License
+
+Bezoro-authored code is licensed under the [MIT License](LICENSE), which permits commercial use, modification and redistribution while preserving the copyright and license notices.
+
+The [UPM package license](Packages/com.bezoro.unity-framework/LICENSE.md) is included in Git and disk installations. Bundled third-party code and external dependencies retain their own license terms and copyright notices. See the [package licensing notes](Packages/com.bezoro.unity-framework/README.md#license).
