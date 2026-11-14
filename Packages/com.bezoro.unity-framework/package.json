@@ -1,8 +1,9 @@
 {
   "name": "com.bezoro.unity-framework",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "displayName": "Bezoro Unity Framework",
   "description": "Unity runtime utilities and native editor tools for Bezoro Framework consumers.",
+  "license": "MIT",
   "unity": "6000.6",
   "author": {
     "name": "Bezoro",

@@ -43,3 +43,9 @@ Version 0.2.0 moved the package into `Packages/com.bezoro.unity-framework` and r
 For another project, add the Framework and UniTask Git dependencies to that project's manifest. Install this package from disk using this directory's `package.json`, or use `https://github.com/bezoro/unity--bezoro-framework.git?path=Packages/com.bezoro.unity-framework#<tag-or-commit>`, replacing the revision with a published tag or commit containing this layout. The old repository-root URL must be updated. Remove a legacy Assets/submodule installation before using UPM; never import both copies.
 
 This project does not change any existing game, its package lock, or its submodule revision. Native Unity resolution, compilation and tests need their own recorded results; package metadata checks alone do not establish those results.
+
+## License
+
+Bezoro-authored code is licensed under the [MIT License](LICENSE.md). Package metadata declares the SPDX identifier `MIT`. Version 0.3.4 adds the repository and package license notices.
+
+Bundled Symlink Utility code retains its original [MIT license and copyright notice](src/Bezoro.Unity.Core.Editor/SymlinkUtility/LICENSE), Copyright (c) 2016 Karl Henkel. Other dependencies retain their respective licenses.
