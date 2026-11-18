@@ -18,6 +18,16 @@ namespace Bezoro.Unity.Core.Tests.EditMode
 		}
 
 		[Test]
+		public void NewRuntimeSession_ReplacesContextsAndDisposesOldBus()
+		{
+			var old = EventBusManager.Instance.GetOrCreateEventBus("scene");
+			EventBusManager.ResetRuntimeContexts();
+			var current = EventBusManager.Instance.GetOrCreateEventBus("scene");
+			Assert.AreNotSame(old, current);
+			Assert.Throws<ObjectDisposedException>(old.CancelEventProcessing);
+		}
+
+		[Test]
 		public void ClearAll_RemovesEveryRegisteredContext()
 		{
 			EventBusManager.Instance.GetOrCreateEventBus("gameplay");

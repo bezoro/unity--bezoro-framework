@@ -11,6 +11,18 @@ namespace Bezoro.Unity.Core.Tests.EditMode
 	public sealed class SerializableDictionaryTests
 	{
 		[Test]
+		public void PairCollection_ContainsAndRemovesOnlyMatchingValues()
+		{
+			ICollection<KeyValuePair<string, int>> pairs = new SerializableDictionary<string, int>();
+			pairs.Add(new("key", 2));
+			Assert.IsFalse(pairs.Contains(new("key", 1)));
+			Assert.IsFalse(pairs.Remove(new("key", 1)));
+			Assert.IsTrue(pairs.Contains(new("key", 2)));
+			Assert.IsTrue(pairs.Remove(new("key", 2)));
+			Assert.AreEqual(0, pairs.Count);
+		}
+
+		[Test]
 		public void AddAndIndexer_ExposeDictionaryValues()
 		{
 			var dictionary = new SerializableDictionary<string, int>();

@@ -21,16 +21,20 @@ public static class NavMeshAgentExtensions
 			   );
 	}
 
-	public static Vector3 GetRandomPosition(this NavMeshAgent navMeshAgent, float maxDistance = Mathf.Infinity)
+	/// <summary>Samples the agent's NavMesh within the radius. Falls back to the current position if sampling fails.</summary>
+	public static Vector3 GetRandomPosition(this NavMeshAgent navMeshAgent, float maxDistance = 10f)
 	{
-		var randomPosition = navMeshAgent.transform.position + Random.insideUnitSphere * maxDistance;
-		NavMesh.SamplePosition(
-			randomPosition,
-			out var hit,
-			maxDistance,
-			NavMesh.AllAreas
-		);
+		if (!(maxDistance > 0f) || float.IsInfinity(maxDistance))
+			throw new System.ArgumentOutOfRangeException(nameof(maxDistance), "The search radius must be finite and positive.");
 
-		return hit.position;
+		var origin = navMeshAgent.transform.position;
+		var candidate = origin + Random.insideUnitSphere * maxDistance;
+		var filter = new NavMeshQueryFilter
+		{
+			agentTypeID = navMeshAgent.agentTypeID,
+			areaMask = navMeshAgent.areaMask
+		};
+
+		return NavMesh.SamplePosition(candidate, out var hit, maxDistance, filter) ? hit.position : origin;
 	}
 }

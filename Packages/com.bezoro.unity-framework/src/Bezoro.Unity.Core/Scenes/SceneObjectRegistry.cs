@@ -136,6 +136,12 @@ public static class SceneObjectRegistry
 		}
 	}
 
+	internal static void Unregister(string guid, GameObject owner)
+	{
+		if (_GUID_TO_GAME_OBJECT_MAP.TryGetValue(guid, out var registered) && registered == owner)
+			Unregister(guid);
+	}
+
 	public static void Unregister(string guid)
 	{
 		if (!GUIDUtils.Check_GUID_Validity(

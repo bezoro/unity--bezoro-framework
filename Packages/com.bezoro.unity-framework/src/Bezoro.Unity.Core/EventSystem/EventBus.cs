@@ -1,437 +1,238 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Threading;
+using System.Runtime.CompilerServices;
 using Bezoro.Logging;
 using Cysharp.Threading.Tasks;
-using UnityEngine.Profiling;
 
 namespace Bezoro.Unity.Core.EventSystem;
 
-/// <summary>
-///     Manages event subscriptions, unsubscriptions, and event publishing.
-/// </summary>
+/// <summary>Serializes event dispatch and tracks the completion of each publication.</summary>
 [Serializable]
 public class EventBus : IEventBus
 {
-	private const int BATCH_SIZE    = 100;
-	private const int MAX_POOL_SIZE = 100;
-
-	private readonly Dictionary<Type, HashSet<Delegate>>  _eventHandlers                   = new();
-	private readonly Dictionary<Type, ITypeSafeEventPool> _eventPools                      = new();
-	private readonly List<CancellationTokenSource>        _retiredCancellationTokenSources = new();
-	private readonly object                               _lock                            = new();
-	private readonly SemaphoreSlim                        _processSemaphore                = new(1, 1);
-
-	private readonly TypeSafeEventQueue _eventQueue = new();
-
-	private bool _isProcessingEvents;
+	private readonly object _gate = new();
+	private readonly Dictionary<Type, HashSet<Delegate>> _eventHandlers = new();
+	private readonly Dictionary<Type, ITypeSafeEventPool> _eventPools = new();
+	private readonly ConditionalWeakTable<object, Lease> _leases = new();
+	private readonly StableEventQueue<Publication> _queue = new();
+	private bool _draining;
 	private bool _disposed;
+	private Publication? _active;
 
-	private CancellationTokenSource _cancellationTokenSource;
-
-	public EventBus()
+	private sealed class Lease
 	{
-		_cancellationTokenSource = new();
+		public bool CheckedOut;
 	}
 
-	public void Dispose()
+	private sealed class Publication
 	{
-		if (_disposed) return;
+		public readonly Type EventType;
+		public readonly IEvent Data;
+		public readonly UniTaskCompletionSource Completion = new();
+		public volatile bool Canceled;
 
-		_disposed = true;
-		_cancellationTokenSource.Cancel();
-		_cancellationTokenSource.Dispose();
-		DisposeRetiredCancellationTokenSources();
-		_processSemaphore.Dispose();
-	}
-
-	private HashSet<Delegate> GetHandlersForType(Type type)
-	{
-		lock (_lock)
+		public Publication(Type eventType, IEvent data)
 		{
-			return _eventHandlers.TryGetValue(
-					   type,
-					   out var handlers
-				   )
-					   ? new(
-						   handlers
-					   )
-					   : new HashSet<Delegate>();
+			EventType = eventType;
+			Data = data;
 		}
 	}
 
-	private TEvent GetFromPool<TEvent>()
-		where TEvent : IEvent
-	{
-		lock (_lock)
-		{
-			if (!_eventPools.TryGetValue(
-					typeof(TEvent),
-					out var pool
-				))
-			{
-				pool = new TypeSafeEventPool<TEvent>(
-					MAX_POOL_SIZE,
-					() => (TEvent)Activator.CreateInstance(
-						typeof(TEvent)
-					)
-				);
+	public void Dispose() => StopPending(dispose: true, clearHandlers: true);
 
-				_eventPools[typeof(TEvent)] = pool;
+	public void Clear() => StopPending(dispose: false, clearHandlers: true);
+
+	public void CancelEventProcessing() => StopPending(dispose: false, clearHandlers: false);
+
+	private void StopPending(bool dispose, bool clearHandlers)
+	{
+		var pending = new List<Publication>();
+		lock (_gate)
+		{
+			if (_disposed && dispose) return;
+			ThrowIfDisposed();
+			_disposed = dispose;
+			if (clearHandlers) _eventHandlers.Clear();
+			if (_active != null) _active.Canceled = true;
+			while (_queue.TryDequeue(out var publication))
+			{
+				ReturnLease(publication.Data);
+				pending.Add(publication);
+			}
+			if (dispose) _eventPools.Clear();
+		}
+		foreach (var publication in pending) publication.Completion.TrySetCanceled();
+	}
+
+	public void SubscribeUnique<T>(Action<T> handler) where T : IEvent
+	{
+		if (handler == null) throw new ArgumentNullException(nameof(handler));
+		lock (_gate)
+		{
+			ThrowIfDisposed();
+			if (!_eventHandlers.TryGetValue(typeof(T), out var handlers))
+			{
+				handlers = new HashSet<Delegate>();
+				_eventHandlers.Add(typeof(T), handlers);
+			}
+			handlers.Add(handler);
+		}
+	}
+
+	public void Unsubscribe<T>(Action<T> handler) where T : IEvent
+	{
+		if (handler == null) throw new ArgumentNullException(nameof(handler));
+		lock (_gate)
+		{
+			ThrowIfDisposed();
+			if (!_eventHandlers.TryGetValue(typeof(T), out var handlers)) return;
+			handlers.Remove(handler);
+			if (handlers.Count == 0) _eventHandlers.Remove(typeof(T));
+		}
+	}
+
+	public void UnsubscribeAll<T>() where T : IEvent
+	{
+		lock (_gate)
+		{
+			ThrowIfDisposed();
+			_eventHandlers.Remove(typeof(T));
+		}
+	}
+
+	public bool HasSubscribersFor<T>() where T : IEvent
+	{
+		lock (_gate) return _eventHandlers.ContainsKey(typeof(T));
+	}
+
+	public async UniTask Publish<T>(T eventData) where T : IEvent
+	{
+		if (eventData == null) throw new ArgumentNullException(nameof(eventData));
+		var publication = new Publication(typeof(T), eventData);
+		bool startDrain;
+		lock (_gate)
+		{
+			ThrowIfDisposed();
+			int priority = eventData.Priority;
+			if (_leases.TryGetValue(publication.Data, out var lease))
+			{
+				if (!lease.CheckedOut)
+					throw new InvalidOperationException("This event has already been published.");
+				lease.CheckedOut = false;
+			}
+			if (!_eventHandlers.ContainsKey(typeof(T)))
+			{
+				ReturnLease(publication.Data);
+				return;
+			}
+			_queue.Enqueue(publication, priority);
+			startDrain = !_draining;
+			_draining = true;
+		}
+
+		if (startDrain) DrainAsync().Forget();
+		await publication.Completion.Task;
+	}
+
+	public UniTask PublishAsync<T>(T eventData) where T : IEvent => Publish(eventData);
+
+	private async UniTask DrainAsync()
+	{
+		while (true)
+		{
+			Publication publication;
+			Delegate[] handlers;
+			lock (_gate)
+			{
+				if (!_queue.TryDequeue(out publication))
+				{
+					_draining = false;
+					return;
+				}
+				_active = publication;
+				if (_eventHandlers.TryGetValue(publication.EventType, out var registered))
+				{
+					handlers = new Delegate[registered.Count];
+					registered.CopyTo(handlers);
+				}
+				else handlers = Array.Empty<Delegate>();
 			}
 
-			return ((TypeSafeEventPool<TEvent>)pool).Get();
-		}
-	}
-
-	private async UniTask InvokeHandlersAsync(
-		HashSet<Delegate> handlers,
-		IEvent            eventData,
-		CancellationToken cancellationToken
-	)
-	{
-		Profiler.BeginSample(
-			"InvokeHandlersAsync"
-		);
-
-		foreach (var handler in handlers)
-		{
-			cancellationToken.ThrowIfCancellationRequested();
-
+			Exception? error = null;
 			try
 			{
-				if (eventData.RunOnThreadPool)
+				foreach (var handler in handlers)
 				{
-					await UniTask.RunOnThreadPool(
-						() => handler.DynamicInvoke(
-							eventData
-						),
-						cancellationToken: cancellationToken
-					);
-				}
-				else
-				{
-					await UniTask.SwitchToMainThread(
-						cancellationToken
-					);
-
-					handler.DynamicInvoke(
-						eventData
-					);
+					if (publication.Canceled) break;
+					if (publication.Data.RunOnThreadPool)
+						await UniTask.RunOnThreadPool(() => Invoke(publication, handler));
+					else
+					{
+						await UniTask.SwitchToMainThread();
+						Invoke(publication, handler);
+					}
 				}
 			}
-			catch (OperationCanceledException)
+			catch (Exception exception) { error = exception; }
+			lock (_gate)
 			{
-				throw;
-			}
-			catch (Exception e)
-			{
-				await UniTask.SwitchToMainThread(
-					cancellationToken
-				);
-
-				Logger.LogError(
-					$"Error processing event {eventData.GetType().Name}: {e}"
-				);
-			}
-		}
-
-		Profiler.EndSample();
-	}
-
-	private async UniTask ProcessEventsAsync(CancellationToken cancellationToken)
-	{
-		Profiler.BeginSample(
-			"ProcessEventsAsync"
-		);
-
-		var semaphoreAcquired = false;
-
-		try
-		{
-			await _processSemaphore.WaitAsync(
-				cancellationToken
-			);
-
-			semaphoreAcquired = true;
-
-			await UniTask.SwitchToMainThread(
-				cancellationToken
-			);
-
-			_isProcessingEvents = true;
-
-			while (!cancellationToken.IsCancellationRequested)
-			{
-				int processedCount = await ProcessEventBatchAsync(
-										 cancellationToken
-									 );
-
-				if (processedCount == 0) break;
-			}
-		}
-		catch (OperationCanceledException)
-		{
-			Logger.Log(
-				"Event processing was cancelled."
-			);
-		}
-		finally
-		{
-			_isProcessingEvents = false;
-			if (semaphoreAcquired)
-				_processSemaphore.Release();
-
-			DisposeRetiredCancellationTokenSources();
-			Profiler.EndSample();
-		}
-	}
-
-	private async UniTask<int> ProcessEventBatchAsync(CancellationToken cancellationToken)
-	{
-		Profiler.BeginSample(
-			"ProcessEventBatchAsync"
-		);
-
-		var processedCount = 0;
-
-		for (var i = 0; i < BATCH_SIZE; i++)
-		{
-			cancellationToken.ThrowIfCancellationRequested();
-
-			if (!_eventQueue.TryDequeueAny(
-					out var eventType,
-					out var eventData
-				))
-				break;
-
-			try
-			{
-				var handlers = GetHandlersForType(
-					eventType!
-				);
-
-				await InvokeHandlersAsync(
-					handlers,
-					eventData!,
-					cancellationToken
-				);
-
-				processedCount++;
-			}
-			finally
-			{
-				if (eventData != null)
-					ReturnToPool(
-						eventData
-					);
-			}
-		}
-
-		Profiler.EndSample();
-
-		return processedCount;
-	}
-
-	private void DisposeRetiredCancellationTokenSources()
-	{
-		lock (_lock)
-		{
-			foreach (var cts in _retiredCancellationTokenSources)
-				cts.Dispose();
-
-			_retiredCancellationTokenSources.Clear();
-		}
-	}
-
-	private void ReturnToPool(IEvent eventData)
-	{
-		lock (_lock)
-		{
-			if (_eventPools.TryGetValue(
-					eventData.GetType(),
-					out var pool
-				))
-				pool.Return(
-					eventData
-				);
-		}
-	}
-
-	#region Interface Implementations
-
-	public void CancelEventProcessing()
-	{
-		ThrowIfDisposed();
-
-		var previousCts = _cancellationTokenSource;
-		_cancellationTokenSource.Cancel();
-		_cancellationTokenSource = new();
-
-		if (_isProcessingEvents)
-			lock (_lock)
-			{
-				_retiredCancellationTokenSources.Add(
-					previousCts
-				);
-			}
-		else
-			previousCts.Dispose();
-	}
-
-	public void SubscribeUnique<T>(Action<T> handler)
-		where T : IEvent
-	{
-		if (handler == null)
-			throw new ArgumentNullException(
-				nameof(handler)
-			);
-
-		lock (_lock)
-		{
-			if (!_eventHandlers.TryGetValue(
-					typeof(T),
-					out var handlers
-				))
-			{
-				handlers                  = new();
-				_eventHandlers[typeof(T)] = handlers;
+				_active = null;
+				ReturnLease(publication.Data);
 			}
 
-			handlers.Add(
-				handler
-			);
+			if (error != null) publication.Completion.TrySetException(error);
+			else if (publication.Canceled) publication.Completion.TrySetCanceled();
+			else publication.Completion.TrySetResult();
 		}
 	}
 
-	public void Unsubscribe<T>(Action<T> handler)
-		where T : IEvent
+	private static void Invoke(Publication publication, Delegate handler)
 	{
-		if (handler == null)
-			throw new ArgumentNullException(
-				nameof(handler)
-			);
-
-		lock (_lock)
+		if (publication.Canceled) return;
+		try { handler.DynamicInvoke(publication.Data); }
+		catch (Exception exception)
 		{
-			if (_eventHandlers.TryGetValue(
-					typeof(T),
-					out var handlers
-				))
-			{
-				handlers.Remove(
-					handler
-				);
+			Logger.LogError($"Error processing event {publication.EventType.Name}: {exception}");
+		}
+	}
 
-				if (handlers.Count == 0)
-					_eventHandlers.Remove(
-						typeof(T)
-					);
+	// A fresh instance is required: IEvent offers no operation to restore constructor defaults.
+	public TEvent CreateEvent<TEvent>() where TEvent : IEvent, new()
+	{
+		lock (_gate) ThrowIfDisposed();
+		return new TEvent();
+	}
+
+	public TEvent CreateEvent<TEvent, TPayload>(TPayload payload) where TEvent : IEvent<TPayload>, new()
+	{
+		TEvent item;
+		lock (_gate)
+		{
+			ThrowIfDisposed();
+			if (typeof(TEvent).IsValueType) item = new TEvent();
+			else
+			{
+				if (!_eventPools.TryGetValue(typeof(TEvent), out var pool))
+				{
+					pool = new TypeSafeEventPool<TEvent>(100, () => new TEvent());
+					_eventPools.Add(typeof(TEvent), pool);
+				}
+				item = ((TypeSafeEventPool<TEvent>)pool).Get();
+				_leases.GetValue(item, _ => new Lease()).CheckedOut = true;
 			}
 		}
+		item.Initialize(payload);
+		return item;
 	}
 
-	public void UnsubscribeAll<T>()
-		where T : IEvent
+	private void ReturnLease(IEvent data)
 	{
-		lock (_lock)
-		{
-			_eventHandlers.Remove(
-				typeof(T)
-			);
-		}
-	}
-
-	public async UniTask Publish<T>(T eventData)
-		where T : IEvent
-	{
-		ThrowIfDisposed();
-
-		if (eventData == null)
-			throw new ArgumentNullException(
-				nameof(eventData)
-			);
-
-		if (!HasSubscribersFor<T>())
-		{
-			ReturnToPool(
-				eventData
-			);
-
-			return;
-		}
-
-		Profiler.BeginSample(
-			$"Publish {typeof(T).Name}"
-		);
-
-		_eventQueue.Enqueue(
-			eventData
-		);
-
-		Profiler.EndSample();
-
-		if (!_isProcessingEvents)
-			await ProcessEventsAsync(
-				_cancellationTokenSource.Token
-			);
-	}
-
-	public async UniTask PublishAsync<T>(T eventData)
-		where T : IEvent
-	{
-		await Publish(eventData);
-
-		await UniTask.WaitUntil(
-			() => !_isProcessingEvents,
-			cancellationToken: _cancellationTokenSource.Token
-		);
-	}
-
-	public bool HasSubscribersFor<T>()
-		where T : IEvent
-	{
-		lock (_lock)
-		{
-			return _eventHandlers.TryGetValue(
-					   typeof(T),
-					   out var handlers
-				   ) &&
-				   handlers.Count > 0;
-		}
-	}
-
-	public void Clear()
-	{
-		lock (_lock)
-		{
-			_eventHandlers.Clear();
-			_eventQueue.Clear();
-		}
-	}
-
-	public TEvent CreateEvent<TEvent>()
-		where TEvent : IEvent, new() =>
-		GetFromPool<TEvent>();
-
-	public TEvent CreateEvent<TEvent, TPayload>(TPayload payload)
-		where TEvent : IEvent<TPayload>, new()
-	{
-		var evt = GetFromPool<TEvent>();
-		evt.Initialize(
-			payload
-		);
-
-		return evt;
+		if (!_disposed && _leases.TryGetValue(data, out _) && _eventPools.TryGetValue(data.GetType(), out var pool))
+			pool.Return(data);
 	}
 
 	private void ThrowIfDisposed()
 	{
-		if (_disposed)
-			throw new ObjectDisposedException(
-				nameof(EventBus)
-			);
+		if (_disposed) throw new ObjectDisposedException(nameof(EventBus));
 	}
-
-	#endregion
 }

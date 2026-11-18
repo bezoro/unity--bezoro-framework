@@ -12,6 +12,16 @@ The published Framework package contains the compiled .NET Standard assemblies a
 
 Unity permits Git dependencies in a [project manifest](https://docs.unity3d.com/6000.0/Documentation/Manual/upm-git.html), not as Git URLs in a package's `dependencies`. This is why each consuming project must declare the Framework and UniTask Git URLs, while this package declares its Unity registry dependencies in its own `package.json`.
 
+## Upgrading to 0.4.0
+
+- Call `Safe_Dispose()` on the writable `NativeArray<T>` variable that owns the allocation. Static calls must pass it by `ref`. The helper clears that variable when it disposes the allocation.
+- Use `await PlayerLoopHelpers.ReturnToMainThread()` to resume the calling method on the Unity thread. Use the action overload to post a callback.
+- For a deferred scene load, check `SceneLoadHandle.IsReadyForActivation` and call `Activate()` on the Unity main thread before awaiting completion. Canceling the handle also releases the activations it owns. Started Unity operations finish and emit their completion notifications. Loads and unloads that already match the requested state complete successfully.
+- `EventBus.Publish` and `PublishAsync` complete after their own handlers return. A handler can queue a nested publication with `.Forget()` and return so the bus can dispatch it. Higher priorities go first among pending events, with FIFO ordering at equal priority. A payload event created by the bus returns to its pool after publication. `CreateEvent<TEvent>()` creates a fresh instance.
+- `ObservableProperty` invokes subscribers outside its state lock on the calling thread. Subscribers that can receive concurrent updates must handle overlapping callbacks. A disposed `ServiceLocator` is terminal. Create a new locator for the next lifetime.
+- For checked `InputAction` operations using extension syntax, use `EnableChecked()` and `DisableChecked()`. The existing static wrappers remain available. NavMesh random sampling defaults to a finite search radius of 10 world units and returns the agent's position if it finds no valid sample.
+- Assign the runtime `GameInitializationConfig` in the resource-backed `GameSettings` to satisfy application-wide provider requirements during build validation. Prefab conversion and retargeting refuse edits when Unity cannot preserve the target's object identities or map its overrides safely.
+
 ## Fix in 0.3.3
 
 Component enabled-state helpers now read and write native Renderer and Collider properties, as well as other public boolean `enabled` properties such as LODGroup and Cloth. Components without an enabled member remain unchanged. `ComponentState` and hierarchy-cache snapshots therefore retain each component's actual initial state, including intentionally disabled renderers and colliders.
@@ -41,6 +51,8 @@ Version 0.2.0 moved the package into `Packages/com.bezoro.unity-framework` and r
 `src` and `tests` keep their existing assembly names, internal paths and Unity GUIDs. The repository's `testables` entry enables this package's tests. Project-owned assets, settings and CI tools are outside the package and are not imported by consumers.
 
 For another project, add the Framework and UniTask Git dependencies to that project's manifest. Install this package from disk using this directory's `package.json`, or use `https://github.com/bezoro/unity--bezoro-framework.git?path=Packages/com.bezoro.unity-framework#<tag-or-commit>`, replacing the revision with a published tag or commit containing this layout. The old repository-root URL must be updated. Remove a legacy Assets/submodule installation before using UPM; never import both copies.
+
+Install [Git LFS](https://git-lfs.com/) and run `git lfs install` before installing from Git. For an existing checkout used by a disk installation, run `git lfs pull` to materialize the Symlink Utility documentation image.
 
 This project does not change any existing game, its package lock, or its submodule revision. Native Unity resolution, compilation and tests need their own recorded results; package metadata checks alone do not establish those results.
 

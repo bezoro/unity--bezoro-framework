@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
@@ -90,80 +91,93 @@ namespace Bezoro.Unity.Core.Tickable
 			tickable.ThrowIfNull();
 
 			if (tickable is IPreEarlyTickable preEarlyTickable)
-				ArrayHelper.AddUnique(
+				AddToPhase(
 					ref _preEarlyTickables,
 					preEarlyTickable
 				);
 
 			if (tickable is IEarlyTickable earlyTickable)
-				ArrayHelper.AddUnique(
+				AddToPhase(
 					ref _earlyTickables,
 					earlyTickable
 				);
 
 			if (tickable is IPostEarlyTickable postEarlyTickable)
-				ArrayHelper.AddUnique(
+				AddToPhase(
 					ref _postEarlyTickables,
 					postEarlyTickable
 				);
 
 			if (tickable is IPreFixedTickable preFixedTickable)
-				ArrayHelper.AddUnique(
+				AddToPhase(
 					ref _preFixedTickables,
 					preFixedTickable
 				);
 
 			if (tickable is IFixedTickable fixedTickable)
-				ArrayHelper.AddUnique(
+				AddToPhase(
 					ref _fixedTickables,
 					fixedTickable
 				);
 
 			if (tickable is IPostFixedTickable postFixedTickable)
-				ArrayHelper.AddUnique(
+				AddToPhase(
 					ref _postFixedTickables,
 					postFixedTickable
 				);
 
 			if (tickable is IPreLateTickable preLateTickable)
-				ArrayHelper.AddUnique(
+				AddToPhase(
 					ref _preLateTickables,
 					preLateTickable
 				);
 
 			if (tickable is ILateTickable lateTickable)
-				ArrayHelper.AddUnique(
+				AddToPhase(
 					ref _lateTickables,
 					lateTickable
 				);
 
 			if (tickable is IPostLateTickable postLateTickable)
-				ArrayHelper.AddUnique(
+				AddToPhase(
 					ref _postLateTickables,
 					postLateTickable
 				);
 
 			if (tickable is IPreRegularTickable preRegularTickable)
-				ArrayHelper.AddUnique(
+				AddToPhase(
 					ref _preTickables,
 					preRegularTickable
 				);
 
 			if (tickable is IRegularTickable regularTickable)
-				ArrayHelper.AddUnique(
+				AddToPhase(
 					ref _tickables,
 					regularTickable
 				);
 
 			if (tickable is IPostRegularTickable postRegularTickable)
-				ArrayHelper.AddUnique(
+				AddToPhase(
 					ref _postTickables,
 					postRegularTickable
 				);
 
+			if (!enableLogs) return;
 			LogTickable(
 				$"Registered {tickable.GetType().Name} as {DescribeTickableTypes(tickable)}. {DescribeCounts()}"
 			);
+		}
+
+		private static void AddToPhase<T>(ref T?[] items, T tickable) where T : class
+		{
+			if (Array.IndexOf(items, tickable) >= 0) return;
+			int slot = Array.IndexOf(items, null);
+			if (slot < 0)
+			{
+				slot = items.Length;
+				Array.Resize(ref items, checked(slot * 2));
+			}
+			items[slot] = tickable;
 		}
 
 		public void Remove(ITickable tickable)
@@ -242,6 +256,7 @@ namespace Bezoro.Unity.Core.Tickable
 					postRegularTickable
 				);
 
+			if (!enableLogs) return;
 			LogTickable($"Removed {tickable.GetType().Name} as {DescribeTickableTypes(tickable)}. {DescribeCounts()}");
 		}
 

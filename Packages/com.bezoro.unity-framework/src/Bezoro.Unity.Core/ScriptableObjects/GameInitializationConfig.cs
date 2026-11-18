@@ -26,6 +26,8 @@ namespace Bezoro.Unity.Core.ScriptableObjects
 	{
 		public static bool IsGameInitialized { get; private set; }
 
+		internal static void ResetSession() => IsGameInitialized = false;
+
 		public IReadOnlyList<GlobalDependencyDefinition> ApplicationDependencies => applicationDependencies;
 
 		public static async UniTask<bool> WaitForInitializationToComplete(CancellationToken ct = default)

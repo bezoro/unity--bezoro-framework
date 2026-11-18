@@ -12,6 +12,15 @@ namespace Bezoro.Unity.Core.Tests.PlayMode
 {
 	public sealed class UnityLoggerPlayModeTests
 	{
+		[Test]
+		public void FrameMetadata_CanBeReadFromWorker()
+		{
+			Bezoro.Unity.Core.Logging.UnityLogger.Initialize();
+			var provider = LoggerSettings.FrameCount.Provider!;
+			int frame = Time.frameCount;
+			Assert.AreEqual(frame, System.Threading.Tasks.Task.Run(provider).GetAwaiter().GetResult());
+		}
+
 		[TestCase(LogLevel.Info, LogType.Log)]
 		[TestCase(LogLevel.Warning, LogType.Warning)]
 		[TestCase(LogLevel.Error, LogType.Error)]

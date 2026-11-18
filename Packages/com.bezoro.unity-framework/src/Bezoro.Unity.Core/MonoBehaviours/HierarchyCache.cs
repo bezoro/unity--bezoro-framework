@@ -1,7 +1,6 @@
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -36,8 +35,6 @@ namespace Bezoro.Unity.Core.MonoBehaviours
 		private int _processed;
 
 		private CancellationTokenSource? _destroyCts;
-		private LoadingStage?            _loadingStage;
-		private ProgressTracker?         _tracker;
 
 		#region Unity Lifecycle
 
@@ -53,26 +50,13 @@ namespace Bezoro.Unity.Core.MonoBehaviours
 			_destroyCts = null;
 		}
 
-		private void OnDestroy()
-		{
-			_tracker      = null;
-			_loadingStage = null;
-		}
-
 		#endregion
 
 		public async UniTask<int> EnableGroupsCacheAsync(CancellationToken ct = default)
 		{
-			if (_inProgress)
-			{
-				Logger.LogWarning(
-					"EnableGroupsCacheAsync called while already in progress — skipping.",
-					contextObject: this,
-					category: LogCategory.Loading
-				);
-
-				return _processed;
-			}
+			ct.ThrowIfCancellationRequested();
+			while (_inProgress)
+				await UniTask.Yield(ct);
 
 			if (gameObjectStatesCache.IsEmpty()) return _processed;
 
@@ -83,6 +67,8 @@ namespace Bezoro.Unity.Core.MonoBehaviours
 									  : CancellationTokenSource.CreateLinkedTokenSource(ct);
 
 			var token = linkedCts.Token;
+			LoadingStage? stage = null;
+			LoadingProgressService.TryGetInstance(out var service);
 
 			try
 			{
@@ -90,7 +76,8 @@ namespace Bezoro.Unity.Core.MonoBehaviours
 				_processed = 0;
 				var frameBudget = new AsyncLoadingFrameBudget();
 
-				SetupProgressTracking();
+				stage = service?.BeginStage(LOADING_STAGE_NAME, WEIGHT);
+				var tracker = stage?.CreateTracker(gameObject.name);
 
 				foreach (var state in gameObjectStatesCache)
 				{
@@ -98,6 +85,7 @@ namespace Bezoro.Unity.Core.MonoBehaviours
 					await ActivateGameObjectGroupAsync(state, frameBudget, token);
 
 					_processed++;
+					if (tracker != null) tracker.Progress = _processed / (float)gameObjectStatesCache.Length;
 
 					Logger.Log(
 						$"Processed {_processed}/{gameObjectStatesCache.Length}",
@@ -106,13 +94,12 @@ namespace Bezoro.Unity.Core.MonoBehaviours
 					);
 				}
 
-				CompleteProgressTracking();
-
 				return _processed;
 			}
-			catch (OperationCanceledException)
+			catch
 			{
-				return _processed;
+				if (stage != null && service != null) service.DiscardStage(stage);
+				throw;
 			}
 			finally
 			{
@@ -263,18 +250,6 @@ namespace Bezoro.Unity.Core.MonoBehaviours
 			await frameBudget.WaitIfNeededAsync(ct);
 		}
 
-		private void CompleteProgressTracking()
-		{
-			if (_tracker != null)
-				_tracker.Progress = 1f;
-
-			if (_loadingStage != null)
-			{
-				_loadingStage.Complete();
-				_loadingStage = null;
-			}
-		}
-
 		/// <summary>
 		///     Build <see cref="gameObjectStatesCache" /> in strict top-to-bottom hierarchy order.
 		/// </summary>
@@ -289,19 +264,5 @@ namespace Bezoro.Unity.Core.MonoBehaviours
 #endif
 		}
 
-		private void SetupProgressTracking()
-		{
-			if (!LoadingProgressService.TryGetInstance(out var loadingProgressService))
-				return;
-
-			var stage = _loadingStage ??= loadingProgressService.BeginStage(LOADING_STAGE_NAME, WEIGHT);
-
-			if (_tracker == null)
-			{
-				int total = gameObjectStatesCache.Length;
-				_tracker = stage.CreateTracker(gameObject.name);
-				_tracker.BindToVariable(() => total > 0 ? _processed / (float)total : 1f);
-			}
-		}
 	}
 }

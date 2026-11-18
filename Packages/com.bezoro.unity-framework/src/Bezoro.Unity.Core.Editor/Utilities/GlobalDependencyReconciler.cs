@@ -48,7 +48,7 @@ namespace Bezoro.Unity.Core.Editor.Dependencies
 			try
 			{
 				var collections = FindAssets<SceneCollection>();
-				var config      = FindInitializationConfig();
+				var config      = GameSettings.LoadFromResources()?.InitializationConfig;
 
 				for (var i = 0; i < SceneManager.sceneCount; i++)
 				{
@@ -116,15 +116,6 @@ namespace Bezoro.Unity.Core.Editor.Dependencies
 						 .Select(AssetDatabase.LoadAssetAtPath<T>)
 						 .Where(asset => asset != null)
 						 .ToArray();
-
-		private static GameInitializationConfig? FindInitializationConfig()
-		{
-			var settings = GameSettings.Instance;
-			if (settings?.InitializationConfig != null)
-				return settings.InitializationConfig;
-
-			return FindAssets<GameInitializationConfig>().FirstOrDefault();
-		}
 
 		private static void Schedule()
 		{

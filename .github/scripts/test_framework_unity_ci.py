@@ -90,6 +90,7 @@ class ProjectLayoutTests(unittest.TestCase):
         (self.root / 'Assets/Editor/Runner.cs').write_text('// Project-owned runner fixture.\n')
         def git(*args):
             return subprocess.check_output(['git', *args], cwd=self.root, text=True, stderr=subprocess.DEVNULL).strip()
+        ci.write_json(self.root / 'Packages/packages-lock.json', {'dependencies': {}})
         git('init', '--quiet')
         git('add', '.')
         git('-c', 'user.name=CI fixture', '-c', 'user.email=ci@example.invalid',
@@ -105,7 +106,11 @@ class ProjectLayoutTests(unittest.TestCase):
         for name in source['source_sha256']:
             self.assertEqual((self.root / name).read_bytes(), (destination / name).read_bytes())
         self.assertFalse((destination / 'DevProject~').exists())
-        self.assertFalse((destination / 'Packages/packages-lock.json').exists())
+        self.assertEqual((self.root / 'artifacts/packages-lock-input.json').read_bytes(),
+                         (destination / 'Packages/packages-lock.json').read_bytes())
+        with patch.object(ci, 'ROOT', self.root), patch.object(ci, 'ARTIFACTS', self.root / 'artifacts'):
+            ci.redact()
+        self.assertFalse((self.root / 'artifacts/packages-lock-resolved.json').exists())
 
 
 class NativeEvidenceTests(unittest.TestCase):
@@ -227,6 +232,19 @@ class NativeEvidenceTests(unittest.TestCase):
         self.assertNotIn('private@example.com', text)
         self.assertNotIn('assigned-account', text)
         self.assertIn('error CS0001: missing type', text)
+
+    def test_player_and_resolved_packages_require_separate_native_outputs(self):
+        player = self.folder / 'player-compilation.json'
+        ci.write_json(player, {'editor': ci.EDITOR, 'target': 'StandaloneLinux64', 'assembly': 'Bezoro.Unity.Core.dll'})
+        lock = {'dependencies': {name: {} for name in (ci.PACKAGE_PATH.name, 'com.bezoro.framework', 'com.cysharp.unitask')}}
+        ci.write_json(self.folder / 'packages-lock-input.json', lock)
+        with self.assertRaises(FileNotFoundError):
+            ci.verify_player_and_packages()
+        ci.write_json(self.folder / 'packages-lock-resolved.json', lock)
+        ci.verify_player_and_packages()
+        ci.write_json(player, {'editor': ci.EDITOR, 'target': 'Editor', 'assembly': 'Bezoro.Unity.Core.dll'})
+        with self.assertRaisesRegex(ValueError, 'Player compilation'):
+            ci.verify_player_and_packages()
 
     def test_native_failure_blocks_every_later_editor_launch(self):
         workspace = self.folder / 'workspace'

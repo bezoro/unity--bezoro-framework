@@ -48,9 +48,8 @@ public class SerializableDictionary<TKey, TValue> :
 	[MethodImpl(
 		MethodImplOptions.AggressiveInlining
 	)]
-	public bool Contains(KeyValuePair<TKey, TValue> item) => Dictionary.ContainsKey(
-		item.Key
-	);
+	public bool Contains(KeyValuePair<TKey, TValue> item) =>
+		((ICollection<KeyValuePair<TKey, TValue>>)Dictionary).Contains(item);
 
 	[MethodImpl(
 		MethodImplOptions.AggressiveInlining
@@ -69,9 +68,8 @@ public class SerializableDictionary<TKey, TValue> :
 	[MethodImpl(
 		MethodImplOptions.AggressiveInlining
 	)]
-	public bool Remove(KeyValuePair<TKey, TValue> item) => Dictionary.Remove(
-		item.Key
-	);
+	public bool Remove(KeyValuePair<TKey, TValue> item) =>
+		((ICollection<KeyValuePair<TKey, TValue>>)Dictionary).Remove(item);
 
 	[MethodImpl(
 		MethodImplOptions.AggressiveInlining

@@ -1,4 +1,8 @@
 using System;
+using System.Reflection;
+using Bezoro.Unity.Core.Editor.PropertyDrawers;
+using Bezoro.Unity.Core.MonoBehaviours;
+using UnityEditor;
 using Bezoro.Unity.Core.AsyncLoading;
 using Bezoro.Unity.Core.Common.Extensions;
 using NUnit.Framework;
@@ -26,6 +30,27 @@ namespace Bezoro.Unity.Core.Tests.EditMode
 		{
 			if (_root != null)
 				Object.DestroyImmediate(_root);
+		}
+
+		[Test]
+		public void AutoComponentDrawer_DoesNotAssignAcrossMultipleSelectedObjects()
+		{
+			var second = new GameObject("Second audio fader");
+			second.transform.SetParent(_root.transform);
+			_root.AddComponent<AudioSource>();
+			second.AddComponent<AudioSource>();
+			var firstFader = _root.AddComponent<AudioFader>();
+			var secondFader = second.AddComponent<AudioFader>();
+			using var serialized = new SerializedObject(new Object[] { firstFader, secondFader });
+			var apply = typeof(EditorGetComponentDrawer).GetMethod("TryApplyComponent",
+				BindingFlags.NonPublic | BindingFlags.Instance);
+
+			apply.Invoke(new EditorGetComponentDrawer(), new object[] { serialized.FindProperty("audioSource") });
+
+			using var firstFields = new SerializedObject(firstFader);
+			using var secondFields = new SerializedObject(secondFader);
+			Assert.IsNull(firstFields.FindProperty("audioSource").objectReferenceValue);
+			Assert.IsNull(secondFields.FindProperty("audioSource").objectReferenceValue);
 		}
 
 		[Test]

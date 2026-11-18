@@ -14,9 +14,9 @@ namespace Bezoro.Unity.Core.Common.Timing
 	/// </summary>
 	public sealed class CustomFixedTick
 	{
-		private readonly Action                  _callback;
-		private readonly CancellationTokenSource _cts       = new();
-		private readonly Stopwatch               _stopWatch = new();
+		private readonly Action _callback;
+		private CancellationTokenSource? _run;
+		private readonly Stopwatch _stopWatch = new();
 
 		private double _accumulator;
 
@@ -35,17 +35,11 @@ namespace Bezoro.Unity.Core.Common.Timing
 			_accumulator  = 0.0;
 		}
 
-		~CustomFixedTick()
-		{
-			_cts.Cancel();
-			_cts.Dispose();
-		}
-
 		/// <summary>Fixed step size in seconds.</summary>
 		public float CustomFixedDeltaTime { get; }
 
 		/// <summary>True while RunAsync is driving this instance.</summary>
-		public bool IsSelfDriven { get; private set; }
+		public bool IsSelfDriven => _run != null;
 
 		/// <summary>Accumulated fixed time advanced in fixed steps.</summary>
 		public double FixedTime { get; private set; }
@@ -128,25 +122,21 @@ namespace Bezoro.Unity.Core.Common.Timing
 				return;
 			}
 
-			IsSelfDriven = true;
+			using var run = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+			_run = run;
 			var getDeltaTime = deltaTimeProvider ?? (() => Time.deltaTime);
-
-			using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(
-				cancellationToken,
-				_cts.Token
-			);
-
-			while (!linkedCts.Token.IsCancellationRequested)
+			try
 			{
-				float deltaTime = getDeltaTime();
-				ProcessTick(
-					deltaTime
-				);
-
-				await UniTask.Yield(
-					playerLoopTiming,
-					linkedCts.Token
-				);
+				while (!run.IsCancellationRequested)
+				{
+					ProcessTick(getDeltaTime());
+					await UniTask.Yield(playerLoopTiming, run.Token);
+				}
+			}
+			finally
+			{
+				if (ReferenceEquals(_run, run))
+					_run = null;
 			}
 		}
 
@@ -164,10 +154,9 @@ namespace Bezoro.Unity.Core.Common.Timing
 		/// </summary>
 		public void Stop()
 		{
-			if (!IsSelfDriven) return;
-
-			_cts.Cancel();
-			IsSelfDriven = false;
+			var run = _run;
+			_run = null;
+			run?.Cancel();
 		}
 
 		private bool ProcessTick(float deltaTime)

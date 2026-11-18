@@ -37,7 +37,7 @@ concurrency:
 jobs:
   test:
     runs-on: ubuntu-22.04
-    timeout-minutes: 60
+    timeout-minutes: 180
     env:
       SOURCE_COMMIT: ${{ github.sha }}
     steps:
@@ -58,27 +58,40 @@ jobs:
             echo '::error::Unity has not started. UNITY_EMAIL and UNITY_PASSWORD repository secrets are required.'
             exit 1
           fi
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - timeout-minutes: 5
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           ref: ${{ github.sha }}
           persist-credentials: false
           lfs: true
       - name: Check runner safeguards before activation
+        timeout-minutes: 2
         run: |
           python3 -m unittest discover -s .github/scripts -p 'test_*.py' -v
           bash -n .github/scripts/framework_unity_wrapper.sh
+      - name: Record seat recovery for run ${{ inputs.recovered_run_id }} attempt ${{ inputs.recovered_run_attempt }}
+        timeout-minutes: 5
+        if: ${{ github.event_name == 'workflow_dispatch' && (inputs.recovered_run_id != '' || inputs.recovered_run_attempt != '') }}
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          RECOVERED_RUN_ID: ${{ inputs.recovered_run_id }}
+          RECOVERED_RUN_ATTEMPT: ${{ inputs.recovered_run_attempt }}
+        run: python3 .github/scripts/framework_license_gate.py record-recovery
       - name: Block activation after uncertain Personal return
+        timeout-minutes: 5
         env:
           GITHUB_TOKEN: ${{ github.token }}
           RECOVERED_RUN_ID: ${{ inputs.recovered_run_id || '' }}
           RECOVERED_RUN_ATTEMPT: ${{ inputs.recovered_run_attempt || '' }}
         run: python3 .github/scripts/framework_license_gate.py
       - name: Prepare exact isolated package and development project
+        timeout-minutes: 3
         id: project
         run: |
           python3 .github/scripts/framework_unity_ci.py prepare
           echo "owner=$(id -u):$(id -g)" >> "$GITHUB_OUTPUT"
       - name: Install pinned GameCI CLI and verify checksum
+        timeout-minutes: 4
         run: |
           gameci_dir="$RUNNER_TEMP/game-ci-v0.1.72"
           mkdir "$gameci_dir"
@@ -89,10 +102,12 @@ jobs:
           tar -xzf "$gameci_dir/release.tar.gz" -C "$gameci_dir"
           "$gameci_dir/game-ci" --version
       - name: Free host SDK space for the Unity image
+        timeout-minutes: 6
         run: |
           sudo rm -rf -- /usr/local/lib/android /usr/share/dotnet
           df -h /
       - name: Verify the pinned Docker launch hook without activating Unity
+        timeout-minutes: 25
         run: |
           python3 .github/scripts/verify_gameci_docker_wrapper.py \
             --gameci-dir "$RUNNER_TEMP/game-ci-v0.1.72" \

@@ -2,6 +2,7 @@
     "name": "Bezoro.Unity.Core.Tests.EditMode",
     "rootNamespace": "",
     "references": [
+        "GUID:b743e246e6a4260418a6fd3336767d20",
         "GUID:0acc523941302664db1f4e527237feb3",
         "GUID:27619889b8ba8c24980f49ee34dbb44a",
         "GUID:b5120e6e7c923514e83c2ac656701190",

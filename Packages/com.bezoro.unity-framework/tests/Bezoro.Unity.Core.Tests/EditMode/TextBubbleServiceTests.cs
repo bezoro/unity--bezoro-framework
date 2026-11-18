@@ -39,6 +39,22 @@ namespace Bezoro.Unity.Core.Tests.EditMode
 		}
 
 		[Test]
+		public void Show_WithBottomLeftPrefabAnchor_PlacesPivotAtScreenPoint()
+		{
+			var service = CreateService();
+			var rect = _prefabObject!.GetComponent<RectTransform>();
+			rect.anchorMin = rect.anchorMax = Vector2.zero;
+			var screenPoint = new Vector2(80f, 110f);
+			var handle = service.Show(new("Offset anchor", TextBubbleAnchor.ForScreenPosition(screenPoint)));
+			Assert.IsTrue(handle.IsValid);
+
+			var view = FindInstantiatedBubbleViewWithText("Offset anchor");
+			var actual = RectTransformUtility.WorldToScreenPoint(null, view.RectTransform.position);
+			Assert.AreEqual(screenPoint.x, actual.x, 0.001f);
+			Assert.AreEqual(screenPoint.y, actual.y, 0.001f);
+		}
+
+		[Test]
 		public void Show_WhenRequestIsValid_CreatesValidHandleAndActiveBubble()
 		{
 			var service = CreateService();

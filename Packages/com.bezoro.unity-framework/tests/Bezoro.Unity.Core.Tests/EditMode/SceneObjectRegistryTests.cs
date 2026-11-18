@@ -31,6 +31,21 @@ namespace Bezoro.Unity.Core.Tests.EditMode
 		}
 
 		[Test]
+		public void Unregister_WithDifferentOwner_PreservesRegisteredObject()
+		{
+			var duplicate = new GameObject("Non-owning duplicate");
+			try
+			{
+				SceneObjectRegistry.Register(_gameObject, _guid);
+				SceneObjectRegistry.Unregister(_guid, duplicate);
+				Assert.AreSame(_gameObject, SceneObjectRegistry.GetObjectByGuid(_guid));
+				SceneObjectRegistry.Unregister(_guid, _gameObject);
+				Assert.IsFalse(SceneObjectRegistry.IsGuidRegistered(_guid));
+			}
+			finally { Object.DestroyImmediate(duplicate); }
+		}
+
+		[Test]
 		public void Register_WithInvalidGuid_DoesNotRegisterObject()
 		{
 			SceneObjectRegistry.Register(_gameObject, "invalid");

@@ -77,18 +77,12 @@ namespace Bezoro.Unity.Core.AsyncLoading
 
 		public async UniTask LoadAsync(CancellationToken ct)
 		{
-			await EnableHierarchyCache(ct);
-			_isLoaded = true;
-		}
-
-		private async UniTask EnableHierarchyCache(CancellationToken ct)
-		{
-			var hierarchyCache = hierarchyCacheReference;
-			if (!_model.ShouldEnableHierarchyCache(ct.IsCancellationRequested, hierarchyCache != null)) return;
-			if (hierarchyCache == null) return;
-
+			ct.ThrowIfCancellationRequested();
 			using var linked = CancellationTokenSource.CreateLinkedTokenSource(ct, _cts.Token);
+			var hierarchyCache = hierarchyCacheReference != null ? hierarchyCacheReference : GetComponent<HierarchyCache>();
 			await hierarchyCache.EnableGroupsCacheAsync(linked.Token);
+			linked.Token.ThrowIfCancellationRequested();
+			_isLoaded = true;
 		}
 
 #if UNITY_EDITOR
@@ -153,6 +147,8 @@ namespace Bezoro.Unity.Core.AsyncLoading
 
 		public void EditorPrepareForBuild()
 		{
+			if (!enabled || !gameObject.activeInHierarchy) return;
+
 			var hierarchyCache = EditorGetHierarchyCache();
 			var model = new AsyncGameObjectModel();
 			if (model.ShouldUseHierarchyCache(hierarchyCache != null) && hierarchyCache != null)

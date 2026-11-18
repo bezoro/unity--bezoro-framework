@@ -17,7 +17,7 @@ namespace Bezoro.Unity.Core.Tests.EditMode
 			);
 
 			Assert.Throws<InputActionExceptions.NullInputActionAssetException.NullInputActionException>(() =>
-						InputActionExtensions.Disable((InputAction)null)
+						((InputAction)null).DisableChecked()
 			);
 
 			Assert.Throws<InputActionExceptions.NullInputActionAssetException.NullInputActionMapException>(() =>
@@ -34,7 +34,7 @@ namespace Bezoro.Unity.Core.Tests.EditMode
 			);
 
 			Assert.Throws<InputActionExceptions.NullInputActionAssetException.NullInputActionException>(() =>
-						InputActionExtensions.Enable((InputAction)null)
+						((InputAction)null).EnableChecked()
 			);
 
 			Assert.Throws<InputActionExceptions.NullInputActionAssetException.NullInputActionMapException>(() =>
@@ -71,11 +71,11 @@ namespace Bezoro.Unity.Core.Tests.EditMode
 		{
 			using var action = new InputAction("Jump");
 
-			InputActionExtensions.Enable(action);
+			action.EnableChecked();
 
 			Assert.IsTrue(action.enabled);
 
-			InputActionExtensions.Disable(action);
+			action.DisableChecked();
 
 			Assert.IsFalse(action.enabled);
 		}

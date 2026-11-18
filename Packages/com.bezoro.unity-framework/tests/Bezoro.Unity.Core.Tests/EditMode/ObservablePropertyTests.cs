@@ -50,6 +50,20 @@ namespace Bezoro.Unity.Core.Tests.EditMode
 			CollectionAssert.IsEmpty(receivedValues);
 		}
 
+		[Test]
+		public void Subscriber_CanReadValueFromAnotherThreadBeforeReturning()
+		{
+			var property = new TestValueProperty();
+			bool completed = false;
+			property.Subscribe(_ =>
+			{
+				var read = System.Threading.Tasks.Task.Run(() => property.Value);
+				completed = read.Wait(System.TimeSpan.FromSeconds(3)) && read.Result == 42;
+			});
+			property.Value = 42;
+			Assert.IsTrue(completed);
+		}
+
 		private sealed class TestReferenceProperty : ObservableReferenceProperty<string> { }
 
 		private sealed class TestValueProperty : ObservableValueProperty<int> { }

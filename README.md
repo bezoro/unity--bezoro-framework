@@ -27,6 +27,8 @@ Install the published pure C# Framework and UniTask Git dependencies first. Add 
 
 Replace `<tag-or-commit>` with a published revision containing this layout. The Package Manager's **Add package from git URL** accepts the same utilities URL. The `?path=Packages/com.bezoro.unity-framework` part is required; the repository root is the project, not a package. To install from disk, select `Packages/com.bezoro.unity-framework/package.json` in **Add package from disk**.
 
+Install [Git LFS](https://git-lfs.com/) and run `git lfs install` before installing from Git. If you already cloned the repository, run `git lfs pull` in the checkout before adding it from disk. The Symlink Utility documentation image is stored in LFS.
+
 Unity does not support Git URLs in a package's dependency list. Framework and UniTask therefore belong in each consuming project's manifest. Unity registry dependencies are declared by the utilities package. Let Unity generate `Packages/packages-lock.json` after a real resolution and commit that lock; no fabricated lock or copied Framework DLLs are provided.
 
 ## Dependencies and validation

@@ -58,8 +58,11 @@ namespace Bezoro.Unity.Core.ScriptableObjects
 			Instance?.gameInitializationConfig?.BeforeSplashScreenPhase();
 
 		[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-		private static void Initialize_Subsystems() =>
+		private static void Initialize_Subsystems()
+		{
+			GameInitializationConfig.ResetSession();
 			Instance?.gameInitializationConfig?.SubsystemRegistrationPhase();
+		}
 
 		public static string SceneCollectionsName => nameof(sceneCollections);
 

@@ -39,6 +39,27 @@ namespace Bezoro.Unity.Core.Tests.EditMode
 		}
 
 		[UnityTest]
+		public IEnumerator Completed_HandlerCanBeginNextOperation()
+		{
+			_service.completeEventDelayS = 0;
+			_service.BeginOperation("First");
+			_service.Completed += () =>
+			{
+				_service.BeginOperation("Second");
+				_service.CreateTracker("Pending");
+			};
+			_service.ForceComplete();
+			double deadline = EditorApplication.timeSinceStartup + 5;
+			while (_service.OperationName != "Second" && EditorApplication.timeSinceStartup < deadline)
+			{
+				EditorApplication.QueuePlayerLoopUpdate();
+				yield return null;
+			}
+			Assert.AreEqual("Second", _service.OperationName);
+			Assert.IsTrue(_service.IsLoading);
+		}
+
+		[UnityTest]
 		public IEnumerator OnDestroy_WhenNotSingleton_CancelsPendingTrackerWait()
 		{
 			SetPrivateField("noTrackerTimeoutS", 0.01f);

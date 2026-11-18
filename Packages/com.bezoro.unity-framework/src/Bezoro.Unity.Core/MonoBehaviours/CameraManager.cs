@@ -96,8 +96,8 @@ namespace Bezoro.Unity.Core.MonoBehaviours
 
 			if (camera.CompareTag("MainCamera"))
 				manager._model.RegisterMain(camera);
-			else
-				manager._model.RegisterSecondary(camera, item => item.IsUnityNull());
+			else if (!manager._model.RegisterSecondary(camera, item => item.IsUnityNull()))
+				return;
 
 			CameraRegistered?.Invoke(camera);
 		}

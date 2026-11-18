@@ -4,7 +4,8 @@ using System.Collections.Generic;
 namespace Bezoro.Unity.Core.Observables;
 
 /// <summary>
-///     Stores a thread-safe value and notifies subscribers when it changes.
+///     Stores a thread-safe value. A setter synchronously notifies its subscriber snapshot
+///     after releasing the value lock. Concurrent setters may deliver notifications concurrently.
 /// </summary>
 public abstract class ObservableProperty<T>
 {
@@ -46,6 +47,7 @@ public abstract class ObservableProperty<T>
 
 	private void SetLockedValue(T value)
 	{
+		Action<T>? handlers;
 		lock (_lock)
 		{
 			if (EqualityComparer<T>.Default.Equals(
@@ -55,9 +57,8 @@ public abstract class ObservableProperty<T>
 				return;
 
 			_currentValue = value;
-			OnValueChanged?.Invoke(
-				value
-			);
+			handlers = OnValueChanged;
 		}
+		handlers?.Invoke(value);
 	}
 }

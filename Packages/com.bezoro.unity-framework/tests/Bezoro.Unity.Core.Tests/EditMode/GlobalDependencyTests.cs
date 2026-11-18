@@ -31,6 +31,26 @@ namespace Bezoro.Unity.Core.Tests.EditMode
 		}
 
 		[Test]
+		public void ResetSession_PreventsPreviousInitializationFromSatisfyingNewSession()
+		{
+			bool wasInitialized = GameInitializationConfig.IsGameInitialized;
+			var config = ScriptableObject.CreateInstance<GameInitializationConfig>();
+			try
+			{
+				config.AfterSceneLoadPhase();
+				Assert.IsTrue(GameInitializationConfig.IsGameInitialized);
+				GameInitializationConfig.ResetSession();
+				Assert.IsFalse(GameInitializationConfig.IsGameInitialized);
+			}
+			finally
+			{
+				if (wasInitialized) config.AfterSceneLoadPhase();
+				else GameInitializationConfig.ResetSession();
+				UnityEngine.Object.DestroyImmediate(config);
+			}
+		}
+
+		[Test]
 		public void Definition_WithConfiguredProvider_ExposesTypeLifetimeAndOrphanPolicy()
 		{
 			var definition = CreateDefinition<TestProvider>(

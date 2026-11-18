@@ -1,5 +1,4 @@
 using System;
-using System.Linq;
 using Bezoro.Unity.Core.Common.Enums;
 using Bezoro.Unity.Core.Loading;
 using Bezoro.Unity.Core.Scenes;
@@ -41,30 +40,6 @@ namespace Bezoro.Unity.Core.MonoBehaviours
 
 		private string[]? GetPathsToLoad()
 		{
-			if (initialScene != null)
-			{
-				var sceneRefs = initialScene.Scenes?.Where(r => r != null
-				).ToArray();
-
-				var decision = _model.DecidePathsToLoad(
-					true,
-					sceneRefs?.Paths().ToArray(),
-					SceneManager.GetActiveScene().buildIndex,
-					SceneManager.SceneCountInBuildSettings
-				);
-
-				if (decision.Status == BootSceneLoaderPathStatus.EmptySceneCollection)
-				{
-					Debug.LogError(
-						$"{nameof(BootSceneLoader)}: SceneCollection `{initialScene.name}` doesn't contain any valid scenes."
-					);
-
-					return null;
-				}
-
-				return decision.Paths;
-			}
-
 			var fallbackDecision = _model.DecidePathsToLoad(
 				false,
 				null,
@@ -86,6 +61,13 @@ namespace Bezoro.Unity.Core.MonoBehaviours
 		private async UniTaskVoid LoadInitialSceneAsync()
 		{
 			await UniTask.Yield();
+
+			if (initialScene != null)
+			{
+				await initialScene.Load(true, LoadSceneMode.Single, loadingScreenScene?.Path);
+				BootSceneLoaded?.Invoke();
+				return;
+			}
 
 			string[]? pathsToLoad = GetPathsToLoad();
 

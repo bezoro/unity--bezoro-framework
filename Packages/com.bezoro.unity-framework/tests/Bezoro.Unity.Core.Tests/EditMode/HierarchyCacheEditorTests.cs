@@ -93,6 +93,22 @@ namespace Bezoro.Unity.Core.Tests.EditMode
 				throw new AggregateException("Owned editor cache test cleanup failed.", failures);
 		}
 
+		[TestCase(false, true)]
+		[TestCase(true, false)]
+		public void BuildPreparation_PreservesInactiveOrDisabledHierarchy(bool active, bool enabled)
+		{
+			_root.SetActive(active);
+			var asyncObject = _root.AddComponent<AsyncGameObject>();
+			asyncObject.enabled = enabled;
+			var child = CreateOwned("Child of skipped root", _root.transform);
+			var behaviour = child.AddComponent<Light>();
+			asyncObject.EditorPrepareForBuild();
+			Assert.AreEqual(active, _root.activeSelf);
+			Assert.AreEqual(enabled, asyncObject.enabled);
+			Assert.IsTrue(child.activeSelf);
+			Assert.IsTrue(behaviour.enabled);
+		}
+
 		[TestCase(HideFlags.DontSaveInEditor)]
 		[TestCase(HideFlags.DontSaveInBuild)]
 		public void RebuildCache_ExcludesTransientSubtreesAndComponents_WhilePublicSnapshotsRemainComplete(HideFlags excluded)

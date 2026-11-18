@@ -18,6 +18,7 @@ namespace Bezoro.Unity.Core.MonoBehaviours
 
 		private readonly AudioManagerModel _model = new();
 
+		private Coroutine? _bgmTransition;
 		private AudioClip? _currentBGM;
 		private float      _bgmVolume = 1f;
 
@@ -53,11 +54,14 @@ namespace Bezoro.Unity.Core.MonoBehaviours
 		{
 			if (!_model.ShouldPlayBGM(BGMAudioSource != null)) return;
 
-			if (_model.ShouldSkipBGM(_currentBGM == bgmClip, BGMAudioSource!.isPlaying)) return;
+			if (_bgmTransition == null && _model.ShouldSkipBGM(_currentBGM == bgmClip, BGMAudioSource!.isPlaying))
+				return;
+
+			CancelBGMTransition();
 
 			if (_model.ShouldFade(fadeInDuration))
 			{
-				StartCoroutine(
+				_bgmTransition = StartCoroutine(
 					FadeBGM(
 						bgmClip,
 						volume,
@@ -101,9 +105,11 @@ namespace Bezoro.Unity.Core.MonoBehaviours
 			if (!_model.ShouldStopBGM(bgmAudioSource != null)) return;
 			if (bgmAudioSource == null) return;
 
+			CancelBGMTransition();
+
 			if (_model.ShouldFade(fadeOutDuration))
 			{
-				StartCoroutine(
+				_bgmTransition = StartCoroutine(
 					FadeOutBGM(
 						fadeOutDuration
 					)
@@ -114,6 +120,14 @@ namespace Bezoro.Unity.Core.MonoBehaviours
 				bgmAudioSource.Stop();
 				_currentBGM = null;
 			}
+		}
+
+		private void CancelBGMTransition()
+		{
+			if (_bgmTransition == null) return;
+
+			StopCoroutine(_bgmTransition);
+			_bgmTransition = null;
 		}
 
 		private static AudioMixerGroup? GetMasterMixerGroup()
@@ -179,6 +193,7 @@ namespace Bezoro.Unity.Core.MonoBehaviours
 
 			BGMAudioSource.volume = targetVolume;
 			_bgmVolume            = targetVolume;
+			_bgmTransition        = null;
 		}
 
 		private IEnumerator FadeOutBGM(float duration)
@@ -204,6 +219,7 @@ namespace Bezoro.Unity.Core.MonoBehaviours
 			BGMAudioSource.Stop();
 			BGMAudioSource.volume = _bgmVolume; // Restore volume for next BGM
 			_currentBGM           = null;
+			_bgmTransition        = null;
 		}
 
 		private void AssignMasterMixerGroup()

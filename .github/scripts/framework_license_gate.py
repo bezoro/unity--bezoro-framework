@@ -27,6 +27,13 @@ class GateError(ValueError):
     pass
 
 
+class IncompleteHistory(GateError):
+    """Completed attempt whose native launch cannot be established."""
+
+
+RECOVERY_STEP = re.compile(r'Record seat recovery for run ([1-9][0-9]*) attempt ([1-9][0-9]*)')
+
+
 @dataclass(frozen=True)
 class Attempt:
     run_id: int
@@ -123,13 +130,15 @@ def previous_attempts(api, current_run, current_attempt):
     return attempts
 
 
-def inspect_attempt(api, attempt):
+def inspect_attempt(api, attempt, receipts):
     jobs = list(api.pages(f'/actions/runs/{attempt.run_id}/attempts/{attempt.number}/jobs', 'jobs'))
     if not jobs:
         if attempt.status in NOT_STARTED:
             return []
-        raise GateError(f'Cannot establish license history for run {attempt.run_id}, attempt {attempt.number}: native job evidence is missing.')
+        error = IncompleteHistory if attempt.status == 'completed' else GateError
+        raise error(f'Cannot establish license history for run {attempt.run_id}, attempt {attempt.number}: native job evidence is missing.')
     native = []
+    missing_launch = False
     for job in jobs:
         if (job.get('run_id') != attempt.run_id or job.get('run_attempt') != attempt.number
                 or job.get('head_sha') != attempt.source):
@@ -137,11 +146,16 @@ def inspect_attempt(api, attempt):
         steps = job.get('steps')
         if not isinstance(steps, list):
             raise GateError('Cannot establish license history: job steps are missing.')
+        for step in steps:
+            match = RECOVERY_STEP.fullmatch(step.get('name', ''))
+            if match and step.get('status') == 'completed' and step.get('conclusion') == 'success':
+                receipts.add(tuple(map(int, match.groups())))
         launches = [step for step in steps if step.get('name') == LAUNCH_STEP]
         if not launches:
             if job.get('conclusion') == 'skipped' or job.get('status') in NOT_STARTED:
                 continue
-            raise GateError(f'Cannot establish license history for run {attempt.run_id}, attempt {attempt.number}: the native launch step is absent.')
+            missing_launch = True
+            continue
         if len(launches) != 1:
             raise GateError('Cannot establish license history: duplicate native launch steps.')
         launch = launches[0]
@@ -155,6 +169,9 @@ def inspect_attempt(api, attempt):
                     and isinstance(returns[0].get('number'), int)
                     and returns[0]['number'] > launch['number'])
         native.append(NativeLaunch(attempt, started_at, returned))
+    if missing_launch:
+        error = IncompleteHistory if attempt.status == 'completed' else GateError
+        raise error(f'Cannot establish license history for run {attempt.run_id}, attempt {attempt.number}: the native launch step is absent.')
     return native
 
 
@@ -165,15 +182,26 @@ def check_history(api, current_run, current_attempt, event, recovered_run_id='',
                  positive_integer(recovered_run_attempt, 'RECOVERED_RUN_ATTEMPT')) if recovered_run_id else None
     if recovered is not None and event != 'workflow_dispatch':
         raise GateError('Seat recovery is accepted only through an explicit manual workflow_dispatch.')
-    launches = []
+    launches, incomplete, receipts = [], {}, set()
     for attempt in previous_attempts(api, current_run, current_attempt):
         # Inspect all attempts. Scheduling order is not native execution order, even
         # when workflow concurrency prevents overlapping activations.
-        launches.extend(inspect_attempt(api, attempt))
+        try:
+            launches.extend(inspect_attempt(api, attempt, receipts))
+        except IncompleteHistory as error:
+            incomplete[(attempt.run_id, attempt.number)] = str(error)
+    for identity, reason in incomplete.items():
+        if identity != recovered and identity not in receipts:
+            raise GateError(reason + ' Confirm the seat with the owner, then manually dispatch recovery for this exact attempt.')
+    incomplete_recovery = recovered in incomplete
+    if incomplete_recovery:
+        recovery_decision = {'result': 'Passed', 'basis': 'manual_incomplete_history_recovery',
+                             'run_id': recovered[0], 'attempt': recovered[1]}
+        recovered = None
     if not launches:
         if recovered is not None:
             raise GateError('RECOVERED_RUN_ID has no matching uncertain launch.')
-        return {'result': 'Passed', 'basis': 'no_previous_launch'}
+        return recovery_decision if incomplete_recovery else {'result': 'Passed', 'basis': 'no_previous_launch'}
     latest_time = max(launch.started_at for launch in launches)
     candidates = {launch.attempt for launch in launches if launch.started_at == latest_time}
     if len(candidates) != 1:
@@ -185,7 +213,9 @@ def check_history(api, current_run, current_attempt, event, recovered_run_id='',
     if returned:
         if recovered is not None:
             raise GateError('Recovery inputs do not match an uncertain launch. Remove the stale recovery input.')
-        return {'result': 'Passed', 'basis': 'verified_return', **identity}
+        return recovery_decision if incomplete_recovery else {'result': 'Passed', 'basis': 'verified_return', **identity}
+    if (attempt.run_id, attempt.number) in receipts and recovered is None:
+        return {'result': 'Passed', 'basis': 'recorded_seat_recovery', **identity}
     if recovered == (attempt.run_id, attempt.number):
         return {'result': 'Passed', 'basis': 'manual_seat_recovery', **identity}
     raise GateError(f'Activation blocked after run {attempt.run_id}, attempt {attempt.number}. '
@@ -195,11 +225,35 @@ def check_history(api, current_run, current_attempt, event, recovered_run_id='',
                     'No Unity activation was attempted.')
 
 
+def record_recovery(api, current_run, current_attempt, event, run_id, number):
+    """Verify the dispatch refers to an existing, completed uncertain attempt before recording its receipt."""
+    if event != 'workflow_dispatch':
+        raise GateError('Seat recovery is accepted only through manual dispatch.')
+    target = (positive_integer(run_id, 'RECOVERED_RUN_ID'), positive_integer(number, 'RECOVERED_RUN_ATTEMPT'))
+    for attempt in previous_attempts(api, current_run, current_attempt):
+        if target != (attempt.run_id, attempt.number):
+            continue
+        if attempt.status != 'completed':
+            raise GateError('Only completed attempts can receive a recovery receipt.')
+        try:
+            launches = inspect_attempt(api, attempt, set())
+        except IncompleteHistory:
+            return
+        if any(not launch.returned for launch in launches):
+            return
+        break
+    raise GateError('Recovery inputs do not identify a completed uncertain attempt.')
+
+
 def main():
     try:
         current_run = positive_integer(os.environ.get('GITHUB_RUN_ID'), 'GITHUB_RUN_ID')
         current_attempt = positive_integer(os.environ.get('GITHUB_RUN_ATTEMPT'), 'GITHUB_RUN_ATTEMPT')
         api = ActionsApi(os.environ.get('GITHUB_REPOSITORY', ''), os.environ.get('GITHUB_TOKEN', ''))
+        if sys.argv[1:] == ['record-recovery']:
+            record_recovery(api, current_run, current_attempt, os.environ.get('GITHUB_EVENT_NAME', ''),
+                            os.environ.get('RECOVERED_RUN_ID', ''), os.environ.get('RECOVERED_RUN_ATTEMPT', ''))
+            return 0
         decision = check_history(api, current_run, current_attempt,
                                  os.environ.get('GITHUB_EVENT_NAME', ''), os.environ.get('RECOVERED_RUN_ID', ''),
                                  os.environ.get('RECOVERED_RUN_ATTEMPT', ''))

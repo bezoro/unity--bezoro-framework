@@ -1,4 +1,5 @@
 using System;
+using UnityEngine;
 using System.Collections.Concurrent;
 using Bezoro.Unity.Core.Common.Patterns;
 
@@ -12,6 +13,9 @@ namespace Bezoro.Unity.Core.EventSystem;
 public sealed class EventBusManager : Singleton<EventBusManager>
 {
 	private readonly ConcurrentDictionary<string, IEventBus> _eventBuses;
+
+	[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+	internal static void ResetRuntimeContexts() => Reset();
 
 	private EventBusManager()
 	{
@@ -74,6 +78,9 @@ public sealed class EventBusManager : Singleton<EventBusManager>
 
 	protected override void OnInitialize() { }
 
-	protected override void OnReset() =>
+	protected override void OnReset()
+	{
+		foreach (var bus in _eventBuses.Values) bus.Dispose();
 		ClearAll();
+	}
 }

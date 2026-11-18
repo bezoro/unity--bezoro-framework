@@ -2,10 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Bezoro.Unity.Core.Common.Enums;
-using System.Threading;
 using Bezoro.Unity.Core.Common.Timing;
 using Bezoro.Unity.Core.MonoBehaviours;
-using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 namespace Bezoro.Unity.Core.ReflectionProbes
@@ -17,10 +15,11 @@ namespace Bezoro.Unity.Core.ReflectionProbes
 	[DefaultExecutionOrder(ExecutionOrder.Manager)]
 	public sealed class ReflectionProbeManager : MonoBehaviour
 	{
-		private readonly CancellationTokenSource _cts = new();
-		private readonly ReflectionProbeManagerModel<ReflectionProbe> _model = new(128);
+		internal static event Action<ReflectionProbeManager>? Available;
 
-		private bool _isSingletonInstance;
+		[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+		private static void ResetAvailability() => Available = null;
+		private readonly ReflectionProbeManagerModel<ReflectionProbe> _model = new(128);
 
 		private CustomFixedTick? _customFixedTick;
 
@@ -35,28 +34,16 @@ namespace Bezoro.Unity.Core.ReflectionProbes
 
 		#region Unity Lifecycle
 
-		private void Awake()
+		private void OnEnable()
 		{
-			_isSingletonInstance = GlobalReferenceAccess<ReflectionProbeManager>.IsCurrent(this);
-
-			if (!_isSingletonInstance)
-				return;
-
-			_customFixedTick = new(
-				TickFrequency,
-				RenderAllProbes
-			);
-
-			_customFixedTick.RunAsync(
-				cancellationToken: _cts.Token
-			).Forget();
+			if (!GlobalReferenceAccess<ReflectionProbeManager>.IsCurrent(this)) return;
+			_customFixedTick = new(TickFrequency, RenderAllProbes);
+			Available?.Invoke(this);
 		}
 
-		private void OnDestroy()
-		{
-			_cts.Cancel();
-			_cts.Dispose();
-		}
+		private void Update() => _customFixedTick?.Tick(Time.deltaTime);
+
+		private void OnDisable() => _customFixedTick = null;
 
 		#endregion
 

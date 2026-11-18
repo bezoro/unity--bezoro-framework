@@ -1,343 +1,138 @@
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
-using Bezoro.Logging;
 
 namespace Bezoro.Unity.Core.DI;
 
-/// <summary>
-///     Thread-safe implementation of the Bezoro service locator. It supports
-///     singleton, lazy singleton, scoped, and transient lifetimes and tracks
-///     disposable resolved instances for cleanup.
-/// </summary>
+/// <summary>Thread-safe service registry. Its owner explicitly disposes resolved services at the end of its lifetime.</summary>
 public sealed class ServiceLocator : IServiceLocator
 {
-	private readonly ConcurrentDictionary<Type, Func<IService>> _transientServices;
-	private readonly ConcurrentDictionary<Type, IService>       _singletonServices;
-	private readonly ConcurrentDictionary<Type, Lazy<IService>> _lazySingletonServices;
-	private readonly ConcurrentDictionary<Type, object>         _scopedServices;
-
-	private readonly HashSet<IDisposable> _disposableServices;
-
-	/// <summary>
-	///     Creates an empty locator with separate stores for each supported lifetime.
-	/// </summary>
-	public ServiceLocator()
+	private sealed class Registration
 	{
-		_singletonServices     = new();
-		_lazySingletonServices = new();
-		_transientServices     = new();
-		_scopedServices        = new();
-		_disposableServices    = new();
+		internal Func<IService> Resolve = null!;
+		internal IDisposable? CachedDisposable;
 	}
 
-	~ServiceLocator()
-	{
-		Dispose();
-	}
+	private readonly object _gate = new();
+	private readonly Dictionary<Type, Registration> _registrations = new();
+	private readonly HashSet<IDisposable> _disposables = new();
+	private bool _disposed;
 
-	/// <summary>
-	///     Disposes tracked service instances and clears all registrations.
-	/// </summary>
 	public void Dispose()
 	{
-		IDisposable[] disposableServices;
-
-		lock (_disposableServices)
+		IDisposable[] services;
+		lock (_gate)
 		{
-			disposableServices = new IDisposable[_disposableServices.Count];
-			_disposableServices.CopyTo(
-				disposableServices
-			);
-
-			_disposableServices.Clear();
+			if (_disposed) return;
+			_disposed = true;
+			_registrations.Clear();
+			services = new IDisposable[_disposables.Count];
+			_disposables.CopyTo(services);
+			_disposables.Clear();
 		}
 
-		foreach (var service in disposableServices) service.Dispose();
-
-		_singletonServices.Clear();
-		_lazySingletonServices.Clear();
-		_transientServices.Clear();
-		_scopedServices.Clear();
-	}
-
-	private static void ValidateLifespan(ServiceLifespan lifespan)
-	{
-		if (lifespan == ServiceLifespan.None)
-			throw new ArgumentException(
-				"ServiceLifespan cannot be None",
-				nameof(lifespan)
-			);
-	}
-
-	private bool IsServiceRegistered(Type serviceType) =>
-		_singletonServices.ContainsKey
-		(
-			serviceType
-		) ||
-		_lazySingletonServices.ContainsKey(
-			serviceType
-		) ||
-		_transientServices.ContainsKey(
-			serviceType
-		) ||
-		_scopedServices.ContainsKey(
-			serviceType
-		);
-
-	private void AddDisposableService(object service)
-	{
-		if (service is IDisposable disposable)
-			lock (_disposableServices)
-			{
-				_disposableServices.Add(
-					disposable
-				);
-			}
-	}
-
-	private void DisposeRegisteredLazyService(Lazy<IService> lazy)
-	{
-		if (!lazy.IsValueCreated)
-			return;
-
-		DisposeRegisteredService(
-			lazy.Value
-		);
-	}
-
-	private void DisposeRegisteredService(object service)
-	{
-		if (service is IDisposable disposable)
+		List<Exception>? errors = null;
+		foreach (var service in services)
 		{
-			var shouldDispose = false;
-
-			lock (_disposableServices)
-			{
-				shouldDispose = _disposableServices.Remove(
-					disposable
-				);
-			}
-
-			if (shouldDispose)
-				disposable.Dispose();
+			try { service.Dispose(); }
+			catch (Exception ex) { (errors ??= new()).Add(ex); }
 		}
+		if (errors != null) throw new AggregateException(errors);
 	}
 
-	private void RegisterLazySingletonService<TInterface, TImplementation>(Func<TImplementation> factory)
+	public IServiceLocator Register<TInterface, TImplementation>(Func<TImplementation> factory,
+		ServiceLifespan lifespan, bool replace = false)
 		where TInterface : IService
 		where TImplementation : class, TInterface
 	{
-		var lazy = new Lazy<IService>
-		(() =>
-			{
-				var instance = factory();
-				AddDisposableService(
-					instance
-				);
+		if (factory == null) throw new ArgumentNullException(nameof(factory));
+		if (!Enum.IsDefined(typeof(ServiceLifespan), lifespan) || lifespan == ServiceLifespan.None)
+			throw new ArgumentException("Unsupported service lifespan.", nameof(lifespan));
 
-				return instance;
-			}
-		);
-
-		_lazySingletonServices[typeof(TInterface)] = lazy;
-	}
-
-	private void RegisterScopedService<TInterface, TImplementation>(Func<TImplementation> factory)
-		where TInterface : IService
-		where TImplementation : class, TInterface
-	{
-		var instance = factory();
-		_scopedServices[typeof(TInterface)] = instance;
-		AddDisposableService(
-			instance
-		);
-	}
-
-	private void RegisterSingletonService<TInterface, TImplementation>(Func<TImplementation> factory)
-		where TInterface : IService
-		where TImplementation : class, TInterface
-	{
-		var instance = factory();
-		_singletonServices[typeof(TInterface)] = instance;
-		AddDisposableService(
-			instance
-		);
-	}
-
-	private void RegisterTransientService<TInterface, TImplementation>(Func<TImplementation> factory)
-		where TInterface : IService
-		where TImplementation : class, TInterface =>
-		_transientServices[typeof(TInterface)] = () =>
+		var type = typeof(TInterface);
+		var registration = new Registration();
+		bool cached = lifespan != ServiceLifespan.Transient;
+		IService Create() => Track(type, registration, factory(), cached);
+		if (cached)
 		{
-			var instance = factory();
-			AddDisposableService(
-				instance
-			);
+			var lazy = new Lazy<IService>(Create);
+			registration.Resolve = () => lazy.Value;
+		}
+		else registration.Resolve = Create;
 
-			return instance;
-		};
-
-	private void Unregister(Type serviceType)
-	{
-		if (_singletonServices.TryRemove(
-				serviceType,
-				out var singleton
-			))
-			DisposeRegisteredService(
-				singleton
-			);
-
-		if (_lazySingletonServices.TryRemove(
-				serviceType,
-				out var lazy
-			))
-			DisposeRegisteredLazyService(
-				lazy
-			);
-
-		_transientServices.TryRemove(
-			serviceType,
-			out _
-		);
-
-		if (_scopedServices.TryRemove(
-				serviceType,
-				out object scoped
-			))
-			DisposeRegisteredService(
-				scoped
-			);
-	}
-
-	#region Interface Implementations
-
-	/// <inheritdoc />
-	public IServiceLocator Register<TInterface, TImplementation>(
-		Func<TImplementation> factory,
-		ServiceLifespan       lifespan,
-		bool                  replace = false
-	)
-		where TInterface : IService
-		where TImplementation : class, TInterface
-	{
-		if (factory == null)
-			throw new ArgumentNullException(nameof(factory));
-
-		ValidateLifespan(lifespan);
-
-		var interfaceType = typeof(TInterface);
-
-		if (IsServiceRegistered(
-				interfaceType
-			) &&
-			!replace)
+		IDisposable? previousService;
+		lock (_gate)
 		{
-			Logger.Log(
-				$"Service {interfaceType.Name} is already registered."
-			);
-
-			return this;
+			if (_disposed) throw new ObjectDisposedException(nameof(ServiceLocator));
+			if (_registrations.ContainsKey(type) && !replace) return this;
+			previousService = Remove(type);
+			_registrations[type] = registration;
 		}
 
-		if (replace)
-			Unregister(
-				interfaceType
-			);
-
-		switch (lifespan)
+		try
 		{
-			case ServiceLifespan.Singleton:
-				RegisterSingletonService<TInterface, TImplementation>(
-					factory
-				);
-
-				break;
-
-			case ServiceLifespan.LazySingleton:
-				RegisterLazySingletonService<TInterface, TImplementation>(
-					factory
-				);
-
-				break;
-
-			case ServiceLifespan.Transient:
-				RegisterTransientService<TInterface, TImplementation>(
-					factory
-				);
-
-				break;
-
-			case ServiceLifespan.Scoped:
-				RegisterScopedService<TInterface, TImplementation>(
-					factory
-				);
-
-				break;
+			previousService?.Dispose();
+			if (lifespan == ServiceLifespan.Singleton || lifespan == ServiceLifespan.Scoped)
+				registration.Resolve();
+		}
+		catch
+		{
+			lock (_gate)
+				if (_registrations.TryGetValue(type, out var current) && current == registration)
+					_registrations.Remove(type);
+			throw;
 		}
 
 		return this;
 	}
 
-	/// <summary>
-	///     Resolves a registered service. Transient registrations create a new
-	///     instance on each call; lazy singletons are created on first resolution.
-	/// </summary>
-	/// <exception cref="ServiceNotFoundException">Thrown when no registration exists for <typeparamref name="T" />.</exception>
-	public T GetService<T>()
-		where T : IService
+	private IService Track(Type type, Registration registration, IService instance, bool cached)
 	{
-		var serviceType = typeof(T);
+		lock (_gate)
+		{
+			if (!_disposed && _registrations.TryGetValue(type, out var current) && current == registration)
+			{
+				if (instance is IDisposable disposable)
+				{
+					_disposables.Add(disposable);
+					if (cached) registration.CachedDisposable = disposable;
+				}
+				return instance;
+			}
+		}
 
-		if (_singletonServices.TryGetValue(
-				serviceType,
-				out var singleton
-			))
-			return (T)singleton;
-
-		if (_lazySingletonServices.TryGetValue(
-				serviceType,
-				out var lazy
-			))
-			return (T)lazy.Value;
-
-		if (_transientServices.TryGetValue(
-				serviceType,
-				out var transient
-			))
-			return (T)transient();
-
-		if (_scopedServices.TryGetValue(
-				serviceType,
-				out object scoped
-			))
-			return (T)scoped;
-
-		throw new ServiceNotFoundException(
-			serviceType
-		);
+		// A factory may finish after the owning registration was removed.
+		(instance as IDisposable)?.Dispose();
+		throw new InvalidOperationException($"Registration for {type.Name} ended while its factory was running.");
 	}
 
-	/// <inheritdoc />
-	public bool IsServiceRegistered<T>()
-		where T : IService =>
-		IsServiceRegistered(
-			typeof(T)
-		);
-
-	/// <summary>
-	///     Removes the registration for a service interface from every lifetime
-	///     store and stops tracking its disposable instance, if one exists.
-	/// </summary>
-	public void Unregister<T>()
-		where T : IService
+	public T GetService<T>() where T : IService
 	{
-		Unregister(
-			typeof(T)
-		);
+		Registration registration;
+		lock (_gate)
+			if (!_registrations.TryGetValue(typeof(T), out registration))
+				throw new ServiceNotFoundException(typeof(T));
+		return (T)registration.Resolve();
 	}
 
-	#endregion
+	public bool IsServiceRegistered<T>() where T : IService
+	{
+		lock (_gate) return _registrations.ContainsKey(typeof(T));
+	}
+
+	public void Unregister<T>() where T : IService
+	{
+		IDisposable? service;
+		lock (_gate) service = Remove(typeof(T));
+		service?.Dispose();
+	}
+
+	private IDisposable? Remove(Type type)
+	{
+		if (!_registrations.TryGetValue(type, out var registration)) return null;
+		_registrations.Remove(type);
+		var service = registration.CachedDisposable;
+		return service != null && _disposables.Remove(service) ? service : null;
+	}
 }
 
 /// <summary>

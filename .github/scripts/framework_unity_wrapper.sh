@@ -73,7 +73,9 @@ Path(output).write_text(json.dumps({
 }) + '\n', encoding='utf-8')
 PY
 code=0
-xvfb-run -a "$editor" "${arguments[@]}" -force-glcore \
+# Bound editor startup, domain reload, synchronous compilation and tests inside the
+# GameCI lifecycle. Returning from the wrapper lets GameCI execute its cleanup.
+timeout --kill-after=30s 45m xvfb-run -a "$editor" "${arguments[@]}" -force-glcore \
   -executeMethod Bezoro.Unity.Framework.Validation.NativeTestRunner.Run \
   -frameworkTestMode "$mode" -frameworkTestResults "$report" \
   -frameworkTestDiscovery "$discovery" || code=$?

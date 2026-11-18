@@ -30,11 +30,27 @@ namespace Bezoro.Unity.Core.Tests.EditMode
 		}
 
 		[Test]
+		public void RemoveLastScene_AfterSerialization_RemainsEmptyOnRoundTrip()
+		{
+			var collection = CreateCollection();
+			var scene = new SceneReference("Assets/Scenes/Only.unity");
+			collection.AddScene(scene);
+			var serialized = (ISerializationCallbackReceiver)collection;
+			serialized.OnBeforeSerialize();
+			collection.RemoveScene(scene);
+			Assert.IsEmpty(collection.Scenes);
+			serialized.OnBeforeSerialize();
+			serialized.OnAfterDeserialize();
+			Assert.IsEmpty(collection.Entries);
+		}
+
+		[Test]
 		public void OnAfterDeserialize_WithLegacyScenes_MigratesEntriesWithoutChangingOrder()
 		{
 			var collection = CreateCollection();
 			var first      = new SceneReference("Assets/Scenes/First.unity");
 			var second     = new SceneReference("Assets/Scenes/Second.unity");
+			SetField(collection, "sceneEntriesMigrated", false);
 			SetField(collection, "scenes", new List<SceneReference> { first, second });
 
 			((ISerializationCallbackReceiver)collection).OnAfterDeserialize();

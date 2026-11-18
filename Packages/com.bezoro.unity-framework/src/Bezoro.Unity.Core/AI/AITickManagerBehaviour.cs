@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Bezoro.Unity.Core.Common.Timing;
 using UnityEngine;
@@ -9,14 +10,21 @@ namespace Bezoro.Unity.Core.AI
 	/// </summary>
 	public sealed class AITickManagerBehaviour : MonoBehaviour
 	{
-		private static AITickManagerBehaviour? _instance;
+		private static readonly List<AITickManagerBehaviour> Managers = new();
+		internal static event Action<AITickManagerBehaviour?>? OwnerChanged;
+		private readonly List<AIAgentBehaviour> _snapshot = new(128);
 
 		private readonly AITickManagerModel<AIAgentBehaviour> _model = new(128);
 
 		private CustomFixedTick? _customFixedTick;
 
 		[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-		private static void Init() => Instance = null;
+		private static void Init()
+		{
+			Managers.Clear();
+			OwnerChanged = null;
+			Instance = null;
+		}
 
 		public static AITickManagerBehaviour? Instance { get; private set; }
 
@@ -27,13 +35,27 @@ namespace Bezoro.Unity.Core.AI
 
 		#region Unity Lifecycle
 
-		private void Awake()
+		private void OnEnable()
 		{
-			Instance         = this;
 			_customFixedTick = new(TickFrequency, Tick);
+			Managers.Add(this);
+			if (Instance != null) return;
+			Instance = this;
+			OwnerChanged?.Invoke(this);
 		}
 
-		private void Update() => _customFixedTick?.Tick(UnityEngine.Time.deltaTime);
+		private void OnDisable()
+		{
+			Managers.Remove(this);
+			if (Instance != this) return;
+			Instance = Managers.Count == 0 ? null : Managers[0];
+			OwnerChanged?.Invoke(Instance);
+		}
+
+		private void Update()
+		{
+			if (Instance == this) _customFixedTick?.Tick(UnityEngine.Time.deltaTime);
+		}
 
 		#endregion
 
@@ -46,8 +68,14 @@ namespace Bezoro.Unity.Core.AI
 
 		private void Tick()
 		{
-			foreach (var t in _model.Agents)
-				t.Tick();
+			_snapshot.Clear();
+			_snapshot.AddRange(_model.Agents);
+			foreach (var agent in _snapshot)
+			{
+				if (Instance != this) break;
+				if (agent != null && agent.isActiveAndEnabled) agent.Tick();
+			}
+			_snapshot.Clear();
 		}
 	}
 

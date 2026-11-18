@@ -4,8 +4,10 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using UnityEditor;
+using UnityEditor.Build.Player;
 using UnityEditor.TestTools.TestRunner.Api;
 using UnityEngine;
+using PackageInfo = UnityEditor.PackageManager.PackageInfo;
 
 namespace Bezoro.Unity.Framework.Validation
 {
@@ -48,6 +50,9 @@ namespace Bezoro.Unity.Framework.Validation
                 SessionState.SetString(SessionPrefix + "deadline",
                     DateTime.UtcNow.AddMinutes(40).Ticks.ToString(CultureInfo.InvariantCulture));
 
+                if (_settings.Mode == TestMode.EditMode)
+                    RecordResolvedLock(Path.GetDirectoryName(_settings.DiscoveryPath));
+
                 _api.RetrieveTestList(_settings.Mode, tree =>
                 {
                     try
@@ -75,6 +80,46 @@ namespace Bezoro.Unity.Framework.Validation
                 });
             }
             catch (Exception exception) { Fail(exception); }
+        }
+
+        private static void RecordResolvedLock(string artifacts)
+        {
+            var registered = PackageInfo.GetAllRegisteredPackages().Select(package => package.name).ToHashSet();
+            foreach (var required in new[] { "com.bezoro.unity-framework", "com.bezoro.framework", "com.cysharp.unitask" })
+                if (!registered.Contains(required))
+                    throw new InvalidOperationException($"Unity did not register required package {required}.");
+
+            var project = Path.GetDirectoryName(Application.dataPath);
+            File.Copy(Path.Combine(project, "Packages", "packages-lock.json"),
+                Path.Combine(artifacts, "packages-lock-resolved.json"));
+        }
+
+        private static void CompileLinuxPlayerScripts(string artifacts)
+        {
+            var settings = new ScriptCompilationSettings
+            {
+                group = BuildTargetGroup.Standalone,
+                target = BuildTarget.StandaloneLinux64
+            };
+            // Library is cold in this disposable project. Keep compiled outputs out of the uploaded artifacts.
+            var project = Path.GetDirectoryName(Application.dataPath);
+            var output = Path.Combine(project, "Library", "FrameworkPlayerSmoke");
+            Directory.CreateDirectory(output);
+            var result = PlayerBuildInterface.CompilePlayerScripts(settings, output);
+            const string assembly = "Bezoro.Unity.Core.dll";
+            if (!result.assemblies.Any(path => Path.GetFileName(path) == assembly)
+                || !File.Exists(Path.Combine(output, assembly)))
+                throw new InvalidOperationException($"Linux Player compilation did not produce {assembly}.");
+            File.WriteAllText(Path.Combine(artifacts, "player-compilation.json"), JsonUtility.ToJson(
+                new PlayerCompilation { editor = Application.unityVersion, target = settings.target.ToString(), assembly = assembly }));
+        }
+
+        [Serializable]
+        private sealed class PlayerCompilation
+        {
+            public string editor;
+            public string target;
+            public string assembly;
         }
 
         private static void CollectCases(ITestAdaptor node, bool ownedAssembly, List<Case> cases)
@@ -117,7 +162,10 @@ namespace Bezoro.Unity.Framework.Validation
                 if (IsRunActiveMethod == null || IsRunActiveMethod.ContainsGenericParameters || IsRunActiveMethod.ReturnType != typeof(bool))
                     throw new InvalidOperationException("The pinned Unity Test Framework no longer exposes its job completion signal.");
                 if ((bool)IsRunActiveMethod.Invoke(null, null)) return;
-                Exit(SessionState.GetInt(SessionPrefix + "exitCode", 1));
+                var exitCode = SessionState.GetInt(SessionPrefix + "exitCode", 1);
+                if (exitCode == 0 && _settings.Mode == TestMode.PlayMode)
+                    CompileLinuxPlayerScripts(Path.GetDirectoryName(_settings.DiscoveryPath));
+                Exit(exitCode);
             }
             catch (Exception exception)
             {

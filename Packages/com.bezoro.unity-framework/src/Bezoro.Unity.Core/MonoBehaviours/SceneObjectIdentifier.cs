@@ -67,7 +67,7 @@ namespace Bezoro.Unity.Core.MonoBehaviours
 					GUID
 				))
 				SceneObjectRegistry.Unregister(
-					GUID!
+					GUID!, gameObject
 				);
 		}
 

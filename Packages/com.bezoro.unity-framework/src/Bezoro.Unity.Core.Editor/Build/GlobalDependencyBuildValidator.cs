@@ -6,7 +6,6 @@ using Bezoro.Unity.Core.MonoBehaviours;
 using Bezoro.Unity.Core.ScriptableObjects;
 using UnityEditor;
 using UnityEditor.Build;
-using UnityEditor.Build.Reporting;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -27,22 +26,46 @@ namespace Bezoro.Unity.Core.Editor.Dependencies
 			);
 	}
 
-	public sealed class GlobalDependencyBuildValidator : IPreprocessBuildWithReport
+	public sealed class GlobalDependencyBuildValidator : BuildPlayerProcessor
 	{
 		public static bool IsValidating { get; private set; }
 
-		public int callbackOrder => int.MinValue;
+		public override int callbackOrder => int.MinValue;
 
-		public void OnPreprocessBuild(BuildReport report)
+		public override void PrepareForBuild(BuildPlayerContext buildPlayerContext)
 		{
-			var settings    = GameSettings.Instance;
-			var config      = settings?.InitializationConfig ?? FindAssets<GameInitializationConfig>().FirstOrDefault();
-			var collections = FindAssets<SceneCollection>();
-			var scenePaths = EditorBuildSettings.scenes
-											 .Where(scene => scene.enabled)
-											 .Select(scene => scene.path)
-											 .ToArray();
-			var result = ValidateProject(config, collections, scenePaths);
+			var result = ValidateBuild(GameSettings.LoadFromResources(), buildPlayerContext.BuildPlayerOptions);
+			ThrowIfInvalid(result);
+		}
+
+		public static GlobalDependencyBuildValidationResult ValidateBuild(GameSettings? settings, BuildPlayerOptions options)
+		{
+			var scenePaths = options.scenes is { Length: > 0 }
+				? options.scenes
+				: new[] { SceneManager.GetActiveScene().path };
+			var manifest = new HashSet<string>(scenePaths);
+			// A collection supplies ordered, cross-scene dependencies only when the player
+			// can load the whole collection. Other requested scenes must stand on their own.
+			var collections = (settings?.SceneCollections ?? Array.Empty<SceneCollection>())
+				.Where(collection => collection != null && collection.Entries.Count > 0 &&
+					collection.Entries.All(entry => entry.Scene != null && manifest.Contains(entry.Scene.Path)))
+				.ToArray();
+			return ValidateProject(settings?.InitializationConfig, collections, manifest);
+		}
+
+		[MenuItem("Bezoro/Validation/Validate All Global Dependencies")]
+		private static void ValidateAllAssets()
+		{
+			var paths = EditorBuildSettings.scenes.Where(scene => scene.enabled).Select(scene => scene.path).ToArray();
+			var result = ValidateProject(GameSettings.LoadFromResources()?.InitializationConfig, FindAssets<SceneCollection>(), paths);
+			foreach (var diagnostic in result.Diagnostics)
+				Debug.LogError(diagnostic.Message, diagnostic.Context);
+			if (!result.HasErrors)
+				Debug.Log("Global dependency validation passed.");
+		}
+
+		private static void ThrowIfInvalid(GlobalDependencyBuildValidationResult result)
+		{
 			if (!result.HasErrors)
 				return;
 
@@ -318,7 +341,7 @@ namespace Bezoro.Unity.Core.Editor.Dependencies
 		{
 			if (config == null || !config.ApplicationDependencies.Contains(definition))
 				result.AddError(
-					$"{definition.name} must be explicitly listed in {nameof(GameInitializationConfig)}.",
+					$"{definition.name} must be explicitly listed in the {nameof(GameInitializationConfig)} assigned to {nameof(GameSettings)}.",
 					definition
 				);
 		}
@@ -462,6 +485,7 @@ namespace Bezoro.Unity.Core.Editor.Dependencies
 		{
 			var scene  = SceneManager.GetSceneByPath(scenePath);
 			bool close = !scene.IsValid() || !scene.isLoaded;
+			bool wasInHierarchy = close && EditorSceneManager.GetSceneManagerSetup().Any(setup => setup.path == scenePath);
 
 			try
 			{
@@ -480,7 +504,7 @@ namespace Bezoro.Unity.Core.Editor.Dependencies
 			finally
 			{
 				if (close && scene.IsValid() && scene.isLoaded)
-					EditorSceneManager.CloseScene(scene, true);
+					EditorSceneManager.CloseScene(scene, !wasInHierarchy);
 			}
 		}
 

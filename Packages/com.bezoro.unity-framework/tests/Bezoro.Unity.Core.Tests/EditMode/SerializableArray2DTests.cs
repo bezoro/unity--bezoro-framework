@@ -1,4 +1,8 @@
 using System;
+using System.Reflection;
+using Bezoro.Unity.Core.Editor.PropertyDrawers;
+using UnityEditor;
+using UnityEngine;
 using Bezoro.Unity.Core.Collections;
 using Bezoro.Unity.Core.Common.Extensions;
 using NUnit.Framework;
@@ -11,6 +15,38 @@ namespace Bezoro.Unity.Core.Tests.EditMode
 	[TestFixture]
 	public sealed class SerializableArray2DTests
 	{
+		private sealed class GridOwner : ScriptableObject
+		{
+			public SerializableArray2D<int> grid = new(new[] { 1, 2, 3, 4, 5, 6 }, 3, 2);
+		}
+
+		[Test]
+		public void DrawerResize_PreservesCoordinatesRejectsInvalidInputAndSupportsUndo()
+		{
+			var owner = ScriptableObject.CreateInstance<GridOwner>();
+			try
+			{
+				using var serialized = new SerializedObject(owner);
+				var grid = serialized.FindProperty("grid");
+				var resize = typeof(SerializableArray2DRenderer).GetMethod("ResizeGrid",
+					BindingFlags.NonPublic | BindingFlags.Static);
+				resize.Invoke(null, new object[] { grid, 0, 2 });
+				Assert.IsFalse(serialized.hasModifiedProperties);
+				Undo.IncrementCurrentGroup();
+				resize.Invoke(null, new object[] { grid, 2, 2 });
+				Assert.IsTrue(serialized.ApplyModifiedProperties());
+				CollectionAssert.AreEqual(new[] { 1, 2, 4, 5 }, owner.grid.GetDataCopy());
+				Undo.FlushUndoRecordObjects();
+				Undo.PerformUndo();
+				CollectionAssert.AreEqual(new[] { 1, 2, 3, 4, 5, 6 }, owner.grid.GetDataCopy());
+			}
+			finally
+			{
+				Undo.ClearUndo(owner);
+				UnityEngine.Object.DestroyImmediate(owner);
+			}
+		}
+
 		[Test]
 		public void ClearAndFill_UpdateAllElements()
 		{

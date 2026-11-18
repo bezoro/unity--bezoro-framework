@@ -1,206 +1,80 @@
 using System;
-using System.Reflection;
-using System.Threading;
-using System.Threading.Tasks;
-using Bezoro.Logging;
-using Bezoro.Logging.Types;
 using UnityEditor;
+using UnityEditor.Build;
 using UnityEditor.Build.Reporting;
 
 namespace Bezoro.Unity.Core.Editor.Utilities;
 
-[InitializeOnLoad]
 /// <summary>
-/// Watches player builds and reports result, duration, warning, and error counts.
+/// Publishes the player build report once the pipeline has stopped.
 /// </summary>
 public static class EditorBuildMonitor
 {
-	private static CancellationTokenSource? _cts;
-	private static DateTime                 _buildStartTime;
-	private static int                      _errorCountAtStart;
+	private static BuildReport? _currentReport;
+	private static DateTime _startedAt;
+	private static string _outputPath = string.Empty;
+	private static bool _awaitingCompletion;
 
-	public static event Action<BuildResult>?       BuildCompleted;
+	public static event Action<BuildResult>? BuildCompleted;
 	public static event Action<CustomBuildReport>? BuildCompletedWithReport;
-	public static event Action?                    BuildStarted;
+	public static event Action? BuildStarted;
 
-	static EditorBuildMonitor()
+	internal sealed class BuildCallbacks : IPreprocessBuildWithReport, IPostprocessBuildWithReport
 	{
-		StartMonitoring();
+		public int callbackOrder => int.MinValue;
+
+		public void OnPreprocessBuild(BuildReport report)
+		{
+			if (_awaitingCompletion)
+				PublishCompletion();
+
+			_currentReport = report;
+			_startedAt = report.summary.buildStartedAt;
+			_outputPath = report.summary.outputPath;
+			_awaitingCompletion = true;
+			EditorApplication.update += OnEditorUpdate;
+			BuildStarted?.Invoke();
+		}
+
+		public void OnPostprocessBuild(BuildReport report) => _currentReport = report;
 	}
 
-	private static int GetConsoleErrorCount()
+	private static void OnEditorUpdate()
 	{
-		try
-		{
-			var consoleWindowType = typeof(EditorWindow).Assembly.GetType(
-				"UnityEditor.ConsoleWindow"
-			);
-
-			var getCountsByType = consoleWindowType.GetMethod(
-				"GetCountsByType",
-				BindingFlags.Static | BindingFlags.NonPublic
-			);
-
-			if (getCountsByType != null)
-			{
-				var counts = (int[])getCountsByType.Invoke(
-					null,
-					null
-				);
-
-				return counts is { Length: > 2 } ? counts[2] : 0;
-			}
-		}
-		catch (Exception ex)
-		{
-			Logger.LogWarning(
-				$"Could not get console error count: {ex.Message}",
-				contextObject: nameof(EditorBuildMonitor),
-				category:
-				LogCategory.Editor
-			);
-		}
-
-		return 0;
+		if (!BuildPipeline.isBuildingPlayer)
+			PublishCompletion();
 	}
 
-	private static int GetConsoleWarningCount()
+	private static void PublishCompletion()
 	{
-		try
+		EditorApplication.update -= OnEditorUpdate;
+		_awaitingCompletion = false;
+		var report = _currentReport;
+		_currentReport = null;
+		if (report == null || !IsFinalResult(report.summary.result))
 		{
-			var consoleWindowType = typeof(EditorWindow).Assembly.GetType(
-				"UnityEditor.ConsoleWindow"
-			);
-
-			var getCountsByType = consoleWindowType.GetMethod(
-				"GetCountsByType",
-				BindingFlags.Static | BindingFlags.NonPublic
-			);
-
-			if (getCountsByType != null)
-			{
-				var counts = (int[])getCountsByType.Invoke(
-					null,
-					null
-				);
-
-				return counts != null && counts.Length > 1 ? counts[1] : 0;
-			}
-		}
-		catch (Exception ex)
-		{
-			Logger.LogWarning(
-				$"Could not get console warning count: {ex.Message}",
-				contextObject: nameof(EditorBuildMonitor),
-				category:
-				LogCategory.Editor
-			);
+			var latest = BuildReport.GetLatestReport();
+			if (latest != null && latest.summary.buildStartedAt == _startedAt &&
+				latest.summary.outputPath == _outputPath)
+				report = latest;
 		}
 
-		return 0;
+		var details = CreateCompletionReport(report != null ? report.summary : null, _startedAt, _outputPath);
+		BuildCompleted?.Invoke(details.result);
+		BuildCompletedWithReport?.Invoke(details);
 	}
 
-	private static string GetLastBuildPath()
+	private static bool IsFinalResult(BuildResult result) =>
+		result == BuildResult.Succeeded || result == BuildResult.Failed || result == BuildResult.Cancelled;
+
+	internal static CustomBuildReport CreateCompletionReport(BuildSummary? summary, DateTime startedAt, string outputPath)
 	{
-		try
-		{
-			return EditorUserBuildSettings.GetBuildLocation(
-				EditorUserBuildSettings.activeBuildTarget
-			);
-		}
-		catch
-		{
-			return "Unknown";
-		}
-	}
+		if (summary is { } completed && IsFinalResult(completed.result))
+			return new CustomBuildReport(completed.result, completed.totalTime, completed.buildEndedAt,
+				completed.totalErrors, completed.totalWarnings, completed.outputPath);
 
-	private static async Task HandleBuildCompletion(CancellationToken token)
-	{
-		await Task.Delay(
-			500,
-			token
-		);
-
-		int currentErrorCount = GetConsoleErrorCount();
-		int newErrors         = currentErrorCount - _errorCountAtStart;
-
-		var result        = newErrors > 0 ? BuildResult.Failed : BuildResult.Succeeded;
-		var buildDuration = DateTime.Now - _buildStartTime;
-
-		BuildCompleted?.Invoke(
-			result
-		);
-
-		var customReport = new CustomBuildReport(
-			result,
-			buildDuration,
-			DateTime.Now,
-			newErrors,
-			GetConsoleWarningCount(),
-			GetLastBuildPath()
-		);
-
-		BuildCompletedWithReport?.Invoke(
-			customReport
-		);
-	}
-
-	private static async void StartMonitoring()
-	{
-		_cts?.Cancel();
-		_cts = new();
-
-		AssemblyReloadEvents.beforeAssemblyReload += () =>
-		{
-			_cts?.Cancel();
-			_cts?.Dispose();
-			_cts = null;
-		};
-
-		var wasBuildingLastCheck = false;
-		var token                = _cts.Token;
-
-		try
-		{
-			while (!token.IsCancellationRequested)
-			{
-				await Task.Delay(
-					100,
-					token
-				);
-
-				if (EditorApplication.isPlaying) continue;
-
-				bool isBuildingNow = BuildPipeline.isBuildingPlayer;
-
-				if (isBuildingNow && !wasBuildingLastCheck)
-				{
-					_buildStartTime    = DateTime.Now;
-					_errorCountAtStart = GetConsoleErrorCount();
-					BuildStarted?.Invoke();
-				}
-				else if (!isBuildingNow && wasBuildingLastCheck)
-				{
-					await HandleBuildCompletion(
-						token
-					);
-				}
-
-				wasBuildingLastCheck = isBuildingNow;
-			}
-		}
-		catch (OperationCanceledException)
-		{
-			/* expected on domain reload */
-		}
-		catch (Exception ex)
-		{
-			Logger.LogWarning(
-				$"{nameof(EditorBuildMonitor)} stopped after an unexpected error: {ex}",
-				contextObject: nameof(EditorBuildMonitor),
-				category: LogCategory.Editor
-			);
-		}
+		var now = DateTime.UtcNow;
+		return new CustomBuildReport(BuildResult.Unknown, now - startedAt, now, buildPath: outputPath);
 	}
 
 	[Serializable]
@@ -232,5 +106,4 @@ public static class EditorBuildMonitor
 			this.buildPath    = buildPath;
 		}
 	}
-	// CustomBuildReport definition – unchanged
 }
