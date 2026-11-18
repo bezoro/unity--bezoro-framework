@@ -2,6 +2,7 @@ using System.Collections;
 using System.Text.RegularExpressions;
 using System.Threading;
 using Bezoro.Unity.Core.AsyncLoading;
+using Bezoro.Unity.Core.Loading;
 using Cysharp.Threading.Tasks;
 using NUnit.Framework;
 using UnityEngine;
@@ -14,6 +15,8 @@ namespace Bezoro.Unity.Core.Tests.PlayMode
 		[UnityTest]
 		public IEnumerator RemovedLoad_CancellationPreservesNewRegistration()
 		{
+			using var progress = new TestGlobalProvider<LoadingProgressService>("Async loading progress");
+			progress.Instance.BeginOperation("Withdrawn load test");
 			using var owner = new TestGlobalProvider<AsyncLoadingManager>("Async loading");
 			var manager = owner.Instance;
 			var first = new PendingLoad("Withdrawn load");
@@ -32,20 +35,26 @@ namespace Bezoro.Unity.Core.Tests.PlayMode
 		[UnityTest]
 		public IEnumerator RegisteredLoad_CancellationReportsFailureAndQueueContinues()
 		{
+			using var progress = new TestGlobalProvider<LoadingProgressService>("Async loading progress");
+			progress.Instance.BeginOperation("Registered load test");
 			using var owner = new TestGlobalProvider<AsyncLoadingManager>("Async loading");
 			var manager = owner.Instance;
-			var first = new PendingLoad("Registered cancellation");
+			var withdrawn = new EqualPendingLoad("Earlier equal load", priority: 0);
+			var first = new EqualPendingLoad("Registered cancellation", priority: 1);
 			var next = new PendingLoad("Next load");
+			manager.Register(withdrawn);
 			manager.Register(first);
 
 			yield return WaitForAttempts(first, 1);
 
+			manager.Remove(first);
 			manager.Register(next);
 			LogAssert.Expect(LogType.Error, new Regex("Failed to load item: Registered cancellation"));
 			first.Completion.TrySetCanceled();
 			next.Completion.TrySetResult();
 
 			yield return WaitForAttempts(next, 1);
+			Assert.AreEqual(0, withdrawn.Attempts);
 			Assert.IsFalse(first.IsLoaded);
 			Assert.IsTrue(next.IsLoaded);
 		}
@@ -58,12 +67,16 @@ namespace Bezoro.Unity.Core.Tests.PlayMode
 			Assert.AreEqual(expected, item.Attempts);
 		}
 
-		private sealed class PendingLoad : IAsyncLoadable
+		private class PendingLoad : IAsyncLoadable
 		{
-			public PendingLoad(string name) => LoadingName = name;
+			public PendingLoad(string name, int priority = 0)
+			{
+				LoadingName = name;
+				Priority = priority;
+			}
 
 			public string LoadingName { get; }
-			public int Priority => 0;
+			public int Priority { get; }
 			public int Attempts { get; private set; }
 			public bool IsLoaded { get; private set; }
 			public UniTaskCompletionSource Completion { get; } = new();
@@ -75,6 +88,14 @@ namespace Bezoro.Unity.Core.Tests.PlayMode
 					await Completion.Task.AttachExternalCancellation(ct);
 				IsLoaded = true;
 			}
+		}
+
+		private sealed class EqualPendingLoad : PendingLoad
+		{
+			public EqualPendingLoad(string name, int priority) : base(name, priority) { }
+
+			public override bool Equals(object? other) => other is EqualPendingLoad;
+			public override int GetHashCode() => typeof(EqualPendingLoad).GetHashCode();
 		}
 	}
 }

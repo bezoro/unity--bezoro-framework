@@ -96,7 +96,7 @@ namespace Bezoro.Unity.Core.AsyncLoading
 		{
 			if (!_model.ShouldRemove(!item.IsNull())) return;
 
-			if (_model.Remove(item) && EqualityComparer<IAsyncLoadable>.Default.Equals(_activeItem, item))
+			if (_model.TryRemove(item, out var removed) && ReferenceEquals(_activeItem, removed))
 				_activeItem = null;
 			_totalItemsToLoad = _model.QueueCount;
 
@@ -157,7 +157,7 @@ namespace Bezoro.Unity.Core.AsyncLoading
 
 					if (item.IsLoaded)
 					{
-						_model.Remove(item);
+						_model.RemoveReference(item);
 						continue;
 					}
 
@@ -189,7 +189,7 @@ namespace Bezoro.Unity.Core.AsyncLoading
 						continue;
 
 					_activeItem = null;
-					_model.Remove(item);
+					_model.RemoveReference(item);
 					_itemsLoaded++;
 
 					_totalItemsToLoad = _model.GetTrackedTotalItemsToLoad(_totalItemsToLoad, _itemsLoaded);
@@ -291,7 +291,33 @@ namespace Bezoro.Unity.Core.AsyncLoading
 
 		public bool Remove(TItem item)
 		{
-			return _loadingQueue.Remove(item);
+			return TryRemove(item, out _);
+		}
+
+		internal bool TryRemove(TItem item, out TItem removed)
+		{
+			int index = _loadingQueue.IndexOf(item);
+			if (index < 0)
+			{
+				removed = default!;
+				return false;
+			}
+
+			removed = _loadingQueue[index];
+			_loadingQueue.RemoveAt(index);
+			return true;
+		}
+
+		internal void RemoveReference(TItem item)
+		{
+			for (int i = 0; i < _loadingQueue.Count; i++)
+			{
+				if (!ReferenceEquals(_loadingQueue[i], item))
+					continue;
+
+				_loadingQueue.RemoveAt(i);
+				break;
+			}
 		}
 
 		public TItem GetHighestPriority()
