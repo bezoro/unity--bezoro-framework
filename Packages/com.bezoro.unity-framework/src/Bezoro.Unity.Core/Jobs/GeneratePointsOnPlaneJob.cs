@@ -24,19 +24,15 @@ public struct GeneratePointsOnPlaneJob : IJobParallelFor
 
 	public void Execute(int index)
 	{
-		if (NumPointsWidth <= 0 && NumPointsHeight <= 0) return;
+		if (NumPointsWidth <= 0 || NumPointsHeight <= 0) return;
 
 		int row    = index / NumPointsWidth;
 		int column = index % NumPointsWidth;
 
-		float stepSizeX = Width / (NumPointsWidth - 1);
-		float stepSizeY = Height / (NumPointsHeight - 1);
+		float offsetX = NumPointsWidth == 1 ? 0f : Width * (0.5f - (float)column / (NumPointsWidth - 1));
+		float offsetY = NumPointsHeight == 1 ? 0f : Height * (0.5f - (float)row / (NumPointsHeight - 1));
 
-		var point = Center +
-					(Width * 0.5f - column * stepSizeX) * RightAxis +
-					(Height * 0.5f - row * stepSizeY) * UpAxis;
-
-		ResultPoints[index] = point;
+		ResultPoints[index] = Center + offsetX * RightAxis + offsetY * UpAxis;
 	}
 
 	#endregion

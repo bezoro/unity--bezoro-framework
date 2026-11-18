@@ -27,8 +27,10 @@ namespace Bezoro.Unity.Core.Tests.EditMode
 		[Test]
 		public void NativeArrayExtensions_SafeDispose_WhenArrayIsCreated_DisposesWithoutThrowing()
 		{
-			var array = new NativeArray<int>(1, Allocator.Temp);
+			var array = new NativeArray<int>(1, Allocator.Persistent);
 
+			array.Safe_Dispose();
+			Assert.IsFalse(array.IsCreated);
 			Assert.DoesNotThrow(() => array.Safe_Dispose());
 		}
 

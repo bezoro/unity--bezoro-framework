@@ -13,6 +13,22 @@ namespace Bezoro.Unity.Core.Tests.EditMode
 	public sealed class PlayerLoopHelpersTests
 	{
 		[Test]
+		public async Task ReturnToMainThread_FromWorker_ResumesAndPostsOnUnityThread()
+		{
+			int mainThread = Thread.CurrentThread.ManagedThreadId;
+			var posted = new TaskCompletionSource<int>();
+			int resumed = await Task.Run(async () =>
+			{
+				PlayerLoopHelpers.ReturnToMainThread(() => posted.SetResult(Thread.CurrentThread.ManagedThreadId));
+				await PlayerLoopHelpers.ReturnToMainThread();
+				return Thread.CurrentThread.ManagedThreadId;
+			});
+
+			Assert.AreEqual(mainThread, resumed);
+			Assert.AreEqual(mainThread, await posted.Task);
+		}
+
+		[Test]
 		public void GetCurrentManagedThreadId_ReturnsCurrentThreadId()
 		{
 			int threadId = PlayerLoopHelpers.Get_Current_Managed_Thread_Id();

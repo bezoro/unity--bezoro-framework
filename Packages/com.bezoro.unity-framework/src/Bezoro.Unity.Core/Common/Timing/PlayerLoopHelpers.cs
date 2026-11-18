@@ -12,8 +12,6 @@ namespace Bezoro.Unity.Core.Common.Timing;
 /// </summary>
 public static class PlayerLoopHelpers
 {
-	private static SynchronizationContext? _mainThreadContext;
-
 	/// <summary>
 	///     Checks if the current thread is the game's main thread.
 	/// </summary>
@@ -36,13 +34,8 @@ public static class PlayerLoopHelpers
 	///     Retrieves the synchronization context of the main thread.
 	/// </summary>
 	/// <returns>The synchronization context for the main thread.</returns>
-	public static SynchronizationContext Get_Main_Thread_Context()
-	{
-		if (_mainThreadContext == null)
-			Initialize_Main_Thread_Context();
-
-		return _mainThreadContext!;
-	}
+	public static SynchronizationContext Get_Main_Thread_Context() =>
+		PlayerLoopHelper.UnitySynchronizationContext ?? throw new InvalidOperationException("The Unity main-thread context is not initialized.");
 
 	/// <summary>
 	///     Runs an async task on a background thread.
@@ -130,18 +123,10 @@ public static class PlayerLoopHelpers
 	}
 
 	/// <summary>
-	///     Initializes the main thread context.
+	///     Verifies UniTask has initialized the Unity main-thread context.
 	/// </summary>
-	/// <remarks>
-	///     This method should be called in the Awake method of a MonoBehaviour.
-	/// </remarks>
-	public static void Initialize_Main_Thread_Context()
-	{
-		_mainThreadContext = SynchronizationContext.Current;
-
-		if (_mainThreadContext == null)
-			Logger.LogException(new InvalidOperationException("SynchronizationContext is null."));
-	}
+	public static void Initialize_Main_Thread_Context() =>
+		_ = Get_Main_Thread_Context();
 
 	/// <summary>
 	///     Logs the current thread's information including its ID and name.
@@ -154,14 +139,10 @@ public static class PlayerLoopHelpers
 	}
 
 	/// <summary>
-	///     Ensures that the current thread is the main thread.
-	///     If not, switches execution back to the main thread.
+	///     Await the returned value to resume the calling method on the Unity main thread.
 	/// </summary>
-	public static void ReturnToMainThread()
-	{
-		UniTask.ReturnToMainThread();
-		Logger.Log("Returned to main thread");
-	}
+	public static SwitchToMainThreadAwaitable ReturnToMainThread() =>
+		UniTask.SwitchToMainThread();
 
 	/// <summary>
 	///     Posts an action to be executed on the main thread.

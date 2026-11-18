@@ -19,7 +19,8 @@ public struct CheckRaycastHitJob : IJobParallelFor
 
 	public void Execute(int index)
 	{
-		if (Hits[index].distance > 0) ValidHits[index] = Hits[index];
+		var hit = Hits[index];
+		ValidHits[index] = hit.distance > 0 ? hit : default;
 	}
 
 	#endregion

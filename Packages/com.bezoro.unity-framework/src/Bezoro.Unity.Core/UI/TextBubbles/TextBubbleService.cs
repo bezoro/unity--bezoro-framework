@@ -333,20 +333,21 @@ namespace Bezoro.Unity.Core.UI
 
 		private void ApplyPosition(TextBubbleEntry entry)
 		{
-			if (!TryResolveAnchoredPosition(entry.Request, out var anchoredPosition))
+			if (!TryResolveLocalPosition(entry.Request, out var localPosition))
 			{
 				entry.View.SetVisible(false);
 				return;
 			}
 
-			entry.View.SetAnchoredPosition(anchoredPosition);
+			var rect = entry.View.RectTransform;
+			rect.localPosition = new Vector3(localPosition.x, localPosition.y, rect.localPosition.z);
 			if (entry.IsRequestedVisible)
 				entry.View.SetVisible(true);
 		}
 
-		private bool TryResolveAnchoredPosition(TextBubbleRequest request, out Vector2 anchoredPosition)
+		private bool TryResolveLocalPosition(TextBubbleRequest request, out Vector2 localPosition)
 		{
-			anchoredPosition = Vector2.zero;
+			localPosition = Vector2.zero;
 			ResolveReferences();
 
 			if (container == null || canvas == null)
@@ -403,7 +404,7 @@ namespace Bezoro.Unity.Core.UI
 				container,
 				screenPosition,
 				eventCamera,
-				out anchoredPosition
+				out localPosition
 			);
 		}
 

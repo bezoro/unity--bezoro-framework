@@ -10,6 +10,52 @@ namespace Bezoro.Unity.Core.Tests.EditMode
 	public sealed class JobHelpersTests
 	{
 		[Test]
+		public void CheckRaycastHitsPersistent_MissClearsPreviouslyPopulatedSlot()
+		{
+			var input = new NativeArray<RaycastHit>(1, Allocator.TempJob);
+			var output = default(NativeArray<RaycastHit>);
+			try
+			{
+				input[0] = new RaycastHit { distance = 4f };
+				JobHelpers.CheckRaycastHitsPersistent(input, ref output);
+				Assert.AreEqual(4f, output[0].distance);
+				input[0] = default;
+				JobHelpers.CheckRaycastHitsPersistent(input, ref output);
+				Assert.AreEqual(0f, output[0].distance);
+			}
+			finally
+			{
+				if (output.IsCreated)
+					output.Dispose();
+				input.Dispose();
+			}
+		}
+
+		[TestCase(1, 1)]
+		[TestCase(1, 3)]
+		[TestCase(3, 1)]
+		public void GeneratePointsOnPlanePersistent_CentersSingletonAxis(int columns, int rows)
+		{
+			var points = default(NativeArray<float3>);
+			try
+			{
+				JobHelpers.GeneratePointsOnPlanePersistent(new(3f, 4f, 5f), 4f, 6f, columns, rows,
+					new(1f, 0f, 0f), new(0f, 1f, 0f), ref points);
+				for (var i = 0; i < points.Length; i++)
+				{
+					float x = columns == 1 ? 3f : 5f - 2f * (i % columns);
+					float y = rows == 1 ? 4f : 7f - 3f * (i / columns);
+					AssertFloat3(new(x, y, 5f), points[i]);
+				}
+			}
+			finally
+			{
+				if (points.IsCreated)
+					points.Dispose();
+			}
+		}
+
+		[Test]
 		public void CreateRaycastCommandsPersistent_WhenOriginCountChanges_ReallocatesCommands()
 		{
 			var origins  = new NativeArray<float3>(2, Allocator.TempJob);

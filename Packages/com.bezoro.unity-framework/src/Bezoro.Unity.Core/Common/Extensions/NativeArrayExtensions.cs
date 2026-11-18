@@ -7,7 +7,7 @@ namespace Bezoro.Unity.Core.Common.Extensions;
 /// </summary>
 public static class NativeArrayExtensions
 {
-	public static void Safe_Dispose<T>(this NativeArray<T> array)
+	public static void Safe_Dispose<T>(this ref NativeArray<T> array)
 		where T : struct
 	{
 		if (array.IsCreated) array.Dispose();

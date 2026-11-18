@@ -189,9 +189,9 @@ public static class JobHelpers
 		int                     batchCount = 64
 	)
 	{
-		int totalPoints = numPointsWidth * numPointsHeight;
+		if (numPointsWidth <= 0 || numPointsHeight <= 0) return;
 
-		if (totalPoints <= 0) return;
+		int totalPoints = checked(numPointsWidth * numPointsHeight);
 
 		if (resultPoints.Length != totalPoints)
 		{
@@ -241,9 +241,9 @@ public static class JobHelpers
 		int                     batchCount = 64
 	)
 	{
-		int totalPoints = numPointsWidth * numPointsHeight;
+		if (numPointsWidth <= 0 || numPointsHeight <= 0) return;
 
-		if (totalPoints <= 0) return;
+		int totalPoints = checked(numPointsWidth * numPointsHeight);
 
 		resultPoints.Safe_Dispose();
 

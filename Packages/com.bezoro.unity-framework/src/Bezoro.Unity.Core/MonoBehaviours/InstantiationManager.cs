@@ -28,35 +28,17 @@ namespace Bezoro.Unity.Core.MonoBehaviours
 		public const  int   MAX_INSTANTIATIONS_PER_FRAME = 5;
 		private const float WEIGHT                       = .5f;
 
-		private static readonly InstantiationManagerModel<IRequest> Model = new();
-		private static readonly Stopwatch FrameStopwatch = new();
+		private readonly InstantiationManagerModel<IRequest> _model = new();
+		private readonly Stopwatch _frameStopwatch = new();
 
-		private static CancellationTokenSource _cts = new();
+		private CancellationToken _lifetime;
 
-		private static LoadingStage?    _loadingStage;
-		private static ProgressTracker? _tracker;
-		private bool _isSingletonInstance;
+		private LoadingStage?    _loadingStage;
+		private ProgressTracker? _tracker;
 
 		public static bool IsAvailable => TryGetInstance(out _);
 
 		public static InstantiationManager Instance => GlobalReferenceAccess<InstantiationManager>.Instance;
-
-		[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-		private static void ResetStaticState()
-		{
-			_cts.Cancel();
-			CancelQueuedRequests(
-				_cts.Token
-			);
-
-			_cts.Dispose();
-			_cts = new();
-
-			Model.ResetState();
-			FrameStopwatch.Reset();
-			_loadingStage = null;
-			_tracker      = null;
-		}
 
 		public static bool TryGetInstance([NotNullWhen(true)] out InstantiationManager? instance) =>
 			GlobalReferenceAccess<InstantiationManager>.TryGetInstance(out instance);
@@ -65,15 +47,12 @@ namespace Bezoro.Unity.Core.MonoBehaviours
 
 		private void Awake()
 		{
-			_isSingletonInstance = GlobalReferenceAccess<InstantiationManager>.IsCurrent(this);
+			_lifetime = destroyCancellationToken;
 		}
 
 		private void OnDestroy()
 		{
-			if (!_isSingletonInstance)
-				return;
-
-			Model.MarkDisposed();
+			_model.MarkDisposed();
 
 			FailQueuedRequests(
 				new ObjectDisposedException(
@@ -96,13 +75,13 @@ namespace Bezoro.Unity.Core.MonoBehaviours
 			int               priority = 0,
 			CancellationToken ct       = default) where T : Object
 		{
-			_ = Instance;
+			var manager = Instance;
 			prefab.ThrowIfUnityNull();
 
 			var pos = position ?? Vector3.zero;
 			var rot = rotation ?? Quaternion.identity;
 
-			return InternalEnqueue(
+			return manager.InternalEnqueue(
 				prefab,
 				pos,
 				rot,
@@ -112,16 +91,16 @@ namespace Bezoro.Unity.Core.MonoBehaviours
 			);
 		}
 
-		private static bool ShouldProcessNext(int processedCount) =>
-			Model.ShouldProcessNext(
+		private bool ShouldProcessNext(int processedCount) =>
+			_model.ShouldProcessNext(
 				processedCount,
-				FrameStopwatch.Elapsed.TotalMilliseconds,
+				_frameStopwatch.Elapsed.TotalMilliseconds,
 				FRAME_BUDGET_MS,
 				MAX_INSTANTIATIONS_PER_FRAME,
-				_cts.Token.IsCancellationRequested
+				_lifetime.IsCancellationRequested
 			);
 
-		private static async UniTask<T> InternalEnqueue<T>(
+		private async UniTask<T> InternalEnqueue<T>(
 			T                 prefab,
 			Vector3           pos,
 			Quaternion        rot,
@@ -138,7 +117,7 @@ namespace Bezoro.Unity.Core.MonoBehaviours
 				ct
 			);
 
-			var enqueueDecision = Model.DecideEnqueue(_cts.IsCancellationRequested);
+			var enqueueDecision = _model.DecideEnqueue(_lifetime.IsCancellationRequested);
 
 			if (enqueueDecision == InstantiationManagerEnqueueDecision.FailDisposed)
 			{
@@ -154,18 +133,18 @@ namespace Bezoro.Unity.Core.MonoBehaviours
 			if (enqueueDecision == InstantiationManagerEnqueueDecision.Cancel)
 			{
 				req.Cancel(
-					_cts.Token
+					_lifetime
 				);
 
 				return await req.Task;
 			}
 
-			Model.Enqueue(
+			_model.Enqueue(
 				req,
 				priority
 			);
 
-			if (!Model.TryStartProcessing()) return await req.Task;
+			if (!_model.TryStartProcessing()) return await req.Task;
 
 			ProcessQueueWhileNotEmpty().Forget();
 
@@ -173,7 +152,7 @@ namespace Bezoro.Unity.Core.MonoBehaviours
 		}
 
 
-		private static async UniTaskVoid ProcessQueueWhileNotEmpty()
+		private async UniTaskVoid ProcessQueueWhileNotEmpty()
 		{
 			try
 			{
@@ -190,14 +169,14 @@ namespace Bezoro.Unity.Core.MonoBehaviours
 					return;
 				}
 
-				FrameStopwatch.Reset();
+				_frameStopwatch.Reset();
 
 				if (!loadingProgressService.IsLoading)
 				{
 					Logger.LogWarning(
 						$"[{nameof(HierarchyCache)}] No active loading operation found – " +
 						"creating a fallback one. Progress aggregation may be less accurate.",
-						contextObject: Instance,
+						contextObject: this,
 						category:
 						LogCategory.Loading
 					);
@@ -216,37 +195,38 @@ namespace Bezoro.Unity.Core.MonoBehaviours
 					"Instantiation Batch"
 				);
 
-				while (Model.ShouldContinueProcessing(_cts.IsCancellationRequested))
+				while (_model.ShouldContinueProcessing(_lifetime.IsCancellationRequested))
 				{
 					Logger.Log(
-						$"[{nameof(InstantiationManager)}] Processing queue – current count: {Model.QueueCount}",
+						$"[{nameof(InstantiationManager)}] Processing queue – current count: {_model.QueueCount}",
 						contextObject:
-						Instance,
+						this,
 						category:
 						LogCategory.Loading
 					);
 
-					FrameStopwatch.Restart();
+					_frameStopwatch.Restart();
 					var processedCount = 0;
-					int batchCount     = Model.QueueCount;
+					int batchCount     = _model.QueueCount;
 
 					while (ShouldProcessNext(
 							   processedCount
 						   ))
 					{
-						var req = Model.Dequeue();
-						await req.ExecuteAsync();
+						var req = _model.Dequeue();
+						await req.ExecuteAsync(_lifetime);
+						if (_lifetime.IsCancellationRequested || _model.IsDisposed) return;
 						processedCount++;
 					}
 
-					_tracker.BindToVariable(() => Model.GetBatchProgress(processedCount, batchCount)
+					_tracker.BindToVariable(() => _model.GetBatchProgress(processedCount, batchCount)
 					);
 
-					FrameStopwatch.Stop();
+					_frameStopwatch.Stop();
 					Logger.Log(
 						$"[{nameof(InstantiationManager)}] Frame finished – " +
-						$"elapsed: {FrameStopwatch.Elapsed.TotalMilliseconds:F2} ms, remaining: {Model.QueueCount}",
-						contextObject: Instance,
+						$"elapsed: {_frameStopwatch.Elapsed.TotalMilliseconds:F2} ms, remaining: {_model.QueueCount}",
+						contextObject: this,
 						category:
 						LogCategory.Loading
 					);
@@ -256,7 +236,7 @@ namespace Bezoro.Unity.Core.MonoBehaviours
 			{
 				Logger.LogException(
 					ex,
-					contextObject: Instance,
+					contextObject: this,
 					category: LogCategory.Loading
 				);
 
@@ -266,11 +246,11 @@ namespace Bezoro.Unity.Core.MonoBehaviours
 			}
 			finally
 			{
-				switch (Model.DecideFinalQueueAction(_cts.IsCancellationRequested))
+				switch (_model.DecideFinalQueueAction(_lifetime.IsCancellationRequested))
 				{
 					case InstantiationManagerFinalQueueAction.Cancel:
 						CancelQueuedRequests(
-							_cts.Token
+							_lifetime
 						);
 						break;
 
@@ -283,26 +263,26 @@ namespace Bezoro.Unity.Core.MonoBehaviours
 						break;
 				}
 
-				Model.FinishProcessing();
+				_model.FinishProcessing();
 			}
 		}
 
-		private static void CancelQueuedRequests(CancellationToken ct)
+		private void CancelQueuedRequests(CancellationToken ct)
 		{
-			while (Model.QueueCount > 0)
+			while (_model.QueueCount > 0)
 			{
-				Model.Dequeue()
+				_model.Dequeue()
 					 .Cancel(
 						 ct
 					 );
 			}
 		}
 
-		private static void FailQueuedRequests(Exception exception)
+		private void FailQueuedRequests(Exception exception)
 		{
-			while (Model.QueueCount > 0)
+			while (_model.QueueCount > 0)
 			{
-				Model.Dequeue()
+				_model.Dequeue()
 					 .Fail(
 						 exception
 					 );
@@ -314,7 +294,7 @@ namespace Bezoro.Unity.Core.MonoBehaviours
 		/// </summary>
 		private interface IRequest
 		{
-			UniTask ExecuteAsync();
+			UniTask ExecuteAsync(CancellationToken lifetime);
 			void    Cancel(CancellationToken ct);
 
 			void Fail(Exception exception);
@@ -361,7 +341,7 @@ namespace Bezoro.Unity.Core.MonoBehaviours
 
 			public UniTask<T> Task => _utcs.Task;
 
-			public async UniTask ExecuteAsync()
+			public async UniTask ExecuteAsync(CancellationToken lifetime)
 			{
 				if (_executed) return;
 
@@ -369,37 +349,22 @@ namespace Bezoro.Unity.Core.MonoBehaviours
 
 				try
 				{
-					if (_ct.IsCancellationRequested)
-					{
-						await _ctRegistration.DisposeAsync();
-
-						Logger.Log(
-							$"[{nameof(InstantiationManager)}] Instantiation cancelled for prefab '{_prefab.name}'."
-						);
-
-						_utcs.TrySetCanceled(
-							_ct
-						);
-
-						return;
-					}
-
 					await _ctRegistration.DisposeAsync();
+					using var linked = _ct.CanBeCanceled
+						? CancellationTokenSource.CreateLinkedTokenSource(lifetime, _ct)
+						: null;
+					var token = linked?.Token ?? lifetime;
+					token.ThrowIfCancellationRequested();
 
-					if (_ct.IsCancellationRequested)
+					var op = await Object.InstantiateAsync(_prefab, 1, _parent, _position, _rotation, token);
+					if (token.IsCancellationRequested)
 					{
-						_utcs.TrySetCanceled(
-							_ct
-						);
-
-						return;
+						// Cancellation can race with Unity integrating a completed clone.
+						if (op != null)
+							foreach (var clone in op)
+								Object.Destroy(clone is Component component ? component.gameObject : (Object)clone);
+						token.ThrowIfCancellationRequested();
 					}
-
-					var op = await Object.InstantiateAsync(
-								 _prefab,
-								 _position,
-								 _rotation
-							 );
 
 					if (op == null || op.Length == 0)
 					{
@@ -425,11 +390,6 @@ namespace Bezoro.Unity.Core.MonoBehaviours
 						return;
 					}
 
-					if (_parent != null)
-						obj.transform.SetParent(
-							_parent
-						);
-
 					Logger.Log(
 						$"[{nameof(InstantiationManager)}] Instantiated prefab '{_prefab.name}' at {_position}.",
 						contextObject: this,
@@ -441,11 +401,9 @@ namespace Bezoro.Unity.Core.MonoBehaviours
 						op[0]
 					);
 				}
-				catch (OperationCanceledException) when (_ct.IsCancellationRequested)
+				catch (OperationCanceledException) when (_ct.IsCancellationRequested || lifetime.IsCancellationRequested)
 				{
-					_utcs.TrySetCanceled(
-						_ct
-					);
+					_utcs.TrySetCanceled(_ct.IsCancellationRequested ? _ct : lifetime);
 				}
 				catch (Exception ex)
 				{
@@ -455,13 +413,15 @@ namespace Bezoro.Unity.Core.MonoBehaviours
 				}
 			}
 
-			public void Cancel(CancellationToken ct) =>
-				_utcs.TrySetCanceled(
-					ct
-				);
+			public void Cancel(CancellationToken ct)
+			{
+				_ctRegistration.Dispose();
+				_utcs.TrySetCanceled(ct);
+			}
 
 			public void Fail(Exception exception)
 			{
+				_ctRegistration.Dispose();
 				Logger.LogException(
 					exception,
 					contextObject: this,
@@ -481,6 +441,8 @@ namespace Bezoro.Unity.Core.MonoBehaviours
 
 		private bool _isDisposed;
 		private bool _isProcessing;
+
+		internal bool IsDisposed => _isDisposed;
 
 		public int QueueCount => _queue.Count;
 

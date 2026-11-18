@@ -1,6 +1,7 @@
 using System;
 using Bezoro.Unity.Core.Common.Timing;
 using NUnit.Framework;
+using Cysharp.Threading.Tasks;
 
 namespace Bezoro.Unity.Core.Tests.EditMode
 {
@@ -10,6 +11,28 @@ namespace Bezoro.Unity.Core.Tests.EditMode
 	[TestFixture]
 	public sealed class CustomFixedTickTests
 	{
+		[Test]
+		public async System.Threading.Tasks.Task RunAsync_ExternalCancellationAndStopAllowRestart()
+		{
+			var count = 0;
+			var ticker = new CustomFixedTick(1f, () => count++);
+			using var external = new System.Threading.CancellationTokenSource();
+			var first = ticker.RunAsync(() => 1f, external.Token);
+			external.Cancel();
+			await first.SuppressCancellationThrow();
+			Assert.IsFalse(ticker.IsSelfDriven);
+			ticker.Tick(1f);
+			var second = ticker.RunAsync(() => 1f);
+			ticker.Stop();
+			var third = ticker.RunAsync(() => 1f);
+			await second.SuppressCancellationThrow();
+			Assert.IsTrue(ticker.IsSelfDriven);
+			ticker.Stop();
+			await third.SuppressCancellationThrow();
+			Assert.IsFalse(ticker.IsSelfDriven);
+			Assert.GreaterOrEqual(count, 4);
+		}
+
 		[Test]
 		public void Constructor_WhenFixedDeltaTimeIsNotPositive_Throws()
 		{
