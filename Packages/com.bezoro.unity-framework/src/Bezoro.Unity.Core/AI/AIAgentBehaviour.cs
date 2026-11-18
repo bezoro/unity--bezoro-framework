@@ -7,28 +7,28 @@ namespace Bezoro.Unity.Core.AI
 	/// </summary>
 	public abstract class AIAgentBehaviour : MonoBehaviour
 	{
-		private readonly AIAgentModel _model = new();
+		private AITickManagerBehaviour? _owner;
 
 		#region Unity Lifecycle
 
 		protected virtual void OnEnable()
 		{
-			var manager = AITickManagerBehaviour.Instance;
-			if (!_model.ShouldRegister(manager != null)) return;
-
-			manager?.AddUnique(
-				this
-			);
+			AITickManagerBehaviour.OwnerChanged += Bind;
+			Bind(AITickManagerBehaviour.Instance);
 		}
 
 		protected virtual void OnDisable()
 		{
-			var manager = AITickManagerBehaviour.Instance;
-			if (!_model.ShouldRemove(manager != null)) return;
+			AITickManagerBehaviour.OwnerChanged -= Bind;
+			Bind(null);
+		}
 
-			manager?.Remove(
-				this
-			);
+		private void Bind(AITickManagerBehaviour? owner)
+		{
+			if (ReferenceEquals(_owner, owner)) return;
+			if (_owner != null) _owner.Remove(this);
+			_owner = owner;
+			if (_owner != null) _owner.AddUnique(this);
 		}
 
 		#endregion

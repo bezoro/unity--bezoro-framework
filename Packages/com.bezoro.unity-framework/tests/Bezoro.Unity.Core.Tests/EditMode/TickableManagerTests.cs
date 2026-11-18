@@ -84,6 +84,17 @@ namespace Bezoro.Unity.Core.Tests.EditMode
 			);
 		}
 
+		[Test]
+		public void AddUnique_GrowsEachPhaseAndStillDispatchesExactlyOnce()
+		{
+			for (int i = 0; i < 128; i++) _manager.AddUnique(new AllPhaseTickable());
+			var next = new AllPhaseTickable();
+			_manager.AddUnique(next);
+			_manager.AddUnique(next);
+			InvokeGroup("ProcessRegularTickablesGroup");
+			CollectionAssert.AreEqual(new[] { "PreRegular", "Regular", "PostRegular" }, next.Calls);
+		}
+
 		private void InvokeGroup(string methodName)
 		{
 			typeof(TickableManager)

@@ -49,12 +49,32 @@ namespace Bezoro.Unity.Core.Tests.EditMode
 			}
 		}
 
+		[Test]
+		public void LateManager_RegistersAlreadyEnabledProvider()
+		{
+			var probeObject = new GameObject("Late manager provider");
+			probeObject.SetActive(false);
+			var probe = probeObject.AddComponent<ReflectionProbe>();
+			var provider = probeObject.AddComponent<ReflectionProbeProvider>();
+			try
+			{
+				provider.OnEnable();
+				var manager = CreateReflectionProbeManager();
+				CollectionAssert.Contains(GetRegisteredProbes(manager), probe);
+			}
+			finally
+			{
+				provider.OnDisable();
+				Object.DestroyImmediate(probeObject);
+			}
+		}
+
 		private static ReflectionProbeManager CreateReflectionProbeManager()
 		{
 			var manager = new GameObject("Reflection Probe Manager").AddComponent<ReflectionProbeManager>();
 			manager.GetComponent<SingletonScope>().Configure(manager, SingletonLifetime.Scene);
 			manager.GetComponent<GlobalReference>().ConfigureTarget(manager);
-			InvokeManagerAwake(manager);
+			InvokeManagerEnable(manager);
 			return manager;
 		}
 
@@ -70,10 +90,10 @@ namespace Bezoro.Unity.Core.Tests.EditMode
 			return model.ReflectionProbes;
 		}
 
-		private static void InvokeManagerAwake(ReflectionProbeManager manager)
+		private static void InvokeManagerEnable(ReflectionProbeManager manager)
 		{
 			typeof(ReflectionProbeManager)
-				.GetMethod("Awake", BindingFlags.NonPublic | BindingFlags.Instance)!
+				.GetMethod("OnEnable", BindingFlags.NonPublic | BindingFlags.Instance)!
 				.Invoke(manager, null);
 		}
 

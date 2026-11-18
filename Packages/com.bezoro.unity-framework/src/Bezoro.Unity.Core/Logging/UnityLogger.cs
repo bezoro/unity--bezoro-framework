@@ -2,6 +2,8 @@
 using UnityEditor;
 #endif
 using System;
+using System.Threading;
+using Cysharp.Threading.Tasks;
 using Bezoro.Logging.Types;
 using Bezoro.Unity.Core.Application;
 using UnityEngine;
@@ -14,10 +16,31 @@ namespace Bezoro.Unity.Core.Logging;
 /// </summary>
 public static class UnityLogger
 {
+	private static int _frameCount;
+	private static int _session;
+
+	private sealed class FrameSampler : IPlayerLoopItem
+	{
+		private readonly int _generation = _session;
+		public bool MoveNext()
+		{
+			if (_generation != _session) return false;
+			CaptureFrame();
+			return true;
+		}
+	}
+
+	private static void CaptureFrame() => Volatile.Write(ref _frameCount, Time.frameCount);
+
+	[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
+	private static void StartFrameSampler() =>
+		PlayerLoopHelper.AddAction(PlayerLoopTiming.EarlyUpdate, new FrameSampler());
+
 	internal static void Initialize()
 	{
+		CaptureFrame();
 		LoggerSettings.Stage      = StageConfig.Create(() => ApplicationLifecycle.CurrentStage.ToString());
-		LoggerSettings.FrameCount = FrameCountConfig.Create(() => Time.frameCount);
+		LoggerSettings.FrameCount = FrameCountConfig.Create(() => Volatile.Read(ref _frameCount));
 
 		Logger.OnLog -= ForwardToUnity;
 		Logger.OnLog += ForwardToUnity;
@@ -25,11 +48,20 @@ public static class UnityLogger
 
 #if UNITY_EDITOR
 	[InitializeOnLoadMethod]
-	private static void InitializeInEditor() => Initialize();
+	private static void InitializeInEditor()
+	{
+		Initialize();
+		EditorApplication.update -= CaptureFrame;
+		EditorApplication.update += CaptureFrame;
+	}
 #endif
 
 	[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-	private static void InitializeAtRuntime() => Initialize();
+	private static void InitializeAtRuntime()
+	{
+		_session++;
+		Initialize();
+	}
 
 	[HideInCallstack]
 	internal static void ForwardToUnity(LogPayload logPayload)

@@ -32,15 +32,16 @@ public interface IEventBus : IService,
 		where TEvent : IEvent<TPayload>, new();
 
 	/// <summary>
-	///     Queues or dispatches an event according to the bus processing model.
-	///     Await the returned task when later event handlers depend on completion.
+	///     Queues an event and completes after its own synchronous handlers return. A handler may
+	///     enqueue nested work, which runs after the current event. Never block a handler
+	///     waiting for nested work. Cancellation, clear and disposal cancel outstanding publications.
+	///     Publishing a bus-created payload event transfers ownership back to its creating bus.
 	/// </summary>
 	public UniTask Publish<T>(T eventData)
 		where T : IEvent;
 
 	/// <summary>
-	///     Publishes an event asynchronously and waits for all current handlers to
-	///     finish.
+	///     Equivalent to Publish. Completes when this publication finishes.
 	/// </summary>
 	public UniTask PublishAsync<T>(T eventData)
 		where T : IEvent;

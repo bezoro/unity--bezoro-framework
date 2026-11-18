@@ -9,7 +9,7 @@ namespace Bezoro.Unity.Core.ReflectionProbes
 	/// </summary>
 	public class ReflectionProbeProvider : MonoBehaviour
 	{
-		private readonly ReflectionProbeProviderModel _model = new();
+		private ReflectionProbeManager? _owner;
 
 		[EditorGetComponent(
 			typeof(ReflectionProbe),
@@ -26,39 +26,30 @@ namespace Bezoro.Unity.Core.ReflectionProbes
 		public void OnEnable()
 		{
 			ResolveReferences();
-			var decision = _model.DecideEnable(reflectionProbe != null);
-			if (decision == ReflectionProbeProviderEnableAction.ReportMissingProbe)
+			if (reflectionProbe == null)
 			{
-				Logger.LogWarning(
-					$"{nameof(ReflectionProbeProvider)} requires a ReflectionProbe.", contextObject: this
-				);
-
+				Logger.LogWarning($"{nameof(ReflectionProbeProvider)} requires a ReflectionProbe.", contextObject: this);
 				return;
 			}
 
-			if (decision == ReflectionProbeProviderEnableAction.Register &&
-				reflectionProbe != null &&
-				ReflectionProbeManager.TryGetInstance(
-					out var instance
-				))
-				instance.AddUnique(
-					reflectionProbe
-				);
+			ReflectionProbeManager.Available -= Bind;
+			ReflectionProbeManager.Available += Bind;
+			if (ReflectionProbeManager.TryGetInstance(out var manager)) Bind(manager);
+		}
+
+		private void Bind(ReflectionProbeManager manager)
+		{
+			if (reflectionProbe == null || _owner == manager) return;
+			if (_owner != null) _owner.Remove(reflectionProbe);
+			_owner = manager;
+			manager.AddUnique(reflectionProbe);
 		}
 
 		public void OnDisable()
 		{
-			ResolveReferences();
-			if (!_model.ShouldUnregister(reflectionProbe != null) ||
-				reflectionProbe == null)
-				return;
-
-			if (ReflectionProbeManager.TryGetInstance(
-					out var instance
-				))
-				instance.Remove(
-					reflectionProbe
-				);
+			ReflectionProbeManager.Available -= Bind;
+			if (_owner != null && reflectionProbe != null) _owner.Remove(reflectionProbe);
+			_owner = null;
 		}
 
 		private void OnValidate()

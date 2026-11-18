@@ -29,8 +29,7 @@ public interface IEvent
 	public bool RunOnThreadPool { get; }
 
 	/// <summary>
-	///     Gets the processing priority; higher-level bus code uses this to order
-	///     queued events.
+	///     Higher values dispatch first among pending events. Equal priorities dispatch in publication order.
 	/// </summary>
 	public int Priority { get; }
 }
