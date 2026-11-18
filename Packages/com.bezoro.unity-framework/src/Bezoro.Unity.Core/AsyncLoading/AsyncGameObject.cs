@@ -61,12 +61,17 @@ namespace Bezoro.Unity.Core.AsyncLoading
 
 		private void OnDestroy()
 		{
-			_cts.Cancel();
-			_cts.Dispose();
-
-			if (AsyncLoadingManager.TryGetInstance(out var manager) &&
-				_model.ShouldRemoveFromManager(true))
-				manager.Remove(this);
+			try
+			{
+				if (AsyncLoadingManager.TryGetInstance(out var manager) &&
+					_model.ShouldRemoveFromManager(true))
+					manager.Remove(this);
+			}
+			finally
+			{
+				using (_cts)
+					_cts.Cancel();
+			}
 		}
 
 		#endregion

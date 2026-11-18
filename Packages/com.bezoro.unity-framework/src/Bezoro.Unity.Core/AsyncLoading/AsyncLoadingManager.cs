@@ -24,6 +24,7 @@ namespace Bezoro.Unity.Core.AsyncLoading
 		private readonly AsyncLoadingManagerModel<IAsyncLoadable> _model = new(item => item.Priority);
 
 		private bool _isProcessing;
+		private IAsyncLoadable? _activeItem;
 		private int  _itemsLoaded;
 		private int  _totalItemsToLoad;
 
@@ -95,7 +96,8 @@ namespace Bezoro.Unity.Core.AsyncLoading
 		{
 			if (!_model.ShouldRemove(!item.IsNull())) return;
 
-			_model.Remove(item);
+			if (_model.TryRemove(item, out var removed) && ReferenceEquals(_activeItem, removed))
+				_activeItem = null;
 			_totalItemsToLoad = _model.QueueCount;
 
 			Logger.Log(
@@ -155,10 +157,11 @@ namespace Bezoro.Unity.Core.AsyncLoading
 
 					if (item.IsLoaded)
 					{
-						_model.Remove(item);
+						_model.RemoveReference(item);
 						continue;
 					}
 
+					_activeItem = item;
 					try
 					{
 						await item.LoadAsync(ct);
@@ -166,6 +169,11 @@ namespace Bezoro.Unity.Core.AsyncLoading
 					catch (OperationCanceledException) when (ct.IsCancellationRequested)
 					{
 						throw;
+					}
+					catch (OperationCanceledException) when (_activeItem == null)
+					{
+						// The owner withdrew this registration while its load was in flight.
+						continue;
 					}
 					catch (Exception e)
 					{
@@ -176,7 +184,12 @@ namespace Bezoro.Unity.Core.AsyncLoading
 						);
 					}
 
-					_model.Remove(item);
+					// A withdrawn registration can already have been queued again.
+					if (_activeItem == null)
+						continue;
+
+					_activeItem = null;
+					_model.RemoveReference(item);
 					_itemsLoaded++;
 
 					_totalItemsToLoad = _model.GetTrackedTotalItemsToLoad(_totalItemsToLoad, _itemsLoaded);
@@ -195,6 +208,7 @@ namespace Bezoro.Unity.Core.AsyncLoading
 		private void ClearState()
 		{
 			_model.Clear();
+			_activeItem       = null;
 			_itemsLoaded      = 0;
 			_totalItemsToLoad = 0;
 			_isProcessing     = false;
@@ -277,7 +291,33 @@ namespace Bezoro.Unity.Core.AsyncLoading
 
 		public bool Remove(TItem item)
 		{
-			return _loadingQueue.Remove(item);
+			return TryRemove(item, out _);
+		}
+
+		internal bool TryRemove(TItem item, out TItem removed)
+		{
+			int index = _loadingQueue.IndexOf(item);
+			if (index < 0)
+			{
+				removed = default!;
+				return false;
+			}
+
+			removed = _loadingQueue[index];
+			_loadingQueue.RemoveAt(index);
+			return true;
+		}
+
+		internal void RemoveReference(TItem item)
+		{
+			for (int i = 0; i < _loadingQueue.Count; i++)
+			{
+				if (!ReferenceEquals(_loadingQueue[i], item))
+					continue;
+
+				_loadingQueue.RemoveAt(i);
+				break;
+			}
 		}
 
 		public TItem GetHighestPriority()
