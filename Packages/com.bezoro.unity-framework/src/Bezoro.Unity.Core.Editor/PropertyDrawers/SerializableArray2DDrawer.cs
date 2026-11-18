@@ -38,6 +38,7 @@ namespace Bezoro.Unity.Core.Editor.PropertyDrawers
 		private readonly SerializableArray2DRenderer         _renderer         = new();
 
 		public override float GetPropertyHeight(SerializedProperty property, GUIContent label) =>
+			property.serializedObject.isEditingMultipleObjects ? EditorGUIUtility.singleLineHeight :
 			_layoutCalculator.CalculatePropertyHeight(
 				property,
 				EditorGUIUtility.currentViewWidth,
@@ -47,6 +48,12 @@ namespace Bezoro.Unity.Core.Editor.PropertyDrawers
 
 		public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
 		{
+			if (property.serializedObject.isEditingMultipleObjects)
+			{
+				EditorGUI.LabelField(position, label, new GUIContent("Select one object to edit this grid."));
+				return;
+			}
+
 			var foldoutRect = DrawFoldoutHeader(
 				position,
 				property,
@@ -57,24 +64,14 @@ namespace Bezoro.Unity.Core.Editor.PropertyDrawers
 
 			EditorGUI.indentLevel++;
 
-			var properties =
-				GetArray2DProperties(
-					property
-				);
-
 			var drawPosition = _renderer.DrawDimensionFields(
 				foldoutRect,
-				properties,
-				_config
+				property
 			);
 
+			var properties = GetArray2DProperties(property);
 			var dimensions = GetValidatedDimensions(
 				properties
-			);
-
-			UpdateArraySize(
-				properties.data,
-				dimensions
 			);
 
 			if (!dimensions.IsValid())
@@ -143,12 +140,6 @@ namespace Bezoro.Unity.Core.Editor.PropertyDrawers
 			);
 
 			return position;
-		}
-
-		private void UpdateArraySize(SerializedProperty dataProp, Array2DDimensions dimensions)
-		{
-			int desiredSize                                           = dimensions.Width * dimensions.Height;
-			if (dataProp.arraySize != desiredSize) dataProp.arraySize = desiredSize;
 		}
 	}
 
@@ -290,23 +281,36 @@ namespace Bezoro.Unity.Core.Editor.PropertyDrawers
 			(SerializedProperty width, SerializedProperty height, SerializedProperty data) properties,
 			SerializableArray2DConfig                                                      config)
 		{
-			var position = EditorPropertyRectUtility.NextLine(
-				startPosition
-			);
+			var widthPath = properties.width.propertyPath;
+			var gridPath = widthPath.Substring(0, widthPath.LastIndexOf('.'));
+			return DrawDimensionFields(startPosition, properties.width.serializedObject.FindProperty(gridPath));
+		}
 
-			position = EditorPropertyDrawUtility.DrawProperty(
-				position,
-				properties.width,
-				SerializableArray2DConfig.WidthLabel
-			);
+		internal Rect DrawDimensionFields(Rect startPosition, SerializedProperty grid)
+		{
+			var width = grid.FindPropertyRelative("width").intValue;
+			var height = grid.FindPropertyRelative("height").intValue;
+			var position = EditorPropertyRectUtility.NextLine(startPosition);
+			int newWidth = EditorGUI.DelayedIntField(position, SerializableArray2DConfig.WidthLabel, width);
+			position = EditorPropertyRectUtility.NextLine(position);
+			int newHeight = EditorGUI.DelayedIntField(position, SerializableArray2DConfig.HeightLabel, height);
 
-			position = EditorPropertyDrawUtility.DrawProperty(
-				position,
-				properties.height,
-				SerializableArray2DConfig.HeightLabel
-			);
+			if (newWidth != width && newWidth > 0)
+				ResizeGrid(grid, newWidth, Mathf.Max(1, height));
+			else if (newHeight != height && newHeight > 0)
+				ResizeGrid(grid, Mathf.Max(1, width), newHeight);
 
-			return position;
+			return EditorPropertyRectUtility.NextLine(position);
+		}
+
+		internal static void ResizeGrid(SerializedProperty grid, int width, int height)
+		{
+			if (width <= 0 || height <= 0 || (long)width * height > int.MaxValue ||
+				grid.serializedObject.isEditingMultipleObjects)
+				return;
+
+			var value = (IResizableSerializedGrid)grid.boxedValue;
+			grid.boxedValue = value.ResizedCopy(width, height);
 		}
 
 		public void DrawInvalidDimensionsHelp(Rect position)

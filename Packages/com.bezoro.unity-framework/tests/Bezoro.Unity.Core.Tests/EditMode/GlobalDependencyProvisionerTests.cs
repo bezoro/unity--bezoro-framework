@@ -525,6 +525,49 @@ namespace Bezoro.Unity.Core.Tests.EditMode
 			);
 		}
 
+		[Test]
+		public void BuildValidation_UsesRequestedScenesAndRequiresAssignedApplicationConfig()
+		{
+			var definition = CreateDefinition("Application", GlobalDependencyOrphanPolicy.Keep, SingletonLifetime.Application);
+			var looseConfig = ScriptableObject.CreateInstance<GameInitializationConfig>();
+			using (var serialized = new SerializedObject(looseConfig))
+			{
+				var dependencies = serialized.FindProperty("applicationDependencies");
+				dependencies.arraySize = 1;
+				dependencies.GetArrayElementAtIndex(0).objectReferenceValue = definition;
+				serialized.ApplyModifiedPropertiesWithoutUndo();
+			}
+			AssetDatabase.CreateAsset(looseConfig, $"{TEST_FOLDER}/LooseConfig.asset");
+			var prototype = CreateScene("Prototype");
+			CreateCollection(prototype);
+			var requested = CreateScene("Requested");
+			CreateRequirement(requested, definition);
+			EditorSceneManager.SaveScene(requested);
+			var options = new BuildPlayerOptions { scenes = new[] { requested.path } };
+
+			var result = GlobalDependencyBuildValidator.ValidateBuild(null, options);
+
+			Assert.That(result.Diagnostics.Count, Is.EqualTo(1));
+			StringAssert.Contains("assigned to GameSettings", result.Diagnostics[0].Message);
+		}
+
+		[Test]
+		public void BuildValidation_RestoresUnloadedSceneEntry()
+		{
+			CreateScene("Active");
+			var unloaded = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Additive);
+			string path = $"{TEST_FOLDER}/Unloaded.unity";
+			EditorSceneManager.SaveScene(unloaded, path);
+			EditorSceneManager.CloseScene(unloaded, false);
+
+			var result = GlobalDependencyBuildValidator.ValidateBuild(null,
+				new BuildPlayerOptions { scenes = new[] { path } });
+
+			Assert.IsFalse(result.HasErrors);
+			var savedEntry = EditorSceneManager.GetSceneManagerSetup().Single(setup => setup.path == path);
+			Assert.IsFalse(savedEntry.isLoaded);
+		}
+
 		private SceneCollection CreateCollection(
 			Scene scene,
 			params GlobalDependencyDefinition[] dependencies)

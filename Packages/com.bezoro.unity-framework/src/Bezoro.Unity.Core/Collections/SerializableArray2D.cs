@@ -10,12 +10,17 @@ using Object = UnityEngine.Object;
 
 namespace Bezoro.Unity.Core.Collections;
 
+internal interface IResizableSerializedGrid
+{
+	object ResizedCopy(int width, int height);
+}
+
 /// <summary>
 ///     Represents a serializable 2D array.
 /// </summary>
 /// <typeparam name="T">The type of elements in the array.</typeparam>
 [Serializable]
-public class SerializableArray2D<T> : IEnumerable<T>
+public class SerializableArray2D<T> : IEnumerable<T>, IResizableSerializedGrid
 {
 	[SerializeField] private T[] elements;
 	[SerializeField] private int width;
@@ -762,6 +767,13 @@ public class SerializableArray2D<T> : IEnumerable<T>
 	{
 		Reinitialize();
 		Fill(defaultValue);
+	}
+
+	object IResizableSerializedGrid.ResizedCopy(int newWidth, int newHeight)
+	{
+		var copy = (SerializableArray2D<T>)MemberwiseClone();
+		copy.Resize(newWidth, newHeight);
+		return copy;
 	}
 
 	/// <summary>

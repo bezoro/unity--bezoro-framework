@@ -203,7 +203,7 @@ namespace Bezoro.Unity.Core.Editor.PropertyDrawers
 				return;
 			}
 
-			if (UnityEngine.Application.isPlaying) return;
+			if (UnityEngine.Application.isPlaying || property.serializedObject.isEditingMultipleObjects) return;
 
 			var component = TryFindComponent(
 				property
@@ -224,7 +224,7 @@ namespace Bezoro.Unity.Core.Editor.PropertyDrawers
 
 		private void TryApplyComponent(SerializedProperty property)
 		{
-			if (UnityEngine.Application.isPlaying) return;
+			if (UnityEngine.Application.isPlaying || property.serializedObject.isEditingMultipleObjects) return;
 
 			var newComponent = TryFindComponent(
 				property

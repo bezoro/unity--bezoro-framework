@@ -93,7 +93,7 @@ namespace Bezoro.Unity.Core.ScriptableObjects
 		}
 #endif
 
-		private static T? LoadFromResources()
+		internal static T? LoadFromResources()
 		{
 			var exactNameInstance = Resources.Load<T>(
 				typeof(T).Name
