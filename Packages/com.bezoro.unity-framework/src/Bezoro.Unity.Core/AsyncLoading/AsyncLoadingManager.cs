@@ -24,6 +24,7 @@ namespace Bezoro.Unity.Core.AsyncLoading
 		private readonly AsyncLoadingManagerModel<IAsyncLoadable> _model = new(item => item.Priority);
 
 		private bool _isProcessing;
+		private IAsyncLoadable? _activeItem;
 		private int  _itemsLoaded;
 		private int  _totalItemsToLoad;
 
@@ -95,7 +96,8 @@ namespace Bezoro.Unity.Core.AsyncLoading
 		{
 			if (!_model.ShouldRemove(!item.IsNull())) return;
 
-			_model.Remove(item);
+			if (_model.Remove(item) && EqualityComparer<IAsyncLoadable>.Default.Equals(_activeItem, item))
+				_activeItem = null;
 			_totalItemsToLoad = _model.QueueCount;
 
 			Logger.Log(
@@ -159,6 +161,7 @@ namespace Bezoro.Unity.Core.AsyncLoading
 						continue;
 					}
 
+					_activeItem = item;
 					try
 					{
 						await item.LoadAsync(ct);
@@ -166,6 +169,11 @@ namespace Bezoro.Unity.Core.AsyncLoading
 					catch (OperationCanceledException) when (ct.IsCancellationRequested)
 					{
 						throw;
+					}
+					catch (OperationCanceledException) when (_activeItem == null)
+					{
+						// The owner withdrew this registration while its load was in flight.
+						continue;
 					}
 					catch (Exception e)
 					{
@@ -176,6 +184,11 @@ namespace Bezoro.Unity.Core.AsyncLoading
 						);
 					}
 
+					// A withdrawn registration can already have been queued again.
+					if (_activeItem == null)
+						continue;
+
+					_activeItem = null;
 					_model.Remove(item);
 					_itemsLoaded++;
 
@@ -195,6 +208,7 @@ namespace Bezoro.Unity.Core.AsyncLoading
 		private void ClearState()
 		{
 			_model.Clear();
+			_activeItem       = null;
 			_itemsLoaded      = 0;
 			_totalItemsToLoad = 0;
 			_isProcessing     = false;

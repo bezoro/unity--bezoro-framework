@@ -41,7 +41,8 @@ namespace Bezoro.Unity.Core.Tests.PlayMode
 		[UnityTest]
 		public IEnumerator InstantiateAsync_ReplacingOwnerInAdditiveScene_AcceptsRequests()
 		{
-			CreateManager<LoadingProgressService>(_scene).BeginOperation("Replacement test");
+			using var progress = new TestGlobalProvider<LoadingProgressService>("Replacement test progress", _scene);
+			progress.Instance.BeginOperation("Replacement test");
 			_ownerScene = SceneManager.CreateScene("Previous instantiation owner");
 			CreateManager<InstantiationManager>(_ownerScene);
 			yield return SceneManager.UnloadSceneAsync(_ownerScene);
@@ -56,7 +57,8 @@ namespace Bezoro.Unity.Core.Tests.PlayMode
 		[UnityTest]
 		public IEnumerator StopBGM_DuringPendingFade_PreventsDelayedClipSwitch()
 		{
-			var manager = CreateManager<AudioManager>(_scene);
+			using var audio = new TestGlobalProvider<AudioManager>("Interrupted fade audio", _scene);
+			var manager = audio.Instance;
 			_clip = AudioClip.Create("Interrupted fade", 44100, 1, 44100, false);
 			manager.PlayBGM(_clip, fadeInDuration: 0.1f);
 			manager.StopBGM();
@@ -66,6 +68,29 @@ namespace Bezoro.Unity.Core.Tests.PlayMode
 			Assert.AreEqual(2, sources.Length);
 			foreach (var source in sources)
 				Assert.IsNull(source.clip);
+		}
+
+		[Test]
+		public void ProgressProviderScope_PreservesAndRestoresExistingProvider()
+		{
+			LoadingProgressService.TryGetInstance(out var inherited);
+			using (var original = new TestGlobalProvider<LoadingProgressService>("Original progress", _scene))
+			{
+				var scope = original.Instance.GetComponent<SingletonScope>();
+				var reference = original.Instance.GetComponent<GlobalReference>();
+				using (var temporary = new TestGlobalProvider<LoadingProgressService>("Temporary progress", _scene))
+				{
+					Assert.AreSame(temporary.Instance, LoadingProgressService.Instance);
+					Assert.IsTrue(original.Instance.isActiveAndEnabled);
+					Assert.IsTrue(scope.IsAccepted);
+					Assert.IsTrue(reference.IsRegistered);
+				}
+				Assert.AreSame(original.Instance, LoadingProgressService.Instance);
+				Assert.AreSame(original.Instance, scope.Identity);
+				Assert.AreSame(original.Instance, reference.Target);
+			}
+			LoadingProgressService.TryGetInstance(out var restored);
+			Assert.AreSame(inherited, restored);
 		}
 
 		[Test]

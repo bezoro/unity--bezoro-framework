@@ -4,13 +4,17 @@ Unity runtime utilities and native editor tools, distributed as `com.bezoro.unit
 
 ## Framework dependency
 
-Version `0.4.1` uses `com.bezoro.framework` version `0.1.0-preview.1736`. Use the published Git package at commit `68f51f8484585174bce586b9c015da483dfdbaf7` in `bezoro/csharp-framework`. The repository's `Packages/manifest.json` pins that commit and the UniTask revision. Unity imports this embedded package directly from `Packages/com.bezoro.unity-framework`.
+Version `0.4.2` uses `com.bezoro.framework` version `0.1.0-preview.1736`. Use the published Git package at commit `68f51f8484585174bce586b9c015da483dfdbaf7` in `bezoro/csharp-framework`. The repository's `Packages/manifest.json` pins that commit and the UniTask revision. Unity imports this embedded package directly from `Packages/com.bezoro.unity-framework`.
 
 Open the repository root in the exact Editor recorded in `ProjectSettings/ProjectVersion.txt`. Package Manager resolves the Git dependencies. Keep its generated `Packages/packages-lock.json` with the project after resolution. No lock file or PackageCache is fabricated outside Unity.
 
 The published Framework package contains the compiled .NET Standard assemblies and their dependency closure. Entries such as `Bezoro.Core.dll` in an assembly definition select assemblies supplied by UPM. Do not copy those DLLs into `Assets`, `src`, or another package, and remove duplicate manually installed copies from the development project before import.
 
 Unity permits Git dependencies in a [project manifest](https://docs.unity3d.com/6000.0/Documentation/Manual/upm-git.html), not as Git URLs in a package's `dependencies`. This is why each consuming project must declare the Framework and UniTask Git URLs, while this package declares its Unity registry dependencies in its own `package.json`.
+
+## Fix in 0.4.2
+
+Scene objects withdraw their pending async load before canceling it on destruction. The loading manager continues processing the queue when a withdrawn load is canceled, including when the same item has already been queued again. It still reports cancellations from loads that remain registered.
 
 ## Upgrading to 0.4.0
 

@@ -49,29 +49,23 @@ namespace Bezoro.Unity.Core.Tests.PlayMode
 			var cache = _root.GetComponent<HierarchyCache>();
 			cache.RebuildCache();
 			cache.DisableGroupsCache();
-			var serviceObject = new GameObject("Interrupted progress");
-			try
+			using var progress = new TestGlobalProvider<LoadingProgressService>("Interrupted progress");
+			var service = progress.Instance;
+			using var cancellation = new System.Threading.CancellationTokenSource();
+			service.ProgressChanged += value =>
 			{
-				var service = serviceObject.AddComponent<LoadingProgressService>();
-				serviceObject.GetComponent<SingletonScope>().ConfigureIdentity(service);
-				serviceObject.GetComponent<GlobalReference>().ConfigureTarget(service);
-				using var cancellation = new System.Threading.CancellationTokenSource();
-				service.ProgressChanged += progress =>
-				{
-					if (progress > 0 && progress < 1) cancellation.Cancel();
-				};
-				service.BeginOperation("Interrupt hierarchy");
-				bool cancelled = false;
-				yield return asyncObject.LoadAsync(cancellation.Token).SuppressCancellationThrow()
-					.ToCoroutine(result => cancelled = result);
-				Assert.IsTrue(cancelled);
-				Assert.IsFalse(asyncObject.IsLoaded);
-				Assert.IsFalse(renderer.enabled);
-				yield return asyncObject.LoadAsync(default).ToCoroutine();
-				Assert.IsTrue(asyncObject.IsLoaded);
-				Assert.IsTrue(renderer.enabled);
-			}
-			finally { Object.DestroyImmediate(serviceObject); }
+				if (value > 0 && value < 1) cancellation.Cancel();
+			};
+			service.BeginOperation("Interrupt hierarchy");
+			bool cancelled = false;
+			yield return asyncObject.LoadAsync(cancellation.Token).SuppressCancellationThrow()
+				.ToCoroutine(result => cancelled = result);
+			Assert.IsTrue(cancelled);
+			Assert.IsFalse(asyncObject.IsLoaded);
+			Assert.IsFalse(renderer.enabled);
+			yield return asyncObject.LoadAsync(default).ToCoroutine();
+			Assert.IsTrue(asyncObject.IsLoaded);
+			Assert.IsTrue(renderer.enabled);
 		}
 
 		[UnityTest]
@@ -80,22 +74,16 @@ namespace Bezoro.Unity.Core.Tests.PlayMode
 			_root = new GameObject("Two hierarchy activations");
 			var cache = _root.AddComponent<HierarchyCache>();
 			cache.RebuildCache();
-			var serviceObject = new GameObject("Cache progress service");
-			try
+			using var progress = new TestGlobalProvider<LoadingProgressService>("Cache progress service");
+			var service = progress.Instance;
+			for (int i = 0; i < 2; i++)
 			{
-				var service = serviceObject.AddComponent<LoadingProgressService>();
-				serviceObject.GetComponent<SingletonScope>().ConfigureIdentity(service);
-				serviceObject.GetComponent<GlobalReference>().ConfigureTarget(service);
-				for (int i = 0; i < 2; i++)
-				{
-					service.BeginOperation("Restore " + i);
-					yield return cache.EnableGroupsCacheAsync().ToCoroutine();
-					float deadline = Time.realtimeSinceStartup + 5f;
-					while (service.IsLoading && Time.realtimeSinceStartup < deadline) yield return null;
-					Assert.IsFalse(service.IsLoading, "Activation " + i + " left an unfinished stage.");
-				}
+				service.BeginOperation("Restore " + i);
+				yield return cache.EnableGroupsCacheAsync().ToCoroutine();
+				float deadline = Time.realtimeSinceStartup + 5f;
+				while (service.IsLoading && Time.realtimeSinceStartup < deadline) yield return null;
+				Assert.IsFalse(service.IsLoading, "Activation " + i + " left an unfinished stage.");
 			}
-			finally { Object.DestroyImmediate(serviceObject); }
 		}
 
 		[UnityTest]
