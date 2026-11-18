@@ -177,9 +177,9 @@ namespace Bezoro.Unity.Core.Editor.Tools
 			return asset;
 		}
 
-		private static Dictionary<string, (ulong, ulong, string)> DescribeHierarchy(GameObject root)
+		private static Dictionary<string, (ulong id, ulong prefab, string nested)> DescribeHierarchy(GameObject root)
 		{
-			var result = new Dictionary<string, (ulong, ulong, string)>();
+			var result = new Dictionary<string, (ulong id, ulong prefab, string nested)>();
 			void Add(string key, Object obj, string nested)
 			{
 				var id = GlobalObjectId.GetGlobalObjectIdSlow(obj);

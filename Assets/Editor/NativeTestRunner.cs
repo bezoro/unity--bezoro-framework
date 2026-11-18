@@ -5,9 +5,9 @@ using System.IO;
 using System.Linq;
 using UnityEditor;
 using UnityEditor.Build.Player;
-using UnityEditor.PackageManager;
 using UnityEditor.TestTools.TestRunner.Api;
 using UnityEngine;
+using PackageInfo = UnityEditor.PackageManager.PackageInfo;
 
 namespace Bezoro.Unity.Framework.Validation
 {
