@@ -144,6 +144,9 @@ def prepare():
         'package_manifest': package, 'project_manifest': manifest,
         'run_id': os.environ.get('GITHUB_RUN_ID'), 'run_attempt': os.environ.get('GITHUB_RUN_ATTEMPT'),
     })
+    input_lock = Path('Packages/packages-lock.json')
+    if input_lock.as_posix() in hashes:
+        shutil.copyfile(destination / input_lock, ARTIFACTS / 'packages-lock-input.json')
     write_json(ARTIFACTS / 'test-inventory.json', inventory)
     write_json(ARTIFACTS / 'test-plan.json', {
         'schema': 1, 'modes': list(MODES), 'scope': 'all package tests',
@@ -232,6 +235,16 @@ def license_return():
     print('Personal license return confirmed from the final GameCI return scope.')
 
 
+def verify_player_and_packages():
+    compilation = json.loads((ARTIFACTS / 'player-compilation.json').read_text())
+    if compilation != {'editor': EDITOR, 'target': 'StandaloneLinux64', 'assembly': 'Bezoro.Unity.Core.dll'}:
+        raise ValueError('Missing or unexpected Linux Player compilation evidence.')
+    lock = json.loads((ARTIFACTS / 'packages-lock-resolved.json').read_text())
+    dependencies = lock['dependencies']
+    if any(name not in dependencies for name in (PACKAGE_PATH.name, 'com.bezoro.framework', 'com.cysharp.unitask')):
+        raise ValueError('Native lock is missing required package dependencies.')
+
+
 def verify():
     if (ARTIFACTS / 'unity-failed').exists():
         raise ValueError('A native Unity launch failed; later launches were blocked.')
@@ -241,6 +254,7 @@ def verify():
     report = json.loads((ARTIFACTS / 'license-return.json').read_text())
     if report.get('result') != 'Passed' or report.get('evidence') not in ('returned_ulf', 'returned_entitlement', 'license_returned'):
         raise ValueError('Personal license return has not been confirmed.')
+    verify_player_and_packages()
     counts = {mode: verify_mode(mode, ARTIFACTS / f'{mode}-results.xml') for mode in MODES}
     write_json(ARTIFACTS / 'verification.json', {'result': 'Passed', 'commit': source['commit'], 'counts': counts})
 
@@ -256,10 +270,6 @@ def sanitize(text):
 
 
 def redact():
-    # The resolved lock is native output. Never manufacture a successful dependency resolution.
-    lock = ROOT / 'ci-source/Packages/packages-lock.json'
-    if lock.is_file():
-        shutil.copyfile(lock, ARTIFACTS / 'packages-lock.json')
     for path in ARTIFACTS.rglob('*'):
         if not path.is_file() or path.suffix not in ('.log', '.xml', '.json'):
             continue

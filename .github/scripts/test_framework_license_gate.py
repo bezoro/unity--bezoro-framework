@@ -139,8 +139,45 @@ class LicenseGateTests(unittest.TestCase):
     def test_manual_recovery_cannot_bypass_missing_history_and_hide_an_older_seat(self):
         api = FakeApi([self.current, run(200, started='2026-11-02T13:00:00Z'), run(100)],
                       {(200, 1): [], (100, 1): [job(100, returned=False)]})
-        with self.assertRaisesRegex(gate.GateError, 'native job evidence is missing'):
+        with self.assertRaisesRegex(gate.GateError, 'run 100, attempt 1'):
             self.check(api, event='workflow_dispatch', recovered='200', recovered_attempt='1')
+
+    def test_exact_missing_history_can_be_recovered_and_receipt_persists_for_future_push(self):
+        missing_step = job(100)
+        missing_step['steps'] = []
+        for missing in ([], [missing_step]):
+            with self.subTest(missing=missing):
+                api = FakeApi([self.current, run(100)], {(100, 1): missing})
+                gate.record_recovery(api, 900, 1, 'workflow_dispatch', '100', '1')
+                self.assertEqual(self.check(api, event='workflow_dispatch', recovered='100', recovered_attempt='1')['basis'],
+                                 'manual_incomplete_history_recovery')
+                receipt_job = job(200, launched=False)
+                receipt_job['steps'].insert(0, {'name': 'Record seat recovery for run 100 attempt 1',
+                                                'status': 'completed', 'conclusion': 'success'})
+                later = FakeApi([self.current, run(200), run(100)], {(200, 1): [receipt_job], (100, 1): missing})
+                self.assertEqual(self.check(later)['basis'], 'no_previous_launch')
+                receipt_job['steps'][0]['conclusion'] = 'failure'
+                with self.assertRaises(gate.GateError):
+                    self.check(later)
+
+    def test_recorded_recovery_for_a_known_launch_survives_a_preflight_only_dispatch(self):
+        recovered = job(100, returned=False)
+        receipt = job(200, launched=False)
+        receipt['steps'].insert(0, {'name': 'Record seat recovery for run 100 attempt 1',
+                                    'status': 'completed', 'conclusion': 'success'})
+        api = FakeApi([self.current, run(200), run(100)], {(200, 1): [receipt], (100, 1): [recovered]})
+        self.assertEqual(self.check(api)['basis'], 'recorded_seat_recovery')
+        receipt['steps'][0]['name'] = 'Record seat recovery for run 100 attempt 2'
+        with self.assertRaisesRegex(gate.GateError, 'run 100, attempt 1'):
+            self.check(api)
+
+    def test_receipt_refuses_unverified_identity_unfinished_safe_or_missing_attempt(self):
+        for status, jobs in [('queued', []), ('completed', [job(100)]), ('completed', [dict(job(100), run_id=101)])]:
+            api = FakeApi([self.current, run(100, status=status)], {(100, 1): jobs})
+            with self.subTest(status=status, jobs=jobs), self.assertRaises(gate.GateError):
+                gate.record_recovery(api, 900, 1, 'workflow_dispatch', '100', '1')
+        with self.assertRaises(gate.GateError):
+            gate.record_recovery(FakeApi([self.current]), 900, 1, 'workflow_dispatch', '101', '1')
 
     def test_queued_run_without_jobs_does_not_clear_an_older_uncertain_launch(self):
         api = FakeApi([self.current, run(200, started='2026-11-02T13:00:00Z', status='queued'), run(100)],
