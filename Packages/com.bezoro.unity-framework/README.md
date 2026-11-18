@@ -42,6 +42,8 @@ Version 0.2.0 moved the package into `Packages/com.bezoro.unity-framework` and r
 
 For another project, add the Framework and UniTask Git dependencies to that project's manifest. Install this package from disk using this directory's `package.json`, or use `https://github.com/bezoro/unity--bezoro-framework.git?path=Packages/com.bezoro.unity-framework#<tag-or-commit>`, replacing the revision with a published tag or commit containing this layout. The old repository-root URL must be updated. Remove a legacy Assets/submodule installation before using UPM; never import both copies.
 
+Install [Git LFS](https://git-lfs.com/) and run `git lfs install` before installing from Git. For an existing checkout used by a disk installation, run `git lfs pull` to materialize the Symlink Utility documentation image.
+
 This project does not change any existing game, its package lock, or its submodule revision. Native Unity resolution, compilation and tests need their own recorded results; package metadata checks alone do not establish those results.
 
 ## License
