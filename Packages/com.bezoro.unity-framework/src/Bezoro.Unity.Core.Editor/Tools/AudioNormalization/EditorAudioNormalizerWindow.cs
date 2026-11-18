@@ -388,70 +388,31 @@ namespace Bezoro.Unity.Core.Editor.Tools.AudioNormalization
 			var outputFolderPath = EditorAudioNormalizer.GetNormalizedCopiesFolderPath(
 				_folderPath
 			);
-			Directory.CreateDirectory(
-				EditorAudioNormalizer.AssetPathToFullPath(
-					outputFolderPath
-				)
-			);
-
-			var replacementAssetPaths = new Dictionary<string, string>(
-				StringComparer.OrdinalIgnoreCase
-			);
-			var errors = new List<string>();
-
-			foreach (var row in processableRows)
+			if (!TryCreateTemporaryNormalizedWavs(processableRows, out var files, out var error))
 			{
-				if (!EditorAudioNormalizer.TryCreateNormalizedWavData(
-					    row.Clip,
-					    _targetActiveRmsDb,
-					    _maxPeakDb,
-					    _silenceThresholdDb,
-					    out var wavData,
-					    out _,
-					    out _,
-					    out var error
-				    ))
-				{
-					errors.Add(
-						$"{row.AssetPath}: {error}"
-					);
-					continue;
-				}
-
-				var outputAssetPath = GetOutputCopyAssetPath(
-					row.AssetPath,
-					outputFolderPath
-				);
-				File.WriteAllBytes(
-					EditorAudioNormalizer.AssetPathToFullPath(
-						outputAssetPath
-					),
-					wavData
-				);
-				replacementAssetPaths[row.AssetPath] = outputAssetPath;
+				DeleteTemporaryGeneratedFiles(files);
+				SetStatus(error, MessageType.Error);
+				return;
 			}
 
-			AssetDatabase.Refresh();
-			foreach (var outputAssetPath in replacementAssetPaths.Values)
-				AssetDatabase.ImportAsset(
-					outputAssetPath,
-					ImportAssetOptions.ForceUpdate
-				);
-
-			var changedSettingsCount = _applyCopiesToEditorAudioFeedbackSettings
-				? EditorAudioNormalizer.ApplyClipReplacementMapToEditorAudioFeedbackSettings(
-					replacementAssetPaths
-				)
-				: 0;
-
-			SetStatus(
-				errors.Count == 0
-					? $"Wrote {replacementAssetPaths.Count} normalized WAV copies to {outputFolderPath}. Updated {changedSettingsCount} editor audio feedback references."
-					: $"Wrote {replacementAssetPaths.Count} normalized WAV copies with {errors.Count} errors:\n{string.Join("\n", errors)}",
-				errors.Count == 0
-					? MessageType.Info
-					: MessageType.Warning
-			);
+			try
+			{
+				var copies = files.Select(f => new GeneratedNormalizedWav(f.SourceAssetPath,
+					GetOutputCopyAssetPath(f.SourceAssetPath, _folderPath, outputFolderPath), f.TemporaryWavPath)).ToList();
+				ApplyAudioBatch(copies, false, null);
+				var map = copies.ToDictionary(f => f.SourceAssetPath, f => f.ReplacementAssetPath);
+				var changed = _applyCopiesToEditorAudioFeedbackSettings
+					? EditorAudioNormalizer.ApplyClipReplacementMapToEditorAudioFeedbackSettings(map) : 0;
+				SetStatus($"Wrote {copies.Count} normalized WAV copies to {outputFolderPath}. Updated {changed} settings.", MessageType.Info);
+			}
+			catch (Exception ex)
+			{
+				SetStatus(ex.Message, MessageType.Error);
+			}
+			finally
+			{
+				DeleteTemporaryGeneratedFiles(files);
+			}
 		}
 
 		private void ReplaceOriginalsWithNormalizedWavs()
@@ -495,51 +456,9 @@ namespace Bezoro.Unity.Core.Editor.Tools.AudioNormalization
 				return;
 			}
 
-			var conflict = GetReplacementConflict(
-				generatedFiles
-			);
-			if (!string.IsNullOrWhiteSpace(
-				    conflict
-			    ))
-			{
-				DeleteTemporaryGeneratedFiles(
-					generatedFiles
-				);
-				SetStatus(
-					conflict,
-					MessageType.Error
-				);
-				return;
-			}
-
 			try
 			{
-				if (_createBackupsWhenReplacing)
-					Directory.CreateDirectory(
-						backupRootFullPath
-					);
-
-				AssetDatabase.StartAssetEditing();
-				try
-				{
-					foreach (var generatedFile in generatedFiles)
-						ReplaceOriginalWithGeneratedWav(
-							generatedFile,
-							backupRootFullPath,
-							_createBackupsWhenReplacing
-						);
-				}
-				finally
-				{
-					AssetDatabase.StopAssetEditing();
-				}
-
-				AssetDatabase.Refresh();
-				foreach (var generatedFile in generatedFiles)
-					AssetDatabase.ImportAsset(
-						generatedFile.ReplacementAssetPath,
-						ImportAssetOptions.ForceUpdate
-					);
+				ApplyAudioBatch(generatedFiles, true, _createBackupsWhenReplacing ? backupRootFullPath : null);
 
 				SetStatus(
 					_createBackupsWhenReplacing
@@ -575,56 +494,28 @@ namespace Bezoro.Unity.Core.Editor.Tools.AudioNormalization
 			generatedFiles = new List<GeneratedNormalizedWav>();
 			error          = string.Empty;
 
-			var temporaryFolderPath = Path.Combine(
-				Path.GetTempPath(),
-				nameof(Bezoro),
-				nameof(EditorAudioNormalizer),
-				DateTime.Now.ToString(
-					"yyyyMMdd_HHmmss_fff"
-				)
-			);
-			Directory.CreateDirectory(
-				temporaryFolderPath
-			);
-
-			foreach (var row in rows)
+			try
 			{
-				if (!EditorAudioNormalizer.TryCreateNormalizedWavData(
-					    row.Clip,
-					    _targetActiveRmsDb,
-					    _maxPeakDb,
-					    _silenceThresholdDb,
-					    out var wavData,
-					    out _,
-					    out _,
-					    out var rowError
-				    ))
+				foreach (var row in rows)
 				{
-					error = $"{row.AssetPath}: {rowError}";
-					return false;
+					if (!EditorAudioNormalizer.TryCreateNormalizedWavData(row.Clip, _targetActiveRmsDb, _maxPeakDb,
+						_silenceThresholdDb, out var wavData, out _, out _, out var rowError))
+					{
+						error = $"{row.AssetPath}: {rowError}";
+						return false;
+					}
+					var temporary = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}.wav");
+					generatedFiles.Add(new GeneratedNormalizedWav(row.AssetPath,
+						EditorAudioNormalizer.GetReplacementAssetPath(row.AssetPath), temporary));
+					File.WriteAllBytes(temporary, wavData);
 				}
-
-				var replacementAssetPath = EditorAudioNormalizer.GetReplacementAssetPath(
-					row.AssetPath
-				);
-				var temporaryWavPath = Path.Combine(
-					temporaryFolderPath,
-					$"{Guid.NewGuid():N}.wav"
-				);
-				File.WriteAllBytes(
-					temporaryWavPath,
-					wavData
-				);
-				generatedFiles.Add(
-					new GeneratedNormalizedWav(
-						row.AssetPath,
-						replacementAssetPath,
-						temporaryWavPath
-					)
-				);
+				return true;
 			}
-
-			return true;
+			catch (Exception ex)
+			{
+				error = ex.Message;
+				return false;
+			}
 		}
 
 		private static string GetReplacementConflict(IReadOnlyList<GeneratedNormalizedWav> generatedFiles)
@@ -656,42 +547,78 @@ namespace Bezoro.Unity.Core.Editor.Tools.AudioNormalization
 			return string.Empty;
 		}
 
-		private static void ReplaceOriginalWithGeneratedWav(
-			GeneratedNormalizedWav generatedFile,
-			string                 backupRootFullPath,
-			bool                   createBackup
-		)
+		internal static void ApplyAudioBatch(IReadOnlyList<GeneratedNormalizedWav> files, bool replace, string? backup)
 		{
-			if (createBackup)
-				BackupAssetFile(
-					generatedFile.SourceAssetPath,
-					backupRootFullPath
-				);
-
-			if (!PathsEqual(
-				    generatedFile.SourceAssetPath,
-				    generatedFile.ReplacementAssetPath
-			    ))
+			var destinations = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+			foreach (var file in files)
+				if (!destinations.Add(file.ReplacementAssetPath))
+					throw new IOException($"Several clips would write {file.ReplacementAssetPath}.");
+			if (replace)
 			{
-				var moveError = AssetDatabase.MoveAsset(
-					generatedFile.SourceAssetPath,
-					generatedFile.ReplacementAssetPath
-				);
-				if (!string.IsNullOrEmpty(
-					    moveError
-				    ))
-					throw new IOException(
-						moveError
-					);
+				var conflict = GetReplacementConflict(files);
+				if (!string.IsNullOrEmpty(conflict)) throw new IOException(conflict);
 			}
 
-			File.Copy(
-				generatedFile.TemporaryWavPath,
-				EditorAudioNormalizer.AssetPathToFullPath(
-					generatedFile.ReplacementAssetPath
-				),
-				true
-			);
+			string snapshot = backup ?? Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
+			var paths = new HashSet<string>(destinations, StringComparer.OrdinalIgnoreCase);
+			if (replace) paths.UnionWith(files.Select(file => file.SourceAssetPath));
+			foreach (var path in paths)
+				BackupAssetFile(path, snapshot);
+
+			bool canDeleteSnapshot = true;
+			try
+			{
+				AssetDatabase.StartAssetEditing();
+				try
+				{
+					foreach (var file in files)
+					{
+						if (replace && !PathsEqual(file.SourceAssetPath, file.ReplacementAssetPath))
+						{
+							string moveError = AssetDatabase.MoveAsset(file.SourceAssetPath, file.ReplacementAssetPath);
+							if (!string.IsNullOrEmpty(moveError)) throw new IOException(moveError);
+						}
+						string destination = EditorAudioNormalizer.AssetPathToFullPath(file.ReplacementAssetPath);
+						Directory.CreateDirectory(Path.GetDirectoryName(destination)!);
+						File.Copy(file.TemporaryWavPath, destination, true);
+					}
+				}
+				finally
+				{
+					AssetDatabase.StopAssetEditing();
+				}
+				AssetDatabase.Refresh();
+				foreach (var path in destinations)
+				{
+					AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceSynchronousImport | ImportAssetOptions.ForceUpdate);
+					if (AssetDatabase.LoadAssetAtPath<AudioClip>(path) == null)
+						throw new IOException($"Unity could not import {path} as audio.");
+				}
+			}
+			catch
+			{
+				canDeleteSnapshot = false;
+				foreach (var path in paths)
+				{
+					RestoreFile(path, snapshot);
+					RestoreFile(path + ".meta", snapshot);
+				}
+				AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
+				canDeleteSnapshot = true;
+				throw;
+			}
+			finally
+			{
+				if (backup == null && canDeleteSnapshot && Directory.Exists(snapshot)) Directory.Delete(snapshot, true);
+			}
+		}
+
+		private static void RestoreFile(string assetPath, string snapshot)
+		{
+			var saved = Path.Combine(snapshot, assetPath);
+			var destination = EditorAudioNormalizer.AssetPathToFullPath(assetPath);
+			if (File.Exists(saved)) File.Copy(saved, destination, true);
+			else if (File.Exists(destination)) File.Delete(destination);
 		}
 
 		private void DeleteBackups()
@@ -818,10 +745,11 @@ namespace Bezoro.Unity.Core.Editor.Tools.AudioNormalization
 				))
 				.ToArray();
 
-		private static string GetOutputCopyAssetPath(string sourceAssetPath, string outputFolderPath) =>
-			EditorAudioNormalizer.NormalizeAssetPath(
-				$"{outputFolderPath}/{Path.GetFileNameWithoutExtension(sourceAssetPath)}.wav"
-			);
+		internal static string GetOutputCopyAssetPath(string source, string sourceFolder, string outputFolder)
+		{
+			var relative = source.Substring(sourceFolder.TrimEnd('/').Length + 1);
+			return EditorAudioNormalizer.NormalizeAssetPath(Path.Combine(outputFolder, Path.ChangeExtension(relative, ".wav")));
+		}
 
 		private static string GetBackupRootDirectoryFullPath() =>
 			Path.Combine(
@@ -837,7 +765,7 @@ namespace Bezoro.Unity.Core.Editor.Tools.AudioNormalization
 				GetBackupRootDirectoryFullPath(),
 				DateTime.Now.ToString(
 					"yyyyMMdd_HHmmss"
-				)
+				) + "_" + Guid.NewGuid().ToString("N")
 			);
 
 		private void SetFolderAsset(DefaultAsset folderAsset)
@@ -917,7 +845,7 @@ namespace Bezoro.Unity.Core.Editor.Tools.AudioNormalization
 			public string                    Error     { get; }
 		}
 
-		private readonly struct GeneratedNormalizedWav
+		internal readonly struct GeneratedNormalizedWav
 		{
 			public GeneratedNormalizedWav(
 				string sourceAssetPath,

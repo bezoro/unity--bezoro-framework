@@ -100,83 +100,41 @@ namespace Bezoro.Unity.Core.Editor.EditorWindows
 
 		private void CopyAllComponents()
 		{
-			if (_targetGameObject == null) return;
+			if (_targetGameObject == null || EditorUtility.IsPersistent(_targetGameObject)) return;
 
-			Undo.RegisterCompleteObjectUndo(
-				_targetGameObject,
-				"Copy All Components"
-			);
-
-			foreach (var component in _sourceComponents)
-			{
-				if (component != null)
-					CopyComponent(
-						component
-					);
-			}
-
-			EditorUtility.SetDirty(
-				_targetGameObject
-			);
+			CopyComponents(_sourceComponents, _targetGameObject);
 
 			Debug.Log(
 				$"Copied {_sourceComponents.Count} components to {_targetGameObject.name}"
 			);
 		}
 
-		private void CopyComponent(Component originalComponent)
+		internal static void CopyComponents(IEnumerable<Component> components, GameObject target)
 		{
-			if (_targetGameObject == null) return;
+			if (EditorUtility.IsPersistent(target))
+				throw new InvalidOperationException("Open the prefab in Prefab Mode to edit its components.");
 
-			var componentType = originalComponent.GetType();
-
-			// Check if target already has this component type
-			var existingComponent = _targetGameObject.GetComponent(
-				componentType
-			);
-
-			if (existingComponent != null)
+			var nextIndex = new Dictionary<Type, int>();
+			foreach (var source in components)
 			{
-				// Copy values to existing component
-				EditorUtility.CopySerialized(
-					originalComponent,
-					existingComponent
-				);
-			}
-			else
-			{
-				// Add new component and copy values
-				var newComponent = _targetGameObject.AddComponent(
-					componentType
-				);
+				if (source == null || source.gameObject == target) continue;
+				var type = source.GetType();
+				nextIndex.TryGetValue(type, out var index);
+				nextIndex[type] = index + 1;
 
-				EditorUtility.CopySerialized(
-					originalComponent,
-					newComponent
-				);
+				var matches = target.GetComponents(type).Where(c => c.GetType() == type).ToArray();
+				var destination = index < matches.Length ? matches[index] : Undo.AddComponent(target, type);
+				if (destination == null) continue;
+				Undo.RecordObject(destination, "Copy Component");
+				EditorUtility.CopySerialized(source, destination);
+				PrefabUtility.RecordPrefabInstancePropertyModifications(destination);
 			}
 		}
 
 		private void CopySelectedComponents()
 		{
-			if (_targetGameObject == null) return;
-
-			Undo.RegisterCompleteObjectUndo(
-				_targetGameObject,
-				"Copy Selected Components"
-			);
-
-			foreach (var kvp in _componentSelection)
-			{
-				if (kvp.Value && kvp.Key != null) // If selected
-					CopyComponent(
-						kvp.Key
-					);
-			}
-
-			EditorUtility.SetDirty(
-				_targetGameObject
-			);
+			if (_targetGameObject == null || EditorUtility.IsPersistent(_targetGameObject)) return;
+			CopyComponents(_sourceComponents.Where(c => c != null && _componentSelection[c]), _targetGameObject);
 
 			Debug.Log(
 				$"Copied {_componentSelection.Values.Count(v => v)} components to {_targetGameObject.name}"
@@ -298,6 +256,11 @@ namespace Bezoro.Unity.Core.Editor.EditorWindows
 				return;
 			}
 
+			if (EditorUtility.IsPersistent(_targetGameObject))
+			{
+				EditorGUILayout.HelpBox("Open the target prefab in Prefab Mode to edit its components.", MessageType.Info);
+				return;
+			}
 			if (_sourceGameObject == _targetGameObject)
 			{
 				EditorGUILayout.HelpBox(
@@ -318,6 +281,7 @@ namespace Bezoro.Unity.Core.Editor.EditorWindows
 					$"Copy Selected Components ({selectedCount})"
 				)) CopySelectedComponents();
 
+			GUI.enabled = true;
 			if (GUILayout.Button(
 					"Copy All Components"
 				)) CopyAllComponents();
@@ -416,11 +380,11 @@ namespace Bezoro.Unity.Core.Editor.EditorWindows
 		private void RefreshComponentList()
 		{
 			// Store current selections before clearing
-			var currentSelections = new Dictionary<Type, bool>();
+			var currentSelections = new Dictionary<Component, bool>();
 			foreach (var kvp in _componentSelection)
 			{
 				if (kvp.Key != null)
-					currentSelections[kvp.Key.GetType()] = kvp.Value;
+					currentSelections[kvp.Key] = kvp.Value;
 			}
 
 			_sourceComponents.Clear();
@@ -450,10 +414,7 @@ namespace Bezoro.Unity.Core.Editor.EditorWindows
 				);
 
 				// Restore previous selection if it existed
-				bool wasSelected = currentSelections.ContainsKey(
-									   componentType
-								   ) &&
-								   currentSelections[componentType];
+				bool wasSelected = currentSelections.TryGetValue(component, out var selected) && selected;
 
 				_componentSelection[component] = wasSelected;
 			}
@@ -463,12 +424,7 @@ namespace Bezoro.Unity.Core.Editor.EditorWindows
 
 		private void RemoveDuplicateComponents()
 		{
-			if (_targetGameObject == null) return;
-
-			Undo.RegisterCompleteObjectUndo(
-				_targetGameObject,
-				"Remove Duplicate Components"
-			);
+			if (_targetGameObject == null || EditorUtility.IsPersistent(_targetGameObject)) return;
 
 			IEnumerable<IGrouping<Type, Component>> componentGroups = _targetGameObject.GetComponents<Component>()
 				.Where(c => c != null
@@ -491,7 +447,7 @@ namespace Bezoro.Unity.Core.Editor.EditorWindows
 							component
 						))
 					{
-						DestroyImmediate(
+						Undo.DestroyObjectImmediate(
 							component
 						);
 

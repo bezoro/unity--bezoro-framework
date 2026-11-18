@@ -1,10 +1,14 @@
 using System;
+using System.ComponentModel;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 using System.IO;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
 using Debug = UnityEngine.Debug;
+
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Bezoro.Unity.Core.Tests.EditMode")]
 
 namespace Bezoro.Unity.Core.Editor.SymlinkUtility
 {
@@ -54,84 +58,23 @@ namespace Bezoro.Unity.Core.Editor.SymlinkUtility
 				alignment = TextAnchor.MiddleRight
 			};
 
-		private static string GetRelativePath(string source_path, string output_path)
+		internal static string GetRelativePath(string source, string destination)
 		{
-			if (string.IsNullOrEmpty(
-					output_path
-				)) return source_path;
-
-			source_path ??= string.Empty;
-
-			string[] split_output = output_path.Split(
-				new[] { '/' },
-				StringSplitOptions.RemoveEmptyEntries
-			);
-
-			string[] split_source = source_path.Split(
-				new[] { '/' },
-				StringSplitOptions.RemoveEmptyEntries
-			);
-
-			int max = Mathf.Min(
-				split_output.Length,
-				split_source.Length
-			);
-
-			var i = 0;
-
-			while (i < max)
-			{
-				if (split_output[i] != split_source[i]) break;
-
-				++i;
-			}
-
-			int hop_up_count     = split_output.Length - i - 1;
-			int new_split_count  = hop_up_count + split_source.Length - i;
-			var new_split_target = new string[new_split_count];
-			var j                = 0;
-
-			for (; j < hop_up_count; ++j) new_split_target[j] = "..";
-
-			for (max = new_split_target.Length; j < max; ++j, ++i) new_split_target[j] = split_source[i];
-
-			return string.Join(
-				Path.DirectorySeparatorChar.ToString(),
-				new_split_target
-			);
+			var parent = new Uri(Path.GetFullPath(Path.GetDirectoryName(destination)!) + Path.DirectorySeparatorChar);
+			var relative = parent.MakeRelativeUri(new Uri(Path.GetFullPath(source)));
+			if (relative.IsAbsoluteUri) throw new IOException("A relative link requires paths on the same volume.");
+			return Uri.UnescapeDataString(relative.ToString()).Replace('/', Path.DirectorySeparatorChar);
 		}
 
-		private static void ExecuteBashCommand(string command)
+		[DllImport("libc", EntryPoint = "symlink", SetLastError = true)]
+		private static extern int CreateUnixLink(string source, string destination);
+
+		internal static void CreateUnixDirectoryLink(string source, string destination)
 		{
-			command = command.Replace(
-				"\"",
-				"\"\""
-			);
-
-			var proc = new Process
-			{
-				StartInfo = new()
-				{
-					FileName               = "/bin/bash",
-					Arguments              = "-c \"" + command + "\"",
-					UseShellExecute        = false,
-					RedirectStandardOutput = true,
-					RedirectStandardError  = true,
-					CreateNoWindow         = true
-				}
-			};
-
-			using (proc)
-			{
-				proc.Start();
-				proc.WaitForExit();
-
-				if (!proc.StandardError.EndOfStream)
-					Debug.LogError(
-						proc.StandardError.ReadToEnd()
-					);
-			}
+			if (CreateUnixLink(source, destination) != 0)
+				throw new IOException($"Cannot create link at {destination}: {new Win32Exception(Marshal.GetLastWin32Error()).Message}");
 		}
+
 
 		private static void ExecuteCmdCommand(string command, bool as_admin)
 		{
@@ -221,14 +164,14 @@ namespace Bezoro.Unity.Core.Editor.SymlinkUtility
 					source_folder_path
 				)) return;
 
-			if (source_folder_path.Contains(
-					Application.dataPath
-				))
+			var assets = Path.GetFullPath(Application.dataPath).TrimEnd(Path.DirectorySeparatorChar);
+			var source = Path.GetFullPath(source_folder_path).TrimEnd(Path.DirectorySeparatorChar);
+			var comparison = Application.platform == RuntimePlatform.WindowsEditor
+				? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
+			if (source.Equals(assets, comparison) || source.StartsWith(assets + Path.DirectorySeparatorChar, comparison) ||
+			    assets.StartsWith(source + Path.DirectorySeparatorChar, comparison))
 			{
-				Debug.LogWarning(
-					"Cannot create a symlink to folder in your project!"
-				);
-
+				Debug.LogWarning("Choose a folder outside the project Assets tree that does not contain it.");
 				return;
 			}
 
@@ -270,10 +213,7 @@ namespace Bezoro.Unity.Core.Editor.SymlinkUtility
 				);
 
 			// Get path to project.
-			string path_to_project = Application.dataPath.Split(
-				new[] { "/Assets" },
-				StringSplitOptions.None
-			)[0];
+			string path_to_project = Directory.GetParent(Application.dataPath)!.FullName;
 
 			target_path = $"{path_to_project}/{target_path}/{source_folder_name}";
 
@@ -304,29 +244,13 @@ namespace Bezoro.Unity.Core.Editor.SymlinkUtility
 				command,
 				link_type != SymlinkType.Junction
 			); // Symlinks require admin privilege on windows, junctions do not.
-#elif UNITY_EDITOR_OSX
-			// For some reason, OSX doesn't want to create a symlink with quotes around the paths, so escape the spaces instead.
-			sourcePath = sourcePath.Replace(
-				" ",
-				"\\ "
-			);
-
-			targetPath = targetPath.Replace(
-				" ",
-				"\\ "
-			);
-
-			string command = string.Format(
-				"ln -s {0} {1}",
-				sourcePath,
-				targetPath
-			);
-
-			ExecuteBashCommand(
-				command
-			);
-#elif UNITY_EDITOR_LINUX
-			// Is Linux the same as OSX?
+#elif UNITY_EDITOR_OSX || UNITY_EDITOR_LINUX
+			try { CreateUnixDirectoryLink(source_path, target_path); }
+			catch (IOException error)
+			{
+				Debug.LogError(error.Message);
+				return;
+			}
 #endif
 
 			AssetDatabase.Refresh(

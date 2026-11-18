@@ -10,6 +10,10 @@ namespace Bezoro.Unity.Core.Editor.Tools
 	{
 		private const string PATH = "GameObject/Prefab/Sync Prefab Asset Name";
 
+		internal static bool IsInstanceRoot(GameObject selected) =>
+			selected != null && !EditorUtility.IsPersistent(selected) &&
+			PrefabUtility.GetNearestPrefabInstanceRoot(selected) == selected;
+
 		[MenuItem(
 			PATH,
 			true
@@ -21,9 +25,7 @@ namespace Bezoro.Unity.Core.Editor.Tools
 			// 2. The selected GameObject is a prefab instance
 			if (Selection.activeGameObject == null) return false;
 
-			return PrefabUtility.IsPartOfPrefabInstance(
-				Selection.activeGameObject
-			);
+			return IsInstanceRoot(Selection.activeGameObject);
 		}
 
 		[MenuItem(
@@ -45,9 +47,7 @@ namespace Bezoro.Unity.Core.Editor.Tools
 			}
 
 			// Check if the selected object is a prefab instance
-			if (!PrefabUtility.IsPartOfPrefabInstance(
-					selectedGameObject
-				))
+			if (!IsInstanceRoot(selectedGameObject))
 			{
 				Debug.LogWarning(
 					"Selected GameObject is not a prefab instance."
