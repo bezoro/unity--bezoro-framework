@@ -252,6 +252,13 @@ namespace Bezoro.Unity.Core.Loading
 			RecalculateProgress();
 		}
 
+		internal void DiscardStage(LoadingStage stage)
+		{
+			if (!_stages.Remove(stage)) return;
+			if (_stages.Count == 0) ResetState();
+			else RecalculateProgress();
+		}
+
 		public void ForceComplete()
 		{
 			IsLoading = true;
@@ -316,8 +323,8 @@ namespace Bezoro.Unity.Core.Loading
 
 			if (this == null) return;
 
-			Completed?.Invoke();
 			ResetState();
+			Completed?.Invoke();
 		}
 
 		private async UniTaskVoid WaitForFirstTracker()

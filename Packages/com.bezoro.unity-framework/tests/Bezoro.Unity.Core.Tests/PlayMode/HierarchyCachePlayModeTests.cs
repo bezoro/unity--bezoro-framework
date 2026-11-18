@@ -1,6 +1,7 @@
 using System.Collections;
 using Bezoro.Unity.Core.AsyncLoading;
 using Bezoro.Unity.Core.MonoBehaviours;
+using Bezoro.Unity.Core.Loading;
 using Cysharp.Threading.Tasks;
 using NUnit.Framework;
 using UnityEngine;
@@ -19,6 +20,82 @@ namespace Bezoro.Unity.Core.Tests.PlayMode
 		{
 			if (_root != null)
 				Object.DestroyImmediate(_root);
+		}
+
+		[UnityTest]
+		public IEnumerator LoadAsync_PreCancelled_DoesNotMarkLoadedAndCanRetry()
+		{
+			_root = new GameObject("Cancelled async hierarchy");
+			_root.SetActive(false);
+			var asyncObject = _root.AddComponent<AsyncGameObject>();
+			bool cancelled = false;
+			yield return asyncObject.LoadAsync(new System.Threading.CancellationToken(true))
+				.SuppressCancellationThrow().ToCoroutine(result => cancelled = result);
+			Assert.IsTrue(cancelled);
+			Assert.IsFalse(asyncObject.IsLoaded);
+			yield return asyncObject.LoadAsync(default).ToCoroutine();
+			Assert.IsTrue(asyncObject.IsLoaded);
+		}
+
+		[UnityTest]
+		public IEnumerator LoadAsync_CancelAfterFirstGroup_KeepsRemainingHierarchyRetryable()
+		{
+			_root = new GameObject("Interrupted hierarchy");
+			_root.SetActive(false);
+			var child = new GameObject("Group still to be enabled");
+			child.transform.SetParent(_root.transform);
+			var renderer = child.AddComponent<MeshRenderer>();
+			var asyncObject = _root.AddComponent<AsyncGameObject>();
+			var cache = _root.GetComponent<HierarchyCache>();
+			cache.RebuildCache();
+			cache.DisableGroupsCache();
+			var serviceObject = new GameObject("Interrupted progress");
+			try
+			{
+				var service = serviceObject.AddComponent<LoadingProgressService>();
+				serviceObject.GetComponent<SingletonScope>().ConfigureIdentity(service);
+				serviceObject.GetComponent<GlobalReference>().ConfigureTarget(service);
+				using var cancellation = new System.Threading.CancellationTokenSource();
+				service.ProgressChanged += progress =>
+				{
+					if (progress > 0 && progress < 1) cancellation.Cancel();
+				};
+				service.BeginOperation("Interrupt hierarchy");
+				bool cancelled = false;
+				yield return asyncObject.LoadAsync(cancellation.Token).SuppressCancellationThrow()
+					.ToCoroutine(result => cancelled = result);
+				Assert.IsTrue(cancelled);
+				Assert.IsFalse(asyncObject.IsLoaded);
+				Assert.IsFalse(renderer.enabled);
+				yield return asyncObject.LoadAsync(default).ToCoroutine();
+				Assert.IsTrue(asyncObject.IsLoaded);
+				Assert.IsTrue(renderer.enabled);
+			}
+			finally { Object.DestroyImmediate(serviceObject); }
+		}
+
+		[UnityTest]
+		public IEnumerator EnableGroupsCacheAsync_RepeatedActivationCompletesBothProgressOperations()
+		{
+			_root = new GameObject("Two hierarchy activations");
+			var cache = _root.AddComponent<HierarchyCache>();
+			cache.RebuildCache();
+			var serviceObject = new GameObject("Cache progress service");
+			try
+			{
+				var service = serviceObject.AddComponent<LoadingProgressService>();
+				serviceObject.GetComponent<SingletonScope>().ConfigureIdentity(service);
+				serviceObject.GetComponent<GlobalReference>().ConfigureTarget(service);
+				for (int i = 0; i < 2; i++)
+				{
+					service.BeginOperation("Restore " + i);
+					yield return cache.EnableGroupsCacheAsync().ToCoroutine();
+					float deadline = Time.realtimeSinceStartup + 5f;
+					while (service.IsLoading && Time.realtimeSinceStartup < deadline) yield return null;
+					Assert.IsFalse(service.IsLoading, "Activation " + i + " left an unfinished stage.");
+				}
+			}
+			finally { Object.DestroyImmediate(serviceObject); }
 		}
 
 		[UnityTest]

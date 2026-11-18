@@ -23,6 +23,20 @@ namespace Bezoro.Unity.Core.Tests.EditMode
 			_serviceLocator.Dispose();
 
 		[Test]
+		public void Register_WhenConcurrentCallersRequestSameSingleton_RunsOneFactory()
+		{
+			int calls = 0;
+			System.Threading.Tasks.Parallel.For(0, 32, _ =>
+				_serviceLocator.Register<I_TestService, TestService>(() =>
+				{
+					System.Threading.Interlocked.Increment(ref calls);
+					return new TestService();
+				}, ServiceLifespan.Singleton));
+			Assert.AreEqual(1, calls);
+			Assert.IsInstanceOf<TestService>(_serviceLocator.GetService<I_TestService>());
+		}
+
+		[Test]
 		public void Dispose_ClearsAllServices()
 		{
 			_serviceLocator.Register<I_TestService, TestService>(

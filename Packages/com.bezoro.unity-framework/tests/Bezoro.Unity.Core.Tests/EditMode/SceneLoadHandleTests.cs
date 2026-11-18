@@ -14,6 +14,25 @@ namespace Bezoro.Unity.Core.Tests.EditMode
 	public sealed class SceneLoadHandleTests
 	{
 		[Test]
+		public async Task Unload_WhenAlreadyAbsent_CompletesSuccessfully()
+		{
+			var handle = SceneLoader.Unload("Assets/NotLoaded.unity");
+			await handle.Task;
+			Assert.IsTrue(handle.IsDone);
+			Assert.IsFalse(handle.IsFailed);
+			Assert.AreEqual(1f, handle.Progress);
+		}
+
+		[Test]
+		public void Load_WithAlreadyCancelledToken_StopsBeforeStartingNativeOperation()
+		{
+			var handle = SceneLoader.Load("Assets/NotInBuildSettings.unity",
+				ct: new System.Threading.CancellationToken(true));
+			Assert.IsTrue(handle.IsCancelled);
+			Assert.IsFalse(handle.IsDone);
+		}
+
+		[Test]
 		public async Task Constructor_WhenOperationsAreNull_FailsHandle()
 		{
 			var handle = new SceneLoadHandle(null);

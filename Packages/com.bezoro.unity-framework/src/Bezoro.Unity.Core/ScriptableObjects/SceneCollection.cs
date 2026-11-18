@@ -42,6 +42,8 @@ namespace Bezoro.Unity.Core.ScriptableObjects
 		)]
 		[SerializeField] private List<SceneCollectionEntry> sceneEntries = new();
 
+		[SerializeField, HideInInspector] private bool sceneEntriesMigrated;
+
 		[SerializeField] private bool useLoadingScreen = true;
 
 		[Tooltip(
@@ -69,24 +71,26 @@ namespace Bezoro.Unity.Core.ScriptableObjects
 
 		public string? Name => name;
 
-		public async UniTask Load()
+		public UniTask Load() => Load(useLoadingScreen, loadMode, loadScreenOverride?.Path);
+
+		internal async UniTask Load(bool showLoadingScreen, LoadSceneMode mode, string? screenPath)
 		{
 			EnsureEntriesMigrated();
 			var plan = SceneCollectionLoadPlan.Create(sceneEntries);
 			if (plan.ProviderScenePaths.Count == 0 && plan.RemainingScenePaths.Count == 0)
 				throw new InvalidOperationException($"{nameof(SceneCollection)} '{name}' contains no valid scenes.");
 
-			if (useLoadingScreen)
+			if (showLoadingScreen)
 				await LoadingScreenManager.LoadScenesWithLoadingScreen(
 					plan.ProviderScenePaths,
 					plan.RemainingScenePaths,
-					loadMode,
-					loadScreenOverride?.Path
+					mode,
+					screenPath
 				);
 			else
-				await LoadWithoutLoadingScreen(plan);
+				await LoadWithoutLoadingScreen(plan, mode);
 
-			if (loadMode == LoadSceneMode.Single)
+			if (mode == LoadSceneMode.Single)
 				SceneManager.SetActiveScene(plan.ActiveScenePath);
 
 			Logger.Log(
@@ -145,6 +149,8 @@ namespace Bezoro.Unity.Core.ScriptableObjects
 		private void EnsureEntriesMigrated()
 		{
 			sceneEntries ??= new();
+			if (sceneEntriesMigrated) return;
+			sceneEntriesMigrated = true;
 			if (sceneEntries.Count > 0 || scenes == null || scenes.Count == 0)
 				return;
 
@@ -154,7 +160,7 @@ namespace Bezoro.Unity.Core.ScriptableObjects
 						   .ToList();
 		}
 
-		private async UniTask LoadWithoutLoadingScreen(SceneCollectionLoadPlan plan)
+		private static async UniTask LoadWithoutLoadingScreen(SceneCollectionLoadPlan plan, LoadSceneMode loadMode)
 		{
 			for (var i = 0; i < plan.ProviderScenePaths.Count; i++)
 			{
