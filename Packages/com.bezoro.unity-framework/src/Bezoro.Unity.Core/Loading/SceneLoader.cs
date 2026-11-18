@@ -25,6 +25,13 @@ public static class SceneLoader
 	public static event Action<Scene>?  SceneLoadStarted;
 	public static event Action<string>? SceneUnloadCompleted;
 
+	[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+	private static void ResetTrackedOperations()
+	{
+		Loading.Clear();
+		Unloading.Clear();
+	}
+
 	public static IEnumerable<string> LoadedScenePaths =>
 		Enumerable.Range(
 					  0,
@@ -215,7 +222,7 @@ public static class SceneLoader
 
 
 		var op = UnityEngine.SceneManagement.SceneManager.UnloadSceneAsync(
-			path
+			scene
 		);
 
 		if (op == null) throw new InvalidOperationException($"Unity could not unload {path}.");
@@ -318,14 +325,14 @@ public sealed class SceneLoadHandle
 
 	/// <summary>True when a deferred scene has reached the activation barrier. Unity queues later scenes behind it.</summary>
 	public bool IsReadyForActivation => _deferred != null &&
-		_deferred.Any(op => !op.allowSceneActivation && op.progress >= 0.9f);
+		_deferred.Any(op => !op.isDone && !op.allowSceneActivation && op.progress >= 0.9f);
 
 	/// <summary>Releases all deferred activations for this batch. Call from the Unity main thread.</summary>
 	public void Activate()
 	{
 		if (_deferred == null) return;
 		foreach (var operation in _deferred)
-			if (!operation.allowSceneActivation) operation.allowSceneActivation = true;
+			if (!operation.isDone && !operation.allowSceneActivation) operation.allowSceneActivation = true;
 	}
 
 	public bool IsDone => _tcs.Task.Status == UniTaskStatus.Succeeded;

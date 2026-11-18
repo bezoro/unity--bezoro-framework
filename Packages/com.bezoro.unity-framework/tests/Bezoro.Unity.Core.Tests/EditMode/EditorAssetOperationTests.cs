@@ -185,13 +185,14 @@ namespace Bezoro.Unity.Core.Tests.EditMode
 			var replacement = PrefabUtility.SaveAsPrefabAsset(Create("Other"), _folder + "/Other.prefab");
 
 			var active = SceneManager.GetActiveScene();
-			var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Additive);
+			string scenePath = _folder + "/Consumer.unity";
+			Assert.That(AssetDatabase.CopyAsset(SceneTransitionsTests.First, scenePath), Is.True);
+			var scene = EditorSceneManager.OpenScene(scenePath, OpenSceneMode.Additive);
 			try
 			{
 				var instance = (GameObject)PrefabUtility.InstantiatePrefab(asset, scene);
 				Assert.That(PrefabNameSyncer.IsInstanceRoot(instance), Is.True);
 				Assert.That(PrefabNameSyncer.IsInstanceRoot(instance.transform.GetChild(0).gameObject), Is.False);
-				string scenePath = _folder + "/Consumer.unity";
 				Assert.That(EditorSceneManager.SaveScene(scene, scenePath), Is.True);
 				EditorSceneManager.CloseScene(scene, true);
 				Assert.Throws<IOException>(() => PrefabVariantWriter.InstallVerifiedPrefab(

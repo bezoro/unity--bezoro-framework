@@ -528,6 +528,9 @@ namespace Bezoro.Unity.Core.Tests.EditMode
 		[Test]
 		public void BuildValidation_UsesRequestedScenesAndRequiresAssignedApplicationConfig()
 		{
+			var prototype = CreateScene("Prototype");
+			CreateCollection(prototype);
+			var requested = CreateScene("Requested");
 			var definition = CreateDefinition("Application", GlobalDependencyOrphanPolicy.Keep, SingletonLifetime.Application);
 			var looseConfig = ScriptableObject.CreateInstance<GameInitializationConfig>();
 			using (var serialized = new SerializedObject(looseConfig))
@@ -538,9 +541,6 @@ namespace Bezoro.Unity.Core.Tests.EditMode
 				serialized.ApplyModifiedPropertiesWithoutUndo();
 			}
 			AssetDatabase.CreateAsset(looseConfig, $"{TEST_FOLDER}/LooseConfig.asset");
-			var prototype = CreateScene("Prototype");
-			CreateCollection(prototype);
-			var requested = CreateScene("Requested");
 			CreateRequirement(requested, definition);
 			EditorSceneManager.SaveScene(requested);
 			var options = new BuildPlayerOptions { scenes = new[] { requested.path } };

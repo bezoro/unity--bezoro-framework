@@ -23,16 +23,18 @@ namespace Bezoro.Unity.Core.Tests.EditMode
 	{
 		private const string FixtureDirectory = "Packages/com.bezoro.unity-framework/tests/Bezoro.Unity.Core.Tests/EditMode/SceneLoadingFixtures";
 
-		private const string First = FixtureDirectory + "/First.unity";
+		internal const string First = FixtureDirectory + "/First.unity";
 		private const string Second = FixtureDirectory + "/Second.unity";
 		private const string Screen = FixtureDirectory + "/Screen.unity";
 		private const string SettingsKey = "Bezoro.Tests.SceneTransitions.BuildSettings";
 
 		[Serializable]
-		private sealed class BuildSceneSnapshot
+		private sealed class EditorSettingsSnapshot
 		{
 			public string[] paths;
 			public bool[] enabled;
+			public bool enterPlayModeOptionsEnabled;
+			public EnterPlayModeOptions enterPlayModeOptions;
 		}
 
 		[UnitySetUp]
@@ -41,16 +43,20 @@ namespace Bezoro.Unity.Core.Tests.EditMode
 			if (!UnityEngine.Application.isPlaying && string.IsNullOrEmpty(SessionState.GetString(SettingsKey, "")))
 			{
 				var scenes = EditorBuildSettings.scenes;
-				SessionState.SetString(SettingsKey, JsonUtility.ToJson(new BuildSceneSnapshot
+				SessionState.SetString(SettingsKey, JsonUtility.ToJson(new EditorSettingsSnapshot
 				{
 					paths = scenes.Select(scene => scene.path).ToArray(),
-					enabled = scenes.Select(scene => scene.enabled).ToArray()
+					enabled = scenes.Select(scene => scene.enabled).ToArray(),
+					enterPlayModeOptionsEnabled = EditorSettings.enterPlayModeOptionsEnabled,
+					enterPlayModeOptions = EditorSettings.enterPlayModeOptions
 				}));
 				EditorBuildSettings.scenes = scenes.Where(scene => scene.path != First && scene.path != Second && scene.path != Screen)
 					.Concat(new[] { new EditorBuildSettingsScene(First, true), new EditorBuildSettingsScene(Second, true), new EditorBuildSettingsScene(Screen, true) })
 					.ToArray();
+				EditorSettings.enterPlayModeOptions = EnterPlayModeOptions.DisableDomainReload;
+				EditorSettings.enterPlayModeOptionsEnabled = true;
 			}
-			yield return new EnterPlayMode();
+			yield return new EnterPlayMode(expectDomainReload: false);
 		}
 
 		[UnityTearDown]
@@ -59,9 +65,11 @@ namespace Bezoro.Unity.Core.Tests.EditMode
 			if (UnityEngine.Application.isPlaying) yield return new ExitPlayMode();
 			string json = SessionState.GetString(SettingsKey, "");
 			if (string.IsNullOrEmpty(json)) yield break;
-			var original = JsonUtility.FromJson<BuildSceneSnapshot>(json);
+			var original = JsonUtility.FromJson<EditorSettingsSnapshot>(json);
 			EditorBuildSettings.scenes = original.paths.Select((path, i) =>
 				new EditorBuildSettingsScene(path, original.enabled[i])).ToArray();
+			EditorSettings.enterPlayModeOptions = original.enterPlayModeOptions;
+			EditorSettings.enterPlayModeOptionsEnabled = original.enterPlayModeOptionsEnabled;
 			SessionState.EraseString(SettingsKey);
 		}
 
