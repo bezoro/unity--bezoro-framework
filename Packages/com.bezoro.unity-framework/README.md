@@ -12,6 +12,16 @@ The published Framework package contains the compiled .NET Standard assemblies a
 
 Unity permits Git dependencies in a [project manifest](https://docs.unity3d.com/6000.0/Documentation/Manual/upm-git.html), not as Git URLs in a package's `dependencies`. This is why each consuming project must declare the Framework and UniTask Git URLs, while this package declares its Unity registry dependencies in its own `package.json`.
 
+## Upgrading to 0.4.0
+
+- Call `Safe_Dispose()` on the writable `NativeArray<T>` variable that owns the allocation. Static calls must pass it by `ref`. The helper clears that variable when it disposes the allocation.
+- Use `await PlayerLoopHelpers.ReturnToMainThread()` to resume the calling method on the Unity thread. Use the action overload to post a callback.
+- For a deferred scene load, check `SceneLoadHandle.IsReadyForActivation` and call `Activate()` on the Unity main thread before awaiting completion. Canceling the handle also releases the activations it owns. Started Unity operations finish and emit their completion notifications. Loads and unloads that already match the requested state complete successfully.
+- `EventBus.Publish` and `PublishAsync` complete after their own handlers return. A handler can queue a nested publication with `.Forget()` and return so the bus can dispatch it. Higher priorities go first among pending events, with FIFO ordering at equal priority. A payload event created by the bus returns to its pool after publication. `CreateEvent<TEvent>()` creates a fresh instance.
+- `ObservableProperty` invokes subscribers outside its state lock on the calling thread. Subscribers that can receive concurrent updates must handle overlapping callbacks. A disposed `ServiceLocator` is terminal. Create a new locator for the next lifetime.
+- For checked `InputAction` operations using extension syntax, use `EnableChecked()` and `DisableChecked()`. The existing static wrappers remain available. NavMesh random sampling defaults to a finite search radius of 10 world units and returns the agent's position if it finds no valid sample.
+- Assign the runtime `GameInitializationConfig` in the resource-backed `GameSettings` to satisfy application-wide provider requirements during build validation. Prefab conversion and retargeting refuse edits when Unity cannot preserve the target's object identities or map its overrides safely.
+
 ## Fix in 0.3.3
 
 Component enabled-state helpers now read and write native Renderer and Collider properties, as well as other public boolean `enabled` properties such as LODGroup and Cloth. Components without an enabled member remain unchanged. `ComponentState` and hierarchy-cache snapshots therefore retain each component's actual initial state, including intentionally disabled renderers and colliders.

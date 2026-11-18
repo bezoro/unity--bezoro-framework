@@ -19,8 +19,7 @@ public interface IEventBus : IService,
 		where T : IEvent;
 
 	/// <summary>
-	///     Creates an event instance with default event metadata. Implementations may
-	///     serve this from an internal pool.
+	///     Creates a fresh event instance with default event metadata.
 	/// </summary>
 	public TEvent CreateEvent<TEvent>()
 		where TEvent : IEvent, new();
