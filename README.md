@@ -18,7 +18,7 @@ Install the published pure C# Framework and UniTask Git dependencies first. Add 
 ```json
 {
   "dependencies": {
-    "com.bezoro.framework": "https://github.com/bezoro/framework.git#c9ed5cf0224afdd7256968cde5e3b3a58b80bc3e",
+    "com.bezoro.framework": "https://github.com/bezoro/csharp-framework.git#68f51f8484585174bce586b9c015da483dfdbaf7",
     "com.bezoro.unity-framework": "https://github.com/bezoro/unity--bezoro-framework.git?path=Packages/com.bezoro.unity-framework#<tag-or-commit>",
     "com.cysharp.unitask": "https://github.com/Cysharp/UniTask.git?path=src/UniTask/Assets/Plugins/UniTask#ceac8d6946b1125fe782cd171fbcb245b567dbf9"
   }

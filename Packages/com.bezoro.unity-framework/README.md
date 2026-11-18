@@ -4,7 +4,7 @@ Unity runtime utilities and native editor tools, distributed as `com.bezoro.unit
 
 ## Framework dependency
 
-The repository's `Packages/manifest.json` installs `com.bezoro.framework` from the published Git package at `c9ed5cf0224afdd7256968cde5e3b3a58b80bc3e`, version `0.1.0-preview.1671`, and pins UniTask to a Git revision. Unity imports this embedded package directly from `Packages/com.bezoro.unity-framework`.
+Version `0.4.1` uses `com.bezoro.framework` version `0.1.0-preview.1736`. Use the published Git package at commit `68f51f8484585174bce586b9c015da483dfdbaf7` in `bezoro/csharp-framework`. The repository's `Packages/manifest.json` pins that commit and the UniTask revision. Unity imports this embedded package directly from `Packages/com.bezoro.unity-framework`.
 
 Open the repository root in the exact Editor recorded in `ProjectSettings/ProjectVersion.txt`. Package Manager resolves the Git dependencies. Keep its generated `Packages/packages-lock.json` with the project after resolution. No lock file or PackageCache is fabricated outside Unity.
 
